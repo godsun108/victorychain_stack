@@ -193,9 +193,3 @@ exclude = [
 ]
 ignore = ["E203", "W503"]
 
-scripts/inspect_and_replace.sh
-src/victory_bot/alerts.py
-src/victory_bot/alert_templates.py
-src/victory_bot/execution.py
-src/victory_bot/trailing.py
-tests/test_placeholders.py
