@@ -11,3 +11,4 @@ reports/*.tmp
 execution_errors.log
 config/.env
 config/.env
+.env
