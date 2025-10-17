@@ -10,3 +10,4 @@ reports/*.tmp
 .env.live
 execution_errors.log
 config/.env
+config/.env
