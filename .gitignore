@@ -1,0 +1,12 @@
+.env
+!example.env
+runtime/ledger/**.tmp
+runtime/proofs/**.sig.tmp
+__pycache__/
+*.pyc
+.venv/
+venv/
+reports/*.tmp
+.env.live
+execution_errors.log
+config/.env
