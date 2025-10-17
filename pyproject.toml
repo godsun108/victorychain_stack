@@ -182,15 +182,16 @@ exclude = [
 
 [flake8]
 max-line-length = 88
-exclude =
-    .git,
-    __pycache__,
-    venv,
-    env,
-    build,
-    dist,
-    .venv
-ignore = E203, W503
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+    "env",
+    "build",
+    "dist",
+    ".venv",
+]
+ignore = ["E203", "W503"]
 
 scripts/inspect_and_replace.sh
 src/victory_bot/alerts.py
