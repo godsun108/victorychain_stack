@@ -1,0 +1,276 @@
+#!/usr/bin/env python3
+"""
+Claude Analysis of Comprehensive Market Data
+Get Claude's expert insights on all 205+ tradable tokens and current market conditions
+"""
+
+import os
+import json
+from datetime import datetime
+from typing import Dict, List
+from dotenv import load_dotenv
+import anthropic
+
+class ClaudeMarketAnalyst:
+    def __init__(self):
+        load_dotenv()
+        
+        # Initialize Claude client
+        self.claude_client = anthropic.Anthropic(
+            api_key=os.getenv('CLAUDE_API_KEY')
+        )
+        
+        print("🤖 Claude Market Analyst initialized")
+    
+    def load_latest_market_data(self) -> Dict:
+        """Load the most recent comprehensive market analysis"""
+        try:
+            # Find the most recent expanded analysis file
+            import glob
+            files = glob.glob("expanded_all_tokens_analysis_*.json")
+            if not files:
+                files = glob.glob("enhanced_market_analysis_*.json")
+            
+            if not files:
+                print("❌ No recent market analysis files found")
+                return {}
+            
+            latest_file = max(files)
+            print(f"📊 Loading market data from: {latest_file}")
+            
+            with open(latest_file, 'r') as f:
+                return json.load(f)
+                
+        except Exception as e:
+            print(f"Error loading market data: {e}")
+            return {}
+    
+    def get_current_portfolio(self) -> Dict:
+        """Get current portfolio status"""
+        try:
+            from binance.client import Client
+            
+            client = Client(
+                api_key=os.getenv('BINANCEUS_KEY'),
+                api_secret=os.getenv('BINANCEUS_SECRET'),
+                tld='us'
+            )
+            
+            account = client.get_account()
+            portfolio = {'positions': {}, 'total_value': 0}
+            
+            for balance in account['balances']:
+                free = float(balance['free'])
+                locked = float(balance['locked'])
+                total = free + locked
+                
+                if total > 0:
+                    if balance['asset'] == 'USDT':
+                        portfolio['positions'][balance['asset']] = {
+                            'amount': total,
+                            'usd_value': total,
+                            'daily_change': 0
+                        }
+                        portfolio['total_value'] += total
+                    else:
+                        try:
+                            symbol = balance['asset'] + 'USDT'
+                            ticker = client.get_ticker(symbol=symbol)
+                            price = float(ticker['lastPrice'])
+                            usd_value = total * price
+                            daily_change = float(ticker['priceChangePercent'])
+                            
+                            portfolio['positions'][balance['asset']] = {
+                                'amount': total,
+                                'usd_value': usd_value,
+                                'daily_change': daily_change
+                            }
+                            portfolio['total_value'] += usd_value
+                        except:
+                            continue
+            
+            return portfolio
+        except Exception as e:
+            print(f"Error getting portfolio: {e}")
+            return {'positions': {}, 'total_value': 0}
+    
+    def ask_claude_comprehensive_analysis(self, market_data: Dict, portfolio_data: Dict) -> str:
+        """Ask Claude for comprehensive analysis of all market data"""
+        
+        # Prepare comprehensive data summary for Claude
+        total_tokens = market_data.get('total_tokens_analyzed', 0)
+        market_summary = market_data.get('market_summary', {})
+        top_opportunities = market_data.get('top_opportunities', {})
+        hidden_gems = market_data.get('hidden_gems', [])
+        volume_breakdown = market_data.get('volume_breakdown', {})
+        
+        # Extract key data points
+        momentum_leaders = top_opportunities.get('momentum_leaders', [])[:10]
+        daily_gainers = top_opportunities.get('daily_gainers', [])[:10]
+        volume_leaders = top_opportunities.get('volume_leaders', [])[:10]
+        balanced_opportunities = top_opportunities.get('balanced_opportunities', [])
+        
+        prompt = f"""
+You are a world-class cryptocurrency trading analyst with deep expertise in market analysis, momentum trading, and risk management. I need your expert analysis of comprehensive market data covering ALL {total_tokens} tradable USDT tokens on Binance US.
+
+COMPREHENSIVE MARKET DATA ANALYSIS:
+=====================================
+
+MARKET OVERVIEW:
+- Total tokens analyzed: {total_tokens}
+- Market sentiment: {market_summary.get('sentiment', 'unknown')}
+- Average market change: {market_summary.get('market_performance', {}).get('avg_change', 0):.2f}%
+- Positive/negative ratio: {market_summary.get('market_performance', {}).get('positive_ratio', 0):.1%}
+- Best performer: {market_summary.get('market_performance', {}).get('best_performer', 0):+.2f}%
+- Worst performer: {market_summary.get('market_performance', {}).get('worst_performer', 0):+.2f}%
+
+MOMENTUM ANALYSIS:
+- High momentum tokens (100+): {market_summary.get('momentum_analysis', {}).get('high_momentum_count', 0)}
+- Exceptional momentum (150+): {market_summary.get('momentum_analysis', {}).get('exceptional_momentum_count', 0)}
+- Average momentum score: {market_summary.get('momentum_analysis', {}).get('avg_momentum', 0):.1f}
+
+VOLUME DISTRIBUTION BREAKDOWN:
+- Ultra High (>$1M): {volume_breakdown.get('ultra_high_volume', 0)} tokens
+- High ($100K-$1M): {volume_breakdown.get('high_volume', 0)} tokens
+- Medium ($10K-$100K): {volume_breakdown.get('medium_volume', 0)} tokens
+- Low ($1K-$10K): {volume_breakdown.get('low_volume', 0)} tokens
+- Micro (<$1K): {volume_breakdown.get('micro_volume', 0)} tokens
+
+TOP 10 MOMENTUM LEADERS:
+{json.dumps([{k: v for k, v in token.items() if k in ['token', 'momentum_score', 'daily_change', 'volume_24h']} for token in momentum_leaders], indent=2)}
+
+TOP 10 DAILY GAINERS:
+{json.dumps([{k: v for k, v in token.items() if k in ['token', 'daily_change', 'momentum_score', 'volume_24h']} for token in daily_gainers], indent=2)}
+
+TOP 10 VOLUME LEADERS:
+{json.dumps([{k: v for k, v in token.items() if k in ['token', 'volume_24h', 'daily_change', 'momentum_score']} for token in volume_leaders], indent=2)}
+
+HIDDEN GEMS (High momentum, lower volume):
+{json.dumps([{k: v for k, v in gem.items() if k in ['token', 'momentum_score', 'daily_change', 'volume_24h']} for gem in hidden_gems[:5]], indent=2)}
+
+BALANCED OPPORTUNITIES:
+{json.dumps([{k: v for k, v in token.items() if k in ['token', 'momentum_score', 'daily_change', 'volume_24h']} for token in balanced_opportunities], indent=2)}
+
+CURRENT PORTFOLIO POSITIONING:
+{json.dumps(portfolio_data, indent=2)}
+
+AUTOMATED TRADING SYSTEM STATUS:
+- System has been running 24/7 with automated holding strategy
+- Successfully executed stop-loss on LOKA at -31% (sold 80% of position)
+- Currently holding profitable positions and monitoring for exceptional opportunities
+- No exceptional opportunities found recently (momentum threshold: 150+)
+- System correctly protecting capital in low-momentum market conditions
+
+CRITICAL ANALYSIS QUESTIONS:
+
+1. MARKET ASSESSMENT: Given that NO tokens currently have exceptional momentum (150+) and only 61% are positive, what does this tell us about the current market cycle and trading environment?
+
+2. VOLUME CONCERNS: With 124 out of 205 tokens having micro volume (<$1K), what are the implications for trading strategy and liquidity risk?
+
+3. OPPORTUNITY EVALUATION: The top momentum leaders (REN +17%, ENA +16.6%, XLM +8.1%) have varying volume profiles. How should we evaluate these opportunities?
+
+4. PORTFOLIO OPTIMIZATION: The current portfolio holds XLM and ALGO (both in the top momentum leaders). Is this optimal positioning?
+
+5. SYSTEM THRESHOLDS: Should the automated system lower its "exceptional opportunity" threshold from 150+ given current market conditions?
+
+6. HIDDEN GEMS STRATEGY: Are the identified hidden gems worth the liquidity risk, or should focus remain on higher-volume tokens?
+
+7. MARKET TIMING: Is this a good time to be more aggressive with new positions, or continue the defensive holding strategy?
+
+8. RISK MANAGEMENT: Given the volume distribution and momentum analysis, what are the key risks to watch for?
+
+Please provide a comprehensive analysis addressing these points with specific, actionable trading recommendations. Focus on:
+- Strategic market assessment
+- Specific buy/sell/hold recommendations with reasoning
+- Risk management priorities  
+- System optimization suggestions
+- Market timing insights
+- Portfolio positioning advice
+
+Format your response clearly with section headers and bullet points for easy implementation.
+        """
+        
+        try:
+            print("🤖 Asking Claude for comprehensive market analysis...")
+            
+            response = self.claude_client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=4000,
+                temperature=0.2,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+            
+            return response.content[0].text
+            
+        except Exception as e:
+            return f"❌ Error getting Claude analysis: {e}"
+    
+    def generate_claude_market_report(self) -> Dict:
+        """Generate comprehensive market report with Claude's analysis"""
+        
+        print("🚀 GENERATING CLAUDE'S COMPREHENSIVE MARKET ANALYSIS")
+        print("=" * 70)
+        
+        # Load market data
+        market_data = self.load_latest_market_data()
+        if not market_data:
+            print("❌ No market data available for analysis")
+            return {}
+        
+        # Get current portfolio
+        portfolio_data = self.get_current_portfolio()
+        
+        # Get Claude's analysis
+        claude_analysis = self.ask_claude_comprehensive_analysis(market_data, portfolio_data)
+        
+        # Display Claude's insights
+        print("\n🤖 CLAUDE'S EXPERT ANALYSIS")
+        print("=" * 50)
+        print(claude_analysis)
+        
+        # Create comprehensive report
+        report = {
+            'timestamp': datetime.now().isoformat(),
+            'market_data_summary': {
+                'total_tokens_analyzed': market_data.get('total_tokens_analyzed', 0),
+                'market_sentiment': market_data.get('market_summary', {}).get('sentiment', 'unknown'),
+                'high_momentum_count': market_data.get('market_summary', {}).get('momentum_analysis', {}).get('high_momentum_count', 0),
+                'volume_distribution': market_data.get('volume_breakdown', {})
+            },
+            'portfolio_data': portfolio_data,
+            'claude_analysis': claude_analysis,
+            'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        # Save Claude's analysis
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"claude_comprehensive_analysis_{timestamp}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        # Also save as readable text
+        text_filename = f"claude_analysis_{timestamp}.txt"
+        with open(text_filename, 'w') as f:
+            f.write(f"CLAUDE'S COMPREHENSIVE MARKET ANALYSIS\n")
+            f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"=" * 60 + "\n\n")
+            f.write(claude_analysis)
+        
+        print(f"\n💾 Analysis saved:")
+        print(f"   JSON: {filename}")
+        print(f"   Text: {text_filename}")
+        
+        return report
+
+def main():
+    analyst = ClaudeMarketAnalyst()
+    report = analyst.generate_claude_market_report()
+
+if __name__ == "__main__":
+    main()

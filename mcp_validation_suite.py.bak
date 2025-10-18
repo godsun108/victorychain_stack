@@ -1,0 +1,701 @@
+#!/usr/bin/env python3
+
+"""
+🧪 MCP IMPROVEMENTS VALIDATION SUITE
+====================================
+Comprehensive testing and validation of all MCP improvements:
+
+TESTING COVERAGE:
+- Next-Generation MCP system validation
+- Integration orchestrator testing
+- Performance benchmarking
+- Backward compatibility verification
+- Error handling and resilience testing
+- Live trading simulation
+"""
+
+import asyncio
+import json
+import time
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Any
+import traceback
+import statistics
+
+# Import all MCP systems
+from next_gen_mcp_improvements import NextGenerationMCPSystem, NextGenMCPSignal
+from mcp_integration_orchestrator import MCPIntegrationOrchestrator, IntegratedMCPSignal
+
+class MCPTestSuite:
+    """Comprehensive MCP testing suite"""
+    
+    def __init__(self):
+        self.test_results = {}
+        self.performance_metrics = {}
+        self.error_log = []
+        
+    async def run_all_tests(self):
+        """Run comprehensive test suite"""
+        print("🧪 Starting MCP Improvements Validation Suite")
+        print("=" * 60)
+        
+        # Test categories
+        test_categories = [
+            ("Next-Gen MCP System", self.test_nextgen_mcp),
+            ("Integration Orchestrator", self.test_integration_orchestrator),
+            ("Performance Benchmarks", self.test_performance_benchmarks),
+            ("Error Handling", self.test_error_handling),
+            ("Live Trading Simulation", self.test_live_trading_simulation),
+            ("Stress Testing", self.test_stress_scenarios)
+        ]
+        
+        overall_start = time.time()
+        
+        for category_name, test_function in test_categories:
+            print(f"\n🔬 Testing: {category_name}")
+            print("-" * 40)
+            
+            try:
+                start_time = time.time()
+                result = await test_function()
+                execution_time = time.time() - start_time
+                
+                self.test_results[category_name] = {
+                    'status': 'PASSED',
+                    'result': result,
+                    'execution_time': execution_time
+                }
+                
+                print(f"✅ {category_name} - PASSED ({execution_time:.2f}s)")
+                
+            except Exception as e:
+                execution_time = time.time() - start_time
+                error_info = {
+                    'error': str(e),
+                    'traceback': traceback.format_exc(),
+                    'execution_time': execution_time
+                }
+                
+                self.test_results[category_name] = {
+                    'status': 'FAILED',
+                    'error': error_info,
+                    'execution_time': execution_time
+                }
+                
+                self.error_log.append({
+                    'category': category_name,
+                    'error': str(e),
+                    'timestamp': datetime.now().isoformat()
+                })
+                
+                print(f"❌ {category_name} - FAILED ({execution_time:.2f}s)")
+                print(f"   Error: {str(e)}")
+        
+        total_time = time.time() - overall_start
+        
+        # Generate final report
+        await self.generate_test_report(total_time)
+    
+    async def test_nextgen_mcp(self) -> Dict[str, Any]:
+        """Test Next-Generation MCP System"""
+        
+        # Initialize system
+        mcp_system = NextGenerationMCPSystem()
+        
+        # Test 1: Basic signal generation
+        test_symbol = "TESTUSDT"
+        test_market_data = {
+            'price': 1.50,
+            'volume_24h': 5000000,
+            'price_change_24h': 5.2,
+            'high_24h': 1.55,
+            'low_24h': 1.42,
+            'market_cap': 150000000,
+            'volatility_24h': 0.12
+        }
+        
+        signal = await mcp_system.generate_next_gen_signal(test_symbol, test_market_data)
+        
+        # Validate signal structure
+        assert isinstance(signal, NextGenMCPSignal)
+        assert signal.symbol == test_symbol
+        assert signal.primary_action in ['BUY', 'SELL', 'HOLD']
+        assert 0 <= signal.confidence_score <= 1
+        assert signal.timestamp is not None
+        
+        # Test 2: Multi-asset portfolio optimization
+        test_assets = ["TOKEN1", "TOKEN2", "TOKEN3"]
+        multi_market_data = {
+            asset: {
+                'price': np.random.uniform(0.5, 50),
+                'volume_24h': np.random.uniform(1000000, 20000000),
+                'price_change_24h': np.random.uniform(-15, 15),
+                'market_cap': np.random.uniform(10000000, 1000000000),
+                'volatility_24h': np.random.uniform(0.05, 0.4)
+            }
+            for asset in test_assets
+        }
+        
+        # Generate signals for portfolio
+        portfolio_signals = {}
+        for asset in test_assets:
+            asset_signal = await mcp_system.generate_next_gen_signal(asset, multi_market_data[asset])
+            portfolio_signals[asset] = asset_signal
+        
+        # Test portfolio optimization
+        portfolio_allocation = await mcp_system.optimize_portfolio_allocation(
+            test_assets, multi_market_data, portfolio_signals
+        )
+        
+        # Validate portfolio optimization
+        assert 'quantum_weights' in portfolio_allocation
+        assert 'signal_adjusted_weights' in portfolio_allocation
+        assert sum(portfolio_allocation['signal_adjusted_weights'].values()) <= 1.1  # Allow small rounding
+        
+        # Test 3: Adaptive learning
+        training_samples = []
+        for i in range(25):  # Smaller dataset for testing
+            sample = {
+                'symbol': f"TEST{i%5}",
+                'market_data': {
+                    'price': np.random.uniform(0.1, 100),
+                    'volume_24h': np.random.uniform(100000, 10000000),
+                    'price_change_24h': np.random.uniform(-20, 20),
+                    'market_cap': np.random.uniform(1000000, 1000000000)
+                },
+                'outcome': np.random.uniform(-0.1, 0.1)
+            }
+            training_samples.append(sample)
+        
+        await mcp_system.adaptive_engine.train_adaptive_models(training_samples)
+        
+        # Test ensemble prediction
+        prediction = await mcp_system.adaptive_engine.predict_with_ensemble(
+            test_symbol, test_market_data
+        )
+        
+        assert 'confidence' in prediction
+        assert 'prediction' in prediction
+        assert 0 <= prediction['confidence'] <= 1
+        
+        # Test 4: System status
+        status = mcp_system.get_system_status()
+        
+        assert 'system_active' in status
+        assert 'total_signals_generated' in status
+        assert status['total_signals_generated'] >= 1  # At least one signal generated
+        
+        return {
+            'signal_generation': True,
+            'portfolio_optimization': True,
+            'adaptive_learning': True,
+            'system_status': True,
+            'signals_generated': len(portfolio_signals) + 1,
+            'portfolio_assets': len(test_assets),
+            'training_samples': len(training_samples)
+        }
+    
+    async def test_integration_orchestrator(self) -> Dict[str, Any]:
+        """Test Integration Orchestrator"""
+        
+        # Initialize orchestrator
+        config = {
+            'system_weights': {'legacy': 0.2, 'enhanced': 0.3, 'nextgen': 0.5},
+            'consensus_threshold': 0.7,
+            'max_response_time': 2.0
+        }
+        
+        orchestrator = MCPIntegrationOrchestrator(config)
+        await orchestrator.initialize()
+        
+        # Test 1: Single symbol integration
+        test_symbol = "INTEGTEST"
+        test_market_data = {
+            'price': 2.25,
+            'volume_24h': 8000000,
+            'price_change_24h': -2.1,
+            'high_24h': 2.35,
+            'low_24h': 2.15,
+            'market_cap': 225000000,
+            'volatility_24h': 0.08
+        }
+        
+        integrated_signal = await orchestrator.get_integrated_signal(test_symbol, test_market_data)
+        
+        # Validate integrated signal
+        assert isinstance(integrated_signal, IntegratedMCPSignal)
+        assert integrated_signal.symbol == test_symbol
+        assert integrated_signal.final_action in ['BUY', 'SELL', 'HOLD']
+        assert 0 <= integrated_signal.final_confidence <= 1
+        assert 0 <= integrated_signal.system_agreement <= 1
+        assert integrated_signal.systems_active >= 1
+        
+        # Test 2: Batch analysis
+        batch_symbols = ["BATCH1", "BATCH2", "BATCH3", "BATCH4"]
+        batch_market_data = {
+            symbol: {
+                'price': np.random.uniform(0.1, 10),
+                'volume_24h': np.random.uniform(500000, 5000000),
+                'price_change_24h': np.random.uniform(-10, 10),
+                'market_cap': np.random.uniform(5000000, 500000000),
+                'volatility_24h': np.random.uniform(0.03, 0.25)
+            }
+            for symbol in batch_symbols
+        }
+        
+        batch_results = await orchestrator.batch_signal_analysis(batch_symbols, batch_market_data)
+        
+        # Validate batch results
+        assert len(batch_results) == len(batch_symbols)
+        for symbol, signal in batch_results.items():
+            assert isinstance(signal, IntegratedMCPSignal)
+            assert signal.symbol == symbol
+        
+        # Test 3: Performance reporting
+        performance_report = orchestrator.get_system_performance_report()
+        
+        assert 'integration_performance' in performance_report
+        assert 'system_status' in performance_report
+        assert 'active_systems' in performance_report
+        
+        return {
+            'single_integration': True,
+            'batch_analysis': True,
+            'performance_reporting': True,
+            'signals_processed': len(batch_results) + 1,
+            'systems_active': sum(performance_report['active_systems'].values())
+        }
+    
+    async def test_performance_benchmarks(self) -> Dict[str, Any]:
+        """Test performance benchmarks"""
+        
+        # Initialize systems for benchmarking
+        nextgen_mcp = NextGenerationMCPSystem()
+        orchestrator = MCPIntegrationOrchestrator()
+        await orchestrator.initialize()
+        
+        # Benchmark 1: Signal generation speed
+        signal_times = []
+        for i in range(10):
+            market_data = {
+                'price': np.random.uniform(0.5, 50),
+                'volume_24h': np.random.uniform(1000000, 10000000),
+                'price_change_24h': np.random.uniform(-10, 10),
+                'market_cap': np.random.uniform(10000000, 1000000000),
+                'volatility_24h': np.random.uniform(0.05, 0.3)
+            }
+            
+            start_time = time.time()
+            signal = await nextgen_mcp.generate_next_gen_signal(f"BENCH{i}", market_data)
+            signal_time = time.time() - start_time
+            signal_times.append(signal_time)
+        
+        # Benchmark 2: Integration speed
+        integration_times = []
+        for i in range(10):
+            market_data = {
+                'price': np.random.uniform(0.5, 50),
+                'volume_24h': np.random.uniform(1000000, 10000000),
+                'price_change_24h': np.random.uniform(-10, 10),
+                'market_cap': np.random.uniform(10000000, 1000000000),
+                'volatility_24h': np.random.uniform(0.05, 0.3)
+            }
+            
+            start_time = time.time()
+            integrated = await orchestrator.get_integrated_signal(f"INTEG{i}", market_data)
+            integration_time = time.time() - start_time
+            integration_times.append(integration_time)
+        
+        # Benchmark 3: Batch processing speed
+        batch_symbols = [f"BATCH{i}" for i in range(20)]
+        batch_data = {
+            symbol: {
+                'price': np.random.uniform(0.5, 50),
+                'volume_24h': np.random.uniform(1000000, 10000000),
+                'price_change_24h': np.random.uniform(-10, 10),
+                'market_cap': np.random.uniform(10000000, 1000000000),
+                'volatility_24h': np.random.uniform(0.05, 0.3)
+            }
+            for symbol in batch_symbols
+        }
+        
+        start_time = time.time()
+        batch_results = await orchestrator.batch_signal_analysis(batch_symbols, batch_data)
+        batch_time = time.time() - start_time
+        
+        # Calculate performance metrics
+        avg_signal_time = statistics.mean(signal_times)
+        avg_integration_time = statistics.mean(integration_times)
+        
+        # Performance thresholds (in seconds)
+        SIGNAL_THRESHOLD = 2.0
+        INTEGRATION_THRESHOLD = 3.0
+        BATCH_THRESHOLD = 10.0
+        
+        performance_results = {
+            'avg_signal_generation_time': avg_signal_time,
+            'avg_integration_time': avg_integration_time,
+            'batch_processing_time': batch_time,
+            'batch_throughput': len(batch_symbols) / batch_time,
+            'signal_generation_within_threshold': avg_signal_time < SIGNAL_THRESHOLD,
+            'integration_within_threshold': avg_integration_time < INTEGRATION_THRESHOLD,
+            'batch_within_threshold': batch_time < BATCH_THRESHOLD,
+            'performance_grade': self._calculate_performance_grade(
+                avg_signal_time, avg_integration_time, batch_time
+            )
+        }
+        
+        return performance_results
+    
+    async def test_error_handling(self) -> Dict[str, Any]:
+        """Test error handling and resilience"""
+        
+        nextgen_mcp = NextGenerationMCPSystem()
+        orchestrator = MCPIntegrationOrchestrator()
+        await orchestrator.initialize()
+        
+        error_tests = []
+        
+        # Test 1: Invalid market data
+        try:
+            invalid_data = {'price': -1, 'volume_24h': None}
+            signal = await nextgen_mcp.generate_next_gen_signal("INVALID", invalid_data)
+            error_tests.append({'test': 'invalid_data', 'passed': True})
+        except Exception as e:
+            error_tests.append({'test': 'invalid_data', 'passed': False, 'error': str(e)})
+        
+        # Test 2: Empty symbol
+        try:
+            signal = await nextgen_mcp.generate_next_gen_signal("", {})
+            error_tests.append({'test': 'empty_symbol', 'passed': True})
+        except Exception as e:
+            error_tests.append({'test': 'empty_symbol', 'passed': False, 'error': str(e)})
+        
+        # Test 3: Timeout handling (simulated)
+        try:
+            # Test with minimal timeout
+            quick_orchestrator = MCPIntegrationOrchestrator({'max_response_time': 0.001})
+            await quick_orchestrator.initialize()
+            
+            market_data = {
+                'price': 1.0,
+                'volume_24h': 1000000,
+                'price_change_24h': 0,
+                'market_cap': 10000000,
+                'volatility_24h': 0.1
+            }
+            
+            signal = await quick_orchestrator.get_integrated_signal("TIMEOUT", market_data)
+            error_tests.append({'test': 'timeout_handling', 'passed': True})
+        except Exception as e:
+            error_tests.append({'test': 'timeout_handling', 'passed': False, 'error': str(e)})
+        
+        # Test 4: Missing required fields
+        try:
+            incomplete_data = {'price': 1.0}  # Missing volume
+            signal = await orchestrator.get_integrated_signal("INCOMPLETE", incomplete_data)
+            error_tests.append({'test': 'missing_fields', 'passed': True})
+        except Exception as e:
+            error_tests.append({'test': 'missing_fields', 'passed': False, 'error': str(e)})
+        
+        passed_tests = sum(1 for test in error_tests if test['passed'])
+        total_tests = len(error_tests)
+        
+        return {
+            'total_error_tests': total_tests,
+            'passed_tests': passed_tests,
+            'error_resilience_rate': passed_tests / total_tests,
+            'test_details': error_tests
+        }
+    
+    async def test_live_trading_simulation(self) -> Dict[str, Any]:
+        """Simulate live trading scenarios"""
+        
+        orchestrator = MCPIntegrationOrchestrator()
+        await orchestrator.initialize()
+        
+        # Simulate live market conditions
+        simulation_symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "DOGEUSDT"]
+        simulation_results = []
+        
+        for minute in range(5):  # Simulate 5 minutes of trading
+            minute_results = {}
+            
+            for symbol in simulation_symbols:
+                # Simulate realistic market data with price movement
+                base_price = 1.0 + minute * 0.01  # Slight upward trend
+                price_volatility = np.random.normal(0, 0.02)  # 2% volatility
+                
+                market_data = {
+                    'price': base_price * (1 + price_volatility),
+                    'volume_24h': np.random.uniform(10000000, 100000000),
+                    'price_change_24h': np.random.uniform(-5, 5),
+                    'high_24h': base_price * 1.03,
+                    'low_24h': base_price * 0.97,
+                    'market_cap': np.random.uniform(1000000000, 100000000000),
+                    'volatility_24h': np.random.uniform(0.05, 0.2)
+                }
+                
+                # Get trading signal
+                signal = await orchestrator.get_integrated_signal(symbol, market_data)
+                
+                minute_results[symbol] = {
+                    'action': signal.final_action,
+                    'confidence': signal.final_confidence,
+                    'position_size': signal.recommended_position_size,
+                    'price': market_data['price']
+                }
+            
+            simulation_results.append({
+                'minute': minute,
+                'signals': minute_results,
+                'timestamp': datetime.now().isoformat()
+            })
+        
+        # Analyze simulation results
+        total_signals = sum(len(minute['signals']) for minute in simulation_results)
+        buy_signals = sum(1 for minute in simulation_results 
+                         for signal in minute['signals'].values() 
+                         if signal['action'] == 'BUY')
+        sell_signals = sum(1 for minute in simulation_results 
+                          for signal in minute['signals'].values() 
+                          if signal['action'] == 'SELL')
+        hold_signals = total_signals - buy_signals - sell_signals
+        
+        avg_confidence = statistics.mean([
+            signal['confidence'] for minute in simulation_results 
+            for signal in minute['signals'].values()
+        ])
+        
+        return {
+            'simulation_duration_minutes': 5,
+            'symbols_tracked': len(simulation_symbols),
+            'total_signals_generated': total_signals,
+            'signal_distribution': {
+                'buy': buy_signals,
+                'sell': sell_signals,
+                'hold': hold_signals
+            },
+            'average_confidence': avg_confidence,
+            'simulation_data': simulation_results
+        }
+    
+    async def test_stress_scenarios(self) -> Dict[str, Any]:
+        """Test system under stress conditions"""
+        
+        orchestrator = MCPIntegrationOrchestrator()
+        await orchestrator.initialize()
+        
+        stress_results = {}
+        
+        # Stress Test 1: High volume concurrent requests
+        concurrent_symbols = [f"STRESS{i}" for i in range(50)]
+        concurrent_data = {
+            symbol: {
+                'price': np.random.uniform(0.1, 1000),
+                'volume_24h': np.random.uniform(100000, 50000000),
+                'price_change_24h': np.random.uniform(-20, 20),
+                'market_cap': np.random.uniform(1000000, 10000000000),
+                'volatility_24h': np.random.uniform(0.01, 0.5)
+            }
+            for symbol in concurrent_symbols
+        }
+        
+        start_time = time.time()
+        concurrent_results = await orchestrator.batch_signal_analysis(concurrent_symbols, concurrent_data)
+        concurrent_time = time.time() - start_time
+        
+        stress_results['high_volume_test'] = {
+            'symbols_processed': len(concurrent_results),
+            'processing_time': concurrent_time,
+            'throughput': len(concurrent_results) / concurrent_time,
+            'all_processed': len(concurrent_results) == len(concurrent_symbols)
+        }
+        
+        # Stress Test 2: Extreme market conditions
+        extreme_conditions = [
+            {'name': 'flash_crash', 'price_change_24h': -50, 'volatility_24h': 1.0},
+            {'name': 'pump', 'price_change_24h': 200, 'volatility_24h': 0.8},
+            {'name': 'no_volume', 'volume_24h': 0, 'volatility_24h': 0.01},
+            {'name': 'extreme_volatility', 'volatility_24h': 2.0, 'price_change_24h': 0}
+        ]
+        
+        extreme_results = []
+        for condition in extreme_conditions:
+            market_data = {
+                'price': 1.0,
+                'volume_24h': condition.get('volume_24h', 1000000),
+                'price_change_24h': condition.get('price_change_24h', 0),
+                'market_cap': 10000000,
+                'volatility_24h': condition.get('volatility_24h', 0.1)
+            }
+            
+            try:
+                signal = await orchestrator.get_integrated_signal(f"EXTREME_{condition['name']}", market_data)
+                extreme_results.append({
+                    'condition': condition['name'],
+                    'handled': True,
+                    'action': signal.final_action,
+                    'confidence': signal.final_confidence
+                })
+            except Exception as e:
+                extreme_results.append({
+                    'condition': condition['name'],
+                    'handled': False,
+                    'error': str(e)
+                })
+        
+        stress_results['extreme_conditions'] = {
+            'conditions_tested': len(extreme_conditions),
+            'conditions_handled': sum(1 for r in extreme_results if r['handled']),
+            'results': extreme_results
+        }
+        
+        return stress_results
+    
+    def _calculate_performance_grade(self, signal_time: float, integration_time: float, batch_time: float) -> str:
+        """Calculate overall performance grade"""
+        score = 0
+        
+        # Signal generation speed (max 30 points)
+        if signal_time < 0.5:
+            score += 30
+        elif signal_time < 1.0:
+            score += 25
+        elif signal_time < 2.0:
+            score += 20
+        else:
+            score += 10
+        
+        # Integration speed (max 40 points)
+        if integration_time < 1.0:
+            score += 40
+        elif integration_time < 2.0:
+            score += 30
+        elif integration_time < 3.0:
+            score += 20
+        else:
+            score += 10
+        
+        # Batch processing (max 30 points)
+        if batch_time < 5.0:
+            score += 30
+        elif batch_time < 8.0:
+            score += 25
+        elif batch_time < 10.0:
+            score += 20
+        else:
+            score += 10
+        
+        # Convert to letter grade
+        if score >= 90:
+            return 'A+'
+        elif score >= 85:
+            return 'A'
+        elif score >= 80:
+            return 'B+'
+        elif score >= 75:
+            return 'B'
+        elif score >= 70:
+            return 'C+'
+        elif score >= 65:
+            return 'C'
+        else:
+            return 'D'
+    
+    async def generate_test_report(self, total_time: float):
+        """Generate comprehensive test report"""
+        
+        # Calculate overall results
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results.values() if result['status'] == 'PASSED')
+        failed_tests = total_tests - passed_tests
+        
+        # Generate report
+        report = {
+            'test_execution_summary': {
+                'timestamp': datetime.now().isoformat(),
+                'total_execution_time': total_time,
+                'total_test_categories': total_tests,
+                'passed_categories': passed_tests,
+                'failed_categories': failed_tests,
+                'success_rate': passed_tests / total_tests if total_tests > 0 else 0,
+                'overall_status': 'PASSED' if failed_tests == 0 else 'FAILED'
+            },
+            'detailed_results': self.test_results,
+            'error_log': self.error_log,
+            'performance_summary': self._extract_performance_summary(),
+            'recommendations': self._generate_recommendations()
+        }
+        
+        # Save report
+        with open('mcp_validation_report.json', 'w') as f:
+            json.dump(report, f, indent=2, default=str)
+        
+        # Print summary
+        print(f"\n📋 TEST EXECUTION SUMMARY")
+        print("=" * 50)
+        print(f"Total Execution Time: {total_time:.2f} seconds")
+        print(f"Test Categories: {total_tests}")
+        print(f"Passed: {passed_tests} ✅")
+        print(f"Failed: {failed_tests} {'❌' if failed_tests > 0 else ''}")
+        print(f"Success Rate: {passed_tests/total_tests:.1%}")
+        print(f"Overall Status: {'✅ PASSED' if failed_tests == 0 else '❌ FAILED'}")
+        
+        if self.error_log:
+            print(f"\n⚠️ ERRORS ENCOUNTERED:")
+            for error in self.error_log:
+                print(f"   {error['category']}: {error['error']}")
+        
+        print(f"\n💾 Detailed report saved to: mcp_validation_report.json")
+        print("🏁 MCP Validation Suite Complete!")
+    
+    def _extract_performance_summary(self) -> Dict[str, Any]:
+        """Extract performance metrics from test results"""
+        summary = {}
+        
+        if 'Performance Benchmarks' in self.test_results:
+            perf_data = self.test_results['Performance Benchmarks']
+            if perf_data['status'] == 'PASSED':
+                summary = perf_data['result']
+        
+        return summary
+    
+    def _generate_recommendations(self) -> List[str]:
+        """Generate recommendations based on test results"""
+        recommendations = []
+        
+        # Check for failed tests
+        for category, result in self.test_results.items():
+            if result['status'] == 'FAILED':
+                recommendations.append(f"Investigate and fix issues in {category}")
+        
+        # Performance recommendations
+        perf_summary = self._extract_performance_summary()
+        if perf_summary:
+            if perf_summary.get('performance_grade', 'D') in ['C', 'D']:
+                recommendations.append("Consider optimizing system performance")
+            
+            if not perf_summary.get('signal_generation_within_threshold', True):
+                recommendations.append("Optimize signal generation speed")
+            
+            if not perf_summary.get('integration_within_threshold', True):
+                recommendations.append("Optimize integration orchestrator performance")
+        
+        # Error handling recommendations
+        if self.error_log:
+            recommendations.append("Enhance error handling and resilience mechanisms")
+        
+        if not recommendations:
+            recommendations.append("All systems performing well - consider advanced optimizations")
+        
+        return recommendations
+
+async def main():
+    """Run the comprehensive MCP validation suite"""
+    test_suite = MCPTestSuite()
+    await test_suite.run_all_tests()
+
+if __name__ == "__main__":
+    asyncio.run(main())

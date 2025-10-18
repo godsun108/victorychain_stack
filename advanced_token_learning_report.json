@@ -1,0 +1,115 @@
+{
+  "generated_at": "2025-08-05T21:49:38.725953",
+  "total_tokens_profiled": 4,
+  "learning_summary": {
+    "average_learning_confidence": 0.3,
+    "tokens_with_high_confidence": 0,
+    "total_gas_savings_achieved": 0.0
+  },
+  "allocation_recommendations": {
+    "SAND": {
+      "token_symbol": "SAND",
+      "recommended_allocation": 14.563705802280783,
+      "confidence_level": 0.3,
+      "expected_roi_30d": 0.2275962554705283,
+      "expected_roi_90d": 0.606923347921409,
+      "risk_adjusted_return": 0.06936719490902357,
+      "optimal_entry_price": 0.40988687495223064,
+      "stop_loss_level": 0.3954402553277558,
+      "take_profit_levels": [
+        0.5582685957568317,
+        0.6280521702264358,
+        0.7443581276757757
+      ],
+      "gas_optimized_size": 14.563705802280783,
+      "execution_strategy": "CAUTIOUS_DCA",
+      "reasoning": [
+        "Lower allocation due to limited learning data and prediction accuracy",
+        "Risk management protocols applied due to elevated volatility"
+      ]
+    },
+    "MANA": {
+      "token_symbol": "MANA",
+      "recommended_allocation": 14.13585798285542,
+      "confidence_level": 0.3,
+      "expected_roi_30d": 0.17647950897759782,
+      "expected_roi_90d": 0.4706120239402608,
+      "risk_adjusted_return": 0.04997263446272705,
+      "optimal_entry_price": 0.39146362622418585,
+      "stop_loss_level": 0.33274408229055796,
+      "take_profit_levels": [
+        0.469756351469023,
+        0.5284758954026509,
+        0.6263418019586974
+      ],
+      "gas_optimized_size": 14.13585798285542,
+      "execution_strategy": "CAUTIOUS_DCA",
+      "reasoning": [
+        "Lower allocation due to limited learning data and prediction accuracy",
+        "Risk management protocols applied due to elevated volatility"
+      ]
+    },
+    "AXS": {
+      "token_symbol": "AXS",
+      "recommended_allocation": 14.040067821574672,
+      "confidence_level": 0.3,
+      "expected_roi_30d": 0.44980376648952464,
+      "expected_roi_90d": 1.1994767106387327,
+      "risk_adjusted_return": 0.12031544831283385,
+      "optimal_entry_price": 6.604929598898274,
+      "stop_loss_level": 6.121111907875681,
+      "take_profit_levels": [
+        8.64156975229508,
+        9.721765971331966,
+        11.522093003060107
+      ],
+      "gas_optimized_size": 14.040067821574672,
+      "execution_strategy": "GRADUAL_ACCUMULATION",
+      "reasoning": [
+        "Lower allocation due to limited learning data and prediction accuracy",
+        "Risk management protocols applied due to elevated volatility"
+      ]
+    },
+    "ENJ": {
+      "token_symbol": "ENJ",
+      "recommended_allocation": 14.612239420585022,
+      "confidence_level": 0.3,
+      "expected_roi_30d": 0.049897761279532514,
+      "expected_roi_90d": 0.13306069674542004,
+      "risk_adjusted_return": 0.01570126354667783,
+      "optimal_entry_price": 0.28199022409661956,
+      "stop_loss_level": 0.23969169048212663,
+      "take_profit_levels": [
+        0.3383882689159435,
+        0.3806868025304364,
+        0.4511843585545913
+      ],
+      "gas_optimized_size": 14.612239420585022,
+      "execution_strategy": "CAUTIOUS_DCA",
+      "reasoning": [
+        "Lower allocation due to limited learning data and prediction accuracy",
+        "Risk management protocols applied due to elevated volatility"
+      ]
+    }
+  },
+  "gas_optimization_insights": {
+    "optimal_execution_times": [
+      2,
+      3,
+      4,
+      8,
+      9
+    ],
+    "recommended_batch_sizes": {
+      "small_positions": 3,
+      "medium_positions": 5,
+      "large_positions": 8
+    },
+    "layer2_migration_benefits": {
+      "polygon": "95% gas cost reduction",
+      "arbitrum": "88% gas cost reduction"
+    }
+  },
+  "risk_assessment": {},
+  "cross_token_insights": {}
+}

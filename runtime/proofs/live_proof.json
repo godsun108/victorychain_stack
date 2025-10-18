@@ -1,0 +1,32 @@
+{
+  "proof": {
+    "exchange": "binanceus",
+    "files": {
+      "governance/approvals.py": "...",
+      "libs/common/guards.py": "...",
+      "libs/exchange_adapters/binance_us.py": "...",
+      "scripts/smoke_live_binanceus.py": "..."
+    },
+    "git_commit": "unknown",
+    "limits": {
+      "MAX_NOTIONAL_PER_ORDER": 50.0,
+      "MAX_OPEN_ORDERS": 2,
+      "MIN_PROFIT_BPS": 5,
+      "SLIPPAGE_BPS": 10
+    },
+    "markets": {},
+    "mode": "live",
+    "prompt_hash": "unknown",
+    "symbols": [
+      "BTC/USDT",
+      "ETH/USDT"
+    ]
+  },
+  "redacted_env": {
+    "APPROVAL_SECRET": "<redacted>",
+    "BINANCEUS_API_KEY": "<redacted>",
+    "BINANCEUS_API_SECRET": "<redacted>"
+  },
+  "signature": "deadbeef",
+  "signature_alg": "HMAC-SHA256"
+}

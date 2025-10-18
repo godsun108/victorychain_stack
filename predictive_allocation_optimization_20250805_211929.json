@@ -1,0 +1,295 @@
+{
+  "optimization_result": {
+    "predictions": [
+      {
+        "symbol": "AXSUSDT",
+        "current_allocation": 15.0,
+        "predicted_optimal": 16.128749999999997,
+        "confidence_score": 92.26048581796324,
+        "expected_roi": 2.878527157520453,
+        "risk_adjusted_return": 1.7271162945122718,
+        "gas_optimized_size": 12.5,
+        "execution_priority": 10,
+        "reasoning": "AXSUSDT shows 98% similarity to successful patterns. Bull market favors higher allocations. Gaming sector correlation supports allocation. Strong NFT integration provides upside potential. High confidence justifies increased position."
+      },
+      {
+        "symbol": "SANDUSDT",
+        "current_allocation": 12.0,
+        "predicted_optimal": 15.8125,
+        "confidence_score": 86.26048581796324,
+        "expected_roi": 2.4843019915573414,
+        "risk_adjusted_return": 1.366366095356538,
+        "gas_optimized_size": 15.3,
+        "execution_priority": 10,
+        "reasoning": "SANDUSDT shows 90% similarity to successful patterns. Bull market favors higher allocations. Strong NFT integration provides upside potential. High confidence justifies increased position."
+      },
+      {
+        "symbol": "FLOKIUSDT",
+        "current_allocation": 20.0,
+        "predicted_optimal": 13.440624999999999,
+        "confidence_score": 88.90048581796324,
+        "expected_roi": 2.6542129045811107,
+        "risk_adjusted_return": 1.3271064522905553,
+        "gas_optimized_size": 13.0,
+        "execution_priority": 10,
+        "reasoning": "FLOKIUSDT shows 93% similarity to successful patterns. Bull market favors higher allocations. Gaming sector correlation supports allocation. Strong NFT integration provides upside potential. High confidence justifies increased position."
+      },
+      {
+        "symbol": "SHIBUSDT",
+        "current_allocation": 25.0,
+        "predicted_optimal": 13.750000000000002,
+        "confidence_score": 76.74048581796325,
+        "expected_roi": 1.9178982215625375,
+        "risk_adjusted_return": 0.9589491107812688,
+        "gas_optimized_size": 13.3,
+        "execution_priority": 10,
+        "reasoning": "SHIBUSDT shows 78% similarity to successful patterns. Bull market favors higher allocations."
+      },
+      {
+        "symbol": "ENJUSDT",
+        "current_allocation": 8.0,
+        "predicted_optimal": 14.173749999999997,
+        "confidence_score": 86.82048581796325,
+        "expected_roi": 2.519877780380565,
+        "risk_adjusted_return": 1.4615291126207277,
+        "gas_optimized_size": 11.0,
+        "execution_priority": 9,
+        "reasoning": "ENJUSDT shows 91% similarity to successful patterns. Bull market favors higher allocations. Gaming sector correlation supports allocation. Strong NFT integration provides upside potential. High confidence justifies increased position."
+      }
+    ],
+    "portfolio_metrics": {
+      "portfolio_expected_roi": 1.8347156869014785,
+      "portfolio_confidence": 63.326718756894316,
+      "average_priority": 9.8,
+      "diversification_score": 50,
+      "gas_efficiency_score": 89.06349392148847
+    },
+    "gas_optimization_plan": {
+      "total_gas_savings_percent": 11.193718080979458,
+      "estimated_cost_reduction_eth": 0.01119371808097946,
+      "batch_execution_plan": {
+        "high_priority_batch": 5,
+        "medium_priority_batch": 0,
+        "low_priority_batch": 0
+      },
+      "optimal_execution_windows": [
+        {
+          "start": "02:00",
+          "end": "06:00",
+          "avg_gas": 16.2
+        },
+        {
+          "start": "08:00",
+          "end": "10:00",
+          "avg_gas": 18.8
+        },
+        {
+          "start": "22:00",
+          "end": "24:00",
+          "avg_gas": 19.5
+        }
+      ],
+      "recommended_gas_price": 16.5
+    },
+    "execution_timeline": [
+      {
+        "symbol": "AXSUSDT",
+        "execution_time": "2025-08-05T21:19:29.439432",
+        "urgency": "IMMEDIATE",
+        "allocation_amount": 12.5,
+        "confidence": 92.26048581796324
+      },
+      {
+        "symbol": "SANDUSDT",
+        "execution_time": "2025-08-05T21:34:29.439432",
+        "urgency": "IMMEDIATE",
+        "allocation_amount": 15.3,
+        "confidence": 86.26048581796324
+      },
+      {
+        "symbol": "FLOKIUSDT",
+        "execution_time": "2025-08-05T21:49:29.439432",
+        "urgency": "IMMEDIATE",
+        "allocation_amount": 13.0,
+        "confidence": 88.90048581796324
+      },
+      {
+        "symbol": "SHIBUSDT",
+        "execution_time": "2025-08-05T22:04:29.439432",
+        "urgency": "IMMEDIATE",
+        "allocation_amount": 13.3,
+        "confidence": 76.74048581796325
+      },
+      {
+        "symbol": "ENJUSDT",
+        "execution_time": "2025-08-05T22:19:29.439432",
+        "urgency": "IMMEDIATE",
+        "allocation_amount": 11.0,
+        "confidence": 86.82048581796325
+      }
+    ],
+    "total_allocation": 73.30562499999999,
+    "market_conditions": {
+      "current_phase": "bull_market",
+      "volatility_index": 48.96860337253919,
+      "market_sentiment": 0.7130242908981621,
+      "sector_rotation": {
+        "gaming": 0.8212332052354853,
+        "defi": 0.682726641918131,
+        "nft": 0.6636340495867108
+      },
+      "gas_price_trend": 15.049902300717234
+    }
+  },
+  "market_analysis": {
+    "current_phase": "bull_market",
+    "volatility_index": 48.96860337253919,
+    "market_sentiment": 0.7130242908981621,
+    "sector_rotation": {
+      "gaming": 0.8212332052354853,
+      "defi": 0.682726641918131,
+      "nft": 0.6636340495867108
+    },
+    "gas_price_trend": 15.049902300717234
+  },
+  "gas_predictions": {
+    "current_base_fee": 20.5,
+    "predicted_24h": [
+      18.2,
+      22.1,
+      25.3,
+      19.8,
+      16.5
+    ],
+    "optimal_execution_windows": [
+      {
+        "start": "02:00",
+        "end": "06:00",
+        "avg_gas": 16.2
+      },
+      {
+        "start": "08:00",
+        "end": "10:00",
+        "avg_gas": 18.8
+      },
+      {
+        "start": "22:00",
+        "end": "24:00",
+        "avg_gas": 19.5
+      }
+    ],
+    "gas_saving_strategies": {
+      "batch_transactions": 0.3,
+      "optimal_timing": 0.25,
+      "layer2_alternatives": 0.8
+    }
+  },
+  "learned_patterns": {
+    "gala_patterns": {
+      "successful_allocations": [
+        15.0,
+        18.0,
+        22.0,
+        25.0
+      ],
+      "market_conditions_success": {
+        "bull_market": {
+          "min_allocation": 20.0,
+          "max_allocation": 30.0,
+          "roi": 3.2
+        },
+        "bear_market": {
+          "min_allocation": 10.0,
+          "max_allocation": 15.0,
+          "roi": -0.8
+        },
+        "sideways": {
+          "min_allocation": 15.0,
+          "max_allocation": 20.0,
+          "roi": 0.5
+        }
+      },
+      "risk_factors": {
+        "gaming_sector_correlation": 0.85,
+        "nft_integration_bonus": 1.15,
+        "community_strength_multiplier": 1.1
+      },
+      "timing_patterns": {
+        "optimal_entry_rsi": [
+          25,
+          35
+        ],
+        "optimal_exit_rsi": [
+          70,
+          80
+        ],
+        "volume_confirmation": 1.5
+      },
+      "gas_efficiency_lessons": {
+        "batch_size_preference": 5,
+        "optimal_gas_price": 25,
+        "preferred_execution_hours": [
+          2,
+          3,
+          4,
+          8,
+          9
+        ]
+      }
+    },
+    "magic_patterns": {
+      "successful_allocations": [
+        20.0,
+        25.0,
+        28.0,
+        30.0
+      ],
+      "market_conditions_success": {
+        "bull_market": {
+          "min_allocation": 25.0,
+          "max_allocation": 35.0,
+          "roi": 4.1
+        },
+        "bear_market": {
+          "min_allocation": 15.0,
+          "max_allocation": 20.0,
+          "roi": -0.5
+        },
+        "sideways": {
+          "min_allocation": 20.0,
+          "max_allocation": 25.0,
+          "roi": 0.8
+        }
+      },
+      "risk_factors": {
+        "gaming_sector_correlation": 0.92,
+        "nft_integration_bonus": 1.25,
+        "community_strength_multiplier": 1.2,
+        "developer_activity_bonus": 1.15
+      },
+      "timing_patterns": {
+        "optimal_entry_rsi": [
+          30,
+          40
+        ],
+        "optimal_exit_rsi": [
+          65,
+          75
+        ],
+        "volume_confirmation": 1.3
+      },
+      "gas_efficiency_lessons": {
+        "batch_size_preference": 7,
+        "optimal_gas_price": 20,
+        "preferred_execution_hours": [
+          1,
+          2,
+          3,
+          7,
+          8,
+          9
+        ]
+      }
+    }
+  }
+}

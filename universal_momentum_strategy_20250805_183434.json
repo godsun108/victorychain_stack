@@ -1,0 +1,116 @@
+{
+  "strategy_type": "UNIVERSAL_MOMENTUM_ALLOCATION",
+  "total_profiles_analyzed": 57,
+  "qualifying_profiles": 10,
+  "diversified_allocations": 10,
+  "allocations": [
+    {
+      "symbol": "ILVUSDT",
+      "allocation_percent": 10.0,
+      "sector": "gaming",
+      "pattern": "volume_breakout",
+      "confidence": 1.0,
+      "target_gain": 12.4,
+      "risk_level": "MEDIUM",
+      "reason": "High volume breakout pattern in gaming sector with 100% confidence"
+    },
+    {
+      "symbol": "SNXUSDT",
+      "allocation_percent": 10.0,
+      "sector": "defi",
+      "pattern": "double_bottom_recovery",
+      "confidence": 1.0,
+      "target_gain": 15.7,
+      "risk_level": "MEDIUM",
+      "reason": "Token shows strong bounce from support (like MAGIC) in defi sector with 100% confidence"
+    },
+    {
+      "symbol": "OPUSDT",
+      "allocation_percent": 10.0,
+      "sector": "general",
+      "pattern": "double_bottom_recovery",
+      "confidence": 1.0,
+      "target_gain": 15.7,
+      "risk_level": "MEDIUM",
+      "reason": "Token shows strong bounce from support (like MAGIC) in general sector with 100% confidence"
+    },
+    {
+      "symbol": "WIFUSDT",
+      "allocation_percent": 10.0,
+      "sector": "general",
+      "pattern": "double_bottom_recovery",
+      "confidence": 1.0,
+      "target_gain": 15.7,
+      "risk_level": "MEDIUM",
+      "reason": "Token shows strong bounce from support (like MAGIC) in general sector with 100% confidence"
+    },
+    {
+      "symbol": "ONEUSDT",
+      "allocation_percent": 10.0,
+      "sector": "general",
+      "pattern": "double_bottom_recovery",
+      "confidence": 1.0,
+      "target_gain": 15.7,
+      "risk_level": "MEDIUM",
+      "reason": "Token shows strong bounce from support (like MAGIC) in general sector with 100% confidence"
+    },
+    {
+      "symbol": "GRTUSDT",
+      "allocation_percent": 10.0,
+      "sector": "general",
+      "pattern": "double_bottom_recovery",
+      "confidence": 1.0,
+      "target_gain": 15.7,
+      "risk_level": "MEDIUM",
+      "reason": "Token shows strong bounce from support (like MAGIC) in general sector with 100% confidence"
+    },
+    {
+      "symbol": "MAGICUSDT",
+      "allocation_percent": 10.0,
+      "sector": "gaming",
+      "pattern": "correction_bounce",
+      "confidence": 1.0,
+      "target_gain": 18.0,
+      "risk_level": "MEDIUM",
+      "reason": "Bounce from oversold conditions (like GALA) in gaming sector with 100% confidence"
+    },
+    {
+      "symbol": "ALICEUSDT",
+      "allocation_percent": 10.0,
+      "sector": "gaming",
+      "pattern": "correction_bounce",
+      "confidence": 1.0,
+      "target_gain": 18.0,
+      "risk_level": "MEDIUM",
+      "reason": "Bounce from oversold conditions (like GALA) in gaming sector with 100% confidence"
+    },
+    {
+      "symbol": "ETHUSDT",
+      "allocation_percent": 9.9,
+      "sector": "layer1",
+      "pattern": "volume_breakout",
+      "confidence": 1.0,
+      "target_gain": 12.4,
+      "risk_level": "LOW",
+      "reason": "High volume breakout pattern in layer1 sector with 100% confidence"
+    },
+    {
+      "symbol": "ADAUSDT",
+      "allocation_percent": 9.9,
+      "sector": "layer1",
+      "pattern": "volume_breakout",
+      "confidence": 1.0,
+      "target_gain": 12.4,
+      "risk_level": "LOW",
+      "reason": "High volume breakout pattern in layer1 sector with 100% confidence"
+    }
+  ],
+  "sector_distribution": {
+    "gaming": 30.1,
+    "defi": 10.0,
+    "general": 40.1,
+    "layer1": 19.8
+  },
+  "expected_return": 15.2,
+  "risk_assessment": "LOW"
+}

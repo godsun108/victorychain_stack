@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-08-05T19:14:18.543029",
+  "strategy": "ENHANCED_MAGIC_DYNAMIC_REALLOCATION",
+  "magic_learned_parameters": {
+    "gaming_weight": 0.35,
+    "nft_integration_weight": 0.25,
+    "ecosystem_strength_weight": 0.2,
+    "momentum_weight": 0.15,
+    "volume_weight": 0.05,
+    "min_gaming_score": 7.0,
+    "min_ecosystem_score": 6.5,
+    "target_gains": [
+      30.0,
+      50.0,
+      100.0
+    ],
+    "stop_loss_threshold": -15.0,
+    "max_single_position": 0.15,
+    "reallocation_trigger": 0.1
+  },
+  "positions_to_reallocate": [
+    {
+      "symbol": "ILVUSDT",
+      "position": 

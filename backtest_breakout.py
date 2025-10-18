@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+import argparse, math, csv, statistics, json
+from pathlib import Path
+
+
+def read_ohlcv_csv(path: Path):
+    rows = []
+    with open(path, newline="") as f:
+        r = csv.DictReader(f)
+        for row in r:
+            rows.append(
+                {
+                    "ts": int(row.get("timestamp") or row.get("time") or row.get("ts")),
+                    "open": float(row["open"]),
+                    "high": float(row["high"]),
+                    "low": float(row["low"]),
+                    "close": float(row["close"]),
+                    "volume": float(row.get("volume", 0.0)),
+                }
+            )
+    rows.sort(key=lambda x: x["ts"])
+    return rows
+
+
+def breakout_signal(prices, lookback: int):
+    if len(prices) < lookback + 1:
+        return None
+    window = prices[-(lookback + 1) : -1]
+    prior_high = max(p["high"] for p in window)
+    last = prices[-1]
+    return "BUY" if last["close"] > prior_high else None
+
+
+def backtest(ohlcv, lookback=20, fee_bps=10, slip_bps=5, max_notional=30.0):
+    cash = 1000.0
+    pos_qty = 0.0
+    entry_px = None
+    equity_curve = []
+    trades = []
+    fees_total = 0.0
+
+    for i in range(len(ohlcv)):
+        px = ohlcv[i]["close"]
+        sig = breakout_signal(ohlcv[: i + 1], lookback)
+        equity = cash + (pos_qty * px)
+        equity_curve.append(equity)
+
+        if sig == "BUY" and pos_qty == 0.0:
+            notional = min(max_notional, cash)
+            if notional >= 5:
+                qty = notional / px
+                exec_px = px * (1 + slip_bps / 10000)
+                fee = exec_px * qty * (fee_bps / 10000)
+                cash -= exec_px * qty + fee
+                pos_qty += qty
+                entry_px = exec_px
+                fees_total += fee
+                trades.append(
+                    {"side": "BUY", "px": exec_px, "qty": qty, "ts": ohlcv[i]["ts"]}
+                )
+        if pos_qty > 0:
+            stop = entry_px * 0.99
+            exit_cond = (px <= stop) or (
+                breakout_signal(ohlcv[: i + 1], max(2, lookback // 2)) is None
+            )
+            if exit_cond:
+                exec_px = px * (1 - slip_bps / 10000)
+                fee = exec_px * pos_qty * (fee_bps / 10000)
+                cash += exec_px * pos_qty - fee
+                trades.append(
+                    {
+                        "side": "SELL",
+                        "px": exec_px,
+                        "qty": pos_qty,
+                        "ts": ohlcv[i]["ts"],
+                    }
+                )
+                fees_total += fee
+                pos_qty, entry_px = 0.0, None
+
+    final_equity = cash + pos_qty * (ohlcv[-1]["close"])
+    rets = []
+    for a, b in zip(equity_curve[:-1], equity_curve[1:]):
+        if a > 0:
+            rets.append((b - a) / a)
+    sharpe = (
+        (statistics.mean(rets) / (statistics.pstdev(rets) + 1e-12))
+        * math.sqrt(252 * 24 * 12)
+        if len(rets) > 2
+        else 0.0
+    )
+    max_dd = 0.0
+    peak = -1e18
+    for e in equity_curve:
+        peak = max(peak, e)
+        dd = (peak - e) / peak if peak > 0 else 0
+        max_dd = max(max_dd, dd)
+
+    return {
+        "start_equity": 1000.0,
+        "final_equity": round(final_equity, 2),
+        "return_pct": round((final_equity / 1000.0 - 1) * 100, 2),
+        "sharpe_like": round(sharpe, 2),
+        "max_drawdown_pct": round(max_dd * 100, 2),
+        "trades": trades,
+        "fees_total": round(fees_total, 4),
+        "num_trades": len(trades),
+    }
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--csv",
+        required=True,
+        help="CSV with columns: timestamp,open,high,low,close,volume",
+    )
+    ap.add_argument("--lookback", type=int, default=20)
+    ap.add_argument("--fee_bps", type=float, default=10)
+    ap.add_argument("--slip_bps", type=float, default=5)
+    ap.add_argument("--max_notional", type=float, default=30)
+    args = ap.parse_args()
+    data = read_ohlcv_csv(Path(args.csv))
+    res = backtest(data, args.lookback, args.fee_bps, args.slip_bps, args.max_notional)
+    print(json.dumps(res, indent=2))

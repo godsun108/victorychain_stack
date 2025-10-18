@@ -1,0 +1,102 @@
+{
+  "timestamp": "2025-08-05T16:05:26.244370",
+  "magic_pattern": {
+    "surge_peak": 49.42,
+    "correction_depth": -11.85,
+    "peak_volume": 11239,
+    "correction_volume": 7120,
+    "peak_price": 0.27,
+    "correction_price": 0.238,
+    "surge_duration": "hours",
+    "correction_duration": "hours"
+  },
+  "claude_analysis": {
+    "status": "success",
+    "claude_analysis": {
+      "analysis_timestamp": "2024-03-19",
+      "market_context": "Gaming sector showing strong momentum, Layer 1s consolidating",
+      "top_3_candidates": {
+        "ILV": {
+          "ranking": 1,
+          "reasoning": "Most similar to MAGIC pattern - gaming sector, high volume surge, momentum building",
+          "surge_potential": {
+            "expected_gain": "35-45%",
+            "timeframe": "7-14 days",
+            "probability": "75%"
+          },
+          "trading_signals": {
+            "action": "STRONG BUY",
+            "entry_range": "$18.50-19.30",
+            "targets": {
+              "conservative": "$24.50",
+              "aggressive": "$27.80"
+            },
+            "stop_loss": "$17.20",
+            "position_size": "15% of trading capital"
+          },
+          "risk_assessment": "Medium - Strong sector alignment but higher volatility"
+        },
+        "BTC": {
+          "ranking": 2,
+          "reasoning": "Market leader with strong volume and institutional backing",
+          "surge_potential": {
+            "expected_gain": "20-30%",
+            "timeframe": "14-21 days",
+            "probability": "70%"
+          },
+          "trading_signals": {
+            "action": "BUY",
+            "entry_range": "$112,000-114,000",
+            "targets": {
+              "conservative": "$125,000",
+              "aggressive": "$135,000"
+            },
+            "stop_loss": "$108,000",
+            "position_size": "20% of trading capital"
+          },
+          "risk_assessment": "Low-Medium - Strong fundamentals but extended rally"
+        },
+        "SOL": {
+          "ranking": 3,
+          "reasoning": "High ecosystem activity and gaming/NFT exposure",
+          "surge_potential": {
+            "expected_gain": "25-35%",
+            "timeframe": "10-14 days",
+            "probability": "65%"
+          },
+          "trading_signals": {
+            "action": "BUY",
+            "entry_range": "$160-165",
+            "targets": {
+              "conservative": "$190",
+              "aggressive": "$210"
+            },
+            "stop_loss": "$152",
+            "position_size": "12% of trading capital"
+          },
+          "risk_assessment": "Medium - High correlation with gaming sector"
+        }
+      },
+      "sector_analysis": {
+        "gaming": {
+          "momentum_score": 9.5,
+          "trend": "BULLISH",
+          "volume_profile": "INCREASING"
+        },
+        "layer1": {
+          "momentum_score": 7.0,
+          "trend": "NEUTRAL",
+          "volume_profile": "STABLE"
+        }
+      },
+      "risk_warnings": [
+        "Set strict stop losses due to current market volatility",
+        "Consider scaling in positions rather than full entry",
+        "Monitor gaming sector sentiment closely",
+        "Watch for broader market correlation breaks"
+      ]
+    },
+    "raw_response": "{\n    \"analysis_timestamp\": \"2024-03-19\",\n    \"market_context\": \"Gaming sector showing strong momentum, Layer 1s consolidating\",\n    \"top_3_candidates\": {\n        \"ILV\": {\n            \"ranking\": 1,\n            \"reasoning\": \"Most similar to MAGIC pattern - gaming sector, high volume surge, momentum building\",\n            \"surge_potential\": {\n                \"expected_gain\": \"35-45%\",\n                \"timeframe\": \"7-14 days\",\n                \"probability\": \"75%\"\n            },\n            \"trading_signals\": {\n                \"action\": \"STRONG BUY\",\n                \"entry_range\": \"$18.50-19.30\",\n                \"targets\": {\n                    \"conservative\": \"$24.50\",\n                    \"aggressive\": \"$27.80\"\n                },\n                \"stop_loss\": \"$17.20\",\n                \"position_size\": \"15% of trading capital\"\n            },\n            \"risk_assessment\": \"Medium - Strong sector alignment but higher volatility\"\n        },\n        \"BTC\": {\n            \"ranking\": 2,\n            \"reasoning\": \"Market leader with strong volume and institutional backing\",\n            \"surge_potential\": {\n                \"expected_gain\": \"20-30%\",\n                \"timeframe\": \"14-21 days\",\n                \"probability\": \"70%\"\n            },\n            \"trading_signals\": {\n                \"action\": \"BUY\",\n                \"entry_range\": \"$112,000-114,000\",\n                \"targets\": {\n                    \"conservative\": \"$125,000\",\n                    \"aggressive\": \"$135,000\"\n                },\n                \"stop_loss\": \"$108,000\",\n                \"position_size\": \"20% of trading capital\"\n            },\n            \"risk_assessment\": \"Low-Medium - Strong fundamentals but extended rally\"\n        },\n        \"SOL\": {\n            \"ranking\": 3,\n            \"reasoning\": \"High ecosystem activity and gaming/NFT exposure\",\n            \"surge_potential\": {\n                \"expected_gain\": \"25-35%\",\n                \"timeframe\": \"10-14 days\",\n                \"probability\": \"65%\"\n            },\n            \"trading_signals\": {\n                \"action\": \"BUY\",\n                \"entry_range\": \"$160-165\",\n                \"targets\": {\n                    \"conservative\": \"$190\",\n                    \"aggressive\": \"$210\"\n                },\n                \"stop_loss\": \"$152\",\n                \"position_size\": \"12% of trading capital\"\n            },\n            \"risk_assessment\": \"Medium - High correlation with gaming sector\"\n        }\n    },\n    \"sector_analysis\": {\n        \"gaming\": {\n            \"momentum_score\": 9.5,\n            \"trend\": \"BULLISH\",\n            \"volume_profile\": \"INCREASING\"\n        },\n        \"layer1\": {\n            \"momentum_score\": 7.0,\n            \"trend\": \"NEUTRAL\",\n            \"volume_profile\": \"STABLE\"\n        }\n    },\n    \"risk_warnings\": [\n        \"Set strict stop losses due to current market volatility\",\n        \"Consider scaling in positions rather than full entry\",\n        \"Monitor gaming sector sentiment closely\",\n        \"Watch for broader market correlation breaks\"\n    ]\n}"
+  },
+  "analysis_type": "momentum_surge_prediction"
+}

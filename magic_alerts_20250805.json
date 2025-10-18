@@ -1,0 +1,47 @@
+[
+  {
+    "type": "price_spike",
+    "priority": "HIGH",
+    "timestamp": "2025-08-05T16:48:02.929529",
+    "data": {
+      "direction": "UP",
+      "magnitude": 3.2,
+      "price": 0.2465,
+      "timestamp": "2025-08-05 16:48:02.929515"
+    }
+  },
+  {
+    "type": "volume_surge",
+    "priority": "HIGH",
+    "timestamp": "2025-08-05T16:48:03.935726",
+    "data": {
+      "ratio": 2.3,
+      "current_volume": 15420,
+      "avg_volume": 6700,
+      "timestamp": "2025-08-05 16:48:02.929524"
+    }
+  },
+  {
+    "type": "support_test",
+    "priority": "MEDIUM",
+    "timestamp": "2025-08-05T16:48:04.941968",
+    "data": {
+      "level": "support",
+      "level_price": 0.23,
+      "current_price": 0.2315,
+      "distance": 0.6,
+      "timestamp": "2025-08-05 16:48:02.929525"
+    }
+  },
+  {
+    "type": "pattern_completion",
+    "priority": "HIGH",
+    "timestamp": "2025-08-05T16:48:05.952048",
+    "data": {
+      "pattern": "double_bottom",
+      "confidence": 0.75,
+      "target": 0.275,
+      "timestamp": "2025-08-05 16:48:02.929527"
+    }
+  }
+]

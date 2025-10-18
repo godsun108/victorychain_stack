@@ -1,0 +1,340 @@
+#!/usr/bin/env python3
+"""
+VictoryChain ALL Tokens Report Generator
+Creates comprehensive reports on ALL 179 tradable USDT pairs on Binance US
+"""
+
+import json
+import pandas as pd
+from datetime import datetime
+from typing import Dict, List
+
+
+class AllTokensReportGenerator:
+    def __init__(self):
+        self.volume_categories = {
+            "mega_cap": {"min": 50_000_000, "color": "🟢", "desc": "Mega Cap (>$50M)"},
+            "large_cap": {
+                "min": 10_000_000,
+                "color": "🔵",
+                "desc": "Large Cap ($10M-$50M)",
+            },
+            "mid_cap": {"min": 1_000_000, "color": "🟡", "desc": "Mid Cap ($1M-$10M)"},
+            "small_cap": {
+                "min": 100_000,
+                "color": "🟠",
+                "desc": "Small Cap ($100K-$1M)",
+            },
+            "micro_cap": {
+                "min": 10_000,
+                "color": "🔴",
+                "desc": "Micro Cap ($10K-$100K)",
+            },
+            "nano_cap": {"min": 0, "color": "⚫", "desc": "Nano Cap (<$10K)"},
+        }
+
+    def load_latest_analysis(self) -> List[Dict]:
+        """Load the most recent comprehensive analysis"""
+        try:
+            import glob
+
+            files = glob.glob("comprehensive_token_analysis_*.json")
+            if not files:
+                print("❌ No analysis files found!")
+                return []
+
+            latest_file = max(files)
+            with open(latest_file, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"❌ Error loading analysis: {e}")
+            return []
+
+    def categorize_by_volume(self, volume_usd: float) -> str:
+        """Categorize token by volume"""
+        for category, info in self.volume_categories.items():
+            if volume_usd >= info["min"]:
+                return category
+        return "nano_cap"
+
+    def generate_all_tokens_report(self):
+        """Generate comprehensive report of ALL tokens"""
+        print("📊 VictoryChain ALL Tokens Analysis Report")
+        print("=" * 80)
+        print("Complete analysis of ALL 179 tradable USDT pairs on Binance US")
+        print("=" * 80)
+
+        # Load analysis
+        analyses = self.load_latest_analysis()
+        if not analyses:
+            return
+
+        # Filter valid analyses
+        valid_analyses = [a for a in analyses if "error" not in a]
+        print(f"✅ Successfully analyzed: {len(valid_analyses)}/179 tokens")
+
+        # Sort by volume for display
+        volume_sorted = sorted(
+            valid_analyses, key=lambda x: x.get("quote_volume_24h", 0), reverse=True
+        )
+        momentum_sorted = sorted(
+            valid_analyses, key=lambda x: x.get("price_change_24h", 0), reverse=True
+        )
+        opportunity_sorted = sorted(
+            valid_analyses, key=lambda x: x.get("opportunity_score", 0), reverse=True
+        )
+
+        # Volume category breakdown
+        categories = {}
+        for analysis in valid_analyses:
+            volume = analysis.get("quote_volume_24h", 0)
+            cat = self.categorize_by_volume(volume)
+            if cat not in categories:
+                categories[cat] = []
+            categories[cat].append(analysis)
+
+        print(f"\n📈 Volume Category Breakdown:")
+        print("-" * 60)
+        for cat, info in self.volume_categories.items():
+            tokens = categories.get(cat, [])
+            if tokens:
+                avg_score = sum(t.get("opportunity_score", 0) for t in tokens) / len(
+                    tokens
+                )
+                avg_change = sum(t.get("price_change_24h", 0) for t in tokens) / len(
+                    tokens
+                )
+                total_volume = sum(t.get("quote_volume_24h", 0) for t in tokens)
+
+                print(
+                    f"{info['color']} {info['desc']:20} | "
+                    f"Count: {len(tokens):3d} | "
+                    f"Avg Score: {avg_score:5.1f} | "
+                    f"Avg 24h: {avg_change:+6.2f}% | "
+                    f"Total Vol: ${total_volume:>12,.0f}"
+                )
+
+        # Top performers by different metrics
+        print(f"\n🏆 TOP 20 BY VOLUME:")
+        print("-" * 100)
+        print(
+            f"{'Rank':4} {'Symbol':12} {'Volume (24h)':15} {'Price':10} {'24h Change':12} {'Score':8} {'Category':12}"
+        )
+        print("-" * 100)
+
+        for i, token in enumerate(volume_sorted[:20], 1):
+            symbol = token["symbol"]
+            volume = token.get("quote_volume_24h", 0)
+            price = token.get("current_price", 0)
+            change = token.get("price_change_24h", 0)
+            score = token.get("opportunity_score", 0)
+            cat = self.categorize_by_volume(volume)
+            cat_info = self.volume_categories[cat]
+
+            print(
+                f"{i:4} {symbol:12} ${volume:>13,.0f} ${price:>8.4f} {change:+10.2f}% "
+                f"{score:6.1f}  {cat_info['color']}{cat:10}"
+            )
+
+        print(f"\n🚀 TOP 20 BY MOMENTUM (24h):")
+        print("-" * 100)
+        print(
+            f"{'Rank':4} {'Symbol':12} {'24h Change':12} {'Volume':15} {'RSI':6} {'Score':8} {'Signal':12}"
+        )
+        print("-" * 100)
+
+        for i, token in enumerate(momentum_sorted[:20], 1):
+            symbol = token["symbol"]
+            change = token.get("price_change_24h", 0)
+            volume = token.get("quote_volume_24h", 0)
+            rsi = token.get("rsi", 50)
+            score = token.get("opportunity_score", 0)
+
+            # Generate simple signal
+            if rsi < 30:
+                signal = "OVERSOLD"
+            elif rsi > 70:
+                signal = "OVERBOUGHT"
+            elif change > 5:
+                signal = "MOMENTUM"
+            elif change < -10:
+                signal = "OVERSOLD"
+            else:
+                signal = "NEUTRAL"
+
+            print(
+                f"{i:4} {symbol:12} {change:+10.2f}% ${volume:>12,.0f} {rsi:5.1f} "
+                f"{score:6.1f}  {signal:12}"
+            )
+
+        print(f"\n🎯 TOP 20 BY OPPORTUNITY SCORE:")
+        print("-" * 100)
+        print(
+            f"{'Rank':4} {'Symbol':12} {'Score':8} {'24h Change':12} {'RSI':6} {'Volume':15} {'Volatility':11}"
+        )
+        print("-" * 100)
+
+        for i, token in enumerate(opportunity_sorted[:20], 1):
+            symbol = token["symbol"]
+            score = token.get("opportunity_score", 0)
+            change = token.get("price_change_24h", 0)
+            rsi = token.get("rsi", 50)
+            volume = token.get("quote_volume_24h", 0)
+            volatility = token.get("volatility", 0)
+
+            print(
+                f"{i:4} {symbol:12} {score:6.1f}  {change:+10.2f}% {rsi:5.1f} "
+                f"${volume:>12,.0f} {volatility:9.1f}%"
+            )
+
+        # Market statistics
+        total_volume = sum(t.get("quote_volume_24h", 0) for t in valid_analyses)
+        avg_change = sum(t.get("price_change_24h", 0) for t in valid_analyses) / len(
+            valid_analyses
+        )
+        positive_tokens = len(
+            [t for t in valid_analyses if t.get("price_change_24h", 0) > 0]
+        )
+        high_volume_tokens = len(
+            [t for t in valid_analyses if t.get("quote_volume_24h", 0) > 100000]
+        )
+
+        print(f"\n📊 MARKET STATISTICS:")
+        print("-" * 50)
+        print(f"Total Tokens Analyzed:      {len(valid_analyses):,}")
+        print(f"Total 24h Volume:           ${total_volume:,.0f}")
+        print(f"Average 24h Change:         {avg_change:+.2f}%")
+        print(
+            f"Tokens with Positive Move:  {positive_tokens} ({positive_tokens/len(valid_analyses)*100:.1f}%)"
+        )
+        print(f"High Volume Tokens (>$100K): {high_volume_tokens}")
+        print(
+            f"Analysis Timestamp:         {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+
+        # Save comprehensive CSV report
+        self.save_comprehensive_csv(valid_analyses)
+
+        # Trading recommendations
+        print(f"\n🎯 TRADING STRATEGY RECOMMENDATIONS:")
+        print("-" * 60)
+
+        # High-volume opportunities
+        high_vol_opps = [
+            t
+            for t in valid_analyses
+            if t.get("quote_volume_24h", 0) > 100000
+            and t.get("opportunity_score", 0) > 30
+        ]
+
+        if high_vol_opps:
+            print(f"\n🚀 HIGH-VOLUME OPPORTUNITIES ({len(high_vol_opps)} tokens):")
+            high_vol_opps.sort(
+                key=lambda x: x.get("opportunity_score", 0), reverse=True
+            )
+            for token in high_vol_opps[:5]:
+                symbol = token["symbol"]
+                score = token.get("opportunity_score", 0)
+                change = token.get("price_change_24h", 0)
+                volume = token.get("quote_volume_24h", 0)
+                rsi = token.get("rsi", 50)
+                print(
+                    f"  • {symbol:12} Score: {score:5.1f} | 24h: {change:+6.2f}% | "
+                    f"Vol: ${volume:>10,.0f} | RSI: {rsi:5.1f}"
+                )
+
+        # Oversold opportunities
+        oversold_opps = [
+            t
+            for t in valid_analyses
+            if t.get("rsi", 50) < 35 and t.get("quote_volume_24h", 0) > 1000
+        ]
+
+        if oversold_opps:
+            print(f"\n📉 OVERSOLD OPPORTUNITIES ({len(oversold_opps)} tokens):")
+            oversold_opps.sort(key=lambda x: x.get("rsi", 50))
+            for token in oversold_opps[:5]:
+                symbol = token["symbol"]
+                rsi = token.get("rsi", 50)
+                change = token.get("price_change_24h", 0)
+                volume = token.get("quote_volume_24h", 0)
+                score = token.get("opportunity_score", 0)
+                print(
+                    f"  • {symbol:12} RSI: {rsi:5.1f} | 24h: {change:+6.2f}% | "
+                    f"Vol: ${volume:>10,.0f} | Score: {score:5.1f}"
+                )
+
+        # Momentum opportunities
+        momentum_opps = [
+            t
+            for t in valid_analyses
+            if t.get("price_change_24h", 0) > 5
+            and t.get("quote_volume_24h", 0) > 10000
+            and t.get("volatility", 0) < 10
+        ]
+
+        if momentum_opps:
+            print(f"\n📈 MOMENTUM OPPORTUNITIES ({len(momentum_opps)} tokens):")
+            momentum_opps.sort(key=lambda x: x.get("price_change_24h", 0), reverse=True)
+            for token in momentum_opps[:5]:
+                symbol = token["symbol"]
+                change = token.get("price_change_24h", 0)
+                volume = token.get("quote_volume_24h", 0)
+                volatility = token.get("volatility", 0)
+                score = token.get("opportunity_score", 0)
+                print(
+                    f"  • {symbol:12} 24h: {change:+6.2f}% | Vol: ${volume:>10,.0f} | "
+                    f"Volatility: {volatility:5.1f}% | Score: {score:5.1f}"
+                )
+
+        print(f"\n⚠️  RISK MANAGEMENT GUIDELINES:")
+        print(f"  • Only trade tokens with >$10K daily volume")
+        print(f"  • Use 2-3% stop losses on all positions")
+        print(f"  • Target 6-12% profit per trade")
+        print(f"  • Maximum 5% of portfolio per position")
+        print(f"  • Monitor RSI and volume for exit signals")
+        print(f"  • Avoid tokens with >15% volatility unless experienced")
+
+    def save_comprehensive_csv(self, analyses: List[Dict]):
+        """Save comprehensive analysis to CSV"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"all_tokens_analysis_{timestamp}.csv"
+
+        # Prepare data for CSV
+        csv_data = []
+        for analysis in analyses:
+            volume = analysis.get("quote_volume_24h", 0)
+            csv_data.append(
+                {
+                    "symbol": analysis.get("symbol", ""),
+                    "current_price": analysis.get("current_price", 0),
+                    "price_change_24h": analysis.get("price_change_24h", 0),
+                    "volume_24h_usd": volume,
+                    "volume_category": self.categorize_by_volume(volume),
+                    "rsi": analysis.get("rsi", 50),
+                    "volatility": analysis.get("volatility", 0),
+                    "opportunity_score": analysis.get("opportunity_score", 0),
+                    "volume_ratio": analysis.get("volume_ratio", 1),
+                    "price_position": analysis.get("price_position", 50),
+                    "trades_24h": analysis.get("trades_24h", 0),
+                    "high_24h": analysis.get("high_24h", 0),
+                    "low_24h": analysis.get("low_24h", 0),
+                }
+            )
+
+        # Create DataFrame and save
+        df = pd.DataFrame(csv_data)
+        df = df.sort_values("volume_24h_usd", ascending=False)
+        df.to_csv(filename, index=False)
+
+        print(f"\n💾 Comprehensive CSV saved: {filename}")
+        print(f"   Contains all {len(csv_data)} tokens with detailed metrics")
+
+
+def main():
+    generator = AllTokensReportGenerator()
+    generator.generate_all_tokens_report()
+
+
+if __name__ == "__main__":
+    main()

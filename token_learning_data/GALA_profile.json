@@ -1,0 +1,54 @@
+{
+  "symbol": "GALA",
+  "acquisition_date": "2025-08-05T21:50:05.464221",
+  "initial_price": 0.025231151162119304,
+  "current_price": 0.01884375362842019,
+  "price_performance": {
+    "1d": 0.0,
+    "7d": 0.0,
+    "30d": 0.0,
+    "90d": 0.0,
+    "total": -25.315521644881635,
+    "last_update": "2025-08-05T21:51:35.502121"
+  },
+  "volume_patterns": {
+    "avg_daily": 58710212.83111538,
+    "volatility": 65.96337703621015,
+    "liquidity_score": 6.958729927261136,
+    "current": 49288507.32336738
+  },
+  "volatility_evolution": [
+    65.96337703621015,
+    63.10476784286034,
+    88.95747191075918,
+    85.55670934774574
+  ],
+  "correlation_matrix": {},
+  "optimal_entry_points": [
+    0.023783465683349554
+  ],
+  "optimal_exit_points": [],
+  "successful_allocation_sizes": [],
+  "gas_cost_history": [],
+  "sector_influence": {
+    "gaming": 1.0
+  },
+  "whale_behavior_patterns": [],
+  "social_sentiment_correlation": {},
+  "news_impact_scores": [],
+  "success_prediction_accuracy": 0.5,
+  "allocation_optimization_score": 0.5,
+  "gas_savings_achieved": 0.0,
+  "learning_confidence": 0.3,
+  "fibonacci_retracement_accuracy": {},
+  "support_resistance_reliability": {},
+  "breakout_pattern_success": {},
+  "mean_reversion_tendency": 0.5,
+  "correlation_insights": {},
+  "sector_spillover_effects": {},
+  "market_cycle_behavior": {},
+  "optimal_transaction_times": [],
+  "gas_price_sensitivity": 0.5,
+  "batch_efficiency_scores": {},
+  "layer2_migration_benefits": {}
+}

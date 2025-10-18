@@ -1,0 +1,323 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Live Trading Analyzer
+Find the BEST available opportunities for immediate trading
+"""
+
+import requests
+import json
+import time
+import os
+from datetime import datetime
+from typing import List, Dict, Optional
+
+
+class LiveTradingAnalyzer:
+    def __init__(self):
+        self.binance_us_base = "https://api.binance.us"
+        self.claude_api_key = os.getenv(
+            "CLAUDE_API_KEY",
+            "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",
+        )
+
+    def get_top_movers(self) -> List[Dict]:
+        """Get top moving tokens sorted by 24h change"""
+        try:
+            response = requests.get(f"{self.binance_us_base}/api/v3/ticker/24hr")
+            if response.status_code == 200:
+                tickers = response.json()
+
+                # Filter USDT pairs with good volume
+                usdt_pairs = []
+                for ticker in tickers:
+                    if (
+                        ticker["symbol"].endswith("USDT")
+                        and float(ticker["quoteVolume"]) > 5000
+                    ):  # At least $5K volume
+
+                        usdt_pairs.append(
+                            {
+                                "symbol": ticker["symbol"],
+                                "price": float(ticker["lastPrice"]),
+                                "change_24h": float(ticker["priceChangePercent"]),
+                                "volume_24h": float(ticker["quoteVolume"]),
+                                "high_24h": float(ticker["highPrice"]),
+                                "low_24h": float(ticker["lowPrice"]),
+                                "trades_24h": int(ticker["count"]),
+                            }
+                        )
+
+                # Sort by 24h change (highest first)
+                usdt_pairs.sort(key=lambda x: x["change_24h"], reverse=True)
+                return usdt_pairs
+
+            return []
+        except Exception as e:
+            print(f"❌ Error fetching market data: {e}")
+            return []
+
+    def analyze_with_ai(self, symbol: str, data: Dict) -> Dict:
+        """Get AI analysis for trading potential"""
+        prompt = f"""Quick trading analysis for {symbol}:
+
+CURRENT DATA:
+- Price: ${data['price']:.8f}
+- 24h Change: {data['change_24h']:+.2f}%
+- 24h Volume: ${data['volume_24h']:,.0f}
+- 24h High: ${data['high_24h']:.8f}
+- 24h Low: ${data['low_24h']:.8f}
+- Trades: {data['trades_24h']:,}
+
+Can this token gain 15-25% in next 24-48 hours?
+
+Respond EXACTLY in this format:
+TRADE: YES/NO
+CONFIDENCE: [0-100]
+TARGET: [percentage gain]
+RISK: LOW/MEDIUM/HIGH
+HOLD: [hours]
+REASON: [brief explanation]"""
+
+        try:
+            payload = {
+                "model": "claude-3-5-sonnet-20241022",
+                "max_tokens": 200,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "Content-Type": "application/json",
+                "anthropic-version": "2023-06-01",
+            }
+
+            response = requests.post(
+                "https://api.anthropic.com/v1/messages",
+                headers=headers,
+                json=payload,
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                ai_text = result["content"][0]["text"]
+                return self.parse_ai_response(ai_text, data)
+            else:
+                return self.technical_analysis(data)
+
+        except Exception as e:
+            return self.technical_analysis(data)
+
+    def parse_ai_response(self, ai_text: str, data: Dict) -> Dict:
+        """Parse AI response"""
+        lines = ai_text.split("\n")
+        result = {
+            "trade_signal": "NO",
+            "confidence": 50,
+            "target_gain": 10,
+            "risk_level": "HIGH",
+            "hold_hours": 24,
+            "reasoning": ai_text[:100] + "...",
+        }
+
+        for line in lines:
+            line = line.strip()
+            if line.startswith("TRADE:"):
+                result["trade_signal"] = "YES" if "YES" in line.upper() else "NO"
+            elif line.startswith("CONFIDENCE:"):
+                try:
+                    result["confidence"] = int("".join(filter(str.isdigit, line)))
+                except:
+                    pass
+            elif line.startswith("TARGET:"):
+                try:
+                    result["target_gain"] = float(
+                        "".join(filter(str.isdigit, line.replace(".", "X"))).replace(
+                            "X", "."
+                        )
+                    )
+                except:
+                    pass
+            elif line.startswith("RISK:"):
+                if "LOW" in line.upper():
+                    result["risk_level"] = "LOW"
+                elif "MEDIUM" in line.upper():
+                    result["risk_level"] = "MEDIUM"
+                else:
+                    result["risk_level"] = "HIGH"
+            elif line.startswith("HOLD:"):
+                try:
+                    result["hold_hours"] = int("".join(filter(str.isdigit, line)))
+                except:
+                    pass
+            elif line.startswith("REASON:"):
+                result["reasoning"] = line.replace("REASON:", "").strip()
+
+        return result
+
+    def technical_analysis(self, data: Dict) -> Dict:
+        """Fallback technical analysis"""
+        change_24h = data["change_24h"]
+        volume_24h = data["volume_24h"]
+
+        # Score based on momentum and volume
+        if change_24h > 10 and volume_24h > 50000:
+            return {
+                "trade_signal": "YES",
+                "confidence": 75,
+                "target_gain": min(change_24h * 1.2, 25),
+                "risk_level": "MEDIUM",
+                "hold_hours": 36,
+                "reasoning": f"Strong {change_24h:.1f}% momentum with good volume",
+            }
+        elif change_24h > 5 and volume_24h > 20000:
+            return {
+                "trade_signal": "YES",
+                "confidence": 60,
+                "target_gain": min(change_24h * 1.5, 20),
+                "risk_level": "MEDIUM",
+                "hold_hours": 24,
+                "reasoning": f"Good {change_24h:.1f}% momentum",
+            }
+        else:
+            return {
+                "trade_signal": "NO",
+                "confidence": 40,
+                "target_gain": 5,
+                "risk_level": "HIGH",
+                "hold_hours": 12,
+                "reasoning": "Insufficient momentum or volume",
+            }
+
+    def find_best_opportunities(self, limit: int = 20) -> List[Dict]:
+        """Find the best trading opportunities right now"""
+        print("🔍 Analyzing top movers for immediate trading opportunities...")
+
+        top_movers = self.get_top_movers()
+        print(f"📊 Found {len(top_movers)} USDT pairs")
+
+        opportunities = []
+
+        # Analyze top movers
+        for i, token in enumerate(top_movers[:limit]):
+            symbol = token["symbol"]
+            print(f"   Analyzing {symbol} ({token['change_24h']:+.2f}%)...", end=" ")
+
+            analysis = self.analyze_with_ai(symbol, token)
+
+            if analysis["trade_signal"] == "YES" and analysis["confidence"] >= 55:
+                opportunity = {
+                    "symbol": symbol,
+                    "current_price": token["price"],
+                    "change_24h": token["change_24h"],
+                    "volume_24h": token["volume_24h"],
+                    "target_price": token["price"]
+                    * (1 + analysis["target_gain"] / 100),
+                    **analysis,
+                }
+                opportunities.append(opportunity)
+                print(f"✅ TRADEABLE ({analysis['target_gain']:.1f}% potential)")
+            else:
+                print(f"❌ Skip")
+
+            time.sleep(0.3)  # Rate limiting
+
+        # Sort by potential (target_gain * confidence)
+        opportunities.sort(
+            key=lambda x: x["target_gain"] * (x["confidence"] / 100), reverse=True
+        )
+
+        return opportunities
+
+    def display_trading_plan(self, opportunities: List[Dict]):
+        """Display immediate trading plan"""
+        print("\n" + "=" * 80)
+        print("⚡ IMMEDIATE TRADING OPPORTUNITIES")
+        print("=" * 80)
+
+        if not opportunities:
+            print("❌ No suitable trading opportunities found right now")
+            print("   • Market may be in consolidation phase")
+            print("   • Try again in 30-60 minutes")
+            print("   • Consider existing positions in your portfolio")
+            return
+
+        print(f"Found {len(opportunities)} tradeable opportunities:")
+
+        for i, opp in enumerate(opportunities[:5], 1):  # Top 5
+            risk_emoji = {"LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🔴"}.get(
+                opp["risk_level"], "🔴"
+            )
+
+            print(f"\n{i}. {opp['symbol']} 📈")
+            print(f"   Current Price:    ${opp['current_price']:.8f}")
+            print(f"   Target Price:     ${opp['target_price']:.8f}")
+            print(f"   Gain Potential:   {opp['target_gain']:.1f}%")
+            print(f"   AI Confidence:    {opp['confidence']}%")
+            print(f"   24h Change:       {opp['change_24h']:+.2f}%")
+            print(f"   24h Volume:       ${opp['volume_24h']:,.0f}")
+            print(f"   Risk Level:       {risk_emoji} {opp['risk_level']}")
+            print(f"   Hold Duration:    {opp['hold_hours']} hours")
+            print(f"   Analysis:         {opp['reasoning']}")
+
+        # Trading execution plan
+        if opportunities:
+            print(f"\n🎯 EXECUTION PLAN:")
+            total_capital = 237.15  # Available USDT
+            position_size = min(75, total_capital / 3)  # Max 3 positions
+
+            print(f"   💰 Available Capital: ${total_capital:.2f}")
+            print(f"   📊 Position Size: ${position_size:.2f} each")
+            print(f"   🎯 Max Positions: 3")
+
+            for i, opp in enumerate(opportunities[:3], 1):
+                quantity = position_size / opp["current_price"]
+                stop_loss = opp["current_price"] * 0.92  # 8% stop loss
+
+                print(f"\n   Position {i}: {opp['symbol']}")
+                print(f"     Buy: {quantity:.6f} @ ${opp['current_price']:.8f}")
+                print(
+                    f"     Target: ${opp['target_price']:.8f} (+{opp['target_gain']:.1f}%)"
+                )
+                print(f"     Stop: ${stop_loss:.8f} (-8%)")
+                print(f"     Risk: {opp['risk_level']}")
+
+
+def main():
+    print("⚡ VictoryChain Live Trading Analyzer")
+    print("===================================")
+    print("🎯 Finding IMMEDIATE trading opportunities")
+    print("💹 Ready-to-execute trades")
+    print("")
+
+    analyzer = LiveTradingAnalyzer()
+
+    # Find best opportunities
+    opportunities = analyzer.find_best_opportunities(30)  # Analyze top 30 movers
+
+    # Display trading plan
+    analyzer.display_trading_plan(opportunities)
+
+    print(f"\n📋 ANALYSIS SUMMARY:")
+    print(f"   • Tokens analyzed: 30 (top movers)")
+    print(f"   • Tradeable opportunities: {len(opportunities)}")
+    print(f"   • Analysis time: {datetime.now().strftime('%H:%M:%S')}")
+
+    if opportunities:
+        print(f"\n🚀 READY TO TRADE:")
+        print(f"   1. Review opportunities above")
+        print(f"   2. Execute trades manually on Binance")
+        print(f"   3. Set stop losses at -8%")
+        print(f"   4. Monitor for target hits")
+
+        # Show top opportunity
+        top = opportunities[0]
+        print(f"\n💎 TOP PICK: {top['symbol']}")
+        print(f"   • {top['target_gain']:.1f}% potential")
+        print(f"   • {top['confidence']}% confidence")
+        print(f"   • {top['risk_level']} risk")
+        print(f"   • Current momentum: {top['change_24h']:+.2f}%")
+
+
+if __name__ == "__main__":
+    main()

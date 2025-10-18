@@ -1,0 +1,169 @@
+{
+  "timestamp": "2025-08-05T19:18:04.145123",
+  "strategy": "ENHANCED_MAGIC_DYNAMIC_REALLOCATION",
+  "magic_learned_parameters": {
+    "gaming_weight": 0.35,
+    "nft_integration_weight": 0.25,
+    "ecosystem_strength_weight": 0.2,
+    "momentum_weight": 0.15,
+    "volume_weight": 0.05,
+    "min_gaming_score": 7.0,
+    "min_ecosystem_score": 6.5,
+    "target_gains": [
+      30.0,
+      50.0,
+      100.0
+    ],
+    "stop_loss_threshold": -15.0,
+    "max_single_position": 0.15,
+    "reallocation_trigger": 0.1
+  },
+  "positions_to_reallocate": [
+    {
+      "symbol": "MAGICUSDT",
+      "position_data": {
+        "symbol": "MAGICUSDT",
+        "entry_price": 0.238,
+        "current_price": 0.24775386778713698,
+        "allocation_percentage": 15.0,
+        "magic_similarity_score": 95.55,
+        "gaming_correlation": 0.5
+      },
+      "current_gain": 4.098263776107981,
+      "realized_amount": 15.0
+    },
+    {
+      "symbol": "ILVUSDT",
+      "position_data": {
+        "symbol": "ILVUSDT",
+        "entry_price": 18.93,
+        "current_price": 19.17367052761104,
+        "allocation_percentage": 15.0,
+        "magic_similarity_score": 90.6,
+        "gaming_correlation": 0.5
+      },
+      "current_gain": 1.2872188463340777,
+      "realized_amount": 15.0
+    }
+  ],
+  "new_opportunities": [
+    {
+      "symbol": "ALICEUSDT",
+      "magic_pattern_score": 73.5199933271671,
+      "gaming_correlation": 1.0,
+      "ecosystem_score": 7.0,
+      "momentum_score": 4.131523147223681,
+      "current_price": 0.3806,
+      "volume_24h": 1561.0727659999998,
+      "price_change_24h": -9.381,
+      "recommended_allocation": 0.11027998999075064,
+      "reasoning": [
+        "Gaming sector correlation matches MAGIC's 8.5/10 gaming score",
+        "Strong ecosystem score (7.0/10) similar to MAGIC",
+        "Strong MAGIC pattern similarity (70%+ match)"
+      ]
+    },
+    {
+      "symbol": "AXSUSDT",
+      "magic_pattern_score": 73.186763757813,
+      "gaming_correlation": 1.0,
+      "ecosystem_score": 7.0,
+      "momentum_score": 3.3424956593766355,
+      "current_price": 2.278,
+      "volume_24h": 1368.03012,
+      "price_change_24h": -2.064,
+      "recommended_allocation": 0.10978014563671949,
+      "reasoning": [
+        "Gaming sector correlation matches MAGIC's 8.5/10 gaming score",
+        "Strong ecosystem score (7.0/10) similar to MAGIC",
+        "Strong MAGIC pattern similarity (70%+ match)"
+      ]
+    },
+    {
+      "symbol": "MANAUSDT",
+      "magic_pattern_score": 72.98428873163508,
+      "gaming_correlation": 1.0,
+      "ecosystem_score": 7.0,
+      "momentum_score": 3.301274605450215,
+      "current_price": 0.2719,
+      "volume_24h": 987.8127,
+      "price_change_24h": -3.066,
+      "recommended_allocation": 0.1094764330974526,
+      "reasoning": [
+        "Gaming sector correlation matches MAGIC's 8.5/10 gaming score",
+        "Strong ecosystem score (7.0/10) similar to MAGIC",
+        "Strong MAGIC pattern similarity (70%+ match)"
+      ]
+    }
+  ],
+  "total_available_cash": 0.5499999999999999,
+  "executed_trades": [
+    {
+      "symbol": "ALICEUSDT",
+      "action": "BUY",
+      "allocation_percentage": 0.11027998999075064,
+      "entry_price": 0.3806,
+      "magic_pattern_score": 73.5199933271671,
+      "reasoning": [
+        "Gaming sector correlation matches MAGIC's 8.5/10 gaming score",
+        "Strong ecosystem score (7.0/10) similar to MAGIC",
+        "Strong MAGIC pattern similarity (70%+ match)"
+      ],
+      "timestamp": "2025-08-05T19:18:04.145123"
+    },
+    {
+      "symbol": "AXSUSDT",
+      "action": "BUY",
+      "allocation_percentage": 0.10978014563671949,
+      "entry_price": 2.278,
+      "magic_pattern_score": 73.186763757813,
+      "reasoning": [
+        "Gaming sector correlation matches MAGIC's 8.5/10 gaming score",
+        "Strong ecosystem score (7.0/10) similar to MAGIC",
+        "Strong MAGIC pattern similarity (70%+ match)"
+      ],
+      "timestamp": "2025-08-05T19:18:04.145123"
+    },
+    {
+      "symbol": "MANAUSDT",
+      "action": "BUY",
+      "allocation_percentage": 0.1094764330974526,
+      "entry_price": 0.2719,
+      "magic_pattern_score": 72.98428873163508,
+      "reasoning": [
+        "Gaming sector correlation matches MAGIC's 8.5/10 gaming score",
+        "Strong ecosystem score (7.0/10) similar to MAGIC",
+        "Strong MAGIC pattern similarity (70%+ match)"
+      ],
+      "timestamp": "2025-08-05T19:18:04.145123"
+    }
+  ],
+  "learning_events": [
+    {
+      "timestamp": "2025-08-05T19:18:04.145123",
+      "event_type": "REALLOCATION_TRIGGER",
+      "symbol": "MAGICUSDT",
+      "trigger": "Gained 4.10%, reallocating 7.5%",
+      "gain_loss": 4.098263776107981,
+      "learning_data": {
+        "magic_pattern_match": true,
+        "gaming_correlation": true
+      },
+      "magic_correlation": 95.55,
+      "action_taken": "PARTIAL_REALLOCATION"
+    },
+    {
+      "timestamp": "2025-08-05T19:18:04.145123",
+      "event_type": "REALLOCATION_TRIGGER",
+      "symbol": "ILVUSDT",
+      "trigger": "Gained 1.29%, reallocating 7.5%",
+      "gain_loss": 1.2872188463340777,
+      "learning_data": {
+        "magic_pattern_match": true,
+        "gaming_correlation": true
+      },
+      "magic_correlation": 90.6,
+      "action_taken": "PARTIAL_REALLOCATION"
+    }
+  ]
+}

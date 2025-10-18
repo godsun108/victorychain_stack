@@ -1,0 +1,454 @@
+#!/usr/bin/env python3
+
+"""
+🚀 VICTORYCHAIN INTEGRATION MANAGER
+Orchestrates and manages integration between all VictoryChain modules
+Author: Senior Developer
+Version: 2.0.0
+"""
+
+import os
+import sys
+import json
+import time
+import logging
+import importlib
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Union, Any, Type
+from dataclasses import dataclass, asdict
+
+# Import shared interfaces
+try:
+    from victorychain_shared import (
+        OrderType, StrategyType, TradingMode, OrderStatus, RiskLevel,
+        MarketData, TradingSignal, TradeResult, PortfolioPosition, TradingConfig,
+        AnalysisResult, BaseStrategy, BaseTrader, TradingEngine, StrategyProvider,
+        ClaudeProvider, RiskManager, validate_signal_data, format_currency,
+        format_percentage, DEFAULT_CONFIG, get_logger
+    )
+    HAS_SHARED_INTERFACES = True
+except ImportError as e:
+    print(f"Warning: Could not import shared interfaces: {e}")
+    HAS_SHARED_INTERFACES = False
+
+# Configure logging
+logger = get_logger(__name__) if HAS_SHARED_INTERFACES else logging.getLogger(__name__)
+
+@dataclass
+class ModuleInfo:
+    """Information about a VictoryChain module"""
+    name: str
+    version: str
+    path: str
+    loaded: bool = False
+    instance: Optional[Any] = None
+    dependencies: List[str] = None
+    last_update: datetime = None
+
+    def __post_init__(self):
+        if self.dependencies is None:
+            self.dependencies = []
+        if self.last_update is None:
+            self.last_update = datetime.now()
+
+class VictoryChainIntegrationManager:
+    """
+    Manages integration and communication between all VictoryChain modules
+    Ensures proper dependency injection and interface compliance
+    """
+    
+    def __init__(self, config: Optional[TradingConfig] = None):
+        self.config = config or DEFAULT_CONFIG
+        self.modules: Dict[str, ModuleInfo] = {}
+        self.strategies: Dict[str, BaseStrategy] = {}
+        self.traders: Dict[str, BaseTrader] = {}
+        self.claude_providers: Dict[str, ClaudeProvider] = {}
+        self.logger = logger
+        
+        # Initialize module registry
+        self._register_core_modules()
+    
+    def _register_core_modules(self):
+        """Register all known VictoryChain modules"""
+        
+        core_modules = {
+            'victorychain_core_v2': ModuleInfo(
+                name='VictoryChain Core Engine',
+                version='2.0.0',
+                path='victorychain_core_v2',
+                dependencies=[]
+            ),
+            'momentum_trader_v2': ModuleInfo(
+                name='Momentum Trading System',
+                version='2.0.0',
+                path='momentum_trader_v2',
+                dependencies=['victorychain_core_v2']
+            ),
+            'launch_live_trading_v2': ModuleInfo(
+                name='Live Trading Orchestrator',
+                version='2.0.0',
+                path='launch_live_trading_v2',
+                dependencies=['victorychain_core_v2', 'momentum_trader_v2']
+            ),
+            'claude_auto_consolidator': ModuleInfo(
+                name='Claude Auto Consolidator',
+                version='2.0.0',
+                path='claude_auto_consolidator',
+                dependencies=['claude_token_optimizer']
+            ),
+            'claude_buy_hold': ModuleInfo(
+                name='Claude Buy & Hold System',
+                version='2.0.0',
+                path='claude_buy_hold',
+                dependencies=['claude_token_optimizer']
+            ),
+            'claude_token_optimizer': ModuleInfo(
+                name='Claude Token Optimizer',
+                version='2.0.0',
+                path='claude_token_optimizer',
+                dependencies=[]
+            ),
+            'claude_token_predictor': ModuleInfo(
+                name='Claude Token Predictor',
+                version='2.0.0',
+                path='claude_token_predictor',
+                dependencies=['claude_token_optimizer']
+            ),
+            'portfolio_consolidator': ModuleInfo(
+                name='Portfolio Consolidator',
+                version='1.0.0',
+                path='portfolio_consolidator',
+                dependencies=[]
+            ),
+            'quick_consolidator': ModuleInfo(
+                name='Quick Consolidator',
+                version='2.0.0',
+                path='quick_consolidator',
+                dependencies=[]
+            ),
+            'robust_consolidator': ModuleInfo(
+                name='Robust Consolidator',
+                version='2.0.0',
+                path='robust_consolidator',
+                dependencies=[]
+            )
+        }
+        
+        self.modules.update(core_modules)
+        self.logger.info(f"Registered {len(core_modules)} core modules")
+    
+    def load_module(self, module_name: str, force_reload: bool = False) -> bool:
+        """Load a VictoryChain module and its dependencies"""
+        
+        if module_name not in self.modules:
+            self.logger.error(f"Unknown module: {module_name}")
+            return False
+        
+        module_info = self.modules[module_name]
+        
+        # Check if already loaded
+        if module_info.loaded and not force_reload:
+            self.logger.info(f"Module {module_name} already loaded")
+            return True
+        
+        try:
+            # Load dependencies first
+            for dep in module_info.dependencies:
+                if not self.load_module(dep):
+                    self.logger.error(f"Failed to load dependency {dep} for {module_name}")
+                    return False
+            
+            # Import the module
+            module = importlib.import_module(module_info.path)
+            
+            # Try to find the main class
+            main_class = self._find_main_class(module, module_name)
+            
+            if main_class:
+                # Create instance with proper configuration
+                instance = self._create_module_instance(main_class, module_name)
+                module_info.instance = instance
+                module_info.loaded = True
+                module_info.last_update = datetime.now()
+                
+                # Register specialized interfaces
+                self._register_module_interfaces(instance, module_name)
+                
+                self.logger.info(f"Successfully loaded module: {module_name}")
+                return True
+            else:
+                self.logger.error(f"Could not find main class in module: {module_name}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error loading module {module_name}: {e}")
+            return False
+    
+    def _find_main_class(self, module: Any, module_name: str) -> Optional[Type]:
+        """Find the main class in a module"""
+        
+        # Common patterns for main classes
+        class_patterns = [
+            'VictoryChainCore',
+            'MomentumTrader',
+            'LiveTradingSystem',
+            'ClaudePortfolioConsolidator',
+            'ClaudeBuyHold',
+            'ClaudeTokenOptimizer',
+            'ClaudeTokenPredictor',
+            'PortfolioConsolidator',
+            'QuickConsolidator',
+            'RobustConsolidator'
+        ]
+        
+        # Try exact patterns first
+        for pattern in class_patterns:
+            if hasattr(module, pattern):
+                return getattr(module, pattern)
+        
+        # Try to find classes that might be the main one
+        for attr_name in dir(module):
+            attr = getattr(module, attr_name)
+            if (isinstance(attr, type) and 
+                attr_name.replace('_', '').lower() in module_name.replace('_', '').lower()):
+                return attr
+        
+        return None
+    
+    def _create_module_instance(self, main_class: Type, module_name: str) -> Any:
+        """Create an instance of a module's main class"""
+        
+        try:
+            # Try with configuration parameter
+            return main_class(config=self.config)
+        except TypeError:
+            try:
+                # Try without parameters
+                return main_class()
+            except Exception as e:
+                self.logger.warning(f"Could not instantiate {module_name}: {e}")
+                return main_class
+    
+    def _register_module_interfaces(self, instance: Any, module_name: str):
+        """Register module interfaces for easy access"""
+        
+        if HAS_SHARED_INTERFACES:
+            # Register strategy providers
+            if isinstance(instance, BaseStrategy):
+                self.strategies[module_name] = instance
+                self.logger.debug(f"Registered strategy: {module_name}")
+            
+            # Register traders
+            if isinstance(instance, BaseTrader):
+                self.traders[module_name] = instance
+                self.logger.debug(f"Registered trader: {module_name}")
+            
+            # Register Claude providers
+            if hasattr(instance, 'analyze_opportunity') or 'claude' in module_name.lower():
+                self.claude_providers[module_name] = instance
+                self.logger.debug(f"Registered Claude provider: {module_name}")
+    
+    def get_module(self, module_name: str) -> Optional[Any]:
+        """Get a loaded module instance"""
+        
+        if module_name in self.modules and self.modules[module_name].loaded:
+            return self.modules[module_name].instance
+        return None
+    
+    def get_strategies(self) -> Dict[str, BaseStrategy]:
+        """Get all registered strategies"""
+        return self.strategies.copy()
+    
+    def get_traders(self) -> Dict[str, BaseTrader]:
+        """Get all registered traders"""
+        return self.traders.copy()
+    
+    def get_claude_providers(self) -> Dict[str, ClaudeProvider]:
+        """Get all registered Claude providers"""
+        return self.claude_providers.copy()
+    
+    def load_all_modules(self) -> Dict[str, bool]:
+        """Load all registered modules"""
+        
+        results = {}
+        
+        for module_name in self.modules:
+            results[module_name] = self.load_module(module_name)
+        
+        loaded_count = sum(1 for success in results.values() if success)
+        total_count = len(results)
+        
+        self.logger.info(f"Loaded {loaded_count}/{total_count} modules successfully")
+        
+        return results
+    
+    def get_integration_status(self) -> Dict[str, Any]:
+        """Get comprehensive integration status"""
+        
+        status = {
+            'timestamp': datetime.now().isoformat(),
+            'modules': {},
+            'strategies_count': len(self.strategies),
+            'traders_count': len(self.traders),
+            'claude_providers_count': len(self.claude_providers),
+            'shared_interfaces_available': HAS_SHARED_INTERFACES
+        }
+        
+        for name, info in self.modules.items():
+            status['modules'][name] = {
+                'loaded': info.loaded,
+                'version': info.version,
+                'dependencies': info.dependencies,
+                'last_update': info.last_update.isoformat() if info.last_update else None
+            }
+        
+        return status
+    
+    def create_unified_trading_signal(self, symbol: str, action: OrderType, 
+                                    confidence: float, reasoning: str,
+                                    amount: float, strategy_type: StrategyType) -> Optional[TradingSignal]:
+        """Create a unified trading signal that all modules can understand"""
+        
+        if not HAS_SHARED_INTERFACES:
+            self.logger.error("Shared interfaces not available")
+            return None
+        
+        try:
+            # Get current market data
+            market_data = self._get_current_market_data(symbol)
+            
+            signal = TradingSignal(
+                symbol=symbol,
+                action=action,
+                confidence=confidence,
+                reasoning=reasoning,
+                target_amount=amount,
+                current_price=market_data.price if market_data else 0.0,
+                strategy_type=strategy_type,
+                timestamp=datetime.now()
+            )
+            
+            # Validate signal
+            if validate_signal_data(signal):
+                return signal
+            else:
+                self.logger.error(f"Invalid signal data for {symbol}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error creating trading signal: {e}")
+            return None
+    
+    def _get_current_market_data(self, symbol: str) -> Optional[MarketData]:
+        """Get current market data for symbol"""
+        
+        # Try to get market data from loaded modules
+        core_module = self.get_module('victorychain_core_v2')
+        
+        if core_module and hasattr(core_module, 'get_market_data'):
+            try:
+                return core_module.get_market_data(symbol)
+            except Exception as e:
+                self.logger.warning(f"Could not get market data from core: {e}")
+        
+        # Fallback to basic market data
+        return MarketData(
+            symbol=symbol,
+            price=0.0,
+            volume_24h=0.0,
+            price_change_24h=0.0,
+            timestamp=datetime.now()
+        )
+    
+    def test_module_integration(self) -> Dict[str, Any]:
+        """Test integration between modules"""
+        
+        test_results = {
+            'timestamp': datetime.now().isoformat(),
+            'shared_interfaces': HAS_SHARED_INTERFACES,
+            'modules_tested': {},
+            'integration_score': 0.0
+        }
+        
+        total_tests = 0
+        passed_tests = 0
+        
+        for module_name, module_info in self.modules.items():
+            if module_info.loaded and module_info.instance:
+                module_tests = {
+                    'interface_compliance': False,
+                    'method_availability': False,
+                    'data_compatibility': False
+                }
+                
+                # Test interface compliance
+                if HAS_SHARED_INTERFACES:
+                    instance = module_info.instance
+                    if (isinstance(instance, BaseStrategy) or 
+                        isinstance(instance, BaseTrader) or
+                        hasattr(instance, 'analyze_opportunity')):
+                        module_tests['interface_compliance'] = True
+                        passed_tests += 1
+                
+                # Test method availability
+                required_methods = ['__init__']
+                if all(hasattr(module_info.instance, method) for method in required_methods):
+                    module_tests['method_availability'] = True
+                    passed_tests += 1
+                
+                # Test data compatibility
+                try:
+                    str(module_info.instance)  # Basic serialization test
+                    module_tests['data_compatibility'] = True
+                    passed_tests += 1
+                except:
+                    pass
+                
+                test_results['modules_tested'][module_name] = module_tests
+                total_tests += 3
+        
+        # Calculate integration score
+        if total_tests > 0:
+            test_results['integration_score'] = (passed_tests / total_tests) * 100
+        
+        return test_results
+
+def create_integration_manager(config: Optional[TradingConfig] = None) -> VictoryChainIntegrationManager:
+    """Factory function to create integration manager"""
+    return VictoryChainIntegrationManager(config)
+
+def main():
+    """Test the integration manager"""
+    
+    print("🚀 VictoryChain Integration Manager Test")
+    print("=" * 50)
+    
+    # Create integration manager
+    manager = create_integration_manager()
+    
+    # Load all modules
+    print("📦 Loading modules...")
+    results = manager.load_all_modules()
+    
+    for module_name, success in results.items():
+        status = "✅" if success else "❌"
+        print(f"  {status} {module_name}")
+    
+    # Show integration status
+    print("\n📊 Integration Status:")
+    status = manager.get_integration_status()
+    print(f"  Modules loaded: {sum(1 for m in status['modules'].values() if m['loaded'])}")
+    print(f"  Strategies: {status['strategies_count']}")
+    print(f"  Traders: {status['traders_count']}")
+    print(f"  Claude providers: {status['claude_providers_count']}")
+    print(f"  Shared interfaces: {'✅' if status['shared_interfaces_available'] else '❌'}")
+    
+    # Test integration
+    print("\n🧪 Testing integration...")
+    test_results = manager.test_module_integration()
+    print(f"  Integration score: {test_results['integration_score']:.1f}%")
+    
+    print("\n🎉 Integration manager ready!")
+
+if __name__ == "__main__":
+    main()

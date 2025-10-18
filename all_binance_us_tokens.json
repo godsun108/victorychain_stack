@@ -1,0 +1,1378 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "base_asset": "BTC",
+    "price": 113591.37,
+    "volume_24h_usdt": 924638.2954548,
+    "price_change_24h": -1.042,
+    "count": 1921
+  },
+  {
+    "symbol": "ETHUSDT",
+    "base_asset": "ETH",
+    "price": 3577.85,
+    "volume_24h_usdt": 883465.262455,
+    "price_change_24h": -2.453,
+    "count": 1933
+  },
+  {
+    "symbol": "XRPUSDT",
+    "base_asset": "XRP",
+    "price": 2.9487,
+    "volume_24h_usdt": 643408.69896,
+    "price_change_24h": -3.226,
+    "count": 1719
+  },
+  {
+    "symbol": "ADAUSDT",
+    "base_asset": "ADA",
+    "price": 0.7193,
+    "volume_24h_usdt": 255467.01958,
+    "price_change_24h": -3.255,
+    "count": 594
+  },
+  {
+    "symbol": "DOGEUSDT",
+    "base_asset": "DOGE",
+    "price": 0.19767,
+    "volume_24h_usdt": 249995.2257,
+    "price_change_24h": -3.293,
+    "count": 774
+  },
+  {
+    "symbol": "LTCUSDT",
+    "base_asset": "LTC",
+    "price": 119.76,
+    "volume_24h_usdt": 209543.11392,
+    "price_change_24h": -0.167,
+    "count": 1700
+  },
+  {
+    "symbol": "SOLUSDT",
+    "base_asset": "SOL",
+    "price": 163.02,
+    "volume_24h_usdt": 188193.38538000002,
+    "price_change_24h": -1.433,
+    "count": 886
+  },
+  {
+    "symbol": "USDCUSDT",
+    "base_asset": "USDC",
+    "price": 1.0002,
+    "volume_24h_usdt": 182723.5374,
+    "price_change_24h": 0.07,
+    "count": 708
+  },
+  {
+    "symbol": "PENGUUSDT",
+    "base_asset": "PENGU",
+    "price": 0.033382,
+    "volume_24h_usdt": 157331.335538,
+    "price_change_24h": -2.954,
+    "count": 254
+  },
+  {
+    "symbol": "BNBUSDT",
+    "base_asset": "BNB",
+    "price": 748.55,
+    "volume_24h_usdt": 125781.10214999998,
+    "price_change_24h": -1.782,
+    "count": 633
+  },
+  {
+    "symbol": "HYPEUSDT",
+    "base_asset": "HYPE",
+    "price": 38.46,
+    "volume_24h_usdt": 121456.71846,
+    "price_change_24h": 0.444,
+    "count": 189
+  },
+  {
+    "symbol": "XLMUSDT",
+    "base_asset": "XLM",
+    "price": 0.3957,
+    "volume_24h_usdt": 111213.4635,
+    "price_change_24h": -4.328,
+    "count": 429
+  },
+  {
+    "symbol": "ILVUSDT",
+    "base_asset": "ILV",
+    "price": 18.93,
+    "volume_24h_usdt": 87899.3727,
+    "price_change_24h": 7.618,
+    "count": 659
+  },
+  {
+    "symbol": "HBARUSDT",
+    "base_asset": "HBAR",
+    "price": 0.23829,
+    "volume_24h_usdt": 82661.13297,
+    "price_change_24h": -4.474,
+    "count": 691
+  },
+  {
+    "symbol": "VETUSDT",
+    "base_asset": "VET",
+    "price": 0.02262,
+    "volume_24h_usdt": 77232.30294000001,
+    "price_change_24h": -3.867,
+    "count": 235
+  },
+  {
+    "symbol": "SHIBUSDT",
+    "base_asset": "SHIB",
+    "price": 1.194e-05,
+    "volume_24h_usdt": 76215.29876094,
+    "price_change_24h": -3.554,
+    "count": 367
+  },
+  {
+    "symbol": "FLOKIUSDT",
+    "base_asset": "FLOKI",
+    "price": 0.00010212,
+    "volume_24h_usdt": 67310.46068148,
+    "price_change_24h": -7.349,
+    "count": 299
+  },
+  {
+    "symbol": "BONKUSDT",
+    "base_asset": "BONK",
+    "price": 2.443e-05,
+    "volume_24h_usdt": 46820.60275312,
+    "price_change_24h": -6.506,
+    "count": 885
+  },
+  {
+    "symbol": "ROSEUSDT",
+    "base_asset": "ROSE",
+    "price": 0.02501,
+    "volume_24h_usdt": 46542.764662,
+    "price_change_24h": -3.697,
+    "count": 830
+  },
+  {
+    "symbol": "APTUSDT",
+    "base_asset": "APT",
+    "price": 4.305,
+    "volume_24h_usdt": 46263.725549999996,
+    "price_change_24h": 1.128,
+    "count": 109
+  },
+  {
+    "symbol": "DGBUSDT",
+    "base_asset": "DGB",
+    "price": 0.00814,
+    "volume_24h_usdt": 44708.164489999996,
+    "price_change_24h": -4.348,
+    "count": 355
+  },
+  {
+    "symbol": "1000REKTUSDT",
+    "base_asset": "1000REKT",
+    "price": 0.00118277,
+    "volume_24h_usdt": 43984.99978902,
+    "price_change_24h": 5.682,
+    "count": 92
+  },
+  {
+    "symbol": "DOTUSDT",
+    "base_asset": "DOT",
+    "price": 3.558,
+    "volume_24h_usdt": 38608.3917,
+    "price_change_24h": -4.303,
+    "count": 158
+  },
+  {
+    "symbol": "XDCUSDT",
+    "base_asset": "XDC",
+    "price": 0.092936,
+    "volume_24h_usdt": 30930.866584000003,
+    "price_change_24h": -2.964,
+    "count": 603
+  },
+  {
+    "symbol": "SNXUSDT",
+    "base_asset": "SNX",
+    "price": 0.573,
+    "volume_24h_usdt": 30762.8802,
+    "price_change_24h": -6.981,
+    "count": 147
+  },
+  {
+    "symbol": "RVNUSDT",
+    "base_asset": "RVN",
+    "price": 0.01322,
+    "volume_24h_usdt": 30693.751808,
+    "price_change_24h": -3.15,
+    "count": 434
+  },
+  {
+    "symbol": "PEPEUSDT",
+    "base_asset": "PEPE",
+    "price": 1.006e-05,
+    "volume_24h_usdt": 30348.86624454,
+    "price_change_24h": -4.645,
+    "count": 434
+  },
+  {
+    "symbol": "LINKUSDT",
+    "base_asset": "LINK",
+    "price": 16.26,
+    "volume_24h_usdt": 28503.292200000004,
+    "price_change_24h": -3.559,
+    "count": 293
+  },
+  {
+    "symbol": "SUIUSDT",
+    "base_asset": "SUI",
+    "price": 3.3757,
+    "volume_24h_usdt": 27939.993759999998,
+    "price_change_24h": -4.129,
+    "count": 315
+  },
+  {
+    "symbol": "THETAUSDT",
+    "base_asset": "THETA",
+    "price": 0.746,
+    "volume_24h_usdt": 25753.2628,
+    "price_change_24h": -3.493,
+    "count": 195
+  },
+  {
+    "symbol": "OPUSDT",
+    "base_asset": "OP",
+    "price": 0.658,
+    "volume_24h_usdt": 24969.5537,
+    "price_change_24h": -6.0,
+    "count": 147
+  },
+  {
+    "symbol": "BCHUSDT",
+    "base_asset": "BCH",
+    "price": 543.4,
+    "volume_24h_usdt": 23115.149199999996,
+    "price_change_24h": -3.103,
+    "count": 202
+  },
+  {
+    "symbol": "SPXUSDT",
+    "base_asset": "SPX",
+    "price": 1.615,
+    "volume_24h_usdt": 18453.1515,
+    "price_change_24h": -4.228,
+    "count": 34
+  },
+  {
+    "symbol": "WIFUSDT",
+    "base_asset": "WIF",
+    "price": 0.865,
+    "volume_24h_usdt": 18334.4535,
+    "price_change_24h": -6.486,
+    "count": 45
+  },
+  {
+    "symbol": "FETUSDT",
+    "base_asset": "FET",
+    "price": 0.643,
+    "volume_24h_usdt": 16374.8309,
+    "price_change_24h": -2.28,
+    "count": 149
+  },
+  {
+    "symbol": "AVAXUSDT",
+    "base_asset": "AVAX",
+    "price": 21.66,
+    "volume_24h_usdt": 16281.822000000002,
+    "price_change_24h": -3.476,
+    "count": 237
+  },
+  {
+    "symbol": "ONEUSDT",
+    "base_asset": "ONE",
+    "price": 0.01014,
+    "volume_24h_usdt": 16047.830682,
+    "price_change_24h": -5.234,
+    "count": 71
+  },
+  {
+    "symbol": "IOTAUSDT",
+    "base_asset": "IOTA",
+    "price": 0.1828,
+    "volume_24h_usdt": 15822.6196,
+    "price_change_24h": -3.485,
+    "count": 104
+  },
+  {
+    "symbol": "CRVUSDT",
+    "base_asset": "CRV",
+    "price": 0.8877,
+    "volume_24h_usdt": 15173.98872,
+    "price_change_24h": -4.937,
+    "count": 78
+  },
+  {
+    "symbol": "TRUMPUSDT",
+    "base_asset": "TRUMP",
+    "price": 8.6,
+    "volume_24h_usdt": 14069.316200000001,
+    "price_change_24h": -3.587,
+    "count": 86
+  },
+  {
+    "symbol": "ATOMUSDT",
+    "base_asset": "ATOM",
+    "price": 4.165,
+    "volume_24h_usdt": 12716.328099999999,
+    "price_change_24h": -3.297,
+    "count": 133
+  },
+  {
+    "symbol": "POLUSDT",
+    "base_asset": "POL",
+    "price": 0.2104,
+    "volume_24h_usdt": 11129.46568,
+    "price_change_24h": 0.718,
+    "count": 133
+  },
+  {
+    "symbol": "GRTUSDT",
+    "base_asset": "GRT",
+    "price": 0.0879,
+    "volume_24h_usdt": 11016.067500000001,
+    "price_change_24h": -5.28,
+    "count": 102
+  },
+  {
+    "symbol": "ENAUSDT",
+    "base_asset": "ENA",
+    "price": 0.5725,
+    "volume_24h_usdt": 8788.212775,
+    "price_change_24h": -4.567,
+    "count": 129
+  },
+  {
+    "symbol": "NEOUSDT",
+    "base_asset": "NEO",
+    "price": 5.92,
+    "volume_24h_usdt": 8009.5824,
+    "price_change_24h": -1.661,
+    "count": 141
+  },
+  {
+    "symbol": "ZILUSDT",
+    "base_asset": "ZIL",
+    "price": 0.01086,
+    "volume_24h_usdt": 7989.860556,
+    "price_change_24h": -2.688,
+    "count": 119
+  },
+  {
+    "symbol": "ALGOUSDT",
+    "base_asset": "ALGO",
+    "price": 0.234,
+    "volume_24h_usdt": 7789.158,
+    "price_change_24h": -4.216,
+    "count": 201
+  },
+  {
+    "symbol": "MAGICUSDT",
+    "base_asset": "MAGIC",
+    "price": 0.238,
+    "volume_24h_usdt": 7119.8652,
+    "price_change_24h": -11.852,
+    "count": 125
+  },
+  {
+    "symbol": "QNTUSDT",
+    "base_asset": "QNT",
+    "price": 104.01,
+    "volume_24h_usdt": 6496.048560000001,
+    "price_change_24h": -8.183,
+    "count": 75
+  },
+  {
+    "symbol": "RENDERUSDT",
+    "base_asset": "RENDER",
+    "price": 3.5,
+    "volume_24h_usdt": 5770.835,
+    "price_change_24h": -4.632,
+    "count": 200
+  },
+  {
+    "symbol": "AAVEUSDT",
+    "base_asset": "AAVE",
+    "price": 252.31,
+    "volume_24h_usdt": 5142.582420000001,
+    "price_change_24h": -5.025,
+    "count": 78
+  },
+  {
+    "symbol": "MKRUSDT",
+    "base_asset": "MKR",
+    "price": 1845.5,
+    "volume_24h_usdt": 4714.32975,
+    "price_change_24h": -2.971,
+    "count": 80
+  },
+  {
+    "symbol": "LPTUSDT",
+    "base_asset": "LPT",
+    "price": 6.141,
+    "volume_24h_usdt": 4508.16951,
+    "price_change_24h": -0.984,
+    "count": 89
+  },
+  {
+    "symbol": "BRETTUSDT",
+    "base_asset": "BRETT",
+    "price": 0.052213,
+    "volume_24h_usdt": 4464.942482,
+    "price_change_24h": -4.029,
+    "count": 62
+  },
+  {
+    "symbol": "UNIUSDT",
+    "base_asset": "UNI",
+    "price": 9.4,
+    "volume_24h_usdt": 4402.02,
+    "price_change_24h": -3.826,
+    "count": 68
+  },
+  {
+    "symbol": "ONTUSDT",
+    "base_asset": "ONT",
+    "price": 0.1315,
+    "volume_24h_usdt": 4295.316,
+    "price_change_24h": -4.155,
+    "count": 112
+  },
+  {
+    "symbol": "NEARUSDT",
+    "base_asset": "NEAR",
+    "price": 2.419,
+    "volume_24h_usdt": 4244.377399999999,
+    "price_change_24h": -3.817,
+    "count": 94
+  },
+  {
+    "symbol": "GALAUSDT",
+    "base_asset": "GALA",
+    "price": 0.01513,
+    "volume_24h_usdt": 4233.05627,
+    "price_change_24h": -2.763,
+    "count": 25
+  },
+  {
+    "symbol": "VTHOUSDT",
+    "base_asset": "VTHO",
+    "price": 0.001808,
+    "volume_24h_usdt": 4105.937264,
+    "price_change_24h": -3.625,
+    "count": 54
+  },
+  {
+    "symbol": "LDOUSDT",
+    "base_asset": "LDO",
+    "price": 0.922,
+    "volume_24h_usdt": 4065.6419800000003,
+    "price_change_24h": -4.357,
+    "count": 39
+  },
+  {
+    "symbol": "RENUSDT",
+    "base_asset": "REN",
+    "price": 0.01154,
+    "volume_24h_usdt": 3911.9446,
+    "price_change_24h": 17.039,
+    "count": 36
+  },
+  {
+    "symbol": "JAMUSDT",
+    "base_asset": "JAM",
+    "price": 0.000101,
+    "volume_24h_usdt": 3523.039883,
+    "price_change_24h": -0.98,
+    "count": 3
+  },
+  {
+    "symbol": "TURBOUSDT",
+    "base_asset": "TURBO",
+    "price": 0.004138,
+    "volume_24h_usdt": 3520.54833,
+    "price_change_24h": -5.611,
+    "count": 178
+  },
+  {
+    "symbol": "ONDOUSDT",
+    "base_asset": "ONDO",
+    "price": 0.9663,
+    "volume_24h_usdt": 3504.48021,
+    "price_change_24h": -1.869,
+    "count": 65
+  },
+  {
+    "symbol": "LRCUSDT",
+    "base_asset": "LRC",
+    "price": 0.0834,
+    "volume_24h_usdt": 3235.3362,
+    "price_change_24h": -0.477,
+    "count": 33
+  },
+  {
+    "symbol": "XTZUSDT",
+    "base_asset": "XTZ",
+    "price": 0.7707,
+    "volume_24h_usdt": 3179.83113,
+    "price_change_24h": -0.785,
+    "count": 68
+  },
+  {
+    "symbol": "ETCUSDT",
+    "base_asset": "ETC",
+    "price": 19.99,
+    "volume_24h_usdt": 3025.2866,
+    "price_change_24h": -4.217,
+    "count": 76
+  },
+  {
+    "symbol": "NEIROUSDT",
+    "base_asset": "NEIRO",
+    "price": 0.00038072,
+    "volume_24h_usdt": 3002.9975296,
+    "price_change_24h": 0.0,
+    "count": 9
+  },
+  {
+    "symbol": "FILUSDT",
+    "base_asset": "FIL",
+    "price": 2.312,
+    "volume_24h_usdt": 2914.25288,
+    "price_change_24h": -4.934,
+    "count": 19
+  },
+  {
+    "symbol": "WAXPUSDT",
+    "base_asset": "WAXP",
+    "price": 0.02027,
+    "volume_24h_usdt": 2902.48157,
+    "price_change_24h": -4.297,
+    "count": 23
+  },
+  {
+    "symbol": "DASHUSDT",
+    "base_asset": "DASH",
+    "price": 20.91,
+    "volume_24h_usdt": 2896.4741099999997,
+    "price_change_24h": -2.654,
+    "count": 28
+  },
+  {
+    "symbol": "REEFUSDT",
+    "base_asset": "REEF",
+    "price": 0.000409,
+    "volume_24h_usdt": 2538.888359,
+    "price_change_24h": 0.0,
+    "count": 8
+  },
+  {
+    "symbol": "IMXUSDT",
+    "base_asset": "IMX",
+    "price": 0.495,
+    "volume_24h_usdt": 2506.08105,
+    "price_change_24h": -4.255,
+    "count": 174
+  },
+  {
+    "symbol": "STMXUSDT",
+    "base_asset": "STMX",
+    "price": 0.000121,
+    "volume_24h_usdt": 2463.114478,
+    "price_change_24h": 12.037,
+    "count": 26
+  },
+  {
+    "symbol": "DAIUSDT",
+    "base_asset": "DAI",
+    "price": 0.9806,
+    "volume_24h_usdt": 2344.310614,
+    "price_change_24h": -0.335,
+    "count": 22
+  },
+  {
+    "symbol": "FARTCOINUSDT",
+    "base_asset": "FARTCOIN",
+    "price": 0.9329,
+    "volume_24h_usdt": 2342.6051899999998,
+    "price_change_24h": -6.998,
+    "count": 27
+  },
+  {
+    "symbol": "SUSDT",
+    "base_asset": "S",
+    "price": 0.2771,
+    "volume_24h_usdt": 2261.1637100000003,
+    "price_change_24h": -6.982,
+    "count": 51
+  },
+  {
+    "symbol": "FTMUSDT",
+    "base_asset": "FTM",
+    "price": 0.4806,
+    "volume_24h_usdt": 2026.6902,
+    "price_change_24h": 0.021,
+    "count": 35
+  },
+  {
+    "symbol": "JTOUSDT",
+    "base_asset": "JTO",
+    "price": 1.643,
+    "volume_24h_usdt": 1961.5777000000003,
+    "price_change_24h": -1.084,
+    "count": 12
+  },
+  {
+    "symbol": "DIAUSDT",
+    "base_asset": "DIA",
+    "price": 0.74,
+    "volume_24h_usdt": 1735.892,
+    "price_change_24h": -1.779,
+    "count": 20
+  },
+  {
+    "symbol": "COMPUSDT",
+    "base_asset": "COMP",
+    "price": 44.77,
+    "volume_24h_usdt": 1715.04916,
+    "price_change_24h": -3.388,
+    "count": 28
+  },
+  {
+    "symbol": "RAREUSDT",
+    "base_asset": "RARE",
+    "price": 0.0631,
+    "volume_24h_usdt": 1680.70636,
+    "price_change_24h": -2.773,
+    "count": 70
+  },
+  {
+    "symbol": "FLUXUSDT",
+    "base_asset": "FLUX",
+    "price": 0.2128,
+    "volume_24h_usdt": 1610.45976,
+    "price_change_24h": -4.83,
+    "count": 146
+  },
+  {
+    "symbol": "ALICEUSDT",
+    "base_asset": "ALICE",
+    "price": 0.3806,
+    "volume_24h_usdt": 1561.0727659999998,
+    "price_change_24h": -9.381,
+    "count": 33
+  },
+  {
+    "symbol": "COTIUSDT",
+    "base_asset": "COTI",
+    "price": 0.04975,
+    "volume_24h_usdt": 1487.525,
+    "price_change_24h": -9.049,
+    "count": 13
+  },
+  {
+    "symbol": "KSMUSDT",
+    "base_asset": "KSM",
+    "price": 13.17,
+    "volume_24h_usdt": 1441.61454,
+    "price_change_24h": -8.031,
+    "count": 41
+  },
+  {
+    "symbol": "RLCUSDT",
+    "base_asset": "RLC",
+    "price": 0.916,
+    "volume_24h_usdt": 1427.2196,
+    "price_change_24h": -2.657,
+    "count": 20
+  },
+  {
+    "symbol": "KNCUSDT",
+    "base_asset": "KNC",
+    "price": 0.414,
+    "volume_24h_usdt": 1376.4672,
+    "price_change_24h": -6.673,
+    "count": 17
+  },
+  {
+    "symbol": "VIRTUALUSDT",
+    "base_asset": "VIRTUAL",
+    "price": 1.2135,
+    "volume_24h_usdt": 1371.37635,
+    "price_change_24h": -6.003,
+    "count": 27
+  },
+  {
+    "symbol": "AXSUSDT",
+    "base_asset": "AXS",
+    "price": 2.278,
+    "volume_24h_usdt": 1368.03012,
+    "price_change_24h": -2.064,
+    "count": 24
+  },
+  {
+    "symbol": "LTOUSDT",
+    "base_asset": "LTO",
+    "price": 0.0127,
+    "volume_24h_usdt": 1288.7578999999998,
+    "price_change_24h": -13.605,
+    "count": 62
+  },
+  {
+    "symbol": "ARBUSDT",
+    "base_asset": "ARB",
+    "price": 0.3817,
+    "volume_24h_usdt": 1241.51742,
+    "price_change_24h": -6.216,
+    "count": 46
+  },
+  {
+    "symbol": "PAXGUSDT",
+    "base_asset": "PAXG",
+    "price": 3397.99,
+    "volume_24h_usdt": 1234.149968,
+    "price_change_24h": 0.592,
+    "count": 18
+  },
+  {
+    "symbol": "ICPUSDT",
+    "base_asset": "ICP",
+    "price": 5.034,
+    "volume_24h_usdt": 1125.8037599999998,
+    "price_change_24h": -3.006,
+    "count": 20
+  },
+  {
+    "symbol": "SYSUSDT",
+    "base_asset": "SYS",
+    "price": 0.04378,
+    "volume_24h_usdt": 1093.71196,
+    "price_change_24h": 4.238,
+    "count": 22
+  },
+  {
+    "symbol": "MXCUSDT",
+    "base_asset": "MXC",
+    "price": 0.00211,
+    "volume_24h_usdt": 1080.66393,
+    "price_change_24h": 3.941,
+    "count": 33
+  },
+  {
+    "symbol": "SLPUSDT",
+    "base_asset": "SLP",
+    "price": 0.001703,
+    "volume_24h_usdt": 1073.8862550000001,
+    "price_change_24h": -4.754,
+    "count": 92
+  },
+  {
+    "symbol": "ALPINEUSDT",
+    "base_asset": "ALPINE",
+    "price": 0.925,
+    "volume_24h_usdt": 1070.82625,
+    "price_change_24h": 1.648,
+    "count": 13
+  },
+  {
+    "symbol": "KDAUSDT",
+    "base_asset": "KDA",
+    "price": 0.3973,
+    "volume_24h_usdt": 1062.304713,
+    "price_change_24h": -4.998,
+    "count": 50
+  },
+  {
+    "symbol": "JUPUSDT",
+    "base_asset": "JUP",
+    "price": 0.4641,
+    "volume_24h_usdt": 1049.09805,
+    "price_change_24h": -3.953,
+    "count": 23
+  },
+  {
+    "symbol": "ICXUSDT",
+    "base_asset": "ICX",
+    "price": 0.1259,
+    "volume_24h_usdt": 1033.68936,
+    "price_change_24h": -4.549,
+    "count": 113
+  },
+  {
+    "symbol": "BATUSDT",
+    "base_asset": "BAT",
+    "price": 0.1512,
+    "volume_24h_usdt": 995.9544,
+    "price_change_24h": 0.599,
+    "count": 52
+  },
+  {
+    "symbol": "MANAUSDT",
+    "base_asset": "MANA",
+    "price": 0.2719,
+    "volume_24h_usdt": 987.8127,
+    "price_change_24h": -3.066,
+    "count": 22
+  },
+  {
+    "symbol": "GLMUSDT",
+    "base_asset": "GLM",
+    "price": 0.2387,
+    "volume_24h_usdt": 971.4373899999999,
+    "price_change_24h": 6.849,
+    "count": 10
+  },
+  {
+    "symbol": "ZRXUSDT",
+    "base_asset": "ZRX",
+    "price": 0.2445,
+    "volume_24h_usdt": 951.8385,
+    "price_change_24h": -1.212,
+    "count": 42
+  },
+  {
+    "symbol": "TLMUSDT",
+    "base_asset": "TLM",
+    "price": 0.00404,
+    "volume_24h_usdt": 902.59256,
+    "price_change_24h": -19.522,
+    "count": 11
+  },
+  {
+    "symbol": "OCEANUSDT",
+    "base_asset": "OCEAN",
+    "price": 0.3019,
+    "volume_24h_usdt": 880.9442,
+    "price_change_24h": 4.103,
+    "count": 20
+  },
+  {
+    "symbol": "APEUSDT",
+    "base_asset": "APE",
+    "price": 0.5701,
+    "volume_24h_usdt": 874.151433,
+    "price_change_24h": 0.246,
+    "count": 19
+  },
+  {
+    "symbol": "CLVUSDT",
+    "base_asset": "CLV",
+    "price": 0.01869,
+    "volume_24h_usdt": 862.0687739999998,
+    "price_change_24h": 5.772,
+    "count": 12
+  },
+  {
+    "symbol": "AXLUSDT",
+    "base_asset": "AXL",
+    "price": 0.338,
+    "volume_24h_usdt": 858.0806,
+    "price_change_24h": -2.874,
+    "count": 32
+  },
+  {
+    "symbol": "ZECUSDT",
+    "base_asset": "ZEC",
+    "price": 36.47,
+    "volume_24h_usdt": 851.3921499999999,
+    "price_change_24h": -2.434,
+    "count": 61
+  },
+  {
+    "symbol": "LOKAUSDT",
+    "base_asset": "LOKA",
+    "price": 0.1907,
+    "volume_24h_usdt": 849.51129,
+    "price_change_24h": -14.138,
+    "count": 11
+  },
+  {
+    "symbol": "YFIUSDT",
+    "base_asset": "YFI",
+    "price": 5287.0,
+    "volume_24h_usdt": 849.14507,
+    "price_change_24h": 3.161,
+    "count": 9
+  },
+  {
+    "symbol": "ASTRUSDT",
+    "base_asset": "ASTR",
+    "price": 0.02322,
+    "volume_24h_usdt": 791.5906980000001,
+    "price_change_24h": -9.615,
+    "count": 7
+  },
+  {
+    "symbol": "ENSUSDT",
+    "base_asset": "ENS",
+    "price": 25.65,
+    "volume_24h_usdt": 786.9419999999999,
+    "price_change_24h": -3.571,
+    "count": 81
+  },
+  {
+    "symbol": "AUDIOUSDT",
+    "base_asset": "AUDIO",
+    "price": 0.0616,
+    "volume_24h_usdt": 751.4152799999999,
+    "price_change_24h": -4.938,
+    "count": 20
+  },
+  {
+    "symbol": "1000MOGUSDT",
+    "base_asset": "1000MOG",
+    "price": 0.00119913,
+    "volume_24h_usdt": 742.3538030100001,
+    "price_change_24h": -5.993,
+    "count": 28
+  },
+  {
+    "symbol": "CELRUSDT",
+    "base_asset": "CELR",
+    "price": 0.00709,
+    "volume_24h_usdt": 661.285718,
+    "price_change_24h": -7.077,
+    "count": 21
+  },
+  {
+    "symbol": "NMRUSDT",
+    "base_asset": "NMR",
+    "price": 8.07,
+    "volume_24h_usdt": 645.6,
+    "price_change_24h": -4.947,
+    "count": 11
+  },
+  {
+    "symbol": "VOXELUSDT",
+    "base_asset": "VOXEL",
+    "price": 0.0561,
+    "volume_24h_usdt": 628.0002299999999,
+    "price_change_24h": 0.0,
+    "count": 15
+  },
+  {
+    "symbol": "BICOUSDT",
+    "base_asset": "BICO",
+    "price": 0.1088,
+    "volume_24h_usdt": 599.7719679999999,
+    "price_change_24h": 4.716,
+    "count": 22
+  },
+  {
+    "symbol": "BLURUSDT",
+    "base_asset": "BLUR",
+    "price": 0.08,
+    "volume_24h_usdt": 588.5680000000001,
+    "price_change_24h": -5.882,
+    "count": 10
+  },
+  {
+    "symbol": "SUSHIUSDT",
+    "base_asset": "SUSHI",
+    "price": 0.753,
+    "volume_24h_usdt": 544.1931000000001,
+    "price_change_24h": -5.757,
+    "count": 20
+  },
+  {
+    "symbol": "EOSUSDT",
+    "base_asset": "EOS",
+    "price": 0.508,
+    "volume_24h_usdt": 515.366,
+    "price_change_24h": 1.6,
+    "count": 12
+  },
+  {
+    "symbol": "XNOUSDT",
+    "base_asset": "XNO",
+    "price": 0.913,
+    "volume_24h_usdt": 511.49912,
+    "price_change_24h": 1.557,
+    "count": 16
+  },
+  {
+    "symbol": "TFUELUSDT",
+    "base_asset": "TFUEL",
+    "price": 0.0362,
+    "volume_24h_usdt": 463.36,
+    "price_change_24h": -2.478,
+    "count": 44
+  },
+  {
+    "symbol": "ENJUSDT",
+    "base_asset": "ENJ",
+    "price": 0.0838,
+    "volume_24h_usdt": 455.10941999999994,
+    "price_change_24h": -6.054,
+    "count": 38
+  },
+  {
+    "symbol": "CELOUSDT",
+    "base_asset": "CELO",
+    "price": 0.3123,
+    "volume_24h_usdt": 442.40418,
+    "price_change_24h": -3.223,
+    "count": 6
+  },
+  {
+    "symbol": "SANDUSDT",
+    "base_asset": "SAND",
+    "price": 0.2703,
+    "volume_24h_usdt": 425.9928,
+    "price_change_24h": 0.409,
+    "count": 14
+  },
+  {
+    "symbol": "QTUMUSDT",
+    "base_asset": "QTUM",
+    "price": 2.13,
+    "volume_24h_usdt": 394.902,
+    "price_change_24h": 8.563,
+    "count": 19
+  },
+  {
+    "symbol": "IOTXUSDT",
+    "base_asset": "IOTX",
+    "price": 0.03208,
+    "volume_24h_usdt": 380.85375999999997,
+    "price_change_24h": 4.054,
+    "count": 177
+  },
+  {
+    "symbol": "KAVAUSDT",
+    "base_asset": "KAVA",
+    "price": 0.3705,
+    "volume_24h_usdt": 306.14414999999997,
+    "price_change_24h": -7.282,
+    "count": 7
+  },
+  {
+    "symbol": "PNUTUSDT",
+    "base_asset": "PNUT",
+    "price": 0.2212,
+    "volume_24h_usdt": 277.42904000000004,
+    "price_change_24h": -4.532,
+    "count": 10
+  },
+  {
+    "symbol": "ANKRUSDT",
+    "base_asset": "ANKR",
+    "price": 0.01481,
+    "volume_24h_usdt": 260.753746,
+    "price_change_24h": -2.694,
+    "count": 6
+  },
+  {
+    "symbol": "ANIMEUSDT",
+    "base_asset": "ANIME",
+    "price": 0.01595,
+    "volume_24h_usdt": 259.709065,
+    "price_change_24h": -4.262,
+    "count": 6
+  },
+  {
+    "symbol": "LAYERUSDT",
+    "base_asset": "LAYER",
+    "price": 0.5884,
+    "volume_24h_usdt": 251.005556,
+    "price_change_24h": -1.901,
+    "count": 2
+  },
+  {
+    "symbol": "DARUSDT",
+    "base_asset": "DAR",
+    "price": 0.12629,
+    "volume_24h_usdt": 240.58245000000002,
+    "price_change_24h": 3.686,
+    "count": 15
+  },
+  {
+    "symbol": "VITEUSDT",
+    "base_asset": "VITE",
+    "price": 0.00246,
+    "volume_24h_usdt": 216.66696,
+    "price_change_24h": -10.545,
+    "count": 20
+  },
+  {
+    "symbol": "XECUSDT",
+    "base_asset": "XEC",
+    "price": 2.013e-05,
+    "volume_24h_usdt": 210.01763871,
+    "price_change_24h": -1.901,
+    "count": 21
+  },
+  {
+    "symbol": "ONGUSDT",
+    "base_asset": "ONG",
+    "price": 0.1647,
+    "volume_24h_usdt": 209.66310000000001,
+    "price_change_24h": -5.886,
+    "count": 7
+  },
+  {
+    "symbol": "BANDUSDT",
+    "base_asset": "BAND",
+    "price": 0.65,
+    "volume_24h_usdt": 204.23,
+    "price_change_24h": -3.988,
+    "count": 5
+  },
+  {
+    "symbol": "1INCHUSDT",
+    "base_asset": "1INCH",
+    "price": 0.2472,
+    "volume_24h_usdt": 203.84112000000002,
+    "price_change_24h": -8.444,
+    "count": 14
+  },
+  {
+    "symbol": "ZENUSDT",
+    "base_asset": "ZEN",
+    "price": 8.49,
+    "volume_24h_usdt": 184.0632,
+    "price_change_24h": 5.86,
+    "count": 10
+  },
+  {
+    "symbol": "CTSIUSDT",
+    "base_asset": "CTSI",
+    "price": 0.0648,
+    "volume_24h_usdt": 178.7184,
+    "price_change_24h": 2.047,
+    "count": 2
+  },
+  {
+    "symbol": "ADXUSDT",
+    "base_asset": "ADX",
+    "price": 0.1195,
+    "volume_24h_usdt": 174.47,
+    "price_change_24h": -6.859,
+    "count": 14
+  },
+  {
+    "symbol": "POLYXUSDT",
+    "base_asset": "POLYX",
+    "price": 0.138,
+    "volume_24h_usdt": 174.21120000000002,
+    "price_change_24h": 0.0,
+    "count": 5
+  },
+  {
+    "symbol": "TRACUSDT",
+    "base_asset": "TRAC",
+    "price": 0.4335,
+    "volume_24h_usdt": 166.0305,
+    "price_change_24h": -5.638,
+    "count": 7
+  },
+  {
+    "symbol": "ACHUSDT",
+    "base_asset": "ACH",
+    "price": 0.02018,
+    "volume_24h_usdt": 142.18828,
+    "price_change_24h": -1.224,
+    "count": 6
+  },
+  {
+    "symbol": "TUSDT",
+    "base_asset": "T",
+    "price": 0.0162,
+    "volume_24h_usdt": 141.3126,
+    "price_change_24h": -0.491,
+    "count": 9
+  },
+  {
+    "symbol": "STORJUSDT",
+    "base_asset": "STORJ",
+    "price": 0.265,
+    "volume_24h_usdt": 126.14,
+    "price_change_24h": 0.991,
+    "count": 3
+  },
+  {
+    "symbol": "KAITOUSDT",
+    "base_asset": "KAITO",
+    "price": 1.1616,
+    "volume_24h_usdt": 106.63488,
+    "price_change_24h": 0.389,
+    "count": 6
+  },
+  {
+    "symbol": "POPCATUSDT",
+    "base_asset": "POPCAT",
+    "price": 0.2922,
+    "volume_24h_usdt": 101.48106000000001,
+    "price_change_24h": -4.291,
+    "count": 7
+  },
+  {
+    "symbol": "MOODENGUSDT",
+    "base_asset": "MOODENG",
+    "price": 0.1595,
+    "volume_24h_usdt": 87.2465,
+    "price_change_24h": -2.803,
+    "count": 4
+  },
+  {
+    "symbol": "PROMUSDT",
+    "base_asset": "PROM",
+    "price": 8.892,
+    "volume_24h_usdt": 86.16347999999999,
+    "price_change_24h": -0.814,
+    "count": 3
+  },
+  {
+    "symbol": "DUSDT",
+    "base_asset": "D",
+    "price": 0.03427,
+    "volume_24h_usdt": 81.76822,
+    "price_change_24h": 1.451,
+    "count": 4
+  },
+  {
+    "symbol": "EGLDUSDT",
+    "base_asset": "EGLD",
+    "price": 14.04,
+    "volume_24h_usdt": 77.3604,
+    "price_change_24h": -1.887,
+    "count": 5
+  },
+  {
+    "symbol": "MASKUSDT",
+    "base_asset": "MASK",
+    "price": 1.218,
+    "volume_24h_usdt": 73.08,
+    "price_change_24h": 0.0,
+    "count": 1
+  },
+  {
+    "symbol": "SKLUSDT",
+    "base_asset": "SKL",
+    "price": 0.01864,
+    "volume_24h_usdt": 72.45368,
+    "price_change_24h": -8.177,
+    "count": 4
+  },
+  {
+    "symbol": "LAZIOUSDT",
+    "base_asset": "LAZIO",
+    "price": 0.854,
+    "volume_24h_usdt": 65.35662,
+    "price_change_24h": -17.087,
+    "count": 5
+  },
+  {
+    "symbol": "ORBSUSDT",
+    "base_asset": "ORBS",
+    "price": 0.01929,
+    "volume_24h_usdt": 49.999680000000005,
+    "price_change_24h": 0.0,
+    "count": 1
+  },
+  {
+    "symbol": "PORTOUSDT",
+    "base_asset": "PORTO",
+    "price": 0.739,
+    "volume_24h_usdt": 31.946969999999997,
+    "price_change_24h": -27.832,
+    "count": 9
+  },
+  {
+    "symbol": "GTCUSDT",
+    "base_asset": "GTC",
+    "price": 0.275,
+    "volume_24h_usdt": 29.782500000000002,
+    "price_change_24h": 0.0,
+    "count": 1
+  },
+  {
+    "symbol": "IOSTUSDT",
+    "base_asset": "IOST",
+    "price": 0.003631,
+    "volume_24h_usdt": 29.472827000000002,
+    "price_change_24h": 3.359,
+    "count": 2
+  },
+  {
+    "symbol": "API3USDT",
+    "base_asset": "API3",
+    "price": 0.72,
+    "volume_24h_usdt": 19.944,
+    "price_change_24h": 0.0,
+    "count": 1
+  },
+  {
+    "symbol": "BNTUSDT",
+    "base_asset": "BNT",
+    "price": 0.664,
+    "volume_24h_usdt": 19.654400000000003,
+    "price_change_24h": 0.0,
+    "count": 1
+  },
+  {
+    "symbol": "OXTUSDT",
+    "base_asset": "OXT",
+    "price": 0.0532,
+    "volume_24h_usdt": 15.8004,
+    "price_change_24h": -0.561,
+    "count": 2
+  },
+  {
+    "symbol": "AIXBTUSDT",
+    "base_asset": "AIXBT",
+    "price": 0.1145,
+    "volume_24h_usdt": 15.12545,
+    "price_change_24h": -6.911,
+    "count": 5
+  },
+  {
+    "symbol": "RADUSDT",
+    "base_asset": "RAD",
+    "price": 0.611,
+    "volume_24h_usdt": 12.4644,
+    "price_change_24h": 0.0,
+    "count": 1
+  },
+  {
+    "symbol": "FLOWUSDT",
+    "base_asset": "FLOW",
+    "price": 0.354,
+    "volume_24h_usdt": 12.428939999999999,
+    "price_change_24h": -2.21,
+    "count": 2
+  },
+  {
+    "symbol": "MEUSDT",
+    "base_asset": "ME",
+    "price": 0.733,
+    "volume_24h_usdt": 2.99064,
+    "price_change_24h": 0.0,
+    "count": 1
+  },
+  {
+    "symbol": "BOSONUSDT",
+    "base_asset": "BOSON",
+    "price": 0.0906,
+    "volume_24h_usdt": 1.812,
+    "price_change_24h": -0.11,
+    "count": 2
+  },
+  {
+    "symbol": "DATAUSDT",
+    "base_asset": "DATA",
+    "price": 0.01751,
+    "volume_24h_usdt": 0.01751,
+    "price_change_24h": 0.0,
+    "count": 1
+  }
+]

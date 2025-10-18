@@ -1,0 +1,579 @@
+#!/usr/bin/env python3
+"""
+Enhanced Momentum Analysis with AI-Style Insights
+Comprehensive market analysis without requiring Claude API (for now)
+"""
+
+import os
+import json
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from dotenv import load_dotenv
+
+class EnhancedMomentumAnalyzer:
+    def __init__(self):
+        load_dotenv()
+        
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv('BINANCEUS_KEY'),
+            api_secret=os.getenv('BINANCEUS_SECRET'),
+            tld='us'
+        )
+        
+        print("🤖 Enhanced Momentum Analyzer initialized")
+    
+    def get_comprehensive_market_data(self) -> Dict:
+        """Get comprehensive market data for analysis"""
+        print("📊 Gathering comprehensive market data...")
+        
+        # Get all tickers
+        tickers = self.client.get_ticker()
+        usdt_pairs = [t for t in tickers if t['symbol'].endswith('USDT') and t['symbol'] != 'USDCUSDT']
+        
+        market_data = {
+            'timestamp': datetime.now().isoformat(),
+            'total_pairs': len(usdt_pairs),
+            'tokens': []
+        }
+        
+        # Analyze top tokens by volume
+        volume_ranked = sorted(usdt_pairs, key=lambda x: float(x['quoteVolume']), reverse=True)
+        
+        for i, ticker in enumerate(volume_ranked[:50]):  # Top 50 by volume
+            symbol = ticker['symbol']
+            token = symbol.replace('USDT', '')
+            
+            try:
+                # Get momentum score and additional metrics
+                momentum_score = self.get_momentum_score(symbol)
+                volatility_score = self.get_volatility_score(symbol)
+                trend_strength = self.get_trend_strength(symbol)
+                
+                daily_change = float(ticker['priceChangePercent'])
+                volume_24h = float(ticker['quoteVolume'])
+                price = float(ticker['lastPrice'])
+                
+                # Calculate composite opportunity score
+                opportunity_score = self.calculate_opportunity_score(
+                    momentum_score, volatility_score, trend_strength, daily_change, volume_24h
+                )
+                
+                token_data = {
+                    'symbol': symbol,
+                    'token': token,
+                    'momentum_score': momentum_score,
+                    'volatility_score': volatility_score,
+                    'trend_strength': trend_strength,
+                    'opportunity_score': opportunity_score,
+                    'daily_change': daily_change,
+                    'volume_24h': volume_24h,
+                    'price': price,
+                    'volume_rank': i + 1,
+                    'analysis_timestamp': datetime.now().isoformat()
+                }
+                
+                market_data['tokens'].append(token_data)
+                
+                time.sleep(0.05)  # Rate limiting
+                
+            except Exception as e:
+                print(f"⚠️ Error analyzing {symbol}: {e}")
+                continue
+        
+        # Add comprehensive market analysis
+        market_data['market_analysis'] = self.analyze_market_conditions(market_data['tokens'])
+        
+        return market_data
+    
+    def get_momentum_score(self, symbol: str) -> float:
+        """Calculate advanced momentum score"""
+        try:
+            # Get various timeframe data
+            klines_1h = self.client.get_klines(symbol=symbol, interval='1h', limit=24)
+            klines_4h = self.client.get_klines(symbol=symbol, interval='4h', limit=12) 
+            klines_1d = self.client.get_klines(symbol=symbol, interval='1d', limit=7)
+            
+            if not klines_1h or not klines_4h or not klines_1d:
+                return 0
+            
+            # Calculate price changes
+            current_price = float(klines_1h[-1][4])
+            price_1h_ago = float(klines_1h[-2][4]) if len(klines_1h) > 1 else current_price
+            price_4h_ago = float(klines_4h[-2][4]) if len(klines_4h) > 1 else current_price
+            price_24h_ago = float(klines_1d[-2][4]) if len(klines_1d) > 1 else current_price
+            
+            change_1h = ((current_price - price_1h_ago) / price_1h_ago) * 100
+            change_4h = ((current_price - price_4h_ago) / price_4h_ago) * 100
+            change_24h = ((current_price - price_24h_ago) / price_24h_ago) * 100
+            
+            # Volume analysis
+            volumes = [float(k[5]) for k in klines_1h[-6:]]
+            avg_volume = np.mean(volumes[:-1]) if len(volumes) > 1 else volumes[0]
+            current_volume = volumes[-1]
+            volume_surge = (current_volume / avg_volume) if avg_volume > 0 else 1
+            
+            # Momentum calculation
+            momentum_score = 50  # Base score
+            momentum_score += change_1h * 3    # Recent movement is most important
+            momentum_score += change_4h * 2    # Medium-term trend
+            momentum_score += change_24h * 1   # Longer-term context
+            
+            # Volume factor
+            if volume_surge > 2:
+                momentum_score += 20
+            elif volume_surge > 1.5:
+                momentum_score += 10
+            elif volume_surge < 0.5:
+                momentum_score -= 10
+            
+            # Consistency bonus
+            if change_1h > 0 and change_4h > 0 and change_24h > 0:
+                momentum_score += 15
+            
+            return max(momentum_score, 0)
+            
+        except Exception as e:
+            return 0
+    
+    def get_volatility_score(self, symbol: str) -> float:
+        """Calculate volatility score (higher = more volatile/risky)"""
+        try:
+            klines = self.client.get_klines(symbol=symbol, interval='1h', limit=24)
+            if not klines:
+                return 0
+            
+            prices = [float(k[4]) for k in klines]  # Close prices
+            price_changes = []
+            
+            for i in range(1, len(prices)):
+                change = abs((prices[i] - prices[i-1]) / prices[i-1]) * 100
+                price_changes.append(change)
+            
+            volatility = np.mean(price_changes) if price_changes else 0
+            return min(volatility * 10, 100)  # Scale to 0-100
+            
+        except:
+            return 0
+    
+    def get_trend_strength(self, symbol: str) -> float:
+        """Calculate trend strength (0-100, higher = stronger trend)"""
+        try:
+            klines = self.client.get_klines(symbol=symbol, interval='4h', limit=12)
+            if len(klines) < 8:
+                return 0
+            
+            prices = [float(k[4]) for k in klines]
+            
+            # Simple trend analysis
+            recent_prices = prices[-6:]  # Last 6 periods
+            older_prices = prices[:6]    # First 6 periods
+            
+            recent_avg = np.mean(recent_prices)
+            older_avg = np.mean(older_prices)
+            
+            trend_change = ((recent_avg - older_avg) / older_avg) * 100
+            
+            # Convert to strength score
+            strength = min(abs(trend_change) * 5, 100)
+            return strength
+            
+        except:
+            return 0
+    
+    def calculate_opportunity_score(self, momentum: float, volatility: float, 
+                                  trend: float, daily_change: float, volume: float) -> float:
+        """Calculate composite opportunity score"""
+        
+        score = 0
+        
+        # Momentum factor (40% weight)
+        score += momentum * 0.4
+        
+        # Positive daily change bonus (20% weight)
+        if daily_change > 0:
+            score += daily_change * 2 * 0.2
+        else:
+            score += daily_change * 0.5 * 0.2  # Penalty for negative
+        
+        # Trend strength (20% weight)
+        score += trend * 0.2
+        
+        # Volume factor (10% weight)
+        volume_score = min(volume / 1000000 * 100, 100)  # Scale volume to 0-100
+        score += volume_score * 0.1
+        
+        # Volatility factor (10% weight) - moderate volatility is good
+        optimal_volatility = 30  # Sweet spot
+        volatility_penalty = abs(volatility - optimal_volatility) / optimal_volatility
+        score += (1 - volatility_penalty) * 10 * 0.1
+        
+        return max(score, 0)
+    
+    def analyze_market_conditions(self, tokens: List[Dict]) -> Dict:
+        """Analyze overall market conditions"""
+        
+        if not tokens:
+            return {'status': 'no_data'}
+        
+        changes = [t['daily_change'] for t in tokens]
+        momentum_scores = [t['momentum_score'] for t in tokens]
+        volumes = [t['volume_24h'] for t in tokens]
+        
+        analysis = {
+            'overall_sentiment': self.determine_market_sentiment(changes),
+            'avg_change': np.mean(changes),
+            'median_change': np.median(changes),
+            'positive_tokens': len([c for c in changes if c > 0]),
+            'negative_tokens': len([c for c in changes if c < 0]),
+            'high_momentum_count': len([m for m in momentum_scores if m > 100]),
+            'total_volume': sum(volumes),
+            'market_strength': self.calculate_market_strength(changes, momentum_scores),
+            'risk_level': self.assess_risk_level(tokens),
+            'top_sectors': self.identify_hot_sectors(tokens)
+        }
+        
+        return analysis
+    
+    def determine_market_sentiment(self, changes: List[float]) -> str:
+        """Determine overall market sentiment"""
+        avg_change = np.mean(changes)
+        positive_ratio = len([c for c in changes if c > 0]) / len(changes)
+        
+        if avg_change > 3 and positive_ratio > 0.7:
+            return 'very_bullish'
+        elif avg_change > 1 and positive_ratio > 0.6:
+            return 'bullish'
+        elif avg_change > -1 and positive_ratio > 0.4:
+            return 'neutral'
+        elif avg_change > -3:
+            return 'bearish'
+        else:
+            return 'very_bearish'
+    
+    def calculate_market_strength(self, changes: List[float], momentum_scores: List[float]) -> float:
+        """Calculate overall market strength (0-100)"""
+        
+        change_strength = min(max(np.mean(changes) + 10, 0), 20) * 2.5  # Scale to 0-50
+        momentum_strength = min(np.mean(momentum_scores), 50)           # Scale to 0-50
+        
+        return change_strength + momentum_strength
+    
+    def assess_risk_level(self, tokens: List[Dict]) -> str:
+        """Assess current market risk level"""
+        
+        volatilities = [t['volatility_score'] for t in tokens]
+        avg_volatility = np.mean(volatilities)
+        
+        negative_momentum = len([t for t in tokens if t['momentum_score'] < 30])
+        total_tokens = len(tokens)
+        
+        if avg_volatility > 50 or negative_momentum / total_tokens > 0.7:
+            return 'high'
+        elif avg_volatility > 30 or negative_momentum / total_tokens > 0.5:
+            return 'medium'
+        else:
+            return 'low'
+    
+    def identify_hot_sectors(self, tokens: List[Dict]) -> List[str]:
+        """Identify trending token categories/sectors"""
+        
+        # Simple sector identification based on token patterns
+        meme_tokens = ['DOGE', 'SHIB', 'PEPE', 'FLOKI', 'BONK']
+        defi_tokens = ['UNI', 'SUSHI', 'CAKE', 'CRV', 'COMP']  
+        layer1_tokens = ['ETH', 'BNB', 'ADA', 'SOL', 'AVAX', 'ATOM']
+        
+        sectors = {
+            'meme': [t for t in tokens if t['token'] in meme_tokens and t['daily_change'] > 2],
+            'defi': [t for t in tokens if t['token'] in defi_tokens and t['daily_change'] > 2],
+            'layer1': [t for t in tokens if t['token'] in layer1_tokens and t['daily_change'] > 2]
+        }
+        
+        hot_sectors = []
+        for sector, sector_tokens in sectors.items():
+            if len(sector_tokens) > 0:
+                avg_performance = np.mean([t['daily_change'] for t in sector_tokens])
+                if avg_performance > 3:
+                    hot_sectors.append(f"{sector} ({avg_performance:.1f}% avg)")
+        
+        return hot_sectors
+    
+    def get_current_portfolio(self) -> Dict:
+        """Get current portfolio status"""
+        try:
+            account = self.client.get_account()
+            portfolio = {'positions': {}, 'total_value': 0}
+            
+            for balance in account['balances']:
+                free = float(balance['free'])
+                locked = float(balance['locked'])
+                total = free + locked
+                
+                if total > 0:
+                    if balance['asset'] == 'USDT':
+                        portfolio['positions'][balance['asset']] = {
+                            'amount': total,
+                            'usd_value': total,
+                            'daily_change': 0
+                        }
+                        portfolio['total_value'] += total
+                    else:
+                        try:
+                            symbol = balance['asset'] + 'USDT'
+                            ticker = self.client.get_ticker(symbol=symbol)
+                            price = float(ticker['lastPrice'])
+                            usd_value = total * price
+                            daily_change = float(ticker['priceChangePercent'])
+                            
+                            portfolio['positions'][balance['asset']] = {
+                                'amount': total,
+                                'usd_value': usd_value,
+                                'daily_change': daily_change
+                            }
+                            portfolio['total_value'] += usd_value
+                        except:
+                            continue
+            
+            return portfolio
+        except Exception as e:
+            print(f"Error getting portfolio: {e}")
+            return {'positions': {}, 'total_value': 0}
+    
+    def generate_ai_style_insights(self, market_data: Dict, portfolio_data: Dict) -> Dict:
+        """Generate AI-style trading insights"""
+        
+        tokens = market_data['tokens']
+        market_analysis = market_data['market_analysis']
+        
+        # Find best opportunities
+        top_opportunities = sorted(tokens, key=lambda x: x['opportunity_score'], reverse=True)[:5]
+        buy_candidates = [t for t in tokens if t['opportunity_score'] > 80 and t['volume_24h'] > 100000]
+        hold_candidates = [t for t in tokens if t['daily_change'] > 0 and t['momentum_score'] > 70]
+        
+        # Portfolio analysis
+        portfolio_analysis = self.analyze_portfolio_positioning(portfolio_data, market_analysis)
+        
+        insights = {
+            'market_overview': {
+                'sentiment': market_analysis['overall_sentiment'],
+                'strength': market_analysis['market_strength'],
+                'risk_level': market_analysis['risk_level'],
+                'key_observation': self.generate_market_observation(market_analysis)
+            },
+            'top_opportunities': [
+                {
+                    'token': t['token'],
+                    'opportunity_score': t['opportunity_score'],
+                    'momentum': t['momentum_score'],
+                    'change': t['daily_change'],
+                    'volume': t['volume_24h'],
+                    'reasoning': self.generate_opportunity_reasoning(t)
+                }
+                for t in top_opportunities
+            ],
+            'trading_recommendations': {
+                'buy': buy_candidates[:3],
+                'hold': [pos for pos in portfolio_data['positions'].keys() 
+                        if pos != 'USDT' and any(t['token'] == pos and t['daily_change'] > -10 
+                        for t in tokens)],
+                'watch': [t['token'] for t in tokens if 60 < t['opportunity_score'] < 80]
+            },
+            'portfolio_insights': portfolio_analysis,
+            'risk_warnings': self.generate_risk_warnings(market_analysis, tokens),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return insights
+    
+    def generate_market_observation(self, market_analysis: Dict) -> str:
+        """Generate key market observation"""
+        
+        sentiment = market_analysis['overall_sentiment']
+        strength = market_analysis['market_strength']
+        positive_ratio = market_analysis['positive_tokens'] / (market_analysis['positive_tokens'] + market_analysis['negative_tokens'])
+        
+        if sentiment == 'very_bullish':
+            return f"Strong bullish momentum with {positive_ratio:.1%} of tokens positive. Market strength at {strength:.0f}/100."
+        elif sentiment == 'bullish':
+            return f"Moderately bullish conditions. Good buying opportunities emerging with controlled risk."
+        elif sentiment == 'neutral':
+            return f"Mixed market conditions. Selective opportunities available. Focus on high-conviction plays."
+        elif sentiment == 'bearish':
+            return f"Bearish sentiment dominates. Focus on capital preservation and wait for better entries."
+        else:
+            return f"Very bearish conditions. High risk environment. Consider reducing exposure."
+    
+    def generate_opportunity_reasoning(self, token_data: Dict) -> str:
+        """Generate reasoning for why a token is an opportunity"""
+        
+        momentum = token_data['momentum_score']
+        change = token_data['daily_change']
+        volume = token_data['volume_24h']
+        
+        reasons = []
+        
+        if momentum > 120:
+            reasons.append("strong momentum")
+        elif momentum > 80:
+            reasons.append("good momentum")
+        
+        if change > 5:
+            reasons.append("strong daily performance")
+        elif change > 0:
+            reasons.append("positive trend")
+        
+        if volume > 1000000:
+            reasons.append("high liquidity")
+        elif volume > 500000:
+            reasons.append("good volume")
+        
+        if token_data['trend_strength'] > 60:
+            reasons.append("clear trend")
+        
+        return ", ".join(reasons) if reasons else "mixed signals"
+    
+    def analyze_portfolio_positioning(self, portfolio_data: Dict, market_analysis: Dict) -> Dict:
+        """Analyze current portfolio positioning"""
+        
+        total_value = portfolio_data['total_value']
+        positions = portfolio_data['positions']
+        
+        usdt_pct = (positions.get('USDT', {}).get('usd_value', 0) / total_value) * 100 if total_value > 0 else 0
+        
+        winning_positions = [k for k, v in positions.items() if k != 'USDT' and v['daily_change'] > 0]
+        losing_positions = [k for k, v in positions.items() if k != 'USDT' and v['daily_change'] < 0]
+        
+        return {
+            'cash_position': f"{usdt_pct:.1f}% in USDT",
+            'winning_positions': len(winning_positions),
+            'losing_positions': len(losing_positions),
+            'portfolio_performance': sum([v['daily_change'] * (v['usd_value'] / total_value) 
+                                        for v in positions.values() if isinstance(v.get('daily_change'), (int, float))]),
+            'recommendation': self.get_portfolio_recommendation(usdt_pct, market_analysis['overall_sentiment'])
+        }
+    
+    def get_portfolio_recommendation(self, usdt_pct: float, sentiment: str) -> str:
+        """Get portfolio positioning recommendation"""
+        
+        if sentiment in ['very_bullish', 'bullish']:
+            if usdt_pct > 50:
+                return "Consider deploying cash into quality opportunities"
+            else:
+                return "Good positioning for bullish market"
+        elif sentiment == 'neutral':
+            if usdt_pct < 20:
+                return "Consider taking some profits and building cash reserves"
+            else:
+                return "Balanced positioning appropriate for mixed conditions"
+        else:  # bearish
+            if usdt_pct < 40:
+                return "Consider reducing risk exposure and increasing cash position"
+            else:
+                return "Good defensive positioning for bearish conditions"
+    
+    def generate_risk_warnings(self, market_analysis: Dict, tokens: List[Dict]) -> List[str]:
+        """Generate risk warnings based on market conditions"""
+        
+        warnings = []
+        
+        if market_analysis['risk_level'] == 'high':
+            warnings.append("High market volatility detected - use tight stop losses")
+        
+        if market_analysis['overall_sentiment'] in ['bearish', 'very_bearish']:
+            warnings.append("Bearish market conditions - consider reducing position sizes")
+        
+        high_momentum_count = len([t for t in tokens if t['momentum_score'] > 150])
+        if high_momentum_count == 0:
+            warnings.append("Low overall momentum - be selective with new positions")
+        
+        low_volume_tokens = len([t for t in tokens if t['volume_24h'] < 100000])
+        if low_volume_tokens > len(tokens) * 0.7:
+            warnings.append("Many tokens showing low volume - liquidity concerns")
+        
+        return warnings
+    
+    def display_comprehensive_analysis(self, market_data: Dict, insights: Dict):
+        """Display comprehensive analysis in readable format"""
+        
+        print("\n🤖 AI-STYLE MARKET ANALYSIS")
+        print("=" * 60)
+        
+        # Market overview
+        overview = insights['market_overview']
+        print(f"📊 MARKET OVERVIEW:")
+        print(f"   Sentiment: {overview['sentiment'].upper()}")
+        print(f"   Market Strength: {overview['strength']:.0f}/100")
+        print(f"   Risk Level: {overview['risk_level'].upper()}")
+        print(f"   Key Insight: {overview['key_observation']}")
+        
+        # Top opportunities
+        print(f"\n🎯 TOP OPPORTUNITIES:")
+        for i, opp in enumerate(insights['top_opportunities'][:5], 1):
+            print(f"   {i}. {opp['token']}: Score {opp['opportunity_score']:.0f} "
+                  f"({opp['reasoning']})")
+        
+        # Trading recommendations
+        rec = insights['trading_recommendations']
+        print(f"\n💡 TRADING RECOMMENDATIONS:")
+        print(f"   🟢 BUY: {[t['token'] for t in rec['buy']]}")
+        print(f"   💎 HOLD: {rec['hold']}")
+        print(f"   👀 WATCH: {rec['watch'][:5]}")
+        
+        # Portfolio insights
+        portfolio = insights['portfolio_insights']
+        print(f"\n💼 PORTFOLIO ANALYSIS:")
+        print(f"   Cash: {portfolio['cash_position']}")
+        print(f"   Winners: {portfolio['winning_positions']}, Losers: {portfolio['losing_positions']}")
+        print(f"   Performance: {portfolio['portfolio_performance']:+.2f}%")
+        print(f"   Recommendation: {portfolio['recommendation']}")
+        
+        # Risk warnings
+        if insights['risk_warnings']:
+            print(f"\n⚠️  RISK WARNINGS:")
+            for warning in insights['risk_warnings']:
+                print(f"   • {warning}")
+    
+    def generate_comprehensive_report(self) -> Dict:
+        """Generate comprehensive market analysis report"""
+        
+        print("🚀 GENERATING COMPREHENSIVE AI-STYLE ANALYSIS")
+        print("=" * 60)
+        
+        # Get data
+        market_data = self.get_comprehensive_market_data()
+        portfolio_data = self.get_current_portfolio()
+        
+        # Generate insights
+        insights = self.generate_ai_style_insights(market_data, portfolio_data)
+        
+        # Display analysis
+        self.display_comprehensive_analysis(market_data, insights)
+        
+        # Save report
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"enhanced_market_analysis_{timestamp}.json"
+        
+        comprehensive_report = {
+            'timestamp': datetime.now().isoformat(),
+            'market_data': market_data,
+            'portfolio_data': portfolio_data,
+            'ai_insights': insights
+        }
+        
+        with open(filename, 'w') as f:
+            json.dump(comprehensive_report, f, indent=2)
+        
+        print(f"\n💾 Full report saved: {filename}")
+        
+        return comprehensive_report
+
+def main():
+    analyzer = EnhancedMomentumAnalyzer()
+    report = analyzer.generate_comprehensive_report()
+
+if __name__ == "__main__":
+    main()

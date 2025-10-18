@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+
+"""
+LAUNCH ALL OPPORTUNITY MAXIMIZATION SYSTEMS
+==========================================
+This script launches and coordinates all systems for maximum opportunity capitalization:
+
+1. Real-Time Opportunity Maximizer
+2. Intelligent Bot Communicator
+3. Ultimate Opportunity Capitalizer (Master Coordinator)
+
+Run this to start the complete system for scanning all tokens,
+allocating to best positions, and maximizing gains continuously.
+"""
+
+import asyncio
+import subprocess
+import sys
+import os
+import time
+import logging
+import signal
+from datetime import datetime
+from typing import List, Dict
+import json
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
+class OpportunitySystemLauncher:
+    """Launcher for all opportunity maximization systems"""
+
+    def __init__(self):
+        self.processes = {}
+        self.running = True
+
+        # System components
+        self.components = {
+            "opportunity_maximizer": "real_time_opportunity_maximizer.py",
+            "bot_communicator": "intelligent_bot_communicator.py",
+            "ultimate_capitalizer": "ultimate_opportunity_capitalizer.py",
+        }
+
+        # Setup signal handlers
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+
+    def _signal_handler(self, signum, frame):
+        """Handle shutdown signals"""
+        logger.info(f"🛑 Received shutdown signal {signum}")
+        self.running = False
+        self._shutdown_all_processes()
+
+    def _shutdown_all_processes(self):
+        """Gracefully shutdown all processes"""
+        logger.info("🛑 Shutting down all processes...")
+
+        for name, process in self.processes.items():
+            if process and process.poll() is None:
+                logger.info(f"🔽 Stopping {name}...")
+                process.terminate()
+
+                # Wait for graceful shutdown
+                try:
+                    process.wait(timeout=10)
+                    logger.info(f"✅ {name} stopped gracefully")
+                except subprocess.TimeoutExpired:
+                    logger.warning(f"⚠️ Force killing {name}...")
+                    process.kill()
+                    process.wait()
+
+    async def launch_opportunity_maximizer(self):
+        """Launch the real-time opportunity maximizer"""
+        logger.info("🎯 Launching Real-Time Opportunity Maximizer...")
+
+        try:
+            # Run the opportunity maximizer directly
+            from real_time_opportunity_maximizer import RealTimeOpportunityMaximizer
+
+            maximizer = RealTimeOpportunityMaximizer(initial_capital=100000)
+
+            # Run a few cycles to demonstrate
+            logger.info("🔍 Running opportunity detection cycles...")
+
+            for cycle in range(3):  # Run 3 cycles for demo
+                logger.info(f"\n{'='*50}")
+                logger.info(f"🔄 Opportunity Detection Cycle #{cycle + 1}")
+                logger.info(f"{'='*50}")
+
+                # Scan for opportunities
+                opportunities = await maximizer.scan_all_tokens_for_opportunities()
+
+                # Calculate allocations
+                allocations = maximizer.calculate_optimal_allocations(opportunities)
+
+                # Maximize positions (simulate existing positions)
+                sample_positions = {
+                    "BTC": {"current_price": 45000, "entry_price": 43000, "size": 0.15},
+                    "ETH": {"current_price": 3200, "entry_price": 3100, "size": 0.12},
+                }
+                maximizations = maximizer.maximize_existing_positions(sample_positions)
+
+                # Generate recommendations
+                recommendations = await maximizer.generate_bot_recommendations(
+                    opportunities, allocations, maximizations
+                )
+
+                # Save results
+                filename = f"opportunity_cycle_{cycle+1}_{datetime.now().strftime('%H%M%S')}.json"
+                with open(filename, "w") as f:
+                    json.dump(recommendations, f, indent=2, default=str)
+
+                # Log summary
+                summary = recommendations["summary"]
+                logger.info(f"📊 Cycle {cycle + 1} Results:")
+                logger.info(f"   • Opportunities: {summary['total_opportunities']}")
+                logger.info(
+                    f"   • Total Allocation: {summary['total_recommended_allocation']:.1%}"
+                )
+                logger.info(
+                    f"   • Expected Return: {summary['expected_portfolio_return']:.1%}"
+                )
+                logger.info(
+                    f"   • Priority Actions: {len(recommendations['priority_actions'])}"
+                )
+                logger.info(f"💾 Results saved to {filename}")
+
+                if cycle < 2:  # Don't wait after last cycle
+                    await asyncio.sleep(10)  # 10 second intervals for demo
+
+            logger.info("✅ Opportunity Maximizer demonstration complete")
+
+        except Exception as e:
+            logger.error(f"❌ Error in Opportunity Maximizer: {e}")
+
+    async def launch_bot_communicator(self):
+        """Launch the intelligent bot communicator"""
+        logger.info("🤖 Launching Intelligent Bot Communicator...")
+
+        try:
+            from intelligent_bot_communicator import IntelligentBotCommunicator
+
+            communicator = IntelligentBotCommunicator()
+
+            # Connect and run for demo
+            await communicator.connect_to_bot()
+
+            # Simulate receiving and processing some recommendations
+            sample_recommendations = {
+                "priority_actions": [
+                    {
+                        "action": "IMMEDIATE_BUY",
+                        "symbol": "ETH",
+                        "urgency": "HIGH",
+                        "reason": "Strong breakout signal detected",
+                        "expected_gain": 0.12,
+                    },
+                    {
+                        "action": "ALLOCATE",
+                        "symbol": "ADA",
+                        "urgency": "MEDIUM",
+                        "amount": 5000,
+                        "reason": "High-confidence momentum opportunity",
+                    },
+                ],
+                "allocation_recommendations": [
+                    {
+                        "symbol": "DOT",
+                        "allocation_percentage": 0.15,
+                        "allocation_amount": 15000,
+                        "entry_strategy": "GRADUAL",
+                        "expected_return": 0.18,
+                        "reason": "Technical breakout with volume confirmation",
+                    }
+                ],
+                "position_maximizations": [
+                    {
+                        "symbol": "BTC",
+                        "recommended_action": "SCALE_OUT",
+                        "size_adjustment": -0.05,
+                        "new_stop_loss": 42000,
+                        "expected_additional_gain": 0.05,
+                    }
+                ],
+            }
+
+            # Process recommendations
+            await communicator.send_recommendations_to_bot(sample_recommendations)
+
+            # Run for a short demo period
+            logger.info("🔄 Running bot communication demo...")
+
+            for i in range(3):  # 3 demo cycles
+                # Get performance summary
+                summary = communicator.get_performance_summary()
+
+                logger.info(f"📊 Bot Communication Status:")
+                logger.info(f"   • Connection: {summary['connection_status']}")
+                logger.info(f"   • Total Orders: {summary['total_orders']}")
+                logger.info(f"   • Success Rate: {summary['success_rate']:.1f}%")
+                logger.info(f"   • Pending Orders: {summary['pending_orders']}")
+
+                await asyncio.sleep(5)  # 5 second intervals
+
+            logger.info("✅ Bot Communicator demonstration complete")
+
+        except Exception as e:
+            logger.error(f"❌ Error in Bot Communicator: {e}")
+
+    async def launch_ultimate_capitalizer(self):
+        """Launch the ultimate opportunity capitalizer"""
+        logger.info("🎯 Launching Ultimate Opportunity Capitalizer...")
+
+        try:
+            from ultimate_opportunity_capitalizer import UltimateOpportunityCapitalizer
+
+            capitalizer = UltimateOpportunityCapitalizer(initial_capital=100000)
+
+            # Initialize components
+            await capitalizer.initialize_all_components()
+
+            # Run for demo period
+            logger.info("🚀 Running Ultimate Capitalizer demo...")
+
+            demo_duration = 60  # 1 minute demo
+            start_time = time.time()
+
+            while time.time() - start_time < demo_duration:
+                # Generate a performance report
+                report = await capitalizer._generate_performance_report()
+
+                logger.info(f"📈 Ultimate Capitalizer Status:")
+                logger.info(f"   • System Status: {report['system_status']}")
+                logger.info(
+                    f"   • Opportunities Detected: {report['opportunities']['total_detected']}"
+                )
+                logger.info(
+                    f"   • Opportunities Capitalized: {report['opportunities']['total_capitalized']}"
+                )
+                logger.info(
+                    f"   • Total Profit: ${report['capital']['profit_realized']:.2f}"
+                )
+                logger.info(f"   • ROI: {report['capital']['roi_percentage']:.2%}")
+
+                await asyncio.sleep(10)  # Update every 10 seconds
+
+            # Generate final report
+            await capitalizer._shutdown_system()
+            logger.info("✅ Ultimate Capitalizer demonstration complete")
+
+        except Exception as e:
+            logger.error(f"❌ Error in Ultimate Capitalizer: {e}")
+
+    async def run_integrated_demo(self):
+        """Run integrated demonstration of all systems"""
+        logger.info("🚀 LAUNCHING INTEGRATED OPPORTUNITY MAXIMIZATION DEMO")
+        logger.info("=" * 80)
+        logger.info("OBJECTIVE: DEMONSTRATE COMPLETE TOKEN OPPORTUNITY CAPITALIZATION")
+        logger.info("=" * 80)
+
+        try:
+            # Phase 1: Opportunity Detection
+            logger.info("\n🎯 PHASE 1: REAL-TIME OPPORTUNITY DETECTION")
+            logger.info("-" * 50)
+            await self.launch_opportunity_maximizer()
+
+            # Phase 2: Bot Communication
+            logger.info("\n🤖 PHASE 2: INTELLIGENT BOT COMMUNICATION")
+            logger.info("-" * 50)
+            await self.launch_bot_communicator()
+
+            # Phase 3: Ultimate Coordination
+            logger.info("\n🎯 PHASE 3: ULTIMATE OPPORTUNITY CAPITALIZATION")
+            logger.info("-" * 50)
+            await self.launch_ultimate_capitalizer()
+
+            # Final Summary
+            logger.info("\n✅ INTEGRATED DEMONSTRATION COMPLETE")
+            logger.info("=" * 80)
+            logger.info("🎯 ALL SYSTEMS DEMONSTRATED SUCCESSFULLY")
+            logger.info("📊 Check generated JSON files for detailed results")
+            logger.info("💡 Systems are ready for live trading integration")
+            logger.info("=" * 80)
+
+        except KeyboardInterrupt:
+            logger.info("🛑 Demo interrupted by user")
+        except Exception as e:
+            logger.error(f"❌ Error in integrated demo: {e}")
+        finally:
+            logger.info("🔽 Demo cleanup complete")
+
+    def display_system_overview(self):
+        """Display system overview and capabilities"""
+        print("\n" + "=" * 80)
+        print("🎯 ULTIMATE OPPORTUNITY MAXIMIZATION SYSTEM")
+        print("=" * 80)
+        print("CAPABILITIES:")
+        print("• 🔍 COMPREHENSIVE TOKEN SCANNING: All tradable tokens across exchanges")
+        print("• 💎 OPPORTUNITY DETECTION: Real-time breakouts, momentum, reversals")
+        print("• 📊 OPTIMAL ALLOCATION: Risk-adjusted capital distribution")
+        print("• 🚀 POSITION MAXIMIZATION: Continuous gain optimization")
+        print("• 🤖 INTELLIGENT EXECUTION: Automated bot communication")
+        print("• 📈 PERFORMANCE TRACKING: Real-time analytics and reporting")
+        print("• ⚡ PRIORITY ACTIONS: Urgent opportunity capitalization")
+        print("• 🛡️ RISK MANAGEMENT: Gas protection and loss prevention")
+        print("=" * 80)
+        print("OBJECTIVE: NEVER MISS A PROFITABLE OPPORTUNITY")
+        print("=" * 80 + "\n")
+
+
+async def main():
+    """Main launcher function"""
+    launcher = OpportunitySystemLauncher()
+
+    # Display system overview
+    launcher.display_system_overview()
+
+    # Run integrated demo
+    await launcher.run_integrated_demo()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

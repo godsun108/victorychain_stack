@@ -1,0 +1,41 @@
+{
+  "as_of": "2025-09-28T08:26:20.706851Z",
+  "iso_reserves": [
+    {
+      "amount": null,
+      "asset": "XRP",
+      "est_usd": 0.0
+    },
+    {
+      "amount": null,
+      "asset": "XLM",
+      "est_usd": 0.0
+    },
+    {
+      "amount": null,
+      "asset": "XDC",
+      "est_usd": 0.0
+    },
+    {
+      "amount": null,
+      "asset": "ALGO",
+      "est_usd": 0.0
+    },
+    {
+      "amount": null,
+      "asset": "IOTA",
+      "est_usd": 0.0
+    },
+    {
+      "amount": null,
+      "asset": "HBAR",
+      "est_usd": 0.0
+    },
+    {
+      "amount": null,
+      "asset": "QNT",
+      "est_usd": 0.0
+    }
+  ],
+  "total_est_usd": 0
+}

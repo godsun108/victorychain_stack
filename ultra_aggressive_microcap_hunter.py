@@ -1,0 +1,789 @@
+#!/usr/bin/env python3
+
+"""
+🚀 ULTRA-AGGRESSIVE MICROCAP HUNTER
+Most aggressive scanner for IMMEDIATE microcap opportunities across ALL tokens
+Beyond GALA - scanning entire market for ultra-high-risk, ultra-high-reward plays
+"""
+
+import json
+import os
+import sys
+import time
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional, Any
+import uuid
+from dataclasses import dataclass, asdict
+
+# Add project root to path
+sys.path.append(os.path.dirname(__file__))
+
+try:
+    from binance.client import Client
+    from binance.exceptions import BinanceAPIException
+
+    binance_available = True
+except ImportError:
+    binance_available = False
+
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "config", ".env"))
+
+
+@dataclass
+class UltraAggressivePlay:
+    """Ultra-aggressive microcap play with immediate execution potential"""
+
+    symbol: str
+    price: float
+    volume_24h: float
+    price_change_24h: float
+    momentum_score: float
+    ultra_rating: float
+    execution_signal: str
+    immediate_action: str
+    position_percentage: float
+    stop_loss_price: float
+    ultra_targets: List[float]
+    catalyst_triggers: List[str]
+    risk_assessment: str
+    ai_recommendation: str
+    beyond_gala_analysis: str
+    expected_timeline: str
+    volatility_score: float
+    liquidity_score: float
+
+
+class UltraAggressiveMicrocapHunter:
+    """Most aggressive microcap scanner for immediate opportunities"""
+
+    def __init__(self):
+        print("🚀 Initializing ULTRA-AGGRESSIVE MICROCAP HUNTER...")
+        self.load_all_market_data()
+
+        # Ultra-aggressive parameters for maximum opportunity detection
+        self.ultra_params = {
+            "max_price": 5.0,  # Expand price ceiling
+            "min_price": 0.000001,  # Ultra-low floor
+            "min_volume": 50,  # Lower volume requirement
+            "momentum_floor": 0.1,  # Any momentum counts
+            "ultra_threshold": 30.0,  # Lower barrier for entry
+            "extreme_threshold": 60.0,  # Extreme potential marker
+            "god_tier_threshold": 80.0,  # God-tier opportunities
+            "max_position": 30.0,  # Higher allocation for conviction plays
+            "stop_loss": -20.0,  # Wider stops for volatility
+            "ultra_targets": [40.0, 100.0, 300.0, 800.0, 2000.0],  # Extreme targets
+            "scan_mode": "ULTRA_AGGRESSIVE",
+            "risk_tolerance": "MAXIMUM",
+        }
+
+        print(f"🔥 Ultra-aggressive parameters loaded")
+        print(
+            f"🎯 Scanning for opportunities with {self.ultra_params['ultra_threshold']}%+ potential"
+        )
+
+    def load_all_market_data(self):
+        """Load every possible data source"""
+        self.all_market_data = []
+        data_sources = []
+
+        # Load comprehensive analysis
+        try:
+            with open("comprehensive_token_analysis_20250805_155947.json", "r") as f:
+                comp_data = json.load(f)
+                self.all_market_data.extend(comp_data)
+                data_sources.append(f"Comprehensive: {len(comp_data)} tokens")
+        except FileNotFoundError:
+            pass
+
+        # Load Binance data
+        try:
+            with open("all_binance_us_tokens.json", "r") as f:
+                binance_data = json.load(f)
+                existing_symbols = {
+                    token.get("symbol", "") for token in self.all_market_data
+                }
+                new_tokens = [
+                    token
+                    for token in binance_data
+                    if token.get("symbol", "") not in existing_symbols
+                ]
+                self.all_market_data.extend(new_tokens)
+                data_sources.append(f"Binance: {len(new_tokens)} new tokens")
+        except FileNotFoundError:
+            pass
+
+        # Load momentum data
+        try:
+            with open("all_token_momentum.json", "r") as f:
+                self.momentum_data = json.load(f)
+                data_sources.append("Momentum: Loaded")
+        except FileNotFoundError:
+            self.momentum_data = {}
+
+        # Load any previous scans for learning
+        try:
+            with open("all_microcap_scan_20250805_194439.json", "r") as f:
+                previous_scan = json.load(f)
+                self.previous_opportunities = previous_scan.get("opportunities", [])
+                data_sources.append(
+                    f"Previous scan: {len(self.previous_opportunities)} opportunities"
+                )
+        except FileNotFoundError:
+            self.previous_opportunities = []
+
+        print(f"📊 Loaded data sources: {', '.join(data_sources)}")
+        print(f"🌍 Total market coverage: {len(self.all_market_data)} tokens")
+
+    def calculate_ultra_aggressive_score(self, token: Dict) -> Tuple[float, Dict]:
+        """Calculate ultra-aggressive opportunity score with detailed breakdown"""
+        score = 0.0
+        breakdown = {}
+
+        price = token.get("price", 0.0)
+        volume = token.get("volume_24h_usdt", token.get("volume_24h", 0.0))
+        momentum = token.get("momentum_score", 0.0)
+        price_change = token.get("price_change_24h", 0.0)
+        sector = token.get("sector", "unknown").lower()
+
+        # ULTRA-LOW PRICE POTENTIAL (40% weight) - The moonshot factor
+        if price <= 0.000001:
+            price_score = 40.0  # Million x potential
+            breakdown["price"] = "MILLION_X_POTENTIAL"
+        elif price <= 0.00001:
+            price_score = 38.0  # 100k x potential
+            breakdown["price"] = "100K_X_POTENTIAL"
+        elif price <= 0.0001:
+            price_score = 35.0  # 10k x potential
+            breakdown["price"] = "10K_X_POTENTIAL"
+        elif price <= 0.001:
+            price_score = 32.0  # 1k x potential
+            breakdown["price"] = "1K_X_POTENTIAL"
+        elif price <= 0.01:
+            price_score = 28.0  # 100x potential
+            breakdown["price"] = "100X_POTENTIAL"
+        elif price <= 0.1:
+            price_score = 22.0  # 10x potential
+            breakdown["price"] = "10X_POTENTIAL"
+        elif price <= 1.0:
+            price_score = 15.0  # 5x potential
+            breakdown["price"] = "5X_POTENTIAL"
+        else:
+            price_score = 8.0  # 2x potential
+            breakdown["price"] = "2X_POTENTIAL"
+
+        score += price_score
+
+        # VOLUME ACTIVITY (25% weight) - Liquidity and interest
+        if volume >= 100000:
+            volume_score = 25.0
+            breakdown["volume"] = "ULTRA_HIGH_VOLUME"
+        elif volume >= 50000:
+            volume_score = 22.0
+            breakdown["volume"] = "HIGH_VOLUME"
+        elif volume >= 20000:
+            volume_score = 18.0
+            breakdown["volume"] = "GOOD_VOLUME"
+        elif volume >= 10000:
+            volume_score = 15.0
+            breakdown["volume"] = "MODERATE_VOLUME"
+        elif volume >= 5000:
+            volume_score = 12.0
+            breakdown["volume"] = "LOW_VOLUME"
+        elif volume >= 1000:
+            volume_score = 8.0
+            breakdown["volume"] = "MINIMAL_VOLUME"
+        else:
+            volume_score = 4.0
+            breakdown["volume"] = "MICRO_VOLUME"
+
+        score += volume_score
+
+        # MOMENTUM SURGE (20% weight) - Current momentum
+        if momentum >= 20.0:
+            momentum_score = 20.0
+            breakdown["momentum"] = "EXPLOSIVE_MOMENTUM"
+        elif momentum >= 15.0:
+            momentum_score = 18.0
+            breakdown["momentum"] = "STRONG_MOMENTUM"
+        elif momentum >= 10.0:
+            momentum_score = 15.0
+            breakdown["momentum"] = "GOOD_MOMENTUM"
+        elif momentum >= 5.0:
+            momentum_score = 12.0
+            breakdown["momentum"] = "BUILDING_MOMENTUM"
+        elif momentum >= 2.0:
+            momentum_score = 8.0
+            breakdown["momentum"] = "EARLY_MOMENTUM"
+        elif momentum >= 1.0:
+            momentum_score = 6.0
+            breakdown["momentum"] = "WEAK_MOMENTUM"
+        else:
+            momentum_score = 3.0
+            breakdown["momentum"] = "NO_MOMENTUM"
+
+        score += momentum_score
+
+        # SECTOR EXPLOSIVENESS (10% weight) - Sector potential
+        explosive_sectors = ["gaming", "ai", "metaverse", "nft", "meme"]
+        growth_sectors = ["defi", "layer1", "infrastructure", "privacy"]
+
+        if any(s in sector for s in explosive_sectors):
+            sector_score = 10.0
+            breakdown["sector"] = "EXPLOSIVE_SECTOR"
+        elif any(s in sector for s in growth_sectors):
+            sector_score = 7.0
+            breakdown["sector"] = "GROWTH_SECTOR"
+        else:
+            sector_score = 4.0
+            breakdown["sector"] = "NEUTRAL_SECTOR"
+
+        score += sector_score
+
+        # PRICE ACTION CATALYST (5% weight) - Recent price movement
+        if price_change > 20.0:
+            action_score = 5.0
+            breakdown["action"] = "EXPLOSIVE_MOVE"
+        elif price_change > 10.0:
+            action_score = 4.0
+            breakdown["action"] = "STRONG_MOVE"
+        elif price_change > 5.0:
+            action_score = 3.5
+            breakdown["action"] = "GOOD_MOVE"
+        elif price_change > 0:
+            action_score = 3.0
+            breakdown["action"] = "POSITIVE_MOVE"
+        elif price_change > -10.0:
+            action_score = 2.0
+            breakdown["action"] = "MINOR_DIP"
+        else:
+            action_score = 1.0
+            breakdown["action"] = "MAJOR_DIP"
+
+        score += action_score
+
+        return min(score, 100.0), breakdown
+
+    def generate_ultra_aggressive_analysis(
+        self, token: Dict, score: float, breakdown: Dict
+    ) -> str:
+        """Generate ultra-aggressive AI analysis"""
+        symbol = token["symbol"]
+        price = token["price"]
+        volume = token.get("volume_24h_usdt", token.get("volume_24h", 0.0))
+        momentum = token.get("momentum_score", 0.0)
+        sector = token.get("sector", "unknown")
+
+        price_potential = breakdown.get("price", "UNKNOWN")
+        volume_rating = breakdown.get("volume", "UNKNOWN")
+        momentum_rating = breakdown.get("momentum", "UNKNOWN")
+
+        if score >= 80.0:
+            analysis = f"""
+🌟 GOD-TIER MICROCAP OPPORTUNITY: {symbol}
+
+MOONSHOT ASSESSMENT:
+• Price: ${price:.8f} ({price_potential})
+• Volume: ${volume:,.0f} ({volume_rating})
+• Momentum: {momentum:.1f}/10 ({momentum_rating})
+• Sector: {sector} (EXPLOSIVE POTENTIAL)
+
+ULTRA-AGGRESSIVE FACTORS:
+• MAXIMUM POTENTIAL: 1000x+ possible
+• RISK LEVEL: EXTREME (100% loss possible)
+• TIMELINE: Immediate to 12 months
+• CATALYST DEPENDENCY: CRITICAL
+
+EXECUTION STRATEGY:
+• MAXIMUM ALLOCATION: 25-30%
+• STOP LOSS: -20% (MANDATORY)
+• TARGETS: +40%, +100%, +300%, +800%, +2000%
+• MONITORING: CONTINUOUS (24/7)
+
+⚠️ MAXIMUM RISK WARNING ⚠️
+This is a LOTTERY TICKET PLAY - only use money you can lose 100%
+Potential for life-changing gains OR total loss
+
+🚀 BEYOND GALA: This opportunity offers exponentially higher risk/reward
+than any gaming sector play including GALA
+            """
+        elif score >= 70.0:
+            analysis = f"""
+🔥 EXTREME POTENTIAL MICROCAP: {symbol}
+
+HIGH-RISK PROFILE:
+• Price: ${price:.8f} ({price_potential})
+• Volume: ${volume:,.0f} ({volume_rating})
+• Momentum: {momentum:.1f}/10 ({momentum_rating})
+• Sector: {sector}
+
+ULTRA-AGGRESSIVE FACTORS:
+• EXTREME POTENTIAL: 100-1000x possible
+• RISK LEVEL: VERY HIGH
+• CATALYST TIMELINE: 3-18 months
+• VOLATILITY: MAXIMUM
+
+AGGRESSIVE STRATEGY:
+• ALLOCATION: 15-25%
+• STOP LOSS: -20%
+• TARGETS: +40%, +100%, +300%, +800%
+• PATIENCE: Required for catalysts
+
+🎯 BEYOND GALA: Higher upside potential than established gaming tokens
+Raw opportunity with extreme volatility
+            """
+        elif score >= 60.0:
+            analysis = f"""
+⚡ HIGH POTENTIAL MICROCAP: {symbol}
+
+OPPORTUNITY PROFILE:
+• Price: ${price:.8f} ({price_potential})
+• Volume: ${volume:,.0f} ({volume_rating})
+• Momentum: {momentum:.1f}/10 ({momentum_rating})
+• Sector: {sector}
+
+AGGRESSIVE FACTORS:
+• HIGH POTENTIAL: 10-100x possible
+• RISK LEVEL: HIGH
+• DEVELOPMENT TIMELINE: 6-24 months
+• CATALYST POTENTIAL: GOOD
+
+BALANCED AGGRESSION:
+• ALLOCATION: 10-20%
+• STOP LOSS: -18%
+• TARGETS: +40%, +100%, +300%
+• MONITORING: Regular
+
+🎮 GALA ALTERNATIVE: Different risk profile from gaming concentration
+Diversification with upside potential
+            """
+        elif score >= 50.0:
+            analysis = f"""
+📈 MODERATE MICROCAP POTENTIAL: {symbol}
+
+ASSESSMENT:
+• Price: ${price:.8f} ({price_potential})
+• Volume: ${volume:,.0f} ({volume_rating})
+• Momentum: {momentum:.1f}/10 ({momentum_rating})
+• Sector: {sector}
+
+POTENTIAL FACTORS:
+• MODERATE POTENTIAL: 3-20x possible
+• RISK LEVEL: MODERATE-HIGH
+• DEVELOPMENT NEEDED: 12-36 months
+• CATALYST WAITING: PATIENT APPROACH
+
+CONSERVATIVE AGGRESSION:
+• ALLOCATION: 5-15%
+• STOP LOSS: -15%
+• TARGETS: +25%, +75%, +200%
+• APPROACH: Value play
+
+📊 PORTFOLIO ROLE: Balanced risk addition to GALA-heavy allocation
+            """
+        else:
+            analysis = f"""
+👀 WATCH LIST: {symbol}
+
+CURRENT STATUS:
+• Price: ${price:.8f}
+• Limited metrics across the board
+• Below ultra-aggressive threshold
+
+ASSESSMENT: 
+• Needs significant catalyst development
+• Monitor for momentum building
+• Potential future opportunity
+• Currently not actionable
+
+RECOMMENDATION: MONITOR ONLY
+            """
+
+        return analysis
+
+    def determine_immediate_action(
+        self, token: Dict, score: float, breakdown: Dict
+    ) -> Tuple[str, str, float]:
+        """Determine immediate action based on ultra-aggressive criteria"""
+        momentum = token.get("momentum_score", 0.0)
+        volume = token.get("volume_24h_usdt", token.get("volume_24h", 0.0))
+        price_change = token.get("price_change_24h", 0.0)
+
+        if score >= 80.0:
+            if momentum >= 10.0 and volume >= 20000:
+                return (
+                    "IMMEDIATE BUY - GOD TIER",
+                    "BUY NOW AT MARKET - MAXIMUM CONVICTION",
+                    30.0,
+                )
+            else:
+                return "STRONG BUY - GOD TIER", "ACCUMULATE ON ANY DIP", 25.0
+        elif score >= 70.0:
+            if momentum >= 7.0 and volume >= 10000:
+                return "IMMEDIATE BUY - EXTREME", "BUY NOW - STRONG CONVICTION", 25.0
+            else:
+                return "STRONG BUY - EXTREME", "ACCUMULATE AGGRESSIVELY", 20.0
+        elif score >= 60.0:
+            if momentum >= 5.0:
+                return "BUY - HIGH POTENTIAL", "ENTER POSITION", 20.0
+            else:
+                return "BUY ON DIP", "WAIT FOR ENTRY", 15.0
+        elif score >= 50.0:
+            return "CONSIDER - MODERATE", "SMALL POSITION", 10.0
+        else:
+            return "WATCH", "MONITOR ONLY", 0.0
+
+    def calculate_beyond_gala_factor(self, token: Dict, score: float) -> str:
+        """Calculate how this opportunity compares to GALA concentration"""
+        symbol = token["symbol"]
+        sector = token.get("sector", "unknown").lower()
+        price = token.get("price", 0.0)
+        momentum = token.get("momentum_score", 0.0)
+
+        if score >= 80.0:
+            if "gaming" in sector:
+                return f"🎮 GAMING SECTOR DISRUPTION: {symbol} could challenge GALA's gaming dominance with superior microcap potential"
+            else:
+                return f"🚀 BEYOND GAMING: {symbol} offers exponentially higher upside than any gaming play - diversifies beyond GALA risk"
+        elif score >= 70.0:
+            if "gaming" in sector:
+                return f"🎯 GAMING ALTERNATIVE: {symbol} provides different gaming exposure with higher volatility than GALA"
+            else:
+                return f"💎 DIVERSIFICATION PLAY: {symbol} reduces GALA concentration risk while maintaining extreme upside"
+        elif score >= 60.0:
+            return f"⚖️ PORTFOLIO BALANCE: {symbol} balances GALA-heavy allocation with different sector exposure"
+        else:
+            return f"📊 MONITORING: {symbol} provides alternative to GALA concentration but needs development"
+
+    def execute_ultra_aggressive_scan(self) -> List[UltraAggressivePlay]:
+        """Execute the most aggressive microcap scan possible"""
+        print("🔍 Executing ULTRA-AGGRESSIVE MICROCAP SCAN...")
+        opportunities = []
+
+        for token in self.all_market_data:
+            try:
+                price = token.get("price", 0.0)
+                volume = token.get("volume_24h_usdt", token.get("volume_24h", 0.0))
+
+                # Ultra-aggressive filtering
+                if (
+                    price <= self.ultra_params["max_price"]
+                    and price >= self.ultra_params["min_price"]
+                    and volume >= self.ultra_params["min_volume"]
+                ):
+
+                    score, breakdown = self.calculate_ultra_aggressive_score(token)
+
+                    if score >= self.ultra_params["ultra_threshold"]:
+                        ai_analysis = self.generate_ultra_aggressive_analysis(
+                            token, score, breakdown
+                        )
+                        signal, action, position = self.determine_immediate_action(
+                            token, score, breakdown
+                        )
+                        beyond_gala = self.calculate_beyond_gala_factor(token, score)
+
+                        # Calculate ultra targets and stop loss
+                        stop_loss = price * (1 + self.ultra_params["stop_loss"] / 100)
+                        ultra_targets = [
+                            price * (1 + target / 100)
+                            for target in self.ultra_params["ultra_targets"]
+                        ]
+
+                        # Risk assessment
+                        if score >= 80.0:
+                            risk = "MAXIMUM_RISK_MAXIMUM_REWARD"
+                        elif score >= 70.0:
+                            risk = "EXTREME_RISK_EXTREME_REWARD"
+                        elif score >= 60.0:
+                            risk = "HIGH_RISK_HIGH_REWARD"
+                        else:
+                            risk = "MODERATE_HIGH_RISK_REWARD"
+
+                        # Timeline expectation
+                        momentum = token.get("momentum_score", 0.0)
+                        if momentum >= 10.0:
+                            timeline = "IMMEDIATE_TO_3_MONTHS"
+                        elif momentum >= 5.0:
+                            timeline = "3_TO_12_MONTHS"
+                        else:
+                            timeline = "6_TO_24_MONTHS"
+
+                        # Catalyst triggers
+                        catalysts = []
+                        if breakdown.get("momentum") in [
+                            "EXPLOSIVE_MOMENTUM",
+                            "STRONG_MOMENTUM",
+                        ]:
+                            catalysts.append("MOMENTUM_BREAKOUT")
+                        if breakdown.get("volume") in [
+                            "ULTRA_HIGH_VOLUME",
+                            "HIGH_VOLUME",
+                        ]:
+                            catalysts.append("VOLUME_SURGE")
+                        if breakdown.get("sector") == "EXPLOSIVE_SECTOR":
+                            catalysts.append("SECTOR_ROTATION")
+                        if breakdown.get("price") in [
+                            "MILLION_X_POTENTIAL",
+                            "100K_X_POTENTIAL",
+                        ]:
+                            catalysts.append("MOONSHOT_SETUP")
+
+                        opportunity = UltraAggressivePlay(
+                            symbol=token["symbol"],
+                            price=price,
+                            volume_24h=volume,
+                            price_change_24h=token.get("price_change_24h", 0.0),
+                            momentum_score=token.get("momentum_score", 0.0),
+                            ultra_rating=score,
+                            execution_signal=signal,
+                            immediate_action=action,
+                            position_percentage=position,
+                            stop_loss_price=stop_loss,
+                            ultra_targets=ultra_targets,
+                            catalyst_triggers=catalysts,
+                            risk_assessment=risk,
+                            ai_recommendation=ai_analysis,
+                            beyond_gala_analysis=beyond_gala,
+                            expected_timeline=timeline,
+                            volatility_score=min(score / 10.0, 10.0),
+                            liquidity_score=min(volume / 10000.0, 10.0),
+                        )
+
+                        opportunities.append(opportunity)
+
+            except Exception as e:
+                continue  # Skip problematic tokens
+
+        # Sort by ultra rating (highest first)
+        opportunities.sort(key=lambda x: x.ultra_rating, reverse=True)
+
+        print(f"✅ Found {len(opportunities)} ultra-aggressive opportunities")
+        return opportunities
+
+    def generate_comprehensive_report(self, opportunities: List[UltraAggressivePlay]):
+        """Generate comprehensive ultra-aggressive report"""
+        timestamp = datetime.now()
+
+        print(f"\n🚀 ULTRA-AGGRESSIVE MICROCAP HUNTER REPORT")
+        print("=" * 60)
+        print(f"Scan Time: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Scan Mode: {self.ultra_params['scan_mode']}")
+        print(f"Risk Tolerance: {self.ultra_params['risk_tolerance']}")
+        print(f"Opportunities Found: {len(opportunities)}")
+
+        if not opportunities:
+            print("❌ No ultra-aggressive opportunities found")
+            return
+
+        # Statistics
+        god_tier = len([o for o in opportunities if o.ultra_rating >= 80])
+        extreme = len([o for o in opportunities if o.ultra_rating >= 70])
+        high = len([o for o in opportunities if o.ultra_rating >= 60])
+        immediate_buys = len(
+            [o for o in opportunities if "IMMEDIATE" in o.execution_signal]
+        )
+
+        print(f"\n📊 OPPORTUNITY BREAKDOWN")
+        print("-" * 40)
+        print(f"🌟 God-Tier (80%+): {god_tier}")
+        print(f"🔥 Extreme (70%+): {extreme}")
+        print(f"⚡ High (60%+): {high}")
+        print(f"🚨 Immediate Buys: {immediate_buys}")
+
+        # Top 10 opportunities
+        print(f"\n🎯 TOP 10 ULTRA-AGGRESSIVE OPPORTUNITIES")
+        print("-" * 50)
+
+        for i, opp in enumerate(opportunities[:10], 1):
+            risk_emoji = (
+                "🌟"
+                if opp.ultra_rating >= 80
+                else "🔥" if opp.ultra_rating >= 70 else "⚡"
+            )
+            print(f"\n{risk_emoji} #{i}. {opp.symbol}")
+            print(f"   💰 Price: ${opp.price:.8f}")
+            print(f"   🎯 Ultra Rating: {opp.ultra_rating:.1f}%")
+            print(f"   📊 Signal: {opp.execution_signal}")
+            print(f"   💪 Position: {opp.position_percentage:.0f}%")
+            print(f"   ⚡ Action: {opp.immediate_action}")
+            print(f"   🎮 vs GALA: {opp.beyond_gala_analysis[:60]}...")
+            print(f"   ⏰ Timeline: {opp.expected_timeline}")
+
+            # Show first ultra target
+            if opp.ultra_targets:
+                first_target_gain = (
+                    (opp.ultra_targets[0] - opp.price) / opp.price
+                ) * 100
+                print(
+                    f"   🎯 First Target: ${opp.ultra_targets[0]:.8f} (+{first_target_gain:.0f}%)"
+                )
+
+        # Detailed analysis for top 3 god-tier opportunities
+        god_tier_ops = [o for o in opportunities if o.ultra_rating >= 80][:3]
+        if god_tier_ops:
+            print(f"\n🌟 GOD-TIER OPPORTUNITY ANALYSIS")
+            print("=" * 60)
+
+            for i, opp in enumerate(god_tier_ops, 1):
+                print(f"\n{'-'*15} GOD-TIER #{i}: {opp.symbol} {'-'*15}")
+                print(opp.ai_recommendation)
+
+                print(f"\n🚀 ULTRA-AGGRESSIVE EXECUTION:")
+                print(f"• Immediate Action: {opp.immediate_action}")
+                print(f"• Position Size: {opp.position_percentage:.0f}%")
+                print(f"• Entry: ${opp.price:.8f}")
+                print(f"• Stop Loss: ${opp.stop_loss_price:.8f} (-20%)")
+                print(f"• Ultra Target 1: ${opp.ultra_targets[0]:.8f} (+40%)")
+                print(f"• Ultra Target 2: ${opp.ultra_targets[1]:.8f} (+100%)")
+                print(f"• Ultra Target 3: ${opp.ultra_targets[2]:.8f} (+300%)")
+                print(f"• Ultra Target 4: ${opp.ultra_targets[3]:.8f} (+800%)")
+                print(f"• Ultra Target 5: ${opp.ultra_targets[4]:.8f} (+2000%)")
+                print(f"• Risk Level: {opp.risk_assessment}")
+                print(f"• Catalysts: {', '.join(opp.catalyst_triggers)}")
+                print(f"• Timeline: {opp.expected_timeline}")
+
+        # Portfolio allocation for ultra-aggressive approach
+        print(f"\n💼 ULTRA-AGGRESSIVE PORTFOLIO ALLOCATION")
+        print("-" * 50)
+        total_allocation = 0
+        for i, opp in enumerate(opportunities[:8], 1):
+            print(
+                f"{i}. {opp.symbol}: {opp.position_percentage:.0f}% - {opp.execution_signal}"
+            )
+            total_allocation += opp.position_percentage
+
+        print(f"\nTotal Allocation: {total_allocation:.0f}%")
+        if total_allocation > 100:
+            print("⚠️ OVER-ALLOCATION: Reduce positions or select fewer opportunities")
+            print("💡 Consider scaling positions proportionally")
+
+        # Beyond GALA insights
+        print(f"\n🎮 BEYOND GALA MARKET INSIGHTS")
+        print("-" * 40)
+        gaming_alternatives = len(
+            [o for o in opportunities if "gaming" in o.beyond_gala_analysis.lower()]
+        )
+        diversification_plays = len(
+            [o for o in opportunities if "diversif" in o.beyond_gala_analysis.lower()]
+        )
+        moonshot_plays = len(
+            [
+                o
+                for o in opportunities
+                if "exponential" in o.beyond_gala_analysis.lower()
+                or "moonshot" in o.beyond_gala_analysis.lower()
+            ]
+        )
+
+        print(f"• Gaming Sector Alternatives: {gaming_alternatives}")
+        print(f"• Diversification Opportunities: {diversification_plays}")
+        print(f"• Moonshot Plays: {moonshot_plays}")
+        print(f"• Total Market Expansion: {len(opportunities)} beyond GALA")
+
+        # Save ultra-aggressive report
+        report = {
+            "timestamp": timestamp.isoformat(),
+            "scan_type": "ULTRA_AGGRESSIVE_MICROCAP_HUNT",
+            "scan_parameters": self.ultra_params,
+            "total_opportunities": len(opportunities),
+            "god_tier_count": god_tier,
+            "extreme_count": extreme,
+            "high_count": high,
+            "immediate_buy_count": immediate_buys,
+            "total_allocation": total_allocation,
+            "opportunities": [asdict(opp) for opp in opportunities],
+            "beyond_gala_insights": {
+                "gaming_alternatives": gaming_alternatives,
+                "diversification_plays": diversification_plays,
+                "moonshot_plays": moonshot_plays,
+                "market_expansion_count": len(opportunities),
+            },
+            "risk_warnings": [
+                "EXTREME RISK: Total loss possible",
+                "MAXIMUM VOLATILITY: 50%+ daily swings possible",
+                "LIQUIDITY RISK: Exit may be difficult",
+                "CATALYST DEPENDENCY: Success depends on external factors",
+                "PSYCHOLOGICAL RISK: Extreme stress during volatility",
+            ],
+        }
+
+        filename = (
+            f"ultra_aggressive_microcap_hunt_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
+        )
+        with open(filename, "w") as f:
+            json.dump(report, f, indent=2, default=str)
+
+        print(f"\n💾 Ultra-aggressive report saved: {filename}")
+
+        # Final extreme warnings
+        print(f"\n⚠️ ⚠️ ⚠️ EXTREME RISK WARNINGS ⚠️ ⚠️ ⚠️")
+        print("=" * 60)
+        print("🚨 MAXIMUM RISK: These are lottery ticket plays")
+        print("💀 TOTAL LOSS: You can lose 100% of your investment")
+        print("🎢 EXTREME VOLATILITY: 50%+ daily price swings")
+        print("💔 PSYCHOLOGICAL STRESS: Extreme emotional pressure")
+        print("⏰ TIME SENSITIVE: Opportunities can disappear quickly")
+        print("🔍 CONTINUOUS MONITORING: 24/7 attention required")
+        print("💎 DIAMOND HANDS: Must hold through extreme volatility")
+        print("📊 STRICT DISCIPLINE: Follow stop losses religiously")
+        print("")
+        print("🚀 MAXIMUM REWARD: Life-changing gains possible")
+        print("🌟 BEYOND GALA: Exponential upside vs established tokens")
+        print("💰 EARLY STAGE: Ground floor opportunities")
+        print("🎯 PORTFOLIO TRANSFORMATION: Small bets, massive impact")
+
+        return opportunities
+
+
+def main():
+    """Main ultra-aggressive execution"""
+    print("🚀 ULTRA-AGGRESSIVE MICROCAP HUNTER")
+    print("=" * 50)
+    print("MAXIMUM RISK - MAXIMUM REWARD")
+    print("Scanning ALL tokens for extreme opportunities beyond GALA")
+    print("")
+    print("⚠️ WARNING: This is the most aggressive scan possible")
+    print("Only proceed if you can afford 100% loss")
+
+    hunter = UltraAggressiveMicrocapHunter()
+    opportunities = hunter.execute_ultra_aggressive_scan()
+    hunter.generate_comprehensive_report(opportunities)
+
+    if opportunities:
+        # Immediate action summary
+        immediate_ops = [o for o in opportunities if "IMMEDIATE" in o.execution_signal]
+        god_tier_ops = [o for o in opportunities if o.ultra_rating >= 80]
+
+        print(f"\n🚨 IMMEDIATE ACTION REQUIRED")
+        print("-" * 40)
+
+        if god_tier_ops:
+            print("🌟 GOD-TIER OPPORTUNITIES:")
+            for opp in god_tier_ops[:3]:
+                print(
+                    f"• {opp.symbol}: {opp.immediate_action} - {opp.position_percentage:.0f}%"
+                )
+
+        if immediate_ops:
+            print("\n🔥 IMMEDIATE BUY SIGNALS:")
+            for opp in immediate_ops[:3]:
+                print(f"• {opp.symbol}: {opp.immediate_action}")
+
+        print(f"\n🎯 MARKET EXPANSION BEYOND GALA:")
+        print(f"• Total opportunities identified: {len(opportunities)}")
+        print(
+            f"• Extreme potential plays: {len([o for o in opportunities if o.ultra_rating >= 70])}"
+        )
+        print(
+            f"• Diversification beyond gaming: {len([o for o in opportunities if 'diversif' in o.beyond_gala_analysis.lower()])}"
+        )
+
+    print("\n✅ Ultra-aggressive microcap hunt completed!")
+    print("💀 Remember: Extreme risk requires extreme discipline")
+
+
+if __name__ == "__main__":
+    main()

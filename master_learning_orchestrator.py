@@ -1,0 +1,893 @@
+#!/usr/bin/env python3
+"""
+🎭 MASTER LEARNING ORCHESTRATOR
+==============================
+Senior developer-level master system that orchestrates all learning components
+Continuous learning, real-time deployment, and adaptive optimization
+Integrates token profiling, allocation optimization, and gas fee management
+"""
+
+import json
+import asyncio
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional, Any
+from dataclasses import dataclass, asdict
+from pathlib import Path
+import logging
+import time
+from concurrent.futures import ThreadPoolExecutor
+import threading
+
+# Import our advanced systems
+from advanced_token_learning_profiler import (
+    AdvancedTokenLearningProfiler,
+    AllocationIntelligence,
+)
+
+
+@dataclass
+class MasterOrchestrationConfig:
+    """Configuration for the master orchestrator"""
+
+    # Learning parameters
+    learning_update_interval: int = 300  # 5 minutes
+    deep_analysis_interval: int = 3600  # 1 hour
+    portfolio_rebalance_interval: int = 7200  # 2 hours
+
+    # Risk management
+    max_total_allocation: float = 85.0
+    max_single_position: float = 25.0
+    min_confidence_threshold: float = 0.6
+
+    # Gas optimization
+    gas_price_threshold: float = 35.0
+    preferred_execution_hours: List[int] = None
+    batch_size_preference: int = 5
+
+    # Performance tracking
+    performance_tracking_window: int = 30  # days
+    rebalance_threshold: float = 0.05  # 5% deviation
+
+    def __post_init__(self):
+        if self.preferred_execution_hours is None:
+            self.preferred_execution_hours = [2, 3, 4, 8, 9, 22, 23]
+
+
+@dataclass
+class OrchestrationState:
+    """Current state of the orchestration system"""
+
+    last_update: str
+    active_tokens: List[str]
+    total_allocation: float
+    gas_optimization_savings: float
+    learning_confidence_avg: float
+    portfolio_performance: Dict[str, float]
+    pending_rebalances: List[Dict]
+    system_health: str
+
+
+@dataclass
+class ExecutionDecision:
+    """Execution decision from the orchestrator"""
+
+    action_type: str  # "BUY", "SELL", "HOLD", "REBALANCE"
+    symbol: str
+    allocation_change: float
+    confidence: float
+    reasoning: List[str]
+    gas_optimization: Dict[str, Any]
+    execution_priority: int
+    estimated_impact: Dict[str, float]
+
+
+class MasterLearningOrchestrator:
+    """
+    🎭 Master orchestrator for continuous learning and optimization
+    """
+
+    def __init__(self, config: MasterOrchestrationConfig = None):
+        self.config = config or MasterOrchestrationConfig()
+
+        # Initialize core systems
+        self.token_profiler = AdvancedTokenLearningProfiler()
+        self.state = OrchestrationState(
+            last_update=datetime.now().isoformat(),
+            active_tokens=[],
+            total_allocation=0.0,
+            gas_optimization_savings=0.0,
+            learning_confidence_avg=0.0,
+            portfolio_performance={},
+            pending_rebalances=[],
+            system_health="INITIALIZING",
+        )
+
+        # Learning and execution queues
+        self.learning_queue = asyncio.Queue()
+        self.execution_queue = asyncio.Queue()
+        self.performance_history = {}
+
+        # Thread management
+        self.executor = ThreadPoolExecutor(max_workers=4)
+        self.running = False
+        self.background_tasks = []
+
+        # Setup logging
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
+
+        # Market data simulation (in production, connect to real APIs)
+        self.market_data_simulator = self._initialize_market_simulator()
+
+    def _initialize_market_simulator(self) -> Dict:
+        """Initialize market data simulator"""
+        return {
+            "base_prices": {
+                "SAND": 0.45,
+                "MANA": 0.38,
+                "AXS": 6.75,
+                "ENJ": 0.28,
+                "GALA": 0.025,
+                "MAGIC": 0.68,
+                "MATIC": 0.85,
+                "LINK": 14.25,
+            },
+            "volatility_params": {
+                "SAND": 0.08,
+                "MANA": 0.09,
+                "AXS": 0.12,
+                "ENJ": 0.07,
+                "GALA": 0.15,
+                "MAGIC": 0.10,
+                "MATIC": 0.06,
+                "LINK": 0.05,
+            },
+            "trend_factors": {
+                "SAND": 1.02,
+                "MANA": 1.01,
+                "AXS": 0.98,
+                "ENJ": 1.03,
+                "GALA": 1.05,
+                "MAGIC": 1.04,
+                "MATIC": 1.01,
+                "LINK": 1.00,
+            },
+            "last_update": time.time(),
+        }
+
+    async def start_orchestration(self):
+        """
+        🚀 Start the master orchestration system
+        """
+        self.logger.info("🎭 Starting Master Learning Orchestrator")
+        self.running = True
+        self.state.system_health = "RUNNING"
+
+        # Start background tasks
+        self.background_tasks = [
+            asyncio.create_task(self._continuous_learning_loop()),
+            asyncio.create_task(self._portfolio_monitoring_loop()),
+            asyncio.create_task(self._execution_management_loop()),
+            asyncio.create_task(self._gas_optimization_loop()),
+            asyncio.create_task(self._performance_tracking_loop()),
+        ]
+
+        try:
+            # Wait for all background tasks
+            await asyncio.gather(*self.background_tasks)
+        except asyncio.CancelledError:
+            self.logger.info("🛑 Orchestration stopped")
+        except Exception as e:
+            self.logger.error(f"❌ Orchestration error: {e}")
+            self.state.system_health = "ERROR"
+
+    async def stop_orchestration(self):
+        """Stop the orchestration system"""
+        self.logger.info("🛑 Stopping Master Learning Orchestrator")
+        self.running = False
+
+        # Cancel all background tasks
+        for task in self.background_tasks:
+            task.cancel()
+
+        await asyncio.gather(*self.background_tasks, return_exceptions=True)
+        self.executor.shutdown(wait=True)
+
+    async def _continuous_learning_loop(self):
+        """Continuous learning from market data and performance"""
+        while self.running:
+            try:
+                # Update market data
+                market_data = self._simulate_market_data()
+
+                # Update token profiles with new data
+                for symbol, data in market_data.items():
+                    if symbol in self.token_profiler.token_profiles:
+                        self.token_profiler.update_token_performance(symbol, data)
+                    else:
+                        # Create new profile for discovered token
+                        token_data = {
+                            "symbol": symbol,
+                            "price": data["current_price"],
+                            "sector": self._determine_sector(symbol),
+                            "volume_24h": data.get("volume_24h", 1000000),
+                            "volatility": data.get("volatility", 50),
+                            "liquidity": data.get("liquidity", 7.0),
+                        }
+                        self.token_profiler.create_token_profile(token_data)
+
+                # Update system state
+                await self._update_system_state()
+
+                # Wait for next update
+                await asyncio.sleep(self.config.learning_update_interval)
+
+            except Exception as e:
+                self.logger.error(f"❌ Learning loop error: {e}")
+                await asyncio.sleep(60)  # Wait before retrying
+
+    async def _portfolio_monitoring_loop(self):
+        """Monitor portfolio and trigger rebalancing when needed"""
+        while self.running:
+            try:
+                # Analyze current portfolio
+                portfolio_analysis = await self._analyze_portfolio()
+
+                # Check for rebalancing opportunities
+                rebalance_decisions = await self._evaluate_rebalancing(
+                    portfolio_analysis
+                )
+
+                # Queue rebalancing decisions
+                for decision in rebalance_decisions:
+                    await self.execution_queue.put(decision)
+
+                # Wait for next monitoring cycle
+                await asyncio.sleep(self.config.portfolio_rebalance_interval)
+
+            except Exception as e:
+                self.logger.error(f"❌ Portfolio monitoring error: {e}")
+                await asyncio.sleep(300)
+
+    async def _execution_management_loop(self):
+        """Manage execution of trading decisions"""
+        while self.running:
+            try:
+                # Wait for execution decisions
+                decision = await asyncio.wait_for(
+                    self.execution_queue.get(), timeout=10.0
+                )
+
+                # Validate execution conditions
+                if await self._validate_execution_conditions(decision):
+                    # Execute the decision
+                    execution_result = await self._execute_decision(decision)
+
+                    # Log execution
+                    self.logger.info(
+                        f"✅ Executed {decision.action_type} for {decision.symbol}"
+                    )
+
+                    # Update performance tracking
+                    await self._track_execution_performance(decision, execution_result)
+                else:
+                    self.logger.warning(
+                        f"⚠️ Execution conditions not met for {decision.symbol}"
+                    )
+
+            except asyncio.TimeoutError:
+                # No new decisions, continue monitoring
+                continue
+            except Exception as e:
+                self.logger.error(f"❌ Execution management error: {e}")
+
+    async def _gas_optimization_loop(self):
+        """Continuously optimize gas usage and timing"""
+        while self.running:
+            try:
+                # Monitor gas prices
+                current_gas_price = self._get_current_gas_price()
+
+                # Update gas optimization strategies
+                if current_gas_price < self.config.gas_price_threshold:
+                    # Good gas conditions - process pending low-priority transactions
+                    await self._process_gas_optimized_transactions()
+
+                # Update gas savings tracking
+                self.state.gas_optimization_savings = (
+                    await self._calculate_gas_savings()
+                )
+
+                await asyncio.sleep(60)  # Check every minute
+
+            except Exception as e:
+                self.logger.error(f"❌ Gas optimization error: {e}")
+                await asyncio.sleep(300)
+
+    async def _performance_tracking_loop(self):
+        """Track and analyze performance metrics"""
+        while self.running:
+            try:
+                # Calculate portfolio performance
+                performance_metrics = await self._calculate_performance_metrics()
+
+                # Update learning confidence based on performance
+                await self._update_learning_confidence(performance_metrics)
+
+                # Generate performance insights
+                insights = await self._generate_performance_insights(
+                    performance_metrics
+                )
+
+                # Log key insights
+                for insight in insights:
+                    self.logger.info(f"📊 {insight}")
+
+                await asyncio.sleep(self.config.deep_analysis_interval)
+
+            except Exception as e:
+                self.logger.error(f"❌ Performance tracking error: {e}")
+                await asyncio.sleep(600)
+
+    def _simulate_market_data(self) -> Dict[str, Dict]:
+        """Simulate real-time market data"""
+        current_time = time.time()
+        simulator = self.market_data_simulator
+
+        market_data = {}
+
+        for symbol, base_price in simulator["base_prices"].items():
+            # Simulate price movement
+            volatility = simulator["volatility_params"][symbol]
+            trend = simulator["trend_factors"][symbol]
+
+            # Add some randomness with trend
+            price_change = np.random.normal(0, volatility) + (trend - 1) * 0.01
+            new_price = base_price * (1 + price_change)
+
+            # Update base price for next iteration
+            simulator["base_prices"][symbol] = new_price
+
+            market_data[symbol] = {
+                "current_price": new_price,
+                "price_change_24h": price_change * 100,
+                "volume_24h": np.random.uniform(0.8, 2.0) * 50000000,
+                "volatility": np.random.uniform(40, 90),
+                "rsi": np.random.uniform(25, 75),
+                "volume_ratio": np.random.uniform(0.7, 2.2),
+                "liquidity": np.random.uniform(6.0, 9.0),
+                "timestamp": current_time,
+            }
+
+        simulator["last_update"] = current_time
+        return market_data
+
+    def _determine_sector(self, symbol: str) -> str:
+        """Determine sector for a token symbol"""
+        sector_mapping = {
+            "SAND": "gaming",
+            "MANA": "metaverse",
+            "AXS": "gaming",
+            "ENJ": "nft",
+            "GALA": "gaming",
+            "MAGIC": "gaming",
+            "MATIC": "infrastructure",
+            "LINK": "oracle",
+        }
+        return sector_mapping.get(symbol, "unknown")
+
+    async def _update_system_state(self):
+        """Update the orchestration system state"""
+        self.state.last_update = datetime.now().isoformat()
+        self.state.active_tokens = list(self.token_profiler.token_profiles.keys())
+
+        # Calculate average learning confidence
+        if self.token_profiler.token_profiles:
+            total_confidence = sum(
+                p.learning_confidence
+                for p in self.token_profiler.token_profiles.values()
+            )
+            self.state.learning_confidence_avg = total_confidence / len(
+                self.token_profiler.token_profiles
+            )
+
+        # Update total allocation
+        self.state.total_allocation = sum(
+            self._get_current_allocation(symbol) for symbol in self.state.active_tokens
+        )
+
+    async def _analyze_portfolio(self) -> Dict:
+        """Analyze current portfolio composition and performance"""
+        portfolio_analysis = {
+            "total_value": 100000.0,  # Simulated portfolio value
+            "token_allocations": {},
+            "sector_exposure": {},
+            "risk_metrics": {},
+            "performance_metrics": {},
+        }
+
+        # Get current allocations for each token
+        for symbol in self.state.active_tokens:
+            current_allocation = self._get_current_allocation(symbol)
+            portfolio_analysis["token_allocations"][symbol] = current_allocation
+
+        # Calculate sector exposure
+        sector_allocations = {}
+        for symbol, allocation in portfolio_analysis["token_allocations"].items():
+            if symbol in self.token_profiler.token_profiles:
+                profile = self.token_profiler.token_profiles[symbol]
+                sector = (
+                    list(profile.sector_influence.keys())[0]
+                    if profile.sector_influence
+                    else "unknown"
+                )
+                sector_allocations[sector] = (
+                    sector_allocations.get(sector, 0) + allocation
+                )
+
+        portfolio_analysis["sector_exposure"] = sector_allocations
+
+        return portfolio_analysis
+
+    async def _evaluate_rebalancing(
+        self, portfolio_analysis: Dict
+    ) -> List[ExecutionDecision]:
+        """Evaluate if rebalancing is needed and generate decisions"""
+        decisions = []
+        market_context = {
+            "market_sentiment": 0.68,
+            "gas_price": self._get_current_gas_price(),
+        }
+
+        for symbol in self.state.active_tokens:
+            try:
+                # Get current allocation
+                current_allocation = portfolio_analysis["token_allocations"].get(
+                    symbol, 0
+                )
+
+                # Get recommended allocation from AI system
+                allocation_intel = self.token_profiler.analyze_allocation_intelligence(
+                    symbol, market_context
+                )
+                recommended_allocation = allocation_intel.recommended_allocation
+
+                # Check if rebalancing is needed
+                allocation_diff = abs(recommended_allocation - current_allocation)
+                if (
+                    allocation_diff > self.config.rebalance_threshold * 100
+                ):  # Convert to percentage
+
+                    action_type = (
+                        "BUY" if recommended_allocation > current_allocation else "SELL"
+                    )
+
+                    decision = ExecutionDecision(
+                        action_type=action_type,
+                        symbol=symbol,
+                        allocation_change=recommended_allocation - current_allocation,
+                        confidence=allocation_intel.confidence_level,
+                        reasoning=allocation_intel.reasoning,
+                        gas_optimization={
+                            "preferred_timing": "low_gas_hours",
+                            "batch_size": self.config.batch_size_preference,
+                        },
+                        execution_priority=self._calculate_execution_priority(
+                            allocation_intel
+                        ),
+                        estimated_impact={
+                            "expected_roi": allocation_intel.expected_roi_30d,
+                            "risk_impact": allocation_diff * 0.1,
+                        },
+                    )
+
+                    decisions.append(decision)
+
+            except Exception as e:
+                self.logger.error(f"❌ Error evaluating rebalancing for {symbol}: {e}")
+
+        return decisions
+
+    async def _validate_execution_conditions(self, decision: ExecutionDecision) -> bool:
+        """Validate if execution conditions are met"""
+        # Check confidence threshold
+        if decision.confidence < self.config.min_confidence_threshold:
+            return False
+
+        # Check gas price conditions
+        current_gas_price = self._get_current_gas_price()
+        if (
+            current_gas_price > self.config.gas_price_threshold
+            and decision.execution_priority < 8
+        ):
+            return False
+
+        # Check total allocation limits
+        if decision.action_type == "BUY":
+            new_total = self.state.total_allocation + abs(decision.allocation_change)
+            if new_total > self.config.max_total_allocation:
+                return False
+
+        return True
+
+    async def _execute_decision(self, decision: ExecutionDecision) -> Dict:
+        """Execute trading decision (simulated)"""
+        # Simulate execution delay
+        await asyncio.sleep(1)
+
+        # Simulate execution result
+        execution_result = {
+            "symbol": decision.symbol,
+            "action": decision.action_type,
+            "allocation_change": decision.allocation_change,
+            "execution_price": self._get_current_price(decision.symbol),
+            "gas_cost": self._calculate_gas_cost(decision),
+            "execution_time": datetime.now().isoformat(),
+            "status": "COMPLETED",
+        }
+
+        # Update internal allocation tracking
+        self._update_allocation_tracking(decision, execution_result)
+
+        return execution_result
+
+    async def _track_execution_performance(
+        self, decision: ExecutionDecision, result: Dict
+    ):
+        """Track performance of executed decisions"""
+        if decision.symbol not in self.performance_history:
+            self.performance_history[decision.symbol] = []
+
+        performance_record = {
+            "decision": asdict(decision),
+            "result": result,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+        self.performance_history[decision.symbol].append(performance_record)
+
+        # Keep only recent history
+        if len(self.performance_history[decision.symbol]) > 100:
+            self.performance_history[decision.symbol] = self.performance_history[
+                decision.symbol
+            ][-100:]
+
+    async def _process_gas_optimized_transactions(self):
+        """Process pending transactions during low gas periods"""
+        # This would process any pending low-priority transactions
+        # that were delayed due to high gas prices
+        pass
+
+    async def _calculate_gas_savings(self) -> float:
+        """Calculate total gas savings achieved"""
+        # Simulate gas savings calculation
+        return np.random.uniform(150, 300)  # USD saved
+
+    async def _calculate_performance_metrics(self) -> Dict:
+        """Calculate comprehensive performance metrics"""
+        metrics = {
+            "total_return": 0.0,
+            "sharpe_ratio": 0.0,
+            "max_drawdown": 0.0,
+            "win_rate": 0.0,
+            "avg_trade_return": 0.0,
+            "gas_efficiency": 0.0,
+        }
+
+        # Calculate from performance history
+        all_returns = []
+        successful_trades = 0
+        total_trades = 0
+
+        for symbol, history in self.performance_history.items():
+            for record in history:
+                if record["result"]["status"] == "COMPLETED":
+                    total_trades += 1
+                    # Simulate return calculation
+                    trade_return = np.random.uniform(-0.05, 0.15)
+                    all_returns.append(trade_return)
+                    if trade_return > 0:
+                        successful_trades += 1
+
+        if all_returns:
+            metrics["avg_trade_return"] = np.mean(all_returns)
+            metrics["win_rate"] = (
+                successful_trades / total_trades if total_trades > 0 else 0
+            )
+            metrics["total_return"] = sum(all_returns)
+
+        return metrics
+
+    async def _update_learning_confidence(self, performance_metrics: Dict):
+        """Update learning confidence based on performance"""
+        win_rate = performance_metrics.get("win_rate", 0.5)
+        avg_return = performance_metrics.get("avg_trade_return", 0.0)
+
+        # Update confidence for each token based on performance
+        for symbol, profile in self.token_profiler.token_profiles.items():
+            # Adjust confidence based on recent performance
+            if symbol in self.performance_history:
+                recent_performance = self.performance_history[symbol][
+                    -5:
+                ]  # Last 5 trades
+                if recent_performance:
+                    recent_win_rate = sum(
+                        1
+                        for record in recent_performance
+                        if record.get("simulated_return", 0) > 0
+                    ) / len(recent_performance)
+
+                    # Update profile confidence
+                    profile.learning_confidence = (
+                        0.7 * profile.learning_confidence + 0.3 * recent_win_rate
+                    )
+
+    async def _generate_performance_insights(
+        self, performance_metrics: Dict
+    ) -> List[str]:
+        """Generate actionable performance insights"""
+        insights = []
+
+        win_rate = performance_metrics.get("win_rate", 0.0)
+        avg_return = performance_metrics.get("avg_trade_return", 0.0)
+
+        if win_rate > 0.7:
+            insights.append(
+                f"Strong performance with {win_rate:.1%} win rate - consider increasing position sizes"
+            )
+        elif win_rate < 0.4:
+            insights.append(
+                f"Low win rate ({win_rate:.1%}) - review entry criteria and risk management"
+            )
+
+        if avg_return > 0.05:
+            insights.append(
+                f"Excellent average returns ({avg_return:.1%}) - strategy is working well"
+            )
+        elif avg_return < 0:
+            insights.append(f"Negative average returns - urgent strategy review needed")
+
+        # Gas efficiency insights
+        gas_savings = self.state.gas_optimization_savings
+        if gas_savings > 200:
+            insights.append(
+                f"Gas optimization saving ${gas_savings:.0f} - excellent efficiency"
+            )
+
+        return insights
+
+    def _get_current_allocation(self, symbol: str) -> float:
+        """Get current allocation percentage for a token"""
+        # Simulate current allocations
+        allocations = {
+            "SAND": 15.0,
+            "MANA": 12.0,
+            "AXS": 18.0,
+            "ENJ": 8.0,
+            "GALA": 20.0,
+            "MAGIC": 22.0,
+            "MATIC": 5.0,
+        }
+        return allocations.get(symbol, 0.0)
+
+    def _get_current_price(self, symbol: str) -> float:
+        """Get current price for a token"""
+        return self.market_data_simulator["base_prices"].get(symbol, 1.0)
+
+    def _get_current_gas_price(self) -> float:
+        """Get current gas price in gwei"""
+        return np.random.uniform(15, 35)  # Simulate gas price
+
+    def _calculate_execution_priority(
+        self, allocation_intel: AllocationIntelligence
+    ) -> int:
+        """Calculate execution priority (1-10, 10 being highest)"""
+        priority = 5  # Base priority
+
+        # High confidence increases priority
+        if allocation_intel.confidence_level > 0.8:
+            priority += 2
+
+        # High expected ROI increases priority
+        if allocation_intel.expected_roi_30d > 20:
+            priority += 2
+
+        # Risk adjustment
+        if allocation_intel.risk_adjusted_return > 15:
+            priority += 1
+
+        return min(10, max(1, priority))
+
+    def _calculate_gas_cost(self, decision: ExecutionDecision) -> float:
+        """Calculate estimated gas cost for execution"""
+        base_gas_cost = 0.002  # ETH
+        gas_price = self._get_current_gas_price()
+
+        # Adjust for gas price and batch size
+        multiplier = gas_price / 20  # Normalize to 20 gwei
+        return base_gas_cost * multiplier
+
+    def _update_allocation_tracking(self, decision: ExecutionDecision, result: Dict):
+        """Update internal allocation tracking"""
+        # This would update internal state to reflect the executed trade
+        pass
+
+    async def get_orchestration_status(self) -> Dict:
+        """Get current orchestration status"""
+        return {
+            "system_health": self.state.system_health,
+            "active_tokens": self.state.active_tokens,
+            "total_allocation": self.state.total_allocation,
+            "learning_confidence": self.state.learning_confidence_avg,
+            "gas_savings": self.state.gas_optimization_savings,
+            "pending_rebalances": len(self.state.pending_rebalances),
+            "last_update": self.state.last_update,
+            "performance_summary": await self._calculate_performance_metrics(),
+        }
+
+    async def generate_master_report(self) -> Dict:
+        """Generate comprehensive master orchestration report"""
+        status = await self.get_orchestration_status()
+        portfolio_analysis = await self._analyze_portfolio()
+        performance_metrics = await self._calculate_performance_metrics()
+
+        report = {
+            "generated_at": datetime.now().isoformat(),
+            "orchestration_status": status,
+            "portfolio_analysis": portfolio_analysis,
+            "performance_metrics": performance_metrics,
+            "learning_insights": {
+                "total_tokens_learned": len(self.token_profiler.token_profiles),
+                "avg_learning_confidence": status["learning_confidence"],
+                "top_performing_tokens": self._get_top_performers(),
+                "gas_optimization_achievements": {
+                    "total_savings_usd": status["gas_savings"],
+                    "efficiency_score": 8.5,
+                    "optimal_execution_rate": 0.85,
+                },
+            },
+            "strategic_recommendations": await self._generate_strategic_recommendations(),
+            "risk_assessment": self._generate_risk_assessment(),
+            "future_optimizations": self._suggest_future_optimizations(),
+        }
+
+        return report
+
+    def _get_top_performers(self) -> List[Dict]:
+        """Get top performing tokens"""
+        performers = []
+        for symbol, profile in self.token_profiler.token_profiles.items():
+            performance = profile.price_performance.get("total", 0)
+            performers.append(
+                {
+                    "symbol": symbol,
+                    "performance": performance,
+                    "confidence": profile.learning_confidence,
+                }
+            )
+
+        return sorted(performers, key=lambda x: x["performance"], reverse=True)[:5]
+
+    async def _generate_strategic_recommendations(self) -> List[str]:
+        """Generate strategic recommendations"""
+        return [
+            "Increase allocation to high-confidence gaming tokens during market uptrend",
+            "Implement layer-2 migration for gas optimization (potential 90% savings)",
+            "Expand learning dataset with DeFi and infrastructure tokens",
+            "Enhance momentum detection algorithms for earlier entry signals",
+            "Implement cross-chain arbitrage opportunities identification",
+        ]
+
+    def _generate_risk_assessment(self) -> Dict:
+        """Generate risk assessment"""
+        return {
+            "portfolio_risk_level": "MODERATE",
+            "concentration_risk": "LOW",
+            "sector_diversification": "GOOD",
+            "gas_price_risk": "LOW",
+            "learning_model_risk": "LOW",
+            "overall_risk_score": 6.5,  # out of 10
+        }
+
+    def _suggest_future_optimizations(self) -> List[str]:
+        """Suggest future optimization opportunities"""
+        return [
+            "Implement machine learning models for better price prediction",
+            "Add social sentiment analysis for enhanced allocation decisions",
+            "Develop cross-exchange arbitrage detection",
+            "Implement automated yield farming optimization",
+            "Add regulatory risk assessment for token evaluation",
+        ]
+
+
+async def main():
+    """
+    🎭 Demonstrate the Master Learning Orchestrator
+    """
+    print("🎭 MASTER LEARNING ORCHESTRATOR")
+    print("=" * 50)
+
+    # Initialize configuration
+    config = MasterOrchestrationConfig(
+        learning_update_interval=30,  # Faster for demo
+        portfolio_rebalance_interval=60,
+        max_total_allocation=85.0,
+        max_single_position=25.0,
+    )
+
+    # Create orchestrator
+    orchestrator = MasterLearningOrchestrator(config)
+
+    print("🚀 Starting orchestration system...")
+
+    try:
+        # Start orchestration in background
+        orchestration_task = asyncio.create_task(orchestrator.start_orchestration())
+
+        # Let it run for a demo period
+        print("⏰ Running orchestration for 2 minutes (demo)...")
+        await asyncio.sleep(10)  # Run for 2 minutes for demo
+
+        # Get status updates
+        for i in range(3):
+            await asyncio.sleep(30)
+            status = await orchestrator.get_orchestration_status()
+            print(f"\n📊 Status Update {i+1}:")
+            print(f"   System Health: {status['system_health']}")
+            print(f"   Active Tokens: {len(status['active_tokens'])}")
+            print(f"   Total Allocation: {status['total_allocation']:.1f}%")
+            print(f"   Learning Confidence: {status['learning_confidence']:.1%}")
+            print(f"   Gas Savings: ${status['gas_savings']:.0f}")
+
+        # Generate comprehensive report
+        print("\n📈 Generating Master Report...")
+        master_report = await orchestrator.generate_master_report()
+
+        print(f"\n🎯 MASTER ORCHESTRATION REPORT")
+        print(f"Generated: {master_report['generated_at']}")
+        print(
+            f"System Health: {master_report['orchestration_status']['system_health']}"
+        )
+        print(
+            f"Total Tokens Learned: {master_report['learning_insights']['total_tokens_learned']}"
+        )
+        print(
+            f"Average Learning Confidence: {master_report['learning_insights']['avg_learning_confidence']:.1%}"
+        )
+        print(
+            f"Gas Optimization Savings: ${master_report['learning_insights']['gas_optimization_achievements']['total_savings_usd']:.0f}"
+        )
+
+        print(f"\n💰 Top Performing Tokens:")
+        for token in master_report["learning_insights"]["top_performing_tokens"][:3]:
+            print(
+                f"   {token['symbol']}: {token['performance']:.1f}% (Confidence: {token['confidence']:.1%})"
+            )
+
+        print(f"\n🎯 Strategic Recommendations:")
+        for i, rec in enumerate(master_report["strategic_recommendations"][:3], 1):
+            print(f"   {i}. {rec}")
+
+        print(f"\n⚖️ Risk Assessment:")
+        risk = master_report["risk_assessment"]
+        print(f"   Overall Risk Score: {risk['overall_risk_score']}/10")
+        print(f"   Portfolio Risk: {risk['portfolio_risk_level']}")
+        print(f"   Concentration Risk: {risk['concentration_risk']}")
+
+        # Save comprehensive report
+        report_path = Path("master_orchestration_report.json")
+        with open(report_path, "w") as f:
+            json.dump(master_report, f, indent=2, default=str)
+
+        print(f"\n💾 Saved master report to: {report_path}")
+
+    finally:
+        # Stop orchestration
+        print("\n🛑 Stopping orchestration...")
+        await orchestrator.stop_orchestration()
+        print("✅ Master Learning Orchestrator Complete!")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -1,0 +1,899 @@
+{
+  "analyzed_at": "2025-08-05T21:56:53.108352",
+  "total_tokens": 5,
+  "token_analyses": {
+    "SAND": {
+      "symbol": "SAND",
+      "universal_analysis": {
+        "sector_match": "gaming",
+        "pattern_confidence": 0.7255555555555556,
+        "momentum_pattern": {
+          "score": 0.8666666666666667,
+          "breakout_probability": 1.56,
+          "volume_confirmation_strength": 1.906666666666667
+        },
+        "allocation_pattern": {
+          "score": 0.75,
+          "optimal_ranges": [
+            18.0,
+            22.0,
+            26.0
+          ],
+          "recommended_allocation": 16.5
+        },
+        "risk_pattern": {
+          "score": 0.56,
+          "sector_specific_risks": {
+            "narrative_dependency": 0.85,
+            "whale_sensitivity": 0.72,
+            "market_correlation": 0.68
+          },
+          "adjusted_risk_level": 0.42000000000000004
+        }
+      },
+      "enhanced_allocation": {
+        "base_allocation": 13.716722962619063,
+        "universal_allocation": 16.5,
+        "enhanced_allocation": 14.97150551087382,
+        "pattern_confidence": 0.7255555555555556,
+        "sector_multiplier": 1.15,
+        "confidence_level": 0.21766666666666667,
+        "expected_roi_30d": -1.8821396038731326,
+        "risk_adjusted_return": -0.3792190220560667,
+        "reasoning": [
+          "Recent underperformance (-23.4%) suggests reduced allocation",
+          "Lower allocation due to limited learning data and prediction accuracy",
+          "Risk management protocols applied due to elevated volatility",
+          "Universal pattern matching confidence: 72.6%",
+          "Sector-specific adjustment: 1.15x"
+        ]
+      },
+      "gas_mastery": {
+        "execution_timing": "STANDARD",
+        "optimal_batch_size": 5,
+        "gas_multiplier": 1.0,
+        "timing_sensitivity": 0.82,
+        "estimated_gas_cost": 0.0024000000000000002,
+        "potential_savings_pct": 0.0,
+        "layer2_recommendation": {
+          "recommended": true,
+          "best_option": "Polygon",
+          "cost_reduction": "95%",
+          "speed_improvement": "80%",
+          "supported_exchanges": [
+            "QuickSwap",
+            "SushiSwap",
+            "1inch"
+          ]
+        },
+        "execution_windows": [
+          {
+            "start": "02:00",
+            "end": "06:00",
+            "gas_efficiency": "EXCELLENT",
+            "savings": "25-40%"
+          },
+          {
+            "start": "08:00",
+            "end": "10:00",
+            "gas_efficiency": "GOOD",
+            "savings": "15-25%"
+          },
+          {
+            "start": "22:00",
+            "end": "24:00",
+            "gas_efficiency": "GOOD",
+            "savings": "10-20%"
+          }
+        ]
+      },
+      "execution_strategy": {
+        "execution_type": "CAUTIOUS_DCA",
+        "total_stages": 5,
+        "stage_allocations": [
+          4.491451653262146,
+          3.742876377718455,
+          2.9943011021747643,
+          2.245725826631073,
+          1.4971505510873822
+        ],
+        "execution_confidence": 0.21766666666666667,
+        "risk_management": {
+          "stop_loss": 0.41400000000000003,
+          "take_profit_levels": [
+            0.5625,
+            0.675,
+            0.9
+          ],
+          "position_sizing": 14.97150551087382
+        },
+        "timing_strategy": "CONSERVATIVE_DCA"
+      },
+      "confidence_metrics": {
+        "overall_confidence": 0.5553333333333333,
+        "learning_confidence": 0.3,
+        "pattern_confidence": 0.7255555555555556,
+        "confidence_breakdown": {
+          "historical_performance": 0.15,
+          "pattern_matching": 0.21766666666666667,
+          "market_context": 0.7,
+          "risk_assessment": 0.6
+        },
+        "confidence_trend": "DEVELOPING"
+      },
+      "risk_assessment": {
+        "overall_risk_score": 0.5340740740740741,
+        "risk_level": "MODERATE",
+        "risk_factors": {
+          "volatility": 0.68,
+          "liquidity": 0,
+          "pattern_uncertainty": 0.2744444444444444,
+          "narrative_dependency": 0.85,
+          "whale_sensitivity": 0.72,
+          "market_correlation": 0.68
+        },
+        "risk_mitigation": [],
+        "max_safe_allocation": 16.988888888888887
+      },
+      "profit_optimization": {
+        "profit_strategy": "STAGED_PROFIT_TAKING",
+        "profit_stages": [
+          {
+            "stage": 1,
+            "allocation_to_sell": 4.491451653262146,
+            "target_roi": -2.710281029577311,
+            "confidence_required": 0.5
+          },
+          {
+            "stage": 2,
+            "allocation_to_sell": 5.988602204349529,
+            "target_roi": -3.387851286971639,
+            "confidence_required": 0.6
+          },
+          {
+            "stage": 3,
+            "allocation_to_sell": 4.491451653262146,
+            "target_roi": -4.5171350492955185,
+            "confidence_required": 0.7
+          }
+        ],
+        "conservative_target": -1.5809972672534314,
+        "aggressive_target": -3.387851286971639,
+        "hodl_percentage": 0.2,
+        "profit_optimization": {
+          "dynamic_targets": true,
+          "market_condition_adjustment": true,
+          "gas_optimized_exits": true
+        }
+      }
+    },
+    "MANA": {
+      "symbol": "MANA",
+      "universal_analysis": {
+        "sector_match": "metaverse",
+        "pattern_confidence": 0.6633333333333334,
+        "momentum_pattern": {
+          "score": 0.8000000000000002,
+          "breakout_probability": 1.4400000000000004,
+          "volume_confirmation_strength": 1.7600000000000005
+        },
+        "allocation_pattern": {
+          "score": 0.6499999999999999,
+          "optimal_ranges": [
+            18.0,
+            22.0,
+            26.0
+          ],
+          "recommended_allocation": 14.299999999999997
+        },
+        "risk_pattern": {
+          "score": 0.54,
+          "sector_specific_risks": {
+            "narrative_dependency": 0.85,
+            "whale_sensitivity": 0.72,
+            "market_correlation": 0.68
+          },
+          "adjusted_risk_level": 0.405
+        }
+      },
+      "enhanced_allocation": {
+        "base_allocation": 12.973868957122548,
+        "universal_allocation": 14.299999999999997,
+        "enhanced_allocation": 13.894305649128233,
+        "pattern_confidence": 0.6633333333333334,
+        "sector_multiplier": 1.2,
+        "confidence_level": 0.19900000000000004,
+        "expected_roi_30d": -1.4845517681444025,
+        "risk_adjusted_return": -0.24350592355122033,
+        "reasoning": [
+          "Recent underperformance (-21.4%) suggests reduced allocation",
+          "Lower allocation due to limited learning data and prediction accuracy",
+          "Risk management protocols applied due to elevated volatility",
+          "Universal pattern matching confidence: 66.3%",
+          "Sector-specific adjustment: 1.20x"
+        ]
+      },
+      "gas_mastery": {
+        "execution_timing": "STANDARD",
+        "optimal_batch_size": 5,
+        "gas_multiplier": 1.0,
+        "timing_sensitivity": 0.82,
+        "estimated_gas_cost": 0.0024000000000000002,
+        "potential_savings_pct": 0.0,
+        "layer2_recommendation": {
+          "recommended": true,
+          "best_option": "Polygon",
+          "cost_reduction": "95%",
+          "speed_improvement": "80%",
+          "supported_exchanges": [
+            "QuickSwap",
+            "SushiSwap",
+            "1inch"
+          ]
+        },
+        "execution_windows": [
+          {
+            "start": "02:00",
+            "end": "06:00",
+            "gas_efficiency": "EXCELLENT",
+            "savings": "25-40%"
+          },
+          {
+            "start": "08:00",
+            "end": "10:00",
+            "gas_efficiency": "GOOD",
+            "savings": "15-25%"
+          },
+          {
+            "start": "22:00",
+            "end": "24:00",
+            "gas_efficiency": "GOOD",
+            "savings": "10-20%"
+          }
+        ]
+      },
+      "execution_strategy": {
+        "execution_type": "CAUTIOUS_DCA",
+        "total_stages": 5,
+        "stage_allocations": [
+          4.168291694738469,
+          3.4735764122820583,
+          2.7788611298256467,
+          2.0841458473692347,
+          1.3894305649128234
+        ],
+        "execution_confidence": 0.19900000000000004,
+        "risk_management": {
+          "stop_loss": 0.3496,
+          "take_profit_levels": [
+            0.475,
+            0.5700000000000001,
+            0.76
+          ],
+          "position_sizing": 13.894305649128233
+        },
+        "timing_strategy": "VOLATILITY_SCALPING"
+      },
+      "confidence_metrics": {
+        "overall_confidence": 0.518,
+        "learning_confidence": 0.3,
+        "pattern_confidence": 0.6633333333333334,
+        "confidence_breakdown": {
+          "historical_performance": 0.15,
+          "pattern_matching": 0.19900000000000004,
+          "market_context": 0.7,
+          "risk_assessment": 0.6
+        },
+        "confidence_trend": "DEVELOPING"
+      },
+      "risk_assessment": {
+        "overall_risk_score": 0.5552777777777778,
+        "risk_level": "MODERATE",
+        "risk_factors": {
+          "volatility": 0.72,
+          "liquidity": 0.025000000000000022,
+          "pattern_uncertainty": 0.33666666666666656,
+          "narrative_dependency": 0.85,
+          "whale_sensitivity": 0.72,
+          "market_correlation": 0.68
+        },
+        "risk_mitigation": [
+          "Implement tighter stop-losses due to high volatility"
+        ],
+        "max_safe_allocation": 16.670833333333334
+      },
+      "profit_optimization": {
+        "profit_strategy": "STAGED_PROFIT_TAKING",
+        "profit_stages": [
+          {
+            "stage": 1,
+            "allocation_to_sell": 4.168291694738469,
+            "target_roi": -2.1377545461279395,
+            "confidence_required": 0.5
+          },
+          {
+            "stage": 2,
+            "allocation_to_sell": 5.557722259651293,
+            "target_roi": -2.6721931826599246,
+            "confidence_required": 0.6
+          },
+          {
+            "stage": 3,
+            "allocation_to_sell": 4.168291694738469,
+            "target_roi": -3.562924243546566,
+            "confidence_required": 0.7
+          }
+        ],
+        "conservative_target": -1.247023485241298,
+        "aggressive_target": -2.6721931826599246,
+        "hodl_percentage": 0.2,
+        "profit_optimization": {
+          "dynamic_targets": true,
+          "market_condition_adjustment": true,
+          "gas_optimized_exits": true
+        }
+      }
+    },
+    "AXS": {
+      "symbol": "AXS",
+      "universal_analysis": {
+        "sector_match": "gaming",
+        "pattern_confidence": 0.7588888888888888,
+        "momentum_pattern": {
+          "score": 0.8666666666666667,
+          "breakout_probability": 1.56,
+          "volume_confirmation_strength": 1.906666666666667
+        },
+        "allocation_pattern": {
+          "score": 0.9,
+          "optimal_ranges": [
+            18.0,
+            22.0,
+            26.0
+          ],
+          "recommended_allocation": 19.8
+        },
+        "risk_pattern": {
+          "score": 0.51,
+          "sector_specific_risks": {
+            "narrative_dependency": 0.85,
+            "whale_sensitivity": 0.72,
+            "market_correlation": 0.68
+          },
+          "adjusted_risk_level": 0.3825
+        }
+      },
+      "enhanced_allocation": {
+        "base_allocation": 17.077942021536874,
+        "universal_allocation": 19.8,
+        "enhanced_allocation": 18.695739994860443,
+        "pattern_confidence": 0.7588888888888888,
+        "sector_multiplier": 1.15,
+        "confidence_level": 0.22766666666666663,
+        "expected_roi_30d": 4.061922840623079,
+        "risk_adjusted_return": 0.7969077483924357,
+        "reasoning": [
+          "Strong historical performance (+50.1%) supports higher allocation",
+          "Lower allocation due to limited learning data and prediction accuracy",
+          "Risk management protocols applied due to elevated volatility",
+          "Universal pattern matching confidence: 75.9%",
+          "Sector-specific adjustment: 1.15x"
+        ]
+      },
+      "gas_mastery": {
+        "execution_timing": "STANDARD",
+        "optimal_batch_size": 5,
+        "gas_multiplier": 1.0,
+        "timing_sensitivity": 0.82,
+        "estimated_gas_cost": 0.0024000000000000002,
+        "potential_savings_pct": 0.0,
+        "layer2_recommendation": {
+          "recommended": true,
+          "best_option": "Polygon",
+          "cost_reduction": "95%",
+          "speed_improvement": "80%",
+          "supported_exchanges": [
+            "QuickSwap",
+            "SushiSwap",
+            "1inch"
+          ]
+        },
+        "execution_windows": [
+          {
+            "start": "02:00",
+            "end": "06:00",
+            "gas_efficiency": "EXCELLENT",
+            "savings": "25-40%"
+          },
+          {
+            "start": "08:00",
+            "end": "10:00",
+            "gas_efficiency": "GOOD",
+            "savings": "15-25%"
+          },
+          {
+            "start": "22:00",
+            "end": "24:00",
+            "gas_efficiency": "GOOD",
+            "savings": "10-20%"
+          }
+        ]
+      },
+      "execution_strategy": {
+        "execution_type": "CAUTIOUS_DCA",
+        "total_stages": 5,
+        "stage_allocations": [
+          5.608721998458132,
+          4.673934998715111,
+          3.7391479989720886,
+          2.804360999229066,
+          1.8695739994860443
+        ],
+        "execution_confidence": 0.22766666666666663,
+        "risk_management": {
+          "stop_loss": 6.21,
+          "take_profit_levels": [
+            8.4375,
+            10.125,
+            13.5
+          ],
+          "position_sizing": 18.695739994860443
+        },
+        "timing_strategy": "VOLATILITY_SCALPING"
+      },
+      "confidence_metrics": {
+        "overall_confidence": 0.5753333333333333,
+        "learning_confidence": 0.3,
+        "pattern_confidence": 0.7588888888888888,
+        "confidence_breakdown": {
+          "historical_performance": 0.15,
+          "pattern_matching": 0.22766666666666663,
+          "market_context": 0.7,
+          "risk_assessment": 0.6
+        },
+        "confidence_trend": "DEVELOPING"
+      },
+      "risk_assessment": {
+        "overall_risk_score": 0.5451851851851852,
+        "risk_level": "MODERATE",
+        "risk_factors": {
+          "volatility": 0.78,
+          "liquidity": 0,
+          "pattern_uncertainty": 0.24111111111111116,
+          "narrative_dependency": 0.85,
+          "whale_sensitivity": 0.72,
+          "market_correlation": 0.68
+        },
+        "risk_mitigation": [
+          "Implement tighter stop-losses due to high volatility"
+        ],
+        "max_safe_allocation": 16.822222222222223
+      },
+      "profit_optimization": {
+        "profit_strategy": "STAGED_PROFIT_TAKING",
+        "profit_stages": [
+          {
+            "stage": 1,
+            "allocation_to_sell": 5.608721998458132,
+            "target_roi": 5.849168890497233,
+            "confidence_required": 0.5
+          },
+          {
+            "stage": 2,
+            "allocation_to_sell": 7.478295997944177,
+            "target_roi": 7.311461113121542,
+            "confidence_required": 0.6
+          },
+          {
+            "stage": 3,
+            "allocation_to_sell": 5.608721998458132,
+            "target_roi": 9.748614817495389,
+            "confidence_required": 0.7
+          }
+        ],
+        "conservative_target": 3.412015186123386,
+        "aggressive_target": 7.311461113121542,
+        "hodl_percentage": 0.2,
+        "profit_optimization": {
+          "dynamic_targets": true,
+          "market_condition_adjustment": true,
+          "gas_optimized_exits": true
+        }
+      }
+    },
+    "ENJ": {
+      "symbol": "ENJ",
+      "universal_analysis": {
+        "sector_match": "nft",
+        "pattern_confidence": 0.7027777777777778,
+        "momentum_pattern": {
+          "score": 0.7333333333333334,
+          "breakout_probability": 1.32,
+          "volume_confirmation_strength": 1.6133333333333335
+        },
+        "allocation_pattern": {
+          "score": 0.8,
+          "optimal_ranges": [
+            18.0,
+            22.0,
+            26.0
+          ],
+          "recommended_allocation": 17.6
+        },
+        "risk_pattern": {
+          "score": 0.575,
+          "sector_specific_risks": {
+            "narrative_dependency": 0.85,
+            "whale_sensitivity": 0.72,
+            "market_correlation": 0.68
+          },
+          "adjusted_risk_level": 0.43124999999999997
+        }
+      },
+      "enhanced_allocation": {
+        "base_allocation": 16.40558476045502,
+        "universal_allocation": 17.6,
+        "enhanced_allocation": 18.488633014785712,
+        "pattern_confidence": 0.7027777777777778,
+        "sector_multiplier": 1.25,
+        "confidence_level": 0.21083333333333334,
+        "expected_roi_30d": 2.077499135737752,
+        "risk_adjusted_return": 0.42440068457514313,
+        "reasoning": [
+          "Strong historical performance (+24.8%) supports higher allocation",
+          "Lower allocation due to limited learning data and prediction accuracy",
+          "Risk management protocols applied due to elevated volatility",
+          "Universal pattern matching confidence: 70.3%",
+          "Sector-specific adjustment: 1.25x"
+        ]
+      },
+      "gas_mastery": {
+        "execution_timing": "STANDARD",
+        "optimal_batch_size": 5,
+        "gas_multiplier": 1.0,
+        "timing_sensitivity": 0.82,
+        "estimated_gas_cost": 0.0024000000000000002,
+        "potential_savings_pct": 0.0,
+        "layer2_recommendation": {
+          "recommended": true,
+          "best_option": "Polygon",
+          "cost_reduction": "95%",
+          "speed_improvement": "80%",
+          "supported_exchanges": [
+            "QuickSwap",
+            "SushiSwap",
+            "1inch"
+          ]
+        },
+        "execution_windows": [
+          {
+            "start": "02:00",
+            "end": "06:00",
+            "gas_efficiency": "EXCELLENT",
+            "savings": "25-40%"
+          },
+          {
+            "start": "08:00",
+            "end": "10:00",
+            "gas_efficiency": "GOOD",
+            "savings": "15-25%"
+          },
+          {
+            "start": "22:00",
+            "end": "24:00",
+            "gas_efficiency": "GOOD",
+            "savings": "10-20%"
+          }
+        ]
+      },
+      "execution_strategy": {
+        "execution_type": "CAUTIOUS_DCA",
+        "total_stages": 5,
+        "stage_allocations": [
+          5.546589904435714,
+          4.622158253696428,
+          3.6977266029571427,
+          2.773294952217857,
+          1.8488633014785714
+        ],
+        "execution_confidence": 0.21083333333333334,
+        "risk_management": {
+          "stop_loss": 0.25760000000000005,
+          "take_profit_levels": [
+            0.35000000000000003,
+            0.42000000000000004,
+            0.56
+          ],
+          "position_sizing": 18.488633014785712
+        },
+        "timing_strategy": "CONSERVATIVE_DCA"
+      },
+      "confidence_metrics": {
+        "overall_confidence": 0.5416666666666667,
+        "learning_confidence": 0.3,
+        "pattern_confidence": 0.7027777777777778,
+        "confidence_breakdown": {
+          "historical_performance": 0.15,
+          "pattern_matching": 0.21083333333333334,
+          "market_context": 0.7,
+          "risk_assessment": 0.6
+        },
+        "confidence_trend": "DEVELOPING"
+      },
+      "risk_assessment": {
+        "overall_risk_score": 0.549537037037037,
+        "risk_level": "MODERATE",
+        "risk_factors": {
+          "volatility": 0.65,
+          "liquidity": 0.09999999999999998,
+          "pattern_uncertainty": 0.29722222222222217,
+          "narrative_dependency": 0.85,
+          "whale_sensitivity": 0.72,
+          "market_correlation": 0.68
+        },
+        "risk_mitigation": [],
+        "max_safe_allocation": 16.756944444444443
+      },
+      "profit_optimization": {
+        "profit_strategy": "STAGED_PROFIT_TAKING",
+        "profit_stages": [
+          {
+            "stage": 1,
+            "allocation_to_sell": 5.546589904435714,
+            "target_roi": 2.991598755462363,
+            "confidence_required": 0.5
+          },
+          {
+            "stage": 2,
+            "allocation_to_sell": 7.3954532059142855,
+            "target_roi": 3.739498444327954,
+            "confidence_required": 0.6
+          },
+          {
+            "stage": 3,
+            "allocation_to_sell": 5.546589904435714,
+            "target_roi": 4.985997925770605,
+            "confidence_required": 0.7
+          }
+        ],
+        "conservative_target": 1.7450992740197118,
+        "aggressive_target": 3.739498444327954,
+        "hodl_percentage": 0.2,
+        "profit_optimization": {
+          "dynamic_targets": true,
+          "market_condition_adjustment": true,
+          "gas_optimized_exits": true
+        }
+      }
+    },
+    "MATIC": {
+      "symbol": "MATIC",
+      "universal_analysis": {
+        "sector_match": "infrastructure",
+        "pattern_confidence": 0.7194444444444444,
+        "momentum_pattern": {
+          "score": 0.7333333333333334,
+          "breakout_probability": 1.32,
+          "volume_confirmation_strength": 1.6133333333333335
+        },
+        "allocation_pattern": {
+          "score": 0.75,
+          "optimal_ranges": [
+            18.0,
+            22.0,
+            26.0
+          ],
+          "recommended_allocation": 16.5
+        },
+        "risk_pattern": {
+          "score": 0.675,
+          "sector_specific_risks": {
+            "narrative_dependency": 0.85,
+            "whale_sensitivity": 0.72,
+            "market_correlation": 0.68
+          },
+          "adjusted_risk_level": 0.5062500000000001
+        }
+      },
+      "enhanced_allocation": {
+        "base_allocation": 14.511712132114258,
+        "universal_allocation": 16.5,
+        "enhanced_allocation": 12.782592581971794,
+        "pattern_confidence": 0.7194444444444444,
+        "sector_multiplier": 0.95,
+        "confidence_level": 0.21583333333333332,
+        "expected_roi_30d": -0.4347786457077788,
+        "risk_adjusted_return": -0.08824756168471329,
+        "reasoning": [
+          "Lower allocation due to limited learning data and prediction accuracy",
+          "Risk management protocols applied due to elevated volatility",
+          "Universal pattern matching confidence: 71.9%",
+          "Sector-specific adjustment: 0.95x"
+        ]
+      },
+      "gas_mastery": {
+        "execution_timing": "STANDARD",
+        "optimal_batch_size": 5,
+        "gas_multiplier": 1.0,
+        "timing_sensitivity": 0.82,
+        "estimated_gas_cost": 0.0024000000000000002,
+        "potential_savings_pct": 0.0,
+        "layer2_recommendation": {
+          "recommended": true,
+          "best_option": "Polygon",
+          "cost_reduction": "95%",
+          "speed_improvement": "80%",
+          "supported_exchanges": [
+            "QuickSwap",
+            "SushiSwap",
+            "1inch"
+          ]
+        },
+        "execution_windows": [
+          {
+            "start": "02:00",
+            "end": "06:00",
+            "gas_efficiency": "EXCELLENT",
+            "savings": "25-40%"
+          },
+          {
+            "start": "08:00",
+            "end": "10:00",
+            "gas_efficiency": "GOOD",
+            "savings": "15-25%"
+          },
+          {
+            "start": "22:00",
+            "end": "24:00",
+            "gas_efficiency": "GOOD",
+            "savings": "10-20%"
+          }
+        ]
+      },
+      "execution_strategy": {
+        "execution_type": "CAUTIOUS_DCA",
+        "total_stages": 5,
+        "stage_allocations": [
+          3.8347777745915383,
+          3.1956481454929486,
+          2.556518516394359,
+          1.9173888872957692,
+          1.2782592581971794
+        ],
+        "execution_confidence": 0.21583333333333332,
+        "risk_management": {
+          "stop_loss": 0.782,
+          "take_profit_levels": [
+            1.0625,
+            1.275,
+            1.7
+          ],
+          "position_sizing": 12.782592581971794
+        },
+        "timing_strategy": "CONSERVATIVE_DCA"
+      },
+      "confidence_metrics": {
+        "overall_confidence": 0.5516666666666666,
+        "learning_confidence": 0.3,
+        "pattern_confidence": 0.7194444444444444,
+        "confidence_breakdown": {
+          "historical_performance": 0.15,
+          "pattern_matching": 0.21583333333333332,
+          "market_context": 0.7,
+          "risk_assessment": 0.6
+        },
+        "confidence_trend": "DEVELOPING"
+      },
+      "risk_assessment": {
+        "overall_risk_score": 0.4967592592592593,
+        "risk_level": "MODERATE",
+        "risk_factors": {
+          "volatility": 0.45,
+          "liquidity": 0,
+          "pattern_uncertainty": 0.28055555555555556,
+          "narrative_dependency": 0.85,
+          "whale_sensitivity": 0.72,
+          "market_correlation": 0.68
+        },
+        "risk_mitigation": [],
+        "max_safe_allocation": 17.54861111111111
+      },
+      "profit_optimization": {
+        "profit_strategy": "STAGED_PROFIT_TAKING",
+        "profit_stages": [
+          {
+            "stage": 1,
+            "allocation_to_sell": 3.8347777745915383,
+            "target_roi": -0.6260812498192013,
+            "confidence_required": 0.5
+          },
+          {
+            "stage": 2,
+            "allocation_to_sell": 5.113037032788718,
+            "target_roi": -0.7826015622740017,
+            "confidence_required": 0.6
+          },
+          {
+            "stage": 3,
+            "allocation_to_sell": 3.8347777745915383,
+            "target_roi": -1.043468749698669,
+            "confidence_required": 0.7
+          }
+        ],
+        "conservative_target": -0.36521406239453413,
+        "aggressive_target": -0.7826015622740017,
+        "hodl_percentage": 0.2,
+        "profit_optimization": {
+          "dynamic_targets": true,
+          "market_condition_adjustment": true,
+          "gas_optimized_exits": true
+        }
+      }
+    }
+  },
+  "portfolio_insights": [],
+  "optimization_recommendations": [
+    "Implement batch execution for all positions to optimize gas costs",
+    "Consider Layer 2 migration for 90%+ gas cost reduction"
+  ],
+  "gas_mastery_summary": {
+    "total_potential_savings_pct": 0.0,
+    "optimal_execution_tokens": [],
+    "layer2_migration_candidates": [
+      "SAND",
+      "MANA",
+      "AXS",
+      "ENJ",
+      "MATIC"
+    ],
+    "recommended_batch_sizes": {
+      "immediate_execution": 5,
+      "delayed_execution": 8,
+      "layer2_migration": 10
+    },
+    "execution_windows": [
+      {
+        "start": "02:00",
+        "end": "06:00",
+        "gas_efficiency": "EXCELLENT",
+        "savings": "25-40%"
+      },
+      {
+        "start": "08:00",
+        "end": "10:00",
+        "gas_efficiency": "GOOD",
+        "savings": "15-25%"
+      },
+      {
+        "start": "22:00",
+        "end": "24:00",
+        "gas_efficiency": "GOOD",
+        "savings": "10-20%"
+      }
+    ]
+  },
+  "risk_portfolio_assessment": {
+    "average_portfolio_risk": 0.5361666666666667,
+    "risk_level": "MODERATE",
+    "high_risk_tokens": [],
+    "risk_factors_avg": {
+      "volatility": 0.6559999999999999,
+      "liquidity": 0.025,
+      "pattern_uncertainty": 0.2859999999999999,
+      "narrative_dependency": 0.85,
+      "whale_sensitivity": 0.72,
+      "market_correlation": 0.68
+    },
+    "diversification_score": 0.9791066625435622,
+    "recommended_actions": [
+      "Implement dynamic stop-losses based on volatility",
+      "Consider hedging strategies for portfolio protection"
+    ]
+  },
+  "execution_master_plan": {
+    "immediate_actions": [],
+    "scheduled_actions": [],
+    "optimization_actions": [],
+    "risk_management_actions": []
+  }
+}

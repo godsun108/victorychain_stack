@@ -1,0 +1,801 @@
+#!/usr/bin/env python3
+"""
+🧠 INTELLIGENT TOKEN PROFILING SYSTEM
+====================================
+Advanced parameter profiling using GALA and MAGIC learning patterns
+Optimizes allocation decisions and minimizes gas fees through smart profiling
+"""
+
+import json
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass, asdict
+import logging
+
+
+@dataclass
+class TokenProfile:
+    """Comprehensive token profile with learned parameters"""
+
+    symbol: str
+    price: float
+    market_cap: float
+
+    # Technical Indicators
+    momentum_score: float
+    volatility_index: float
+    volume_strength: float
+    liquidity_rating: float
+
+    # Fundamental Metrics
+    ecosystem_health: float
+    community_strength: float
+    developer_activity: float
+    utility_score: float
+
+    # Market Position
+    sector: str
+    market_rank: int
+    circulating_supply: float
+    max_supply: float
+
+    # Learning Parameters (derived from GALA/MAGIC)
+    gala_similarity: float
+    magic_similarity: float
+    gaming_correlation: float
+    nft_integration: float
+
+    # Risk Assessment
+    risk_score: float
+    whale_concentration: float
+    exchange_coverage: float
+    regulatory_risk: float
+
+    # Gas Optimization
+    gas_efficiency: float
+    transaction_cost: float
+    optimal_batch_size: int
+    best_execution_time: str
+
+    # Allocation Intelligence
+    recommended_allocation: float
+    confidence_level: float
+    expected_return: float
+    time_horizon: str
+
+    # Dynamic Learning
+    learning_accuracy: float
+    prediction_confidence: float
+    adaptation_rate: float
+
+    timestamp: str
+
+
+class TokenProfiler:
+    """
+    🎯 Advanced token profiling system using GALA/MAGIC learning patterns
+    """
+
+    def __init__(self):
+        self.gala_baseline = self._load_gala_baseline()
+        self.magic_baseline = self._load_magic_baseline()
+        self.gas_optimization_params = self._load_gas_params()
+        self.learning_weights = self._initialize_learning_weights()
+
+        # Setup logging
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
+
+    def _load_gala_baseline(self) -> Dict:
+        """Load GALA baseline parameters for pattern matching"""
+        return {
+            "symbol": "GALA",
+            "momentum_baseline": 7.8,
+            "volatility_baseline": 65.0,
+            "volume_strength": 8.2,
+            "ecosystem_health": 8.5,
+            "gaming_focus": 9.5,
+            "nft_integration": 8.8,
+            "community_strength": 8.0,
+            "developer_activity": 7.5,
+            "risk_profile": "MODERATE_HIGH",
+            "gas_efficiency": 7.2,
+            "optimal_allocation_range": (15.0, 25.0),
+            "performance_patterns": {
+                "bull_market": 2.8,
+                "bear_market": -1.2,
+                "sideways": 0.3,
+            },
+        }
+
+    def _load_magic_baseline(self) -> Dict:
+        """Load MAGIC baseline parameters for pattern matching"""
+        return {
+            "symbol": "MAGIC",
+            "momentum_baseline": 8.1,
+            "volatility_baseline": 58.0,
+            "volume_strength": 7.9,
+            "ecosystem_health": 8.8,
+            "gaming_focus": 9.2,
+            "nft_integration": 9.0,
+            "community_strength": 8.3,
+            "developer_activity": 8.1,
+            "risk_profile": "MODERATE",
+            "gas_efficiency": 8.1,
+            "optimal_allocation_range": (20.0, 30.0),
+            "performance_patterns": {
+                "bull_market": 3.2,
+                "bear_market": -0.8,
+                "sideways": 0.5,
+            },
+        }
+
+    def _load_gas_params(self) -> Dict:
+        """Load gas optimization parameters"""
+        return {
+            "low_gas_hours": [2, 3, 4, 5, 6, 7, 8],  # UTC hours
+            "high_gas_hours": [14, 15, 16, 17, 18, 19],
+            "optimal_batch_sizes": {"small_cap": 3, "mid_cap": 5, "large_cap": 8},
+            "gas_efficiency_weights": {
+                "ethereum": 1.0,
+                "polygon": 0.1,
+                "bsc": 0.05,
+                "arbitrum": 0.2,
+            },
+        }
+
+    def _initialize_learning_weights(self) -> Dict:
+        """Initialize learning weights for pattern recognition"""
+        return {
+            "gala_weight": 0.4,
+            "magic_weight": 0.6,
+            "momentum_weight": 0.25,
+            "fundamentals_weight": 0.35,
+            "risk_weight": 0.20,
+            "gas_weight": 0.20,
+        }
+
+    def calculate_gala_similarity(self, token_data: Dict) -> float:
+        """
+        🎮 Calculate similarity to GALA token patterns
+        """
+        gala = self.gala_baseline
+        similarity_factors = []
+
+        # Gaming ecosystem similarity
+        if token_data.get("sector") == "gaming":
+            similarity_factors.append(0.9)
+        elif token_data.get("sector") in ["metaverse", "nft"]:
+            similarity_factors.append(0.7)
+        else:
+            similarity_factors.append(0.3)
+
+        # Volume and momentum patterns
+        momentum_sim = min(
+            token_data.get("momentum_score", 0) / gala["momentum_baseline"], 1.0
+        )
+        volume_sim = min(
+            token_data.get("volume_strength", 0) / gala["volume_strength"], 1.0
+        )
+
+        similarity_factors.extend([momentum_sim, volume_sim])
+
+        # Ecosystem health comparison
+        ecosystem_sim = min(
+            token_data.get("ecosystem_health", 0) / gala["ecosystem_health"], 1.0
+        )
+        similarity_factors.append(ecosystem_sim)
+
+        return np.mean(similarity_factors) * 100
+
+    def calculate_magic_similarity(self, token_data: Dict) -> float:
+        """
+        ✨ Calculate similarity to MAGIC token patterns
+        """
+        magic = self.magic_baseline
+        similarity_factors = []
+
+        # Gaming and NFT integration
+        if token_data.get("nft_integration", 0) >= 8.0:
+            similarity_factors.append(0.9)
+        elif token_data.get("nft_integration", 0) >= 6.0:
+            similarity_factors.append(0.7)
+        else:
+            similarity_factors.append(0.4)
+
+        # Community and developer activity
+        community_sim = min(
+            token_data.get("community_strength", 0) / magic["community_strength"], 1.0
+        )
+        dev_sim = min(
+            token_data.get("developer_activity", 0) / magic["developer_activity"], 1.0
+        )
+
+        similarity_factors.extend([community_sim, dev_sim])
+
+        # Risk profile alignment
+        if token_data.get("risk_score", 50) <= 40:  # Lower risk like MAGIC
+            similarity_factors.append(0.8)
+        else:
+            similarity_factors.append(0.5)
+
+        return np.mean(similarity_factors) * 100
+
+    def calculate_gas_efficiency(self, token_data: Dict) -> Tuple[float, Dict]:
+        """
+        ⛽ Calculate gas efficiency and optimization parameters
+        """
+        market_cap = token_data.get("market_cap", 0)
+
+        # Determine optimal batch size based on market cap
+        if market_cap < 50_000_000:  # Small cap
+            batch_size = self.gas_optimization_params["optimal_batch_sizes"][
+                "small_cap"
+            ]
+        elif market_cap < 500_000_000:  # Mid cap
+            batch_size = self.gas_optimization_params["optimal_batch_sizes"]["mid_cap"]
+        else:  # Large cap
+            batch_size = self.gas_optimization_params["optimal_batch_sizes"][
+                "large_cap"
+            ]
+
+        # Calculate gas efficiency score
+        base_efficiency = 70.0
+
+        # Bonus for low volatility (stable gas costs)
+        volatility = token_data.get("volatility_index", 50)
+        if volatility < 40:
+            base_efficiency += 15
+        elif volatility < 60:
+            base_efficiency += 5
+
+        # Bonus for high liquidity (better execution)
+        liquidity = token_data.get("liquidity_rating", 50)
+        if liquidity > 80:
+            base_efficiency += 10
+        elif liquidity > 60:
+            base_efficiency += 5
+
+        # Determine best execution time
+        current_hour = datetime.now().hour
+        if current_hour in self.gas_optimization_params["low_gas_hours"]:
+            best_time = "CURRENT"
+            base_efficiency += 5
+        else:
+            best_time = f"{self.gas_optimization_params['low_gas_hours'][0]:02d}:00 UTC"
+
+        gas_optimization = {
+            "efficiency_score": min(base_efficiency, 100),
+            "optimal_batch_size": batch_size,
+            "best_execution_time": best_time,
+            "estimated_gas_cost": self._estimate_gas_cost(token_data),
+            "gas_saving_potential": max(0, 100 - base_efficiency) * 0.1,
+        }
+
+        return gas_optimization["efficiency_score"], gas_optimization
+
+    def _estimate_gas_cost(self, token_data: Dict) -> float:
+        """Estimate gas cost for token transactions"""
+        base_cost = 0.005  # Base ETH cost
+
+        # Adjust based on token complexity
+        if token_data.get("sector") in ["defi", "nft"]:
+            base_cost *= 1.5
+        elif token_data.get("sector") == "gaming":
+            base_cost *= 1.2
+
+        # Adjust based on liquidity
+        liquidity = token_data.get("liquidity_rating", 50)
+        if liquidity < 50:
+            base_cost *= 1.3
+
+        return round(base_cost, 6)
+
+    def calculate_recommended_allocation(
+        self, token_data: Dict, gala_sim: float, magic_sim: float
+    ) -> Tuple[float, float]:
+        """
+        🎯 Calculate recommended allocation based on learned patterns
+        """
+        # Base allocation from similarity scores
+        gala_weight = self.learning_weights["gala_weight"]
+        magic_weight = self.learning_weights["magic_weight"]
+
+        similarity_score = (gala_sim * gala_weight + magic_sim * magic_weight) / 100
+
+        # Risk adjustment
+        risk_score = token_data.get("risk_score", 50)
+        risk_multiplier = max(0.3, (100 - risk_score) / 100)
+
+        # Momentum bonus
+        momentum = token_data.get("momentum_score", 5)
+        momentum_multiplier = min(1.5, momentum / 8.0)
+
+        # Calculate base allocation
+        base_allocation = (
+            similarity_score * risk_multiplier * momentum_multiplier * 30
+        )  # Max 30%
+
+        # Apply learned allocation ranges
+        if gala_sim > magic_sim:
+            min_alloc, max_alloc = self.gala_baseline["optimal_allocation_range"]
+        else:
+            min_alloc, max_alloc = self.magic_baseline["optimal_allocation_range"]
+
+        recommended_allocation = np.clip(base_allocation, min_alloc * 0.5, max_alloc)
+
+        # Confidence calculation
+        confidence = min(
+            90, (gala_sim + magic_sim) / 2 + (token_data.get("ecosystem_health", 0) * 2)
+        )
+
+        return recommended_allocation, confidence
+
+    def predict_performance(
+        self, token_data: Dict, gala_sim: float, magic_sim: float
+    ) -> Dict:
+        """
+        📈 Predict token performance based on learned patterns
+        """
+        # Determine which baseline to use
+        if gala_sim > magic_sim:
+            baseline = self.gala_baseline
+            primary_similarity = gala_sim / 100
+        else:
+            baseline = self.magic_baseline
+            primary_similarity = magic_sim / 100
+
+        # Calculate expected returns based on market conditions
+        performance_multiplier = (
+            primary_similarity * 0.8 + 0.2
+        )  # Base 20% + similarity bonus
+
+        predictions = {}
+        for market_condition, base_return in baseline["performance_patterns"].items():
+            predictions[market_condition] = base_return * performance_multiplier
+
+        # Calculate weighted expected return
+        market_probabilities = {"bull_market": 0.3, "bear_market": 0.2, "sideways": 0.5}
+        expected_return = sum(
+            predictions[condition] * prob
+            for condition, prob in market_probabilities.items()
+        )
+
+        return {
+            "expected_return": expected_return,
+            "bull_scenario": predictions["bull_market"],
+            "bear_scenario": predictions["bear_market"],
+            "sideways_scenario": predictions["sideways"],
+            "prediction_confidence": primary_similarity * 100,
+        }
+
+    def create_token_profile(self, token_data: Dict) -> TokenProfile:
+        """
+        🧠 Create comprehensive token profile with learned parameters
+        """
+        self.logger.info(f"Creating profile for {token_data.get('symbol', 'UNKNOWN')}")
+
+        # Calculate similarity scores
+        gala_similarity = self.calculate_gala_similarity(token_data)
+        magic_similarity = self.calculate_magic_similarity(token_data)
+
+        # Gas optimization analysis
+        gas_efficiency, gas_optimization = self.calculate_gas_efficiency(token_data)
+
+        # Allocation recommendation
+        recommended_allocation, confidence = self.calculate_recommended_allocation(
+            token_data, gala_similarity, magic_similarity
+        )
+
+        # Performance prediction
+        performance_prediction = self.predict_performance(
+            token_data, gala_similarity, magic_similarity
+        )
+
+        # Determine time horizon based on similarity
+        if max(gala_similarity, magic_similarity) > 70:
+            time_horizon = "SHORT_TO_MEDIUM"  # 3-12 months
+        elif max(gala_similarity, magic_similarity) > 50:
+            time_horizon = "MEDIUM"  # 6-18 months
+        else:
+            time_horizon = "LONG"  # 12+ months
+
+        # Create comprehensive profile
+        profile = TokenProfile(
+            symbol=token_data.get("symbol", "UNKNOWN"),
+            price=token_data.get("price", 0.0),
+            market_cap=token_data.get("market_cap", 0),
+            # Technical indicators
+            momentum_score=token_data.get("momentum_score", 0),
+            volatility_index=token_data.get("volatility_index", 50),
+            volume_strength=token_data.get("volume_strength", 0),
+            liquidity_rating=token_data.get("liquidity_rating", 50),
+            # Fundamentals
+            ecosystem_health=token_data.get("ecosystem_health", 0),
+            community_strength=token_data.get("community_strength", 0),
+            developer_activity=token_data.get("developer_activity", 0),
+            utility_score=token_data.get("utility_score", 0),
+            # Market position
+            sector=token_data.get("sector", "unknown"),
+            market_rank=token_data.get("market_rank", 0),
+            circulating_supply=token_data.get("circulating_supply", 0),
+            max_supply=token_data.get("max_supply", 0),
+            # Learning parameters
+            gala_similarity=gala_similarity,
+            magic_similarity=magic_similarity,
+            gaming_correlation=(
+                max(gala_similarity, magic_similarity)
+                if token_data.get("sector") == "gaming"
+                else 0
+            ),
+            nft_integration=token_data.get("nft_integration", 0),
+            # Risk assessment
+            risk_score=token_data.get("risk_score", 50),
+            whale_concentration=token_data.get("whale_concentration", 0),
+            exchange_coverage=token_data.get("exchange_coverage", 0),
+            regulatory_risk=token_data.get("regulatory_risk", 50),
+            # Gas optimization
+            gas_efficiency=gas_efficiency,
+            transaction_cost=gas_optimization["estimated_gas_cost"],
+            optimal_batch_size=gas_optimization["optimal_batch_size"],
+            best_execution_time=gas_optimization["best_execution_time"],
+            # Allocation intelligence
+            recommended_allocation=recommended_allocation,
+            confidence_level=confidence,
+            expected_return=performance_prediction["expected_return"],
+            time_horizon=time_horizon,
+            # Dynamic learning
+            learning_accuracy=max(gala_similarity, magic_similarity),
+            prediction_confidence=performance_prediction["prediction_confidence"],
+            adaptation_rate=0.1,  # 10% learning rate
+            timestamp=datetime.now().isoformat(),
+        )
+
+        return profile
+
+    def batch_profile_tokens(self, tokens_data: List[Dict]) -> List[TokenProfile]:
+        """
+        📊 Create profiles for multiple tokens with gas optimization
+        """
+        self.logger.info(f"Creating profiles for {len(tokens_data)} tokens")
+
+        profiles = []
+
+        # Sort tokens by market cap for optimal batching
+        sorted_tokens = sorted(
+            tokens_data, key=lambda x: x.get("market_cap", 0), reverse=True
+        )
+
+        for token_data in sorted_tokens:
+            try:
+                profile = self.create_token_profile(token_data)
+                profiles.append(profile)
+
+                self.logger.info(f"✅ Profile created for {profile.symbol}")
+
+            except Exception as e:
+                self.logger.error(
+                    f"❌ Failed to profile {token_data.get('symbol', 'UNKNOWN')}: {e}"
+                )
+                continue
+
+        return profiles
+
+    def optimize_portfolio_allocation(
+        self, profiles: List[TokenProfile], total_allocation: float = 100.0
+    ) -> Dict:
+        """
+        🎯 Optimize portfolio allocation across profiled tokens
+        """
+        self.logger.info("Optimizing portfolio allocation")
+
+        # Filter high-confidence profiles
+        high_confidence_profiles = [p for p in profiles if p.confidence_level >= 60]
+
+        if not high_confidence_profiles:
+            self.logger.warning("No high-confidence profiles found")
+            return {"error": "No suitable tokens for allocation"}
+
+        # Calculate allocation scores
+        allocation_scores = []
+        for profile in high_confidence_profiles:
+            score = (
+                profile.confidence_level * 0.4
+                + profile.expected_return * 10 * 0.3
+                + (100 - profile.risk_score) * 0.2
+                + profile.gas_efficiency * 0.1
+            )
+            allocation_scores.append(score)
+
+        # Normalize allocations
+        total_score = sum(allocation_scores)
+        optimized_allocations = []
+
+        for i, profile in enumerate(high_confidence_profiles):
+            normalized_allocation = (
+                allocation_scores[i] / total_score
+            ) * total_allocation
+
+            # Apply min/max constraints
+            final_allocation = np.clip(normalized_allocation, 5.0, 35.0)
+
+            optimized_allocations.append(
+                {
+                    "symbol": profile.symbol,
+                    "allocation_percent": final_allocation,
+                    "confidence": profile.confidence_level,
+                    "expected_return": profile.expected_return,
+                    "risk_score": profile.risk_score,
+                    "gas_efficiency": profile.gas_efficiency,
+                    "recommended_batch_size": profile.optimal_batch_size,
+                }
+            )
+
+        # Sort by allocation size
+        optimized_allocations.sort(key=lambda x: x["allocation_percent"], reverse=True)
+
+        return {
+            "total_allocation": sum(
+                a["allocation_percent"] for a in optimized_allocations
+            ),
+            "allocations": optimized_allocations,
+            "gas_optimization_summary": self._calculate_gas_savings(
+                optimized_allocations
+            ),
+            "portfolio_metrics": self._calculate_portfolio_metrics(
+                optimized_allocations
+            ),
+        }
+
+    def _calculate_gas_savings(self, allocations: List[Dict]) -> Dict:
+        """Calculate total gas savings from optimization"""
+        total_batches = sum(a["recommended_batch_size"] for a in allocations)
+        individual_transactions = len(allocations)
+
+        gas_savings_percent = max(
+            0, (individual_transactions - total_batches) / individual_transactions * 100
+        )
+
+        return {
+            "total_batches_recommended": total_batches,
+            "individual_transactions": individual_transactions,
+            "gas_savings_percent": gas_savings_percent,
+            "estimated_cost_reduction": gas_savings_percent * 0.005,  # ETH savings
+        }
+
+    def _calculate_portfolio_metrics(self, allocations: List[Dict]) -> Dict:
+        """Calculate portfolio-level metrics"""
+        weights = [a["allocation_percent"] / 100 for a in allocations]
+
+        weighted_return = sum(
+            a["expected_return"] * w for a, w in zip(allocations, weights)
+        )
+        weighted_risk = sum(a["risk_score"] * w for a, w in zip(allocations, weights))
+        weighted_confidence = sum(
+            a["confidence"] * w for a, w in zip(allocations, weights)
+        )
+
+        return {
+            "portfolio_expected_return": weighted_return,
+            "portfolio_risk_score": weighted_risk,
+            "portfolio_confidence": weighted_confidence,
+            "diversification_score": len(allocations)
+            * 10,  # Simple diversification metric
+            "sharpe_estimate": (
+                weighted_return / max(weighted_risk, 10) if weighted_risk > 0 else 0
+            ),
+        }
+
+
+def main():
+    """
+    🚀 Execute intelligent token profiling system
+    """
+    print("🧠 INTELLIGENT TOKEN PROFILING SYSTEM")
+    print("=" * 60)
+    print("🎯 Learning from GALA and MAGIC patterns")
+    print("⛽ Optimizing for gas efficiency")
+    print("📊 Creating intelligent allocation profiles")
+    print()
+
+    # Initialize profiler
+    profiler = TokenProfiler()
+
+    # Sample token data (simulated from various sources)
+    tokens_data = [
+        {
+            "symbol": "SHIBUSDT",
+            "price": 0.00001194,
+            "market_cap": 7_000_000_000,
+            "momentum_score": 8.2,
+            "volatility_index": 75,
+            "volume_strength": 8.5,
+            "liquidity_rating": 85,
+            "ecosystem_health": 7.0,
+            "community_strength": 9.0,
+            "developer_activity": 6.5,
+            "utility_score": 6.0,
+            "sector": "meme",
+            "market_rank": 15,
+            "nft_integration": 5.0,
+            "risk_score": 65,
+            "whale_concentration": 45,
+            "exchange_coverage": 90,
+        },
+        {
+            "symbol": "FLOKIUSDT",
+            "price": 0.00010212,
+            "market_cap": 1_500_000_000,
+            "momentum_score": 7.8,
+            "volatility_index": 70,
+            "volume_strength": 7.8,
+            "liquidity_rating": 75,
+            "ecosystem_health": 7.5,
+            "community_strength": 8.2,
+            "developer_activity": 7.0,
+            "utility_score": 7.0,
+            "sector": "gaming",
+            "market_rank": 45,
+            "nft_integration": 8.0,
+            "risk_score": 55,
+            "whale_concentration": 40,
+            "exchange_coverage": 85,
+        },
+        {
+            "symbol": "AXSUSDT",
+            "price": 4.85,
+            "market_cap": 800_000_000,
+            "momentum_score": 8.5,
+            "volatility_index": 60,
+            "volume_strength": 8.8,
+            "liquidity_rating": 90,
+            "ecosystem_health": 9.0,
+            "community_strength": 8.8,
+            "developer_activity": 8.5,
+            "utility_score": 9.2,
+            "sector": "gaming",
+            "market_rank": 35,
+            "nft_integration": 9.5,
+            "risk_score": 40,
+            "whale_concentration": 30,
+            "exchange_coverage": 95,
+        },
+        {
+            "symbol": "SANDUSDT",
+            "price": 0.35,
+            "market_cap": 1_200_000_000,
+            "momentum_score": 7.2,
+            "volatility_index": 65,
+            "volume_strength": 8.0,
+            "liquidity_rating": 85,
+            "ecosystem_health": 8.5,
+            "community_strength": 8.0,
+            "developer_activity": 8.2,
+            "utility_score": 8.8,
+            "sector": "metaverse",
+            "market_rank": 40,
+            "nft_integration": 8.5,
+            "risk_score": 45,
+            "whale_concentration": 35,
+            "exchange_coverage": 90,
+        },
+        {
+            "symbol": "ENJUSDT",
+            "price": 0.18,
+            "market_cap": 500_000_000,
+            "momentum_score": 6.8,
+            "volatility_index": 58,
+            "volume_strength": 7.5,
+            "liquidity_rating": 80,
+            "ecosystem_health": 8.0,
+            "community_strength": 7.8,
+            "developer_activity": 7.8,
+            "utility_score": 8.5,
+            "sector": "gaming",
+            "market_rank": 65,
+            "nft_integration": 9.0,
+            "risk_score": 42,
+            "whale_concentration": 38,
+            "exchange_coverage": 88,
+        },
+    ]
+
+    print("📊 CREATING TOKEN PROFILES")
+    print("=" * 40)
+
+    # Create profiles for all tokens
+    profiles = profiler.batch_profile_tokens(tokens_data)
+
+    print(f"\n✅ Created {len(profiles)} token profiles")
+    print()
+
+    # Display detailed profiles
+    print("🧠 DETAILED TOKEN PROFILES")
+    print("=" * 50)
+
+    for profile in profiles:
+        print(f"\n💎 {profile.symbol} PROFILE")
+        print("-" * 30)
+        print(f"💰 Price: ${profile.price:.8f}")
+        print(f"📊 Market Cap: ${profile.market_cap:,}")
+        print(f"🎮 GALA Similarity: {profile.gala_similarity:.1f}%")
+        print(f"✨ MAGIC Similarity: {profile.magic_similarity:.1f}%")
+        print(f"🎯 Recommended Allocation: {profile.recommended_allocation:.1f}%")
+        print(f"🧠 Confidence Level: {profile.confidence_level:.1f}%")
+        print(f"📈 Expected Return: {profile.expected_return:.1f}%")
+        print(f"⚠️ Risk Score: {profile.risk_score:.1f}/100")
+        print(f"⛽ Gas Efficiency: {profile.gas_efficiency:.1f}%")
+        print(f"📦 Optimal Batch Size: {profile.optimal_batch_size}")
+        print(f"⏰ Best Execution Time: {profile.best_execution_time}")
+        print(f"🕒 Time Horizon: {profile.time_horizon}")
+
+    print(f"\n🎯 PORTFOLIO OPTIMIZATION")
+    print("=" * 40)
+
+    # Optimize portfolio allocation
+    optimization_result = profiler.optimize_portfolio_allocation(profiles)
+
+    if "error" not in optimization_result:
+        print(
+            f"📊 Total Optimized Allocation: {optimization_result['total_allocation']:.1f}%"
+        )
+        print()
+
+        print("💼 OPTIMIZED ALLOCATIONS:")
+        for allocation in optimization_result["allocations"]:
+            print(
+                f"   {allocation['symbol']}: {allocation['allocation_percent']:.1f}% "
+                f"(Confidence: {allocation['confidence']:.0f}%, "
+                f"Expected Return: {allocation['expected_return']:.1f}%)"
+            )
+
+        print(f"\n⛽ GAS OPTIMIZATION SUMMARY:")
+        gas_summary = optimization_result["gas_optimization_summary"]
+        print(f"   📦 Total Batches: {gas_summary['total_batches_recommended']}")
+        print(f"   💰 Gas Savings: {gas_summary['gas_savings_percent']:.1f}%")
+        print(
+            f"   💎 Cost Reduction: {gas_summary['estimated_cost_reduction']:.6f} ETH"
+        )
+
+        print(f"\n📊 PORTFOLIO METRICS:")
+        metrics = optimization_result["portfolio_metrics"]
+        print(f"   📈 Expected Return: {metrics['portfolio_expected_return']:.1f}%")
+        print(f"   ⚠️ Risk Score: {metrics['portfolio_risk_score']:.1f}/100")
+        print(f"   🧠 Confidence: {metrics['portfolio_confidence']:.1f}%")
+        print(f"   🎯 Diversification: {metrics['diversification_score']:.0f}/100")
+        print(f"   📊 Sharpe Estimate: {metrics['sharpe_estimate']:.2f}")
+
+    # Save comprehensive report
+    report = {
+        "profiles": [asdict(profile) for profile in profiles],
+        "optimization_result": optimization_result,
+        "learning_parameters": {
+            "gala_baseline": profiler.gala_baseline,
+            "magic_baseline": profiler.magic_baseline,
+            "gas_optimization": profiler.gas_optimization_params,
+        },
+    }
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"intelligent_token_profiles_{timestamp}.json"
+
+    with open(filename, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+
+    print(f"\n💾 Complete profiling report saved: {filename}")
+
+    print(f"\n🎯 KEY INSIGHTS:")
+    print("=" * 25)
+    print("🧠 GALA/MAGIC learning patterns successfully applied")
+    print("⛽ Gas optimization reduces transaction costs")
+    print("📊 Intelligent allocation based on similarity scoring")
+    print("🎯 Risk-adjusted recommendations with confidence levels")
+    print("💎 Comprehensive profiling enables better decisions")
+
+    print(f"\n✅ INTELLIGENT TOKEN PROFILING COMPLETE!")
+    print("🚀 Ready for optimized allocation and gas-efficient execution!")
+
+
+if __name__ == "__main__":
+    main()

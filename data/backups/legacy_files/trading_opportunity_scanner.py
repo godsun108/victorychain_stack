@@ -1,0 +1,342 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Trading Opportunity Scanner
+Identifies the best trading opportunities from ALL Binance US tokens
+Focuses on volume, momentum, technical indicators, and risk-reward ratios
+"""
+
+import json
+import pandas as pd
+from datetime import datetime
+from typing import Dict, List
+from smart_gains_bot import SmartGainsBot
+
+
+class TradingOpportunityScanner:
+    def __init__(self):
+        self.bot = SmartGainsBot()
+
+        # Define opportunity criteria
+        self.criteria = {
+            "min_volume_usd": 1000,  # Minimum $1K daily volume
+            "max_volatility": 12,  # Maximum 12% volatility
+            "min_price": 0.0001,  # Minimum price to avoid dust
+            "rsi_oversold": 30,  # RSI oversold level
+            "rsi_overbought": 70,  # RSI overbought level
+            "momentum_threshold": 2,  # Minimum 2% momentum
+        }
+
+    def load_latest_analysis(self) -> List[Dict]:
+        """Load the most recent comprehensive analysis"""
+        try:
+            # Find the latest analysis file
+            import glob
+
+            files = glob.glob("comprehensive_token_analysis_*.json")
+            if not files:
+                print(
+                    "❌ No analysis files found. Run comprehensive_token_analyzer.py first!"
+                )
+                return []
+
+            latest_file = max(files)
+            print(f"📊 Loading analysis from: {latest_file}")
+
+            with open(latest_file, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"❌ Error loading analysis: {e}")
+            return []
+
+    def filter_trading_opportunities(self, analyses: List[Dict]) -> List[Dict]:
+        """Filter tokens for the best trading opportunities"""
+        opportunities = []
+
+        for analysis in analyses:
+            if "error" in analysis:
+                continue
+
+            # Extract key metrics
+            symbol = analysis.get("symbol", "")
+            volume_usd = analysis.get("quote_volume_24h", 0)
+            price = analysis.get("current_price", 0)
+            price_change = analysis.get("price_change_24h", 0)
+            volatility = analysis.get("volatility", 0)
+            rsi = analysis.get("rsi", 50)
+            opportunity_score = analysis.get("opportunity_score", 0)
+
+            # Apply filters
+            if (
+                volume_usd >= self.criteria["min_volume_usd"]
+                and volatility <= self.criteria["max_volatility"]
+                and price >= self.criteria["min_price"]
+                and opportunity_score > 25
+            ):  # Basic quality threshold
+
+                # Calculate additional metrics
+                analysis["risk_score"] = self.calculate_risk_score(analysis)
+                analysis["reward_potential"] = self.calculate_reward_potential(analysis)
+                analysis["trading_signal"] = self.generate_trading_signal(analysis)
+
+                opportunities.append(analysis)
+
+        # Sort by combined score (opportunity + reward - risk)
+        opportunities.sort(
+            key=lambda x: x["opportunity_score"]
+            + x["reward_potential"]
+            - x["risk_score"],
+            reverse=True,
+        )
+
+        return opportunities
+
+    def calculate_risk_score(self, analysis: Dict) -> float:
+        """Calculate risk score (0-50, lower is better)"""
+        risk = 0
+
+        volatility = analysis.get("volatility", 0)
+        volume_usd = analysis.get("quote_volume_24h", 0)
+        price_change = analysis.get("price_change_24h", 0)
+
+        # Volatility risk
+        if volatility > 8:
+            risk += min(volatility * 2, 20)
+
+        # Volume risk (low volume = higher risk)
+        if volume_usd < 10000:
+            risk += 15
+        elif volume_usd < 50000:
+            risk += 10
+        elif volume_usd < 100000:
+            risk += 5
+
+        # Extreme price movement risk
+        if abs(price_change) > 20:
+            risk += 10
+
+        return min(risk, 50)
+
+    def calculate_reward_potential(self, analysis: Dict) -> float:
+        """Calculate reward potential (0-50, higher is better)"""
+        reward = 0
+
+        rsi = analysis.get("rsi", 50)
+        price_change = analysis.get("price_change_24h", 0)
+        volume_ratio = analysis.get("volume_ratio", 1)
+        price_position = analysis.get("price_position", 50)
+
+        # RSI-based reward
+        if rsi < 30:  # Oversold
+            reward += 15
+        elif rsi < 40:  # Approaching oversold
+            reward += 10
+        elif rsi > 70:  # Overbought (for shorting)
+            reward += 8
+
+        # Price position reward
+        if price_position < 20:  # Near recent lows
+            reward += 10
+        elif price_position < 40:
+            reward += 5
+
+        # Volume surge reward
+        if volume_ratio > 2:
+            reward += min(volume_ratio * 5, 15)
+
+        # Positive momentum reward
+        if 0 < price_change < 10:  # Controlled positive momentum
+            reward += price_change
+
+        return min(reward, 50)
+
+    def generate_trading_signal(self, analysis: Dict) -> str:
+        """Generate trading signal based on technical analysis"""
+        rsi = analysis.get("rsi", 50)
+        price_change = analysis.get("price_change_24h", 0)
+        volume_ratio = analysis.get("volume_ratio", 1)
+        price_position = analysis.get("price_position", 50)
+
+        # Strong buy signals
+        if rsi < 30 and price_position < 25 and volume_ratio > 1.5:
+            return "STRONG_BUY"
+        elif rsi < 40 and price_change > 2 and volume_ratio > 2:
+            return "STRONG_BUY"
+
+        # Buy signals
+        elif rsi < 45 and price_position < 40:
+            return "BUY"
+        elif price_change > 5 and rsi < 60:
+            return "BUY"
+
+        # Sell signals
+        elif rsi > 70 and price_position > 80:
+            return "SELL"
+        elif price_change < -15 and rsi > 60:
+            return "SELL"
+
+        # Hold/watch
+        else:
+            return "HOLD"
+
+    def categorize_opportunities(self, opportunities: List[Dict]) -> Dict:
+        """Categorize opportunities by type"""
+        categories = {
+            "high_volume_movers": [],  # High volume with momentum
+            "oversold_bounces": [],  # Oversold tokens ready to bounce
+            "breakout_candidates": [],  # Tokens near breakout points
+            "momentum_plays": [],  # Strong momentum with volume
+            "value_picks": [],  # Undervalued with good fundamentals
+            "risk_plays": [],  # High risk/high reward
+        }
+
+        for opp in opportunities:
+            volume_usd = opp.get("quote_volume_24h", 0)
+            rsi = opp.get("rsi", 50)
+            price_change = opp.get("price_change_24h", 0)
+            volatility = opp.get("volatility", 0)
+            volume_ratio = opp.get("volume_ratio", 1)
+            price_position = opp.get("price_position", 50)
+
+            # High volume movers
+            if volume_usd > 50000 and volume_ratio > 2:
+                categories["high_volume_movers"].append(opp)
+
+            # Oversold bounces
+            elif rsi < 35 and price_position < 30:
+                categories["oversold_bounces"].append(opp)
+
+            # Breakout candidates
+            elif price_position > 70 and volume_ratio > 1.5:
+                categories["breakout_candidates"].append(opp)
+
+            # Momentum plays
+            elif price_change > 5 and volume_ratio > 1.5 and volatility < 8:
+                categories["momentum_plays"].append(opp)
+
+            # Value picks
+            elif rsi < 50 and volatility < 5 and volume_usd > 10000:
+                categories["value_picks"].append(opp)
+
+            # Risk plays
+            elif volatility > 8 and abs(price_change) > 10:
+                categories["risk_plays"].append(opp)
+
+        return categories
+
+    def generate_trading_report(self):
+        """Generate comprehensive trading opportunity report"""
+        print("🎯 VictoryChain Trading Opportunity Scanner")
+        print("=" * 60)
+
+        # Load analysis
+        analyses = self.load_latest_analysis()
+        if not analyses:
+            return
+
+        # Filter opportunities
+        opportunities = self.filter_trading_opportunities(analyses)
+        print(
+            f"📊 Found {len(opportunities)} trading opportunities from {len(analyses)} tokens"
+        )
+
+        if not opportunities:
+            print("❌ No trading opportunities meet the criteria")
+            return
+
+        # Categorize opportunities
+        categories = self.categorize_opportunities(opportunities)
+
+        # Display top opportunities
+        print(f"\n🏆 Top 15 Trading Opportunities:")
+        print("-" * 100)
+        print(
+            f"{'Rank':4} {'Symbol':12} {'Signal':12} {'Score':6} {'24h%':7} {'Volume':12} {'RSI':6} {'Risk':6} {'Reward':7}"
+        )
+        print("-" * 100)
+
+        for i, opp in enumerate(opportunities[:15], 1):
+            symbol = opp["symbol"]
+            signal = opp["trading_signal"]
+            score = opp["opportunity_score"]
+            change = opp.get("price_change_24h", 0)
+            volume = opp.get("quote_volume_24h", 0)
+            rsi = opp.get("rsi", 50)
+            risk = opp["risk_score"]
+            reward = opp["reward_potential"]
+
+            print(
+                f"{i:4} {symbol:12} {signal:12} {score:6.1f} {change:+6.2f}% "
+                f"${volume:>10,.0f} {rsi:6.1f} {risk:6.1f} {reward:7.1f}"
+            )
+
+        # Display category summaries
+        print(f"\n📈 Opportunity Categories:")
+        for category, tokens in categories.items():
+            if tokens:
+                print(f"\n{category.replace('_', ' ').title()} ({len(tokens)} tokens):")
+                for token in tokens[:5]:  # Top 5 in each category
+                    symbol = token["symbol"]
+                    signal = token["trading_signal"]
+                    score = token["opportunity_score"]
+                    change = token.get("price_change_24h", 0)
+                    print(
+                        f"  • {symbol:12} {signal:12} Score: {score:5.1f} | 24h: {change:+6.2f}%"
+                    )
+
+        # Save detailed report
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        report_file = f"trading_opportunities_{timestamp}.json"
+
+        report_data = {
+            "timestamp": datetime.now().isoformat(),
+            "total_analyzed": len(analyses),
+            "opportunities_found": len(opportunities),
+            "top_opportunities": opportunities[:25],
+            "categories": categories,
+            "criteria_used": self.criteria,
+        }
+
+        with open(report_file, "w") as f:
+            json.dump(report_data, f, indent=2, default=str)
+
+        print(f"\n💾 Detailed report saved: {report_file}")
+
+        # Trading recommendations
+        print(f"\n🎯 Trading Recommendations:")
+
+        strong_buys = [
+            opp for opp in opportunities[:10] if opp["trading_signal"] == "STRONG_BUY"
+        ]
+        if strong_buys:
+            print(f"\n🚀 STRONG BUY Signals ({len(strong_buys)} tokens):")
+            for sb in strong_buys[:3]:
+                print(
+                    f"  • {sb['symbol']:12} - Score: {sb['opportunity_score']:5.1f} | "
+                    f"24h: {sb.get('price_change_24h', 0):+6.2f}% | "
+                    f"RSI: {sb.get('rsi', 50):5.1f}"
+                )
+
+        buys = [opp for opp in opportunities[:15] if opp["trading_signal"] == "BUY"]
+        if buys:
+            print(f"\n📈 BUY Signals ({len(buys)} tokens):")
+            for b in buys[:5]:
+                print(
+                    f"  • {b['symbol']:12} - Score: {b['opportunity_score']:5.1f} | "
+                    f"24h: {b.get('price_change_24h', 0):+6.2f}% | "
+                    f"RSI: {b.get('rsi', 50):5.1f}"
+                )
+
+        print(f"\n⚠️  Risk Management:")
+        print(f"  • Maximum position size: 5% of portfolio per trade")
+        print(f"  • Stop loss: 3% below entry price")
+        print(f"  • Take profit: 8-15% above entry price")
+        print(f"  • Monitor volume and momentum for exit signals")
+
+
+def main():
+    scanner = TradingOpportunityScanner()
+    scanner.generate_trading_report()
+
+
+if __name__ == "__main__":
+    main()

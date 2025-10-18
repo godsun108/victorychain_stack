@@ -1,0 +1,16 @@
+{
+  "live_trading": true,
+  "demo_mode": false,
+  "strategy": "claude_analysis",
+  "duration_hours": 8,
+  "portfolio_value": 42.67,
+  "max_positions": 2,
+  "position_size_pct": 0.2,
+  "stop_loss_pct": 0.08,
+  "take_profit_pct": 0.15,
+  "max_hold_hours": 24,
+  "emergency_stop_loss": 0.25,
+  "scan_interval": 600,
+  "risk_level": "claude_analysis",
+  "timestamp": "2025-08-04T10:51:18.594614"
+}

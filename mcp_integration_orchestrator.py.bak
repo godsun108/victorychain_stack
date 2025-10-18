@@ -1,0 +1,786 @@
+#!/usr/bin/env python3
+
+"""
+🔗 MCP INTEGRATION ORCHESTRATOR
+===============================
+Seamless integration of Next-Generation MCP improvements with existing systems:
+
+INTEGRATION FEATURES:
+- Backward compatibility with existing MCP clients
+- Real-time signal fusion and validation
+- Performance monitoring and optimization
+- Automatic fallback mechanisms
+- Advanced logging and debugging
+- State synchronization
+- Live trading integration
+"""
+
+import asyncio
+import json
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any, Union
+from dataclasses import dataclass, asdict
+import logging
+
+# Import existing systems
+try:
+    from src.libraries.advanced_mcp_client import AdvancedMCPClient, MCPValidationResult
+    LEGACY_MCP_AVAILABLE = True
+except ImportError:
+    LEGACY_MCP_AVAILABLE = False
+    print("⚠️ Legacy MCP client not found - running in standalone mode")
+
+try:
+    from enhanced_mcp_system import EnhancedMCPSystem, EnhancedMCPSignal
+    ENHANCED_MCP_AVAILABLE = True
+except ImportError:
+    ENHANCED_MCP_AVAILABLE = False
+    print("⚠️ Enhanced MCP system not found")
+
+# Import next-gen system
+from next_gen_mcp_improvements import NextGenerationMCPSystem, NextGenMCPSignal
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@dataclass
+class IntegratedMCPSignal:
+    """Unified signal combining all MCP system outputs"""
+    symbol: str
+    timestamp: datetime
+    
+    # Primary recommendation
+    final_action: str  # BUY, SELL, HOLD
+    final_confidence: float
+    
+    # Multi-system consensus
+    legacy_signal: Optional[Dict] = None
+    enhanced_signal: Optional[Dict] = None
+    nextgen_signal: Optional[Dict] = None
+    
+    # Consensus metrics
+    system_agreement: float = 0.0
+    confidence_variance: float = 0.0
+    signal_strength: float = 0.0
+    
+    # Risk and execution
+    integrated_risk_score: float = 0.0
+    execution_priority: str = "MEDIUM"
+    recommended_position_size: float = 0.0
+    
+    # Performance tracking
+    integration_time_ms: float = 0.0
+    systems_active: int = 0
+    data_quality: float = 1.0
+
+@dataclass
+class MCPSystemStatus:
+    """Status of all MCP systems"""
+    legacy_active: bool = False
+    enhanced_active: bool = False
+    nextgen_active: bool = False
+    
+    legacy_response_time: float = 0.0
+    enhanced_response_time: float = 0.0
+    nextgen_response_time: float = 0.0
+    
+    total_signals_processed: int = 0
+    consensus_rate: float = 0.0
+    performance_score: float = 0.0
+
+class MCPIntegrationOrchestrator:
+    """
+    🎭 MCP Integration Orchestrator
+    
+    Orchestrates multiple MCP systems for optimal trading decisions:
+    - Legacy MCP client compatibility
+    - Enhanced MCP system integration
+    - Next-generation MCP improvements
+    - Real-time consensus building
+    - Performance optimization
+    """
+    
+    def __init__(self, config: Dict[str, Any] = None):
+        self.config = config or {}
+        
+        # Initialize MCP systems
+        self.legacy_mcp = None
+        self.enhanced_mcp = None
+        self.nextgen_mcp = None
+        
+        # System weights for consensus
+        self.system_weights = self.config.get('system_weights', {
+            'legacy': 0.2,
+            'enhanced': 0.3,
+            'nextgen': 0.5
+        })
+        
+        # Performance tracking
+        self.signal_history = []
+        self.performance_metrics = {
+            'total_signals': 0,
+            'consensus_signals': 0,
+            'conflicting_signals': 0,
+            'avg_integration_time': 0.0,
+            'system_reliability': {}
+        }
+        
+        # State management
+        self.last_signals = {}
+        self.system_status = MCPSystemStatus()
+        
+        # Integration settings
+        self.consensus_threshold = self.config.get('consensus_threshold', 0.7)
+        self.max_response_time = self.config.get('max_response_time', 5.0)  # seconds
+        
+    async def initialize(self):
+        """Initialize all available MCP systems"""
+        print("🚀 Initializing MCP Integration Orchestrator...")
+        
+        # Initialize legacy MCP client
+        if LEGACY_MCP_AVAILABLE:
+            try:
+                self.legacy_mcp = AdvancedMCPClient()
+                await self.legacy_mcp.initialize()
+                self.system_status.legacy_active = True
+                print("   ✅ Legacy MCP client initialized")
+            except Exception as e:
+                logger.warning(f"Legacy MCP initialization failed: {e}")
+        
+        # Initialize enhanced MCP system
+        if ENHANCED_MCP_AVAILABLE:
+            try:
+                self.enhanced_mcp = EnhancedMCPSystem()
+                self.system_status.enhanced_active = True
+                print("   ✅ Enhanced MCP system initialized")
+            except Exception as e:
+                logger.warning(f"Enhanced MCP initialization failed: {e}")
+        
+        # Initialize next-gen MCP system
+        try:
+            self.nextgen_mcp = NextGenerationMCPSystem()
+            self.system_status.nextgen_active = True
+            print("   ✅ Next-Generation MCP system initialized")
+        except Exception as e:
+            logger.error(f"Next-Gen MCP initialization failed: {e}")
+            raise
+        
+        # Calculate active systems
+        active_systems = sum([
+            self.system_status.legacy_active,
+            self.system_status.enhanced_active,
+            self.system_status.nextgen_active
+        ])
+        
+        print(f"🎯 MCP Integration ready with {active_systems}/3 systems active")
+        
+        if active_systems == 0:
+            raise RuntimeError("No MCP systems could be initialized")
+    
+    async def get_integrated_signal(self, 
+                                  symbol: str, 
+                                  market_data: Dict[str, Any],
+                                  portfolio_context: Dict[str, Any] = None) -> IntegratedMCPSignal:
+        """Get integrated signal from all available MCP systems"""
+        
+        start_time = time.time()
+        signals = {}
+        response_times = {}
+        
+        # Parallel signal generation from all systems
+        tasks = []
+        
+        if self.system_status.legacy_active and self.legacy_mcp:
+            tasks.append(self._get_legacy_signal(symbol, market_data))
+        
+        if self.system_status.enhanced_active and self.enhanced_mcp:
+            tasks.append(self._get_enhanced_signal(symbol, market_data))
+        
+        if self.system_status.nextgen_active and self.nextgen_mcp:
+            tasks.append(self._get_nextgen_signal(symbol, market_data, portfolio_context))
+        
+        # Execute all signal generation in parallel with timeout
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True),
+                timeout=self.max_response_time
+            )
+            
+            # Process results
+            result_index = 0
+            
+            if self.system_status.legacy_active:
+                if result_index < len(results) and not isinstance(results[result_index], Exception):
+                    signals['legacy'] = results[result_index]
+                result_index += 1
+            
+            if self.system_status.enhanced_active:
+                if result_index < len(results) and not isinstance(results[result_index], Exception):
+                    signals['enhanced'] = results[result_index]
+                result_index += 1
+            
+            if self.system_status.nextgen_active:
+                if result_index < len(results) and not isinstance(results[result_index], Exception):
+                    signals['nextgen'] = results[result_index]
+                result_index += 1
+            
+        except asyncio.TimeoutError:
+            logger.warning(f"Signal generation timeout for {symbol}")
+            # Use cached signals or defaults
+            signals = self._get_fallback_signals(symbol)
+        
+        # Build consensus signal
+        integrated_signal = self._build_consensus_signal(symbol, signals, market_data)
+        
+        # Calculate integration time
+        integration_time = (time.time() - start_time) * 1000  # milliseconds
+        integrated_signal.integration_time_ms = integration_time
+        
+        # Update performance metrics
+        self._update_performance_metrics(integrated_signal)
+        
+        # Store for future reference
+        self.last_signals[symbol] = integrated_signal
+        
+        print(f"🔮 Integrated signal for {symbol}: {integrated_signal.final_action} "
+              f"(conf: {integrated_signal.final_confidence:.2%}, "
+              f"systems: {integrated_signal.systems_active})")
+        
+        return integrated_signal
+    
+    async def _get_legacy_signal(self, symbol: str, market_data: Dict) -> Dict[str, Any]:
+        """Get signal from legacy MCP client"""
+        try:
+            start_time = time.time()
+            
+            # Get market data in legacy format
+            legacy_market_data = await self.legacy_mcp.get_market_data(symbol)
+            
+            # Get validation result
+            validation = await self.legacy_mcp.validate_trade_decision(
+                symbol=symbol,
+                action="BUY",  # We'll analyze the signal regardless of action
+                position_size=0.05,
+                market_data=legacy_market_data
+            )
+            
+            response_time = time.time() - start_time
+            self.system_status.legacy_response_time = response_time
+            
+            # Extract signal information
+            signal_action = "BUY" if validation.is_approved else "HOLD"
+            confidence = validation.confidence
+            
+            return {
+                'action': signal_action,
+                'confidence': confidence,
+                'response_time': response_time,
+                'validation_result': asdict(validation),
+                'system': 'legacy'
+            }
+            
+        except Exception as e:
+            logger.error(f"Legacy MCP signal generation failed: {e}")
+            raise
+    
+    async def _get_enhanced_signal(self, symbol: str, market_data: Dict) -> Dict[str, Any]:
+        """Get signal from enhanced MCP system"""
+        try:
+            start_time = time.time()
+            
+            # Generate enhanced signal
+            enhanced_signal = await self.enhanced_mcp.enhanced_signal_generation(
+                symbol, market_data
+            )
+            
+            response_time = time.time() - start_time
+            self.system_status.enhanced_response_time = response_time
+            
+            return {
+                'action': enhanced_signal.primary_signal,
+                'confidence': enhanced_signal.confidence_score,
+                'response_time': response_time,
+                'enhanced_data': asdict(enhanced_signal),
+                'system': 'enhanced'
+            }
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP signal generation failed: {e}")
+            raise
+    
+    async def _get_nextgen_signal(self, 
+                                symbol: str, 
+                                market_data: Dict,
+                                portfolio_context: Dict = None) -> Dict[str, Any]:
+        """Get signal from next-generation MCP system"""
+        try:
+            start_time = time.time()
+            
+            # Generate next-gen signal
+            nextgen_signal = await self.nextgen_mcp.generate_next_gen_signal(
+                symbol, market_data, portfolio_context
+            )
+            
+            response_time = time.time() - start_time
+            self.system_status.nextgen_response_time = response_time
+            
+            return {
+                'action': nextgen_signal.primary_action,
+                'confidence': nextgen_signal.confidence_score,
+                'response_time': response_time,
+                'nextgen_data': asdict(nextgen_signal),
+                'system': 'nextgen'
+            }
+            
+        except Exception as e:
+            logger.error(f"Next-Gen MCP signal generation failed: {e}")
+            raise
+    
+    def _build_consensus_signal(self, 
+                              symbol: str, 
+                              signals: Dict[str, Dict],
+                              market_data: Dict) -> IntegratedMCPSignal:
+        """Build consensus signal from all available systems"""
+        
+        if not signals:
+            return self._create_default_signal(symbol, "No signals available")
+        
+        # Extract signal data
+        actions = []
+        confidences = []
+        systems_data = {}
+        
+        for system_name, signal_data in signals.items():
+            action = signal_data.get('action', 'HOLD')
+            confidence = signal_data.get('confidence', 0.5)
+            
+            actions.append(action)
+            confidences.append(confidence)
+            systems_data[system_name] = signal_data
+        
+        # Calculate consensus
+        system_agreement = self._calculate_system_agreement(actions)
+        confidence_variance = self._calculate_confidence_variance(confidences)
+        
+        # Weighted consensus decision
+        weighted_scores = self._calculate_weighted_scores(signals)
+        final_action = self._determine_final_action(weighted_scores)
+        final_confidence = self._calculate_final_confidence(signals, system_agreement)
+        
+        # Risk assessment
+        integrated_risk = self._assess_integrated_risk(signals, market_data)
+        
+        # Position sizing
+        recommended_position = self._calculate_position_size(
+            final_confidence, integrated_risk, system_agreement
+        )
+        
+        # Execution priority
+        execution_priority = self._determine_execution_priority(
+            final_confidence, system_agreement, integrated_risk
+        )
+        
+        # Create integrated signal
+        integrated_signal = IntegratedMCPSignal(
+            symbol=symbol,
+            timestamp=datetime.now(),
+            final_action=final_action,
+            final_confidence=final_confidence,
+            legacy_signal=systems_data.get('legacy'),
+            enhanced_signal=systems_data.get('enhanced'),
+            nextgen_signal=systems_data.get('nextgen'),
+            system_agreement=system_agreement,
+            confidence_variance=confidence_variance,
+            signal_strength=self._calculate_signal_strength(final_confidence, system_agreement),
+            integrated_risk_score=integrated_risk,
+            execution_priority=execution_priority,
+            recommended_position_size=recommended_position,
+            systems_active=len(signals),
+            data_quality=self._assess_data_quality(market_data)
+        )
+        
+        return integrated_signal
+    
+    def _calculate_system_agreement(self, actions: List[str]) -> float:
+        """Calculate agreement level between systems"""
+        if not actions:
+            return 0.0
+        
+        # Count action frequencies
+        action_counts = {}
+        for action in actions:
+            action_counts[action] = action_counts.get(action, 0) + 1
+        
+        # Agreement is the proportion of systems with the most common action
+        max_count = max(action_counts.values())
+        agreement = max_count / len(actions)
+        
+        return agreement
+    
+    def _calculate_confidence_variance(self, confidences: List[float]) -> float:
+        """Calculate variance in confidence scores"""
+        if len(confidences) < 2:
+            return 0.0
+        
+        mean_confidence = sum(confidences) / len(confidences)
+        variance = sum((c - mean_confidence) ** 2 for c in confidences) / len(confidences)
+        
+        return variance
+    
+    def _calculate_weighted_scores(self, signals: Dict[str, Dict]) -> Dict[str, float]:
+        """Calculate weighted scores for each action"""
+        action_scores = {'BUY': 0.0, 'SELL': 0.0, 'HOLD': 0.0}
+        total_weight = 0.0
+        
+        for system_name, signal_data in signals.items():
+            action = signal_data.get('action', 'HOLD')
+            confidence = signal_data.get('confidence', 0.5)
+            weight = self.system_weights.get(system_name, 0.33)
+            
+            action_scores[action] += confidence * weight
+            total_weight += weight
+        
+        # Normalize scores
+        if total_weight > 0:
+            action_scores = {k: v / total_weight for k, v in action_scores.items()}
+        
+        return action_scores
+    
+    def _determine_final_action(self, weighted_scores: Dict[str, float]) -> str:
+        """Determine final action from weighted scores"""
+        return max(weighted_scores, key=weighted_scores.get)
+    
+    def _calculate_final_confidence(self, 
+                                  signals: Dict[str, Dict], 
+                                  system_agreement: float) -> float:
+        """Calculate final confidence score"""
+        if not signals:
+            return 0.0
+        
+        # Average confidence weighted by system importance
+        weighted_confidence = 0.0
+        total_weight = 0.0
+        
+        for system_name, signal_data in signals.items():
+            confidence = signal_data.get('confidence', 0.5)
+            weight = self.system_weights.get(system_name, 0.33)
+            
+            weighted_confidence += confidence * weight
+            total_weight += weight
+        
+        if total_weight > 0:
+            base_confidence = weighted_confidence / total_weight
+        else:
+            base_confidence = 0.5
+        
+        # Adjust for system agreement
+        final_confidence = base_confidence * (0.5 + 0.5 * system_agreement)
+        
+        return min(1.0, max(0.0, final_confidence))
+    
+    def _assess_integrated_risk(self, signals: Dict[str, Dict], market_data: Dict) -> float:
+        """Assess integrated risk from all systems"""
+        risk_scores = []
+        
+        for system_name, signal_data in signals.items():
+            if system_name == 'legacy' and 'validation_result' in signal_data:
+                validation = signal_data['validation_result']
+                risk_assessment = validation.get('risk_assessment', {})
+                risk_score = risk_assessment.get('overall_risk_score', 5.0) / 10.0
+                risk_scores.append(risk_score)
+            
+            elif system_name == 'enhanced' and 'enhanced_data' in signal_data:
+                enhanced_data = signal_data['enhanced_data']
+                risk_assessment = enhanced_data.get('risk_assessment', {})
+                risk_score = risk_assessment.get('overall_risk_score', 0.5)
+                risk_scores.append(risk_score)
+            
+            elif system_name == 'nextgen' and 'nextgen_data' in signal_data:
+                nextgen_data = signal_data['nextgen_data']
+                risk_assessment = nextgen_data.get('risk_assessment', {})
+                risk_score = risk_assessment.get('risk_score', 0.5)
+                risk_scores.append(risk_score)
+        
+        # If no risk scores available, use market data
+        if not risk_scores:
+            volatility = market_data.get('volatility_24h', 0.1)
+            volume = market_data.get('volume_24h', 1000000)
+            
+            # Simple risk calculation
+            vol_risk = min(1.0, volatility * 5)
+            liquidity_risk = max(0.0, 1.0 - volume / 10000000)
+            risk_scores.append((vol_risk + liquidity_risk) / 2)
+        
+        return sum(risk_scores) / len(risk_scores)
+    
+    def _calculate_position_size(self, 
+                               confidence: float, 
+                               risk_score: float, 
+                               agreement: float) -> float:
+        """Calculate recommended position size"""
+        # Base position size on confidence
+        base_size = confidence * 0.05  # Max 5% position
+        
+        # Adjust for risk
+        risk_adjustment = 1.0 - risk_score
+        
+        # Adjust for system agreement
+        agreement_adjustment = 0.5 + 0.5 * agreement
+        
+        final_size = base_size * risk_adjustment * agreement_adjustment
+        
+        return min(0.05, max(0.001, final_size))  # Between 0.1% and 5%
+    
+    def _determine_execution_priority(self, 
+                                    confidence: float, 
+                                    agreement: float, 
+                                    risk_score: float) -> str:
+        """Determine execution priority"""
+        # High priority: high confidence, high agreement, acceptable risk
+        if confidence > 0.8 and agreement > 0.8 and risk_score < 0.6:
+            return "HIGH"
+        
+        # Low priority: low confidence or high risk
+        elif confidence < 0.5 or risk_score > 0.8:
+            return "LOW"
+        
+        # Medium priority: everything else
+        else:
+            return "MEDIUM"
+    
+    def _calculate_signal_strength(self, confidence: float, agreement: float) -> float:
+        """Calculate overall signal strength"""
+        return (confidence + agreement) / 2
+    
+    def _assess_data_quality(self, market_data: Dict) -> float:
+        """Assess quality of input market data"""
+        quality_score = 1.0
+        
+        required_fields = ['price', 'volume_24h']
+        for field in required_fields:
+            if field not in market_data or market_data[field] is None:
+                quality_score -= 0.3
+        
+        # Check for reasonable values
+        price = market_data.get('price', 0)
+        volume = market_data.get('volume_24h', 0)
+        
+        if price <= 0:
+            quality_score -= 0.4
+        if volume <= 0:
+            quality_score -= 0.3
+        
+        return max(0.0, quality_score)
+    
+    def _get_fallback_signals(self, symbol: str) -> Dict[str, Dict]:
+        """Get fallback signals in case of timeout or failure"""
+        # Return last known signals or defaults
+        if symbol in self.last_signals:
+            last_signal = self.last_signals[symbol]
+            return {
+                'fallback': {
+                    'action': last_signal.final_action,
+                    'confidence': last_signal.final_confidence * 0.5,  # Reduce confidence for stale data
+                    'system': 'fallback'
+                }
+            }
+        
+        # Default conservative signal
+        return {
+            'default': {
+                'action': 'HOLD',
+                'confidence': 0.3,
+                'system': 'default'
+            }
+        }
+    
+    def _create_default_signal(self, symbol: str, reason: str) -> IntegratedMCPSignal:
+        """Create default signal when no systems are available"""
+        return IntegratedMCPSignal(
+            symbol=symbol,
+            timestamp=datetime.now(),
+            final_action="HOLD",
+            final_confidence=0.3,
+            system_agreement=0.0,
+            confidence_variance=0.0,
+            signal_strength=0.0,
+            integrated_risk_score=1.0,  # High risk due to lack of data
+            execution_priority="LOW",
+            recommended_position_size=0.0,
+            systems_active=0,
+            data_quality=0.0
+        )
+    
+    def _update_performance_metrics(self, signal: IntegratedMCPSignal):
+        """Update integration performance metrics"""
+        self.performance_metrics['total_signals'] += 1
+        
+        if signal.system_agreement > self.consensus_threshold:
+            self.performance_metrics['consensus_signals'] += 1
+        else:
+            self.performance_metrics['conflicting_signals'] += 1
+        
+        # Update average integration time
+        current_avg = self.performance_metrics['avg_integration_time']
+        total_signals = self.performance_metrics['total_signals']
+        
+        new_avg = (current_avg * (total_signals - 1) + signal.integration_time_ms) / total_signals
+        self.performance_metrics['avg_integration_time'] = new_avg
+    
+    async def batch_signal_analysis(self, 
+                                  symbols: List[str], 
+                                  market_data: Dict[str, Dict]) -> Dict[str, IntegratedMCPSignal]:
+        """Analyze multiple symbols efficiently"""
+        print(f"🔄 Batch analyzing {len(symbols)} symbols...")
+        
+        # Create tasks for parallel processing
+        tasks = []
+        for symbol in symbols:
+            if symbol in market_data:
+                task = self.get_integrated_signal(symbol, market_data[symbol])
+                tasks.append((symbol, task))
+        
+        # Execute all tasks
+        results = {}
+        for symbol, task in tasks:
+            try:
+                signal = await task
+                results[symbol] = signal
+            except Exception as e:
+                logger.error(f"Failed to get signal for {symbol}: {e}")
+                results[symbol] = self._create_default_signal(symbol, str(e))
+        
+        print(f"✅ Batch analysis complete: {len(results)} signals generated")
+        return results
+    
+    def get_system_performance_report(self) -> Dict[str, Any]:
+        """Get comprehensive performance report"""
+        return {
+            'integration_performance': self.performance_metrics,
+            'system_status': asdict(self.system_status),
+            'system_weights': self.system_weights,
+            'configuration': {
+                'consensus_threshold': self.consensus_threshold,
+                'max_response_time': self.max_response_time
+            },
+            'active_systems': {
+                'legacy': self.system_status.legacy_active,
+                'enhanced': self.system_status.enhanced_active,
+                'nextgen': self.system_status.nextgen_active
+            },
+            'response_times': {
+                'legacy': self.system_status.legacy_response_time,
+                'enhanced': self.system_status.enhanced_response_time,
+                'nextgen': self.system_status.nextgen_response_time
+            }
+        }
+
+async def demo_mcp_integration():
+    """Comprehensive demonstration of MCP integration capabilities"""
+    print("🎭 DEMO: MCP Integration Orchestrator")
+    print("=" * 50)
+    
+    # Initialize integration system
+    config = {
+        'system_weights': {
+            'legacy': 0.15,
+            'enhanced': 0.35,
+            'nextgen': 0.50
+        },
+        'consensus_threshold': 0.75,
+        'max_response_time': 3.0
+    }
+    
+    orchestrator = MCPIntegrationOrchestrator(config)
+    await orchestrator.initialize()
+    
+    # Demo 1: Single symbol integration
+    print("\n🔮 Single Symbol Integration...")
+    test_symbol = "ADAUSDT"
+    test_market_data = {
+        'price': 0.72,
+        'volume_24h': 255467019,
+        'price_change_24h': -3.3,
+        'high_24h': 0.75,
+        'low_24h': 0.68,
+        'market_cap': 25000000000,
+        'volatility_24h': 0.15
+    }
+    
+    integrated_signal = await orchestrator.get_integrated_signal(test_symbol, test_market_data)
+    
+    print(f"\n📊 Integrated Signal for {test_symbol}:")
+    print(f"   Final Action: {integrated_signal.final_action}")
+    print(f"   Final Confidence: {integrated_signal.final_confidence:.2%}")
+    print(f"   System Agreement: {integrated_signal.system_agreement:.2%}")
+    print(f"   Systems Active: {integrated_signal.systems_active}")
+    print(f"   Integration Time: {integrated_signal.integration_time_ms:.1f}ms")
+    print(f"   Execution Priority: {integrated_signal.execution_priority}")
+    print(f"   Position Size: {integrated_signal.recommended_position_size:.2%}")
+    
+    # Demo 2: Batch analysis
+    print("\n🔄 Batch Symbol Analysis...")
+    test_symbols = ["ADAUSDT", "SOLUSDT", "DOGEUSDT", "SHIBUSDT", "MATICUSDT"]
+    batch_market_data = {
+        symbol: {
+            'price': __import__('numpy').random.uniform(0.1, 100),
+            'volume_24h': __import__('numpy').random.uniform(100000, 10000000),
+            'price_change_24h': __import__('numpy').random.uniform(-10, 10),
+            'market_cap': __import__('numpy').random.uniform(1000000, 50000000000),
+            'volatility_24h': __import__('numpy').random.uniform(0.05, 0.3)
+        }
+        for symbol in test_symbols
+    }
+    
+    batch_signals = await orchestrator.batch_signal_analysis(test_symbols, batch_market_data)
+    
+    print(f"📈 Batch Analysis Results:")
+    for symbol, signal in batch_signals.items():
+        print(f"   {symbol}: {signal.final_action} (conf: {signal.final_confidence:.1%}, "
+              f"agreement: {signal.system_agreement:.1%})")
+    
+    # Demo 3: Performance analysis
+    print("\n⚡ Performance Report...")
+    performance = orchestrator.get_system_performance_report()
+    
+    print(f"   Total Signals: {performance['integration_performance']['total_signals']}")
+    print(f"   Consensus Rate: {performance['integration_performance']['consensus_signals']/max(1, performance['integration_performance']['total_signals']):.1%}")
+    print(f"   Avg Integration Time: {performance['integration_performance']['avg_integration_time']:.1f}ms")
+    print(f"   Active Systems: {sum(performance['active_systems'].values())}/3")
+    
+    # Save comprehensive results
+    demo_results = {
+        'timestamp': datetime.now().isoformat(),
+        'single_symbol_analysis': {
+            'symbol': test_symbol,
+            'final_action': integrated_signal.final_action,
+            'final_confidence': integrated_signal.final_confidence,
+            'system_agreement': integrated_signal.system_agreement,
+            'integration_time_ms': integrated_signal.integration_time_ms
+        },
+        'batch_analysis': {
+            'symbols_processed': len(batch_signals),
+            'signals_summary': {
+                symbol: {
+                    'action': signal.final_action,
+                    'confidence': signal.final_confidence,
+                    'agreement': signal.system_agreement
+                }
+                for symbol, signal in batch_signals.items()
+            }
+        },
+        'performance_report': performance
+    }
+    
+    with open('mcp_integration_demo_results.json', 'w') as f:
+        json.dump(demo_results, f, indent=2, default=str)
+    
+    print(f"\n💾 Demo results saved to mcp_integration_demo_results.json")
+    print("🏁 MCP Integration Demo Complete!")
+    
+    return orchestrator, demo_results
+
+if __name__ == "__main__":
+    asyncio.run(demo_mcp_integration())

@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""
+Extended Demo: Your 22% Stop Loss Strategy in Action
+====================================================
+
+This shows the exact scenario you described:
+- Trading at 28% gain with 22% stop loss
+- Tight stops when profitable
+- Allocation increases on consistent gains
+- Stop loss resets when hitting profit targets
+"""
+
+import asyncio
+from datetime import datetime, timedelta
+
+async def demonstrate_your_strategy():
+    """Demonstrate the exact strategy you described"""
+    
+    print("🎯 YOUR DYNAMIC MOMENTUM STRATEGY")
+    print("="*60)
+    print("Scenario: Following highest momentum token with dynamic stops")
+    print("="*60)
+    
+    # Initial setup
+    entry_price = 1.00  # $1.00 entry
+    current_price = 1.28  # Currently at $1.28 (+28%)
+    stop_loss = 0.78  # Stop at $0.78 (22% below entry)
+    allocation = 10.0  # Starting with 10% allocation
+    
+    print(f"📈 INITIAL POSITION:")
+    print(f"   Entry Price: ${entry_price:.2f}")
+    print(f"   Current Price: ${current_price:.2f} (+{(current_price-entry_price)/entry_price*100:.1f}%)")
+    print(f"   Stop Loss: ${stop_loss:.2f} ({(entry_price-stop_loss)/entry_price*100:.0f}% below entry)")
+    print(f"   Allocation: {allocation:.1f}%")
+    print(f"   Risk/Reward: {(entry_price-stop_loss)/entry_price*100:.0f}% risk for {(current_price-entry_price)/entry_price*100:.0f}% gain")
+    
+    print(f"\n🔄 STRATEGY EXECUTION SIMULATION:")
+    print("-" * 40)
+    
+    # Simulate price movements and stop loss adjustments
+    scenarios = [
+        {"price": 1.32, "action": "Price rises to $1.32 (+32%)"},
+        {"price": 1.38, "action": "Price rises to $1.38 (+38%) - Tightening stop"},
+        {"price": 1.15, "action": "Price hits 15% profit target - Reset & increase allocation"},
+        {"price": 1.45, "action": "Price surges to $1.45 (+45%)"},
+        {"price": 1.42, "action": "Minor pullback to $1.42 - Trailing stop active"},
+    ]
+    
+    consecutive_gains = 0
+    max_profit = 0
+    
+    for i, scenario in enumerate(scenarios, 1):
+        price = scenario["price"]
+        profit_pct = (price - entry_price) / entry_price
+        
+        # Track max profit
+        if profit_pct > max_profit:
+            max_profit = profit_pct
+            consecutive_gains += 1
+        
+        # Calculate dynamic stop loss
+        if profit_pct <= 0:
+            new_stop = entry_price * 0.78  # 22% initial stop
+        elif profit_pct >= 0.15:  # Hit 15% target
+            new_stop = price * 0.95  # 5% tight stop
+            # Increase allocation
+            allocation = min(10 + (consecutive_gains * 5), 50)
+        else:
+            # Progressive tightening
+            stop_pct = 0.22 - (profit_pct * 0.5)
+            stop_pct = max(stop_pct, 0.05)
+            new_stop = price * (1 - stop_pct)
+        
+        risk_pct = (entry_price - new_stop) / entry_price * 100
+        
+        print(f"{i}. {scenario['action']}")
+        print(f"   💰 Profit: {profit_pct*100:+.1f}%")
+        print(f"   🛑 New Stop: ${new_stop:.2f} ({risk_pct:.1f}% below entry)")
+        print(f"   📊 Allocation: {allocation:.1f}%")
+        print(f"   🏆 Consecutive Gains: {consecutive_gains}")
+        print(f"   📈 Max Profit: {max_profit*100:.1f}%")
+        print()
+        
+        stop_loss = new_stop
+        
+        # Simulate delay
+        await asyncio.sleep(1)
+    
+    print("🎯 STRATEGY ADVANTAGES:")
+    print("-" * 30)
+    print("✅ Protects capital with 22% initial stop")
+    print("✅ Locks in profits with trailing stops")
+    print("✅ Increases position size on winners")
+    print("✅ Adapts to momentum changes")
+    print("✅ Maximizes gains while controlling risk")
+    
+    print("\n💡 KEY INSIGHT:")
+    print("Your strategy captures momentum while protecting downside!")
+    print("22% risk for unlimited upside with dynamic allocation scaling.")
+
+async def show_allocation_progression():
+    """Show how allocation increases with consecutive gains"""
+    
+    print("\n" + "="*60)
+    print("📊 ALLOCATION PROGRESSION ON CONSECUTIVE GAINS")
+    print("="*60)
+    
+    base_allocation = 10.0
+    max_allocation = 50.0
+    step = 5.0
+    
+    for gains in range(8):
+        allocation = min(base_allocation + (gains * step), max_allocation)
+        print(f"   {gains} consecutive gains → {allocation:.1f}% allocation")
+        await asyncio.sleep(0.3)
+
+async def show_stop_loss_tightening():
+    """Show how stop loss tightens as profit increases"""
+    
+    print("\n" + "="*60)
+    print("🛑 STOP LOSS TIGHTENING AS PROFIT INCREASES")
+    print("="*60)
+    
+    entry_price = 1.00
+    
+    for profit in [0, 5, 10, 15, 20, 25, 30]:
+        current_price = entry_price * (1 + profit/100)
+        
+        if profit == 0:
+            stop_pct = 22
+        elif profit >= 15:
+            stop_pct = 5  # Tight stop after profit target
+        else:
+            stop_pct = 22 - (profit * 0.5)
+            stop_pct = max(stop_pct, 5)
+        
+        stop_price = entry_price * (1 - stop_pct/100)
+        
+        print(f"   {profit:>2}% profit → Stop at ${stop_price:.3f} ({stop_pct:.1f}% below entry)")
+        await asyncio.sleep(0.3)
+
+async def main():
+    """Run the complete demonstration"""
+    await demonstrate_your_strategy()
+    await show_allocation_progression() 
+    await show_stop_loss_tightening()
+    
+    print("\n🚀 READY TO IMPLEMENT YOUR STRATEGY!")
+    print("="*40)
+    print("The system will:")
+    print("• Monitor highest momentum tokens continuously")
+    print("• Enter with 10% allocation and 22% stop")
+    print("• Tighten stops as profits increase")
+    print("• Scale up allocation on consecutive wins")
+    print("• Switch tokens when momentum shifts")
+
+if __name__ == "__main__":
+    asyncio.run(main())

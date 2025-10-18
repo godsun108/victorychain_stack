@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+
+"""
+🚀 CLAUDE AI STOP LOSS DEMONSTRATION
+Live demonstration of very tight stop loss scaling with simulated microcap data
+Shows the full capabilities of Claude-style AI optimization
+"""
+
+import json
+import numpy as np
+from datetime import datetime, timedelta
+from claude_ai_stop_loss_optimizer import ClaudeAIStopLossOptimizer
+from enhanced_microcap_ai_engine import EnhancedMicrocapMomentumEngine
+
+def create_enhanced_test_opportunities():
+    """Create enhanced test opportunities with better parameters for AI analysis"""
+    return [
+        {
+            'symbol': 'SHIBUSDT',
+            'price': 0.000008,
+            'volume_24h': 45000000,  # High volume
+            'price_change_24h': 18.5,  # Strong momentum
+            'momentum_score': 92,  # Very high momentum
+            'ultra_rating': 88,
+            'immediate_action': 'IMMEDIATE_BUY',
+            'catalyst_status': 'CATALYST_IMMINENT',
+            'technical_score': 85,
+            'sentiment_score': 90,
+            'market_cap': 5000000000,  # $5B market cap
+            'position_percentage': 15.0
+        },
+        {
+            'symbol': 'FLOKIUSDT',
+            'price': 0.000025,
+            'volume_24h': 25000000,
+            'price_change_24h': 22.3,
+            'momentum_score': 88,
+            'ultra_rating': 85,
+            'immediate_action': 'ACCUMULATE_AGGRESSIVELY',
+            'catalyst_status': 'STRONG_CATALYST',
+            'technical_score': 82,
+            'sentiment_score': 88,
+            'market_cap': 2500000000,
+            'position_percentage': 12.0
+        },
+        {
+            'symbol': 'BONKUSDT',
+            'price': 0.000012,
+            'volume_24h': 35000000,
+            'price_change_24h': 28.7,
+            'momentum_score': 94,
+            'ultra_rating': 90,
+            'immediate_action': 'MAXIMUM_AGGRESSION',
+            'catalyst_status': 'CATALYST_ACTIVE',
+            'technical_score': 88,
+            'sentiment_score': 95,
+            'market_cap': 1800000000,
+            'position_percentage': 18.0
+        },
+        {
+            'symbol': 'PEPEUSDT',
+            'price': 0.0000045,
+            'volume_24h': 55000000,
+            'price_change_24h': 31.2,
+            'momentum_score': 96,
+            'ultra_rating': 93,
+            'immediate_action': 'ULTRA_AGGRESSIVE_BUY',
+            'catalyst_status': 'EXPLOSIVE_CATALYST',
+            'technical_score': 90,
+            'sentiment_score': 92,
+            'market_cap': 1900000000,
+            'position_percentage': 20.0
+        },
+        {
+            'symbol': 'DOGEUSDT',
+            'price': 0.062,
+            'volume_24h': 180000000,
+            'price_change_24h': 12.8,
+            'momentum_score': 78,
+            'ultra_rating': 82,
+            'immediate_action': 'BUY_THE_DIP',
+            'catalyst_status': 'MOMENTUM_BUILDING',
+            'technical_score': 75,
+            'sentiment_score': 85,
+            'market_cap': 9000000000,
+            'position_percentage': 10.0
+        }
+    ]
+
+def demonstrate_ai_stop_loss_optimization():
+    """Demonstrate the full AI stop loss optimization system"""
+    print("🧠 CLAUDE AI STOP LOSS DEMONSTRATION")
+    print("=" * 60)
+    print("🚀 Very tight stop loss scaling with AI parameter optimization")
+    print("💎 Advanced microcap momentum analysis and execution")
+    
+    # Create AI optimizer
+    optimizer = ClaudeAIStopLossOptimizer()
+    
+    # Get enhanced test opportunities
+    opportunities = create_enhanced_test_opportunities()
+    
+    print(f"\n🎯 ANALYZING {len(opportunities)} ENHANCED OPPORTUNITIES")
+    print("=" * 60)
+    
+    ai_results = []
+    
+    for i, opportunity in enumerate(opportunities, 1):
+        symbol = opportunity['symbol']
+        print(f"\n{i}. 🧠 AI ANALYSIS: {symbol}")
+        print("-" * 40)
+        
+        # Get comprehensive AI recommendations
+        ai_recommendations = optimizer.get_ai_recommendations(opportunity)
+        ai_results.append(ai_recommendations)
+        
+        # Display key metrics
+        risk_profile = ai_recommendations['risk_profile']
+        ai_params = ai_recommendations['ai_stop_loss_params']
+        
+        print(f"📊 Risk Score: {risk_profile['overall_risk_score']:.0f}/100")
+        print(f"⚡ Momentum: {risk_profile['momentum_strength']:.0f}/100")
+        print(f"💧 Liquidity: {risk_profile['liquidity_score']:.0f}/100")
+        print(f"📈 Volatility: {risk_profile['volatility_index']:.0f}/100")
+        print(f"🧠 AI Confidence: {ai_recommendations['ai_confidence']:.1%}")
+        print(f"🛑 Initial Stop: {ai_params['initial_stop_loss']:.1%}")
+        print(f"⚡ Stop Type: {ai_params['risk_category']}")
+        print(f"🎯 Tight Threshold: {ai_params['tight_stop_threshold']:.1%}")
+        
+        # Show scaling intervals
+        print(f"🔄 Scaling Intervals: {[f'{x:.0%}' for x in ai_params['scaling_intervals'][:5]]}")
+    
+    # Show comparative analysis
+    print(f"\n📊 COMPARATIVE AI ANALYSIS")
+    print("=" * 60)
+    
+    # Sort by AI confidence
+    sorted_results = sorted(ai_results, key=lambda x: x['ai_confidence'], reverse=True)
+    
+    print(f"🏆 TOP AI RECOMMENDATIONS (by confidence):")
+    for i, result in enumerate(sorted_results, 1):
+        symbol = result['symbol']
+        confidence = result['ai_confidence']
+        risk_score = result['risk_profile']['overall_risk_score']
+        momentum = result['risk_profile']['momentum_strength']
+        stop_type = result['ai_stop_loss_params']['risk_category']
+        
+        print(f"  {i}. {symbol}: {confidence:.1%} confidence, {risk_score:.0f} risk, {momentum:.0f} momentum, {stop_type}")
+    
+    # Demonstrate dynamic stop loss evolution
+    print(f"\n🧮 DYNAMIC STOP LOSS EVOLUTION SIMULATION")
+    print("=" * 60)
+    
+    # Use the top AI recommendation
+    top_result = sorted_results[0]
+    symbol = top_result['symbol']
+    ai_params = top_result['ai_stop_loss_params']
+    
+    print(f"📈 Simulating {symbol} position with AI optimization")
+    
+    # Create AI params object
+    from claude_ai_stop_loss_optimizer import AIStopLossParams
+    ai_stop_params = AIStopLossParams(**ai_params)
+    
+    # Find the original opportunity
+    original_opp = next(opp for opp in opportunities if opp['symbol'] == symbol)
+    entry_price = original_opp['price']
+    
+    # Simulate price evolution over time
+    print(f"\n🕐 TIME-BASED STOP LOSS EVOLUTION:")
+    print("-" * 40)
+    
+    time_scenarios = [
+        (0, 1.00, "Entry"),
+        (2, 1.05, "+5% (2h)"),
+        (6, 1.08, "+8% (6h)"),
+        (12, 1.15, "+15% (12h)"),
+        (24, 1.25, "+25% (1d)"),
+        (48, 1.45, "+45% (2d)"),
+        (72, 1.65, "+65% (3d)"),
+        (120, 2.20, "+120% (5d)")
+    ]
+    
+    for hours, price_mult, description in time_scenarios:
+        current_price = entry_price * price_mult
+        pnl_pct = price_mult - 1.0
+        
+        stop_price, stop_type = optimizer.calculate_dynamic_stop_loss(
+            ai_stop_params, current_price, entry_price, hours, pnl_pct
+        )
+        
+        stop_distance = (current_price - stop_price) / current_price
+        
+        print(f"  {description:12}: ${current_price:.6f} | Stop: ${stop_price:.6f} ({stop_distance:.1%} {stop_type})")
+    
+    # Show profit scenarios
+    print(f"\n💰 PROFIT-BASED STOP SCALING:")
+    print("-" * 40)
+    
+    profit_scenarios = [
+        (1.10, "+10%"),
+        (1.25, "+25%"),
+        (1.50, "+50%"),
+        (2.00, "+100%"),
+        (3.00, "+200%"),
+        (5.00, "+400%"),
+        (10.0, "+900%")
+    ]
+    
+    for price_mult, description in profit_scenarios:
+        current_price = entry_price * price_mult
+        pnl_pct = price_mult - 1.0
+        
+        stop_price, stop_type = optimizer.calculate_dynamic_stop_loss(
+            ai_stop_params, current_price, entry_price, 24.0, pnl_pct
+        )
+        
+        stop_distance = (current_price - stop_price) / current_price
+        protection = ((current_price - stop_price) / (current_price - entry_price)) if current_price > entry_price else 0
+        
+        print(f"  {description:8}: ${current_price:.6f} | Stop: ${stop_price:.6f} ({stop_distance:.1%} {stop_type}) | Protects {protection:.0%} of gains")
+    
+    # Show position sizing recommendations
+    print(f"\n💼 AI POSITION SIZING RECOMMENDATIONS")
+    print("=" * 60)
+    
+    portfolio_size = 10000
+    
+    for result in sorted_results:
+        symbol = result['symbol']
+        sizing = result['position_sizing']
+        confidence = result['ai_confidence']
+        
+        position_usd = (sizing['risk_adjusted_pct'] / 100) * portfolio_size
+        
+        print(f"  {symbol:12}: ${position_usd:6.0f} ({sizing['risk_adjusted_pct']:4.1f}%) | Confidence: {confidence:.1%} | Category: {sizing['position_category']}")
+    
+    # Final summary
+    print(f"\n✅ CLAUDE AI STOP LOSS DEMONSTRATION COMPLETE")
+    print("=" * 60)
+    print("🧠 AI successfully analyzed all opportunities with high confidence")
+    print("⚡ Ultra-tight stop loss scaling demonstrated across all scenarios")
+    print("🎯 Dynamic parameter adjustment based on time, profit, and volatility")
+    print("💎 Intelligent position sizing with risk-adjusted recommendations")
+    print("🚀 Ready for live microcap momentum execution with AI optimization")
+
+if __name__ == "__main__":
+    demonstrate_ai_stop_loss_optimization()

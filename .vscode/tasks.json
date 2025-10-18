@@ -1,0 +1,72 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build VictoryChain Bot",
+			"type": "shell",
+			"command": "cargo build --release",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Run Optimizer (paper)",
+			"type": "shell",
+			"command": "MODE=paper python launch_magic_optimizer.py",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Optimizer (request live)",
+			"type": "shell",
+			"command": "MODE=live python launch_magic_optimizer.py",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Dashboard",
+			"type": "shell",
+			"command": "python live_trading_dashboard.py",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Microcap Scanner (paper)",
+			"type": "shell",
+			"command": "MODE=paper python all_microcap_momentum_scanner.py",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Engage Lockdown",
+			"type": "shell",
+			"command": "bash ./helper_scripts/engage_lockdown.sh",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Unlock",
+			"type": "shell",
+			"command": "bash ./helper_scripts/unlock.sh",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "List VS Code Tasks",
+			"type": "shell",
+			"command": "code --list-extensions >/dev/null 2>&1 || true; echo 'TASKS:'; jq -r '.tasks[].label' .vscode/tasks.json || true",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Preflight",
+			"type": "shell",
+			"command": "make preflight || true",
+			"group": "none",
+			"problemMatcher": []
+		}
+	]
+}

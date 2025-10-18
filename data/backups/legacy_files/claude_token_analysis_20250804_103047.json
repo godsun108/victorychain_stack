@@ -1,0 +1,122 @@
+{
+  "timestamp": "2025-08-04T10:30:47.349474",
+  "strategy": "claude_analysis",
+  "magicusdt_reference": {
+    "performance": 18.81,
+    "momentum_score": 0.998,
+    "range_position": 0.97,
+    "pattern_type": "MOMENTUM_SURGE",
+    "volume_strategy": "quality_over_quantity",
+    "technical_alignment": true,
+    "controlled_volatility": true
+  },
+  "total_tokens_analyzed": 181,
+  "claude_analysis": {
+    "opportunities": [
+      {
+        "symbol": "MAGICUSDT",
+        "magicusdt_similarity": 90.38231862999999,
+        "price_change": 38.963,
+        "range_position": 1.0,
+        "current_price": 0.2386,
+        "volume": 3823.1863,
+        "scores": {
+          "performance_score": 1.0,
+          "momentum_score": 1.0,
+          "position_score": 1.0,
+          "volume_score": 0.038231863
+        }
+      },
+      {
+        "symbol": "LTCUSDT",
+        "magicusdt_similarity": 67.92502291475712,
+        "price_change": 9.55,
+        "range_position": 0.986251145737856,
+        "current_price": 119.42,
+        "volume": 151524.68344,
+        "scores": {
+          "performance_score": 0.47750000000000004,
+          "momentum_score": 0.6366666666666667,
+          "position_score": 0.986251145737856,
+          "volume_score": 1.0
+        }
+      },
+      {
+        "symbol": "ENAUSDT",
+        "magicusdt_similarity": 60.04925541002125,
+        "price_change": 9.845,
+        "range_position": 0.818448023426062,
+        "current_price": 0.6237,
+        "volume": 43002.949415,
+        "scores": {
+          "performance_score": 0.49225,
+          "momentum_score": 0.6563333333333333,
+          "position_score": 0.818448023426062,
+          "volume_score": 0.43002949415
+        }
+      },
+      {
+        "symbol": "XRPUSDT",
+        "magicusdt_similarity": 58.32105595408894,
+        "price_change": 7.152,
+        "range_position": 0.9856527977044471,
+        "current_price": 3.0743,
+        "volume": 1831311.10363,
+        "scores": {
+          "performance_score": 0.35760000000000003,
+          "momentum_score": 0.4768,
+          "position_score": 0.9856527977044471,
+          "volume_score": 1.0
+        }
+      },
+      {
+        "symbol": "UNIUSDT",
+        "magicusdt_similarity": 53.998890959,
+        "price_change": 8.295,
+        "range_position": 1.0,
+        "current_price": 9.883,
+        "volume": 8188.90959,
+        "scores": {
+          "performance_score": 0.41475,
+          "momentum_score": 0.553,
+          "position_score": 1.0,
+          "volume_score": 0.0818890959
+        }
+      },
+      {
+        "symbol": "BONKUSDT",
+        "magicusdt_similarity": 51.42343718592966,
+        "price_change": 5.984,
+        "range_position": 0.8743718592964828,
+        "current_price": 2.71e-05,
+        "volume": 110504.52796374,
+        "scores": {
+          "performance_score": 0.2992,
+          "momentum_score": 0.3989333333333333,
+          "position_score": 0.8743718592964828,
+          "volume_score": 1.0
+        }
+      }
+    ],
+    "total_analyzed": 181,
+    "similar_patterns_found": 6,
+    "analysis_method": "fallback",
+    "magicusdt_criteria_used": true
+  },
+  "config": {
+    "live_trading": true,
+    "demo_mode": false,
+    "strategy": "claude_analysis",
+    "duration_hours": 8,
+    "portfolio_value": 42.67,
+    "max_positions": 2,
+    "position_size_pct": 0.2,
+    "stop_loss_pct": 0.08,
+    "take_profit_pct": 0.15,
+    "max_hold_hours": 24,
+    "emergency_stop_loss": 0.25,
+    "scan_interval": 600,
+    "risk_level": "claude_analysis",
+    "timestamp": "2025-08-04T10:30:41.806925"
+  }
+}

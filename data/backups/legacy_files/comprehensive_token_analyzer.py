@@ -1,0 +1,617 @@
+#!/usr/bin/env python3
+"""
+Comprehensive Token Analyzer for ALL Tradable Binance US Tokens
+Analyzes all 179+ USDT pairs for momentum, volume, volatility, and opportunity scoring
+"""
+
+import os
+import json
+import time
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from binance.exceptions import BinanceAPIException
+from dotenv import load_dotenv
+import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+
+
+class ComprehensiveTokenAnalyzer:
+    def __init__(self):
+        load_dotenv()
+
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv("BINANCEUS_KEY"),
+            api_secret=os.getenv("BINANCEUS_SECRET"),
+            tld="us",
+        )
+
+        # Setup logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            handlers=[
+                logging.FileHandler(
+                    f'token_analysis_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+                ),
+                logging.StreamHandler(),
+            ],
+        )
+        self.logger = logging.getLogger(__name__)
+
+        # Analysis parameters
+        self.analysis_timeframes = ["1h", "4h", "1d"]
+        self.lookback_periods = {
+            "1h": 168,  # 7 days of hourly data
+            "4h": 168,  # 28 days of 4h data
+            "1d": 90,  # 90 days of daily data
+        }
+
+        # Volume categories
+        self.volume_thresholds = {
+            "mega_cap": 50_000_000,  # >$50M daily volume
+            "large_cap": 10_000_000,  # $10M-$50M daily volume
+            "mid_cap": 1_000_000,  # $1M-$10M daily volume
+            "small_cap": 100_000,  # $100K-$1M daily volume
+            "micro_cap": 10_000,  # $10K-$100K daily volume
+            "nano_cap": 0,  # <$10K daily volume
+        }
+
+        # Thread safety for API calls
+        self.rate_limit_lock = threading.Lock()
+        self.last_request_time = 0
+        self.min_request_interval = 0.1  # 100ms between requests
+
+        self.logger.info("🔍 Comprehensive Token Analyzer initialized")
+        self.logger.info("Ready to analyze ALL 179+ tradable USDT pairs on Binance US")
+
+    def get_all_tradable_usdt_pairs(self) -> List[str]:
+        """Get all tradable USDT pairs from Binance US"""
+        try:
+            exchange_info = self.client.get_exchange_info()
+            usdt_pairs = []
+
+            for symbol_info in exchange_info["symbols"]:
+                symbol = symbol_info["symbol"]
+
+                # Only USDT pairs that are actively trading
+                if (
+                    symbol.endswith("USDT")
+                    and symbol_info["status"] == "TRADING"
+                    and symbol_info["isSpotTradingAllowed"]
+                ):
+
+                    # Skip major stablecoins but include everything else
+                    base_asset = symbol.replace("USDT", "")
+                    if base_asset not in ["USDC", "BUSD", "DAI", "TUSD"]:
+                        usdt_pairs.append(symbol)
+
+            # Sort by symbol name for consistent order
+            usdt_pairs.sort()
+
+            self.logger.info(f"Found {len(usdt_pairs)} tradable USDT pairs")
+            return usdt_pairs
+
+        except Exception as e:
+            self.logger.error(f"Error getting tradable pairs: {e}")
+            return []
+
+    def rate_limited_request(self, func, *args, **kwargs):
+        """Execute API request with rate limiting"""
+        with self.rate_limit_lock:
+            current_time = time.time()
+            time_since_last = current_time - self.last_request_time
+
+            if time_since_last < self.min_request_interval:
+                time.sleep(self.min_request_interval - time_since_last)
+
+            try:
+                result = func(*args, **kwargs)
+                self.last_request_time = time.time()
+                return result
+            except BinanceAPIException as e:
+                if e.code == -1003:  # Rate limit exceeded
+                    self.logger.warning("Rate limit hit, sleeping 60 seconds")
+                    time.sleep(60)
+                    return func(*args, **kwargs)
+                else:
+                    raise e
+
+    def get_24h_ticker_data(self, symbol: str) -> Optional[Dict]:
+        """Get 24h ticker data for a symbol"""
+        try:
+            ticker = self.rate_limited_request(self.client.get_ticker, symbol=symbol)
+            return ticker
+        except Exception as e:
+            self.logger.error(f"Error getting ticker for {symbol}: {e}")
+            return None
+
+    def get_kline_data(
+        self, symbol: str, interval: str, limit: int = 100
+    ) -> Optional[pd.DataFrame]:
+        """Get kline data for technical analysis"""
+        try:
+            klines = self.rate_limited_request(
+                self.client.get_klines, symbol=symbol, interval=interval, limit=limit
+            )
+
+            if not klines:
+                return None
+
+            df = pd.DataFrame(
+                klines,
+                columns=[
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "close_time",
+                    "quote_asset_volume",
+                    "number_of_trades",
+                    "taker_buy_base_asset_volume",
+                    "taker_buy_quote_asset_volume",
+                    "ignore",
+                ],
+            )
+
+            # Convert to proper data types
+            numeric_columns = [
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume",
+                "quote_asset_volume",
+            ]
+            for col in numeric_columns:
+                df[col] = pd.to_numeric(df[col])
+
+            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+            return df
+
+        except Exception as e:
+            self.logger.error(f"Error getting klines for {symbol}: {e}")
+            return None
+
+    def calculate_technical_indicators(self, df: pd.DataFrame) -> Dict:
+        """Calculate comprehensive technical indicators"""
+        if df is None or len(df) < 20:
+            return {}
+
+        try:
+            indicators = {}
+
+            # Price momentum
+            indicators["price_change_24h"] = (
+                ((df["close"].iloc[-1] / df["close"].iloc[-24]) - 1) * 100
+                if len(df) >= 24
+                else 0
+            )
+            indicators["price_change_7d"] = (
+                ((df["close"].iloc[-1] / df["close"].iloc[-168]) - 1) * 100
+                if len(df) >= 168
+                else 0
+            )
+
+            # Moving averages
+            indicators["sma_20"] = (
+                df["close"].rolling(window=20).mean().iloc[-1]
+                if len(df) >= 20
+                else df["close"].iloc[-1]
+            )
+            indicators["sma_50"] = (
+                df["close"].rolling(window=50).mean().iloc[-1]
+                if len(df) >= 50
+                else df["close"].iloc[-1]
+            )
+
+            # RSI
+            delta = df["close"].diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+            rs = gain / loss
+            rsi = 100 - (100 / (1 + rs))
+            indicators["rsi"] = rsi.iloc[-1] if not rsi.empty else 50
+
+            # Volume analysis
+            indicators["avg_volume_24h"] = (
+                df["volume"].tail(24).mean() if len(df) >= 24 else df["volume"].mean()
+            )
+            indicators["volume_ratio"] = (
+                df["volume"].iloc[-1] / indicators["avg_volume_24h"]
+                if indicators["avg_volume_24h"] > 0
+                else 1
+            )
+
+            # Volatility
+            returns = df["close"].pct_change().dropna()
+            indicators["volatility"] = returns.std() * 100 if len(returns) > 1 else 0
+
+            # Price position relative to range
+            high_20 = (
+                df["high"].rolling(window=20).max().iloc[-1]
+                if len(df) >= 20
+                else df["high"].max()
+            )
+            low_20 = (
+                df["low"].rolling(window=20).min().iloc[-1]
+                if len(df) >= 20
+                else df["low"].min()
+            )
+            current_price = df["close"].iloc[-1]
+
+            if high_20 != low_20:
+                indicators["price_position"] = (
+                    (current_price - low_20) / (high_20 - low_20) * 100
+                )
+            else:
+                indicators["price_position"] = 50
+
+            return indicators
+
+        except Exception as e:
+            self.logger.error(f"Error calculating indicators: {e}")
+            return {}
+
+    def categorize_by_volume(self, volume_usd: float) -> str:
+        """Categorize token by volume"""
+        for category, threshold in self.volume_thresholds.items():
+            if volume_usd >= threshold:
+                return category
+        return "nano_cap"
+
+    def calculate_opportunity_score(self, analysis: Dict) -> float:
+        """Calculate comprehensive opportunity score (0-100)"""
+        try:
+            score = 0
+
+            # Momentum component (30 points)
+            momentum_24h = analysis.get("price_change_24h", 0)
+            momentum_7d = analysis.get("price_change_7d", 0)
+
+            if momentum_24h > 5:  # Strong upward momentum
+                score += min(momentum_24h, 15)
+            elif momentum_24h > 0:  # Positive momentum
+                score += momentum_24h * 2
+
+            if momentum_7d > 10:  # Weekly momentum
+                score += min(momentum_7d * 0.5, 10)
+
+            # Volume component (25 points)
+            volume_ratio = analysis.get("volume_ratio", 1)
+            if volume_ratio > 2:  # High volume spike
+                score += min(volume_ratio * 5, 20)
+            elif volume_ratio > 1.5:  # Above average volume
+                score += (volume_ratio - 1) * 10
+
+            # Volume category bonus
+            volume_cat = analysis.get("volume_category", "nano_cap")
+            volume_bonus = {
+                "mega_cap": 5,
+                "large_cap": 4,
+                "mid_cap": 3,
+                "small_cap": 2,
+                "micro_cap": 1,
+                "nano_cap": 0,
+            }
+            score += volume_bonus.get(volume_cat, 0)
+
+            # Technical indicators (25 points)
+            rsi = analysis.get("rsi", 50)
+            if 30 <= rsi <= 70:  # Healthy RSI range
+                score += 10
+            elif rsi < 30:  # Oversold (potential bounce)
+                score += 15
+
+            price_position = analysis.get("price_position", 50)
+            if price_position < 20:  # Near lows (potential reversal)
+                score += 10
+            elif 20 <= price_position <= 80:  # Healthy range
+                score += 5
+
+            # Volatility component (20 points)
+            volatility = analysis.get("volatility", 0)
+            if 2 <= volatility <= 8:  # Optimal volatility for gains
+                score += 15
+            elif volatility > 8:  # High volatility - risky but potentially rewarding
+                score += max(0, 20 - volatility)
+
+            return min(score, 100)  # Cap at 100
+
+        except Exception as e:
+            self.logger.error(f"Error calculating opportunity score: {e}")
+            return 0
+
+    def analyze_single_token(self, symbol: str) -> Dict:
+        """Comprehensive analysis of a single token"""
+        try:
+            self.logger.info(f"Analyzing {symbol}...")
+
+            # Get 24h ticker data
+            ticker = self.get_24h_ticker_data(symbol)
+            if not ticker:
+                return {"symbol": symbol, "error": "Failed to get ticker data"}
+
+            # Get kline data for different timeframes
+            analysis = {
+                "symbol": symbol,
+                "timestamp": datetime.now().isoformat(),
+                "current_price": float(ticker["lastPrice"]),
+                "price_change_24h": float(ticker["priceChangePercent"]),
+                "volume_24h": float(ticker["volume"]),
+                "quote_volume_24h": float(ticker["quoteVolume"]),
+                "high_24h": float(ticker["highPrice"]),
+                "low_24h": float(ticker["lowPrice"]),
+                "trades_24h": int(ticker["count"]),
+            }
+
+            # Volume categorization
+            analysis["volume_category"] = self.categorize_by_volume(
+                analysis["quote_volume_24h"]
+            )
+
+            # Technical analysis on hourly data
+            hourly_data = self.get_kline_data(symbol, "1h", 168)  # 7 days
+            if hourly_data is not None:
+                tech_indicators = self.calculate_technical_indicators(hourly_data)
+                analysis.update(tech_indicators)
+
+            # Calculate opportunity score
+            analysis["opportunity_score"] = self.calculate_opportunity_score(analysis)
+
+            return analysis
+
+        except Exception as e:
+            self.logger.error(f"Error analyzing {symbol}: {e}")
+            return {"symbol": symbol, "error": str(e)}
+
+    def analyze_all_tokens(self, max_workers: int = 5) -> List[Dict]:
+        """Analyze all tradable tokens with threading"""
+        symbols = self.get_all_tradable_usdt_pairs()
+        if not symbols:
+            self.logger.error("No symbols found to analyze")
+            return []
+
+        self.logger.info(f"Starting comprehensive analysis of {len(symbols)} tokens...")
+
+        results = []
+        successful_analyses = 0
+
+        # Use ThreadPoolExecutor for concurrent analysis
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_symbol = {
+                executor.submit(self.analyze_single_token, symbol): symbol
+                for symbol in symbols
+            }
+
+            # Process completed tasks
+            for future in as_completed(future_to_symbol):
+                symbol = future_to_symbol[future]
+                try:
+                    result = future.result()
+                    results.append(result)
+
+                    if "error" not in result:
+                        successful_analyses += 1
+                        if successful_analyses % 20 == 0:
+                            self.logger.info(
+                                f"Completed {successful_analyses}/{len(symbols)} analyses..."
+                            )
+
+                except Exception as e:
+                    self.logger.error(f"Error processing {symbol}: {e}")
+                    results.append({"symbol": symbol, "error": str(e)})
+
+        self.logger.info(
+            f"Analysis complete! {successful_analyses}/{len(symbols)} tokens analyzed successfully"
+        )
+        return results
+
+    def generate_comprehensive_report(self, analyses: List[Dict]) -> Dict:
+        """Generate comprehensive market analysis report"""
+        try:
+            # Filter successful analyses
+            valid_analyses = [a for a in analyses if "error" not in a]
+
+            if not valid_analyses:
+                return {"error": "No valid analyses to report"}
+
+            # Sort by opportunity score
+            sorted_by_score = sorted(
+                valid_analyses,
+                key=lambda x: x.get("opportunity_score", 0),
+                reverse=True,
+            )
+
+            # Category analysis
+            volume_categories = {}
+            for analysis in valid_analyses:
+                cat = analysis.get("volume_category", "unknown")
+                if cat not in volume_categories:
+                    volume_categories[cat] = []
+                volume_categories[cat].append(analysis)
+
+            # Top performers
+            top_gainers = sorted(
+                valid_analyses, key=lambda x: x.get("price_change_24h", 0), reverse=True
+            )[:20]
+            top_volume = sorted(
+                valid_analyses, key=lambda x: x.get("quote_volume_24h", 0), reverse=True
+            )[:20]
+
+            report = {
+                "analysis_timestamp": datetime.now().isoformat(),
+                "total_tokens_analyzed": len(valid_analyses),
+                "total_tokens_failed": len(analyses) - len(valid_analyses),
+                # Top opportunities
+                "top_opportunities": sorted_by_score[:25],
+                # Market movers
+                "top_gainers_24h": top_gainers[:20],
+                "top_losers_24h": sorted(
+                    valid_analyses, key=lambda x: x.get("price_change_24h", 0)
+                )[:20],
+                # Volume leaders
+                "highest_volume": top_volume[:20],
+                # Category breakdown
+                "volume_categories": {
+                    cat: {
+                        "count": len(tokens),
+                        "avg_opportunity_score": sum(
+                            t.get("opportunity_score", 0) for t in tokens
+                        )
+                        / len(tokens),
+                        "top_3": sorted(
+                            tokens,
+                            key=lambda x: x.get("opportunity_score", 0),
+                            reverse=True,
+                        )[:3],
+                    }
+                    for cat, tokens in volume_categories.items()
+                },
+                # Market statistics
+                "market_stats": {
+                    "avg_24h_change": sum(
+                        a.get("price_change_24h", 0) for a in valid_analyses
+                    )
+                    / len(valid_analyses),
+                    "total_24h_volume": sum(
+                        a.get("quote_volume_24h", 0) for a in valid_analyses
+                    ),
+                    "positive_momentum_count": len(
+                        [a for a in valid_analyses if a.get("price_change_24h", 0) > 0]
+                    ),
+                    "high_opportunity_count": len(
+                        [
+                            a
+                            for a in valid_analyses
+                            if a.get("opportunity_score", 0) > 70
+                        ]
+                    ),
+                },
+            }
+
+            return report
+
+        except Exception as e:
+            self.logger.error(f"Error generating report: {e}")
+            return {"error": str(e)}
+
+    def save_analysis_results(self, analyses: List[Dict], report: Dict):
+        """Save analysis results to files"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Save raw analysis data
+        analysis_file = f"comprehensive_token_analysis_{timestamp}.json"
+        with open(analysis_file, "w") as f:
+            json.dump(analyses, f, indent=2, default=str)
+
+        # Save comprehensive report
+        report_file = f"market_analysis_report_{timestamp}.json"
+        with open(report_file, "w") as f:
+            json.dump(report, f, indent=2, default=str)
+
+        # Save top opportunities as CSV for easy viewing
+        csv_file = None
+        if "top_opportunities" in report and report["top_opportunities"]:
+            import csv
+
+            csv_file = f"top_opportunities_{timestamp}.csv"
+            with open(csv_file, "w", newline="") as f:
+                writer = csv.DictWriter(
+                    f,
+                    fieldnames=[
+                        "symbol",
+                        "opportunity_score",
+                        "price_change_24h",
+                        "volume_category",
+                        "current_price",
+                        "quote_volume_24h",
+                        "rsi",
+                        "volatility",
+                    ],
+                )
+                writer.writeheader()
+                for opp in report["top_opportunities"][:50]:  # Top 50
+                    writer.writerow(
+                        {
+                            "symbol": opp.get("symbol", ""),
+                            "opportunity_score": round(
+                                opp.get("opportunity_score", 0), 2
+                            ),
+                            "price_change_24h": round(
+                                opp.get("price_change_24h", 0), 2
+                            ),
+                            "volume_category": opp.get("volume_category", ""),
+                            "current_price": opp.get("current_price", 0),
+                            "quote_volume_24h": opp.get("quote_volume_24h", 0),
+                            "rsi": round(opp.get("rsi", 50), 2),
+                            "volatility": round(opp.get("volatility", 0), 2),
+                        }
+                    )
+
+        self.logger.info(f"Analysis results saved:")
+        self.logger.info(f"  - Raw data: {analysis_file}")
+        self.logger.info(f"  - Report: {report_file}")
+        if csv_file:
+            self.logger.info(f"  - Top opportunities CSV: {csv_file}")
+
+
+def main():
+    """Main execution function"""
+    print("🔍 VictoryChain Comprehensive Token Analyzer")
+    print("=" * 60)
+    print("Analyzing ALL tradable USDT pairs on Binance US...")
+    print("This will take 10-15 minutes to complete.")
+    print("=" * 60)
+
+    # Initialize analyzer
+    analyzer = ComprehensiveTokenAnalyzer()
+
+    # Run comprehensive analysis
+    start_time = time.time()
+    analyses = analyzer.analyze_all_tokens(max_workers=3)  # Conservative thread count
+
+    # Generate report
+    report = analyzer.generate_comprehensive_report(analyses)
+
+    # Save results
+    analyzer.save_analysis_results(analyses, report)
+
+    # Display summary
+    elapsed_time = time.time() - start_time
+    print(f"\n🎯 Analysis Complete! ({elapsed_time:.1f} seconds)")
+
+    if "error" not in report:
+        print(f"✅ Successfully analyzed {report['total_tokens_analyzed']} tokens")
+        print(f"❌ Failed to analyze {report['total_tokens_failed']} tokens")
+
+        print(f"\n📊 Market Overview:")
+        stats = report["market_stats"]
+        print(f"  • Average 24h change: {stats['avg_24h_change']:.2f}%")
+        print(f"  • Positive momentum tokens: {stats['positive_momentum_count']}")
+        print(
+            f"  • High opportunity tokens (>70 score): {stats['high_opportunity_count']}"
+        )
+        print(f"  • Total 24h volume: ${stats['total_24h_volume']:,.0f}")
+
+        print(f"\n🏆 Top 10 Opportunities:")
+        for i, opp in enumerate(report["top_opportunities"][:10], 1):
+            print(
+                f"  {i:2d}. {opp['symbol']:12s} - Score: {opp.get('opportunity_score', 0):5.1f} | "
+                f"24h: {opp.get('price_change_24h', 0):+6.2f}% | "
+                f"Vol: {opp.get('volume_category', 'unknown'):10s}"
+            )
+    else:
+        print(f"❌ Analysis failed: {report['error']}")
+
+
+if __name__ == "__main__":
+    main()

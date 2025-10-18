@@ -1,0 +1,230 @@
+{
+  "timestamp": "2025-08-04T10:21:05.747789",
+  "account_info": {
+    "balances": {
+      "BTC": {
+        "free": 8.35e-06,
+        "locked": 0.0,
+        "total": 8.35e-06
+      },
+      "USDT": {
+        "free": 16.4203732,
+        "locked": 0.0,
+        "total": 16.4203732
+      },
+      "ADA": {
+        "free": 0.037,
+        "locked": 0.0,
+        "total": 0.037
+      },
+      "XLM": {
+        "free": 112.286,
+        "locked": 0.0,
+        "total": 112.286
+      },
+      "ALGO": {
+        "free": 0.728,
+        "locked": 0.0,
+        "total": 0.728
+      },
+      "IOTA": {
+        "free": 1.33,
+        "locked": 0.0,
+        "total": 1.33
+      },
+      "ATOM": {
+        "free": 0.298225,
+        "locked": 0.0,
+        "total": 0.298225
+      },
+      "HBAR": {
+        "free": 0.536,
+        "locked": 0.0,
+        "total": 0.536
+      },
+      "KNC": {
+        "free": 0.004,
+        "locked": 0.0,
+        "total": 0.004
+      },
+      "SHIB": {
+        "free": 1838910.82,
+        "locked": 0.0,
+        "total": 1838910.82
+      },
+      "CRV": {
+        "free": 0.88475,
+        "locked": 0.0,
+        "total": 0.88475
+      },
+      "DOT": {
+        "free": 0.00144,
+        "locked": 0.0,
+        "total": 0.00144
+      },
+      "LOKA": {
+        "free": 155.188,
+        "locked": 0.0,
+        "total": 155.188
+      },
+      "QNT": {
+        "free": 0.000258,
+        "locked": 0.0,
+        "total": 0.000258
+      },
+      "FLOKI": {
+        "free": 3985.07,
+        "locked": 0.0,
+        "total": 3985.07
+      },
+      "BONK": {
+        "free": 9260.37,
+        "locked": 0.0,
+        "total": 9260.37
+      },
+      "PEPE": {
+        "free": 74886.3,
+        "locked": 0.0,
+        "total": 74886.3
+      },
+      "ANIME": {
+        "free": 0.007,
+        "locked": 0.0,
+        "total": 0.007
+      },
+      "XDC": {
+        "free": 470.82,
+        "locked": 0.0,
+        "total": 470.82
+      },
+      "1000REKT": {
+        "free": 0.1,
+        "locked": 0.0,
+        "total": 0.1
+      }
+    },
+    "total_usdt_value": 170.77502697620002,
+    "usdt_balance": 16.4203732
+  },
+  "opportunities": [
+    {
+      "symbol": "MAGICUSDT",
+      "similarity": 90.682544544,
+      "price_change": 38.73,
+      "range_position": 1.0,
+      "current_price": 0.2382,
+      "volume": 3412.72272,
+      "high_24h": 0.2382,
+      "low_24h": 0.1688
+    },
+    {
+      "symbol": "RENUSDT",
+      "similarity": 80.79802165211375,
+      "price_change": 17.039,
+      "range_position": 0.7962085308056872,
+      "current_price": 0.01154,
+      "volume": 3979.25518,
+      "high_24h": 0.01197,
+      "low_24h": 0.00986
+    },
+    {
+      "symbol": "LTCUSDT",
+      "similarity": 79.374,
+      "price_change": 9.687,
+      "range_position": 1.0,
+      "current_price": 119.57,
+      "volume": 151308.17498,
+      "high_24h": 119.57,
+      "low_24h": 108.66
+    },
+    {
+      "symbol": "XRPUSDT",
+      "similarity": 72.91511524163568,
+      "price_change": 7.057,
+      "range_position": 0.9400557620817839,
+      "current_price": 3.0644,
+      "volume": 1824776.30276,
+      "high_24h": 3.0773,
+      "low_24h": 2.8621
+    },
+    {
+      "symbol": "ENAUSDT",
+      "similarity": 71.50247773865885,
+      "price_change": 7.791,
+      "range_position": 0.8828696925329429,
+      "current_price": 0.6281,
+      "volume": 41315.41944,
+      "high_24h": 0.6361,
+      "low_24h": 0.5678
+    },
+    {
+      "symbol": "ETHUSDT",
+      "similarity": 70.35587401574803,
+      "price_change": 5.299,
+      "range_position": 0.9878937007874014,
+      "current_price": 3659.24,
+      "volume": 445501.308459,
+      "high_24h": 3661.7,
+      "low_24h": 3458.5
+    },
+    {
+      "symbol": "BRETTUSDT",
+      "similarity": 68.7832155092,
+      "price_change": 6.744,
+      "range_position": 1.0,
+      "current_price": 0.055,
+      "volume": 26476.077546,
+      "high_24h": 0.055,
+      "low_24h": 0.051272
+    },
+    {
+      "symbol": "UNIUSDT",
+      "similarity": 68.227781918,
+      "price_change": 8.295,
+      "range_position": 1.0,
+      "current_price": 9.883,
+      "volume": 8188.90959,
+      "high_24h": 9.883,
+      "low_24h": 9.091
+    },
+    {
+      "symbol": "BONKUSDT",
+      "similarity": 67.6664120603015,
+      "price_change": 5.592,
+      "range_position": 0.8241206030150745,
+      "current_price": 2.7e-05,
+      "volume": 107291.77715329,
+      "high_24h": 2.735e-05,
+      "low_24h": 2.536e-05
+    },
+    {
+      "symbol": "XLMUSDT",
+      "similarity": 67.42493150684929,
+      "price_change": 5.87,
+      "range_position": 0.7842465753424648,
+      "current_price": 0.413,
+      "volume": 213796.1688,
+      "high_24h": 0.4193,
+      "low_24h": 0.3901
+    }
+  ],
+  "claude_analysis": null,
+  "recommendation": {
+    "symbol": "MAGICUSDT",
+    "action": "BUY",
+    "position_size": 3.28407464,
+    "entry_price": 0.2382,
+    "take_profit": 0.27392999999999995,
+    "stop_loss": 0.219144,
+    "similarity": 90.682544544,
+    "confidence": "HIGH"
+  },
+  "config": {
+    "min_balance": 10.0,
+    "max_position_pct": 0.8,
+    "stop_loss_pct": 0.08,
+    "take_profit_pct": 0.15,
+    "momentum_threshold": 5.0,
+    "similarity_threshold": 50.0
+  }
+}

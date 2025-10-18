@@ -1,0 +1,536 @@
+#!/usr/bin/env python3
+"""
+Portfolio Growth Maximizer - MAKE THE NUMBERS GO UP! 📈
+Strategically reallocates portfolio to maximize total value growth
+"""
+
+import os
+import json
+import time
+import logging
+from datetime import datetime
+from typing import Dict, List, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from binance.exceptions import BinanceAPIException
+from dotenv import load_dotenv
+
+
+class PortfolioGrowthMaximizer:
+    def __init__(self):
+        load_dotenv()
+
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv("BINANCEUS_KEY"),
+            api_secret=os.getenv("BINANCEUS_SECRET"),
+            tld="us",
+        )
+
+        # Setup logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            handlers=[
+                logging.FileHandler(
+                    f'growth_maximizer_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+                ),
+                logging.StreamHandler(),
+            ],
+        )
+        self.logger = logging.getLogger(__name__)
+
+        # Growth Configuration
+        self.min_trade_usd = 10
+        self.max_position_pct = 0.3  # Max 30% in any single token
+        self.target_growth = 20  # Target 20%+ daily moves
+
+        self.logger.info("📈 Portfolio Growth Maximizer initialized")
+        self.logger.info("🎯 MISSION: MAKE THE NUMBERS GO UP!")
+
+    def get_full_portfolio(self) -> Dict:
+        """Get complete portfolio with USD values"""
+        try:
+            account = self.client.get_account()
+            portfolio = {"tokens": [], "total_value": 0}
+
+            for balance in account["balances"]:
+                free = float(balance["free"])
+                locked = float(balance["locked"])
+                total = free + locked
+
+                if total > 0.01:  # Only meaningful balances
+                    if balance["asset"] == "USDT":
+                        usd_value = total
+                        price = 1.0
+                    else:
+                        try:
+                            ticker = self.client.get_symbol_ticker(
+                                symbol=balance["asset"] + "USDT"
+                            )
+                            price = float(ticker["price"])
+                            usd_value = total * price
+                        except:
+                            price = 0
+                            usd_value = 0
+
+                    if usd_value > 0.01:
+                        portfolio["tokens"].append(
+                            {
+                                "asset": balance["asset"],
+                                "amount": total,
+                                "price": price,
+                                "usd_value": usd_value,
+                                "free": free,
+                                "locked": locked,
+                            }
+                        )
+                        portfolio["total_value"] += usd_value
+
+            # Sort by value
+            portfolio["tokens"].sort(key=lambda x: x["usd_value"], reverse=True)
+
+            self.logger.info(
+                f"💰 Total Portfolio Value: ${portfolio['total_value']:.2f}"
+            )
+            return portfolio
+
+        except Exception as e:
+            self.logger.error(f"Error getting portfolio: {e}")
+            return {"tokens": [], "total_value": 0}
+
+    def find_growth_opportunities(self) -> List[Dict]:
+        """Find tokens with highest growth potential"""
+        try:
+            # Get all symbols
+            exchange_info = self.client.get_exchange_info()
+            usdt_pairs = []
+
+            for symbol_info in exchange_info["symbols"]:
+                if (
+                    symbol_info["status"] == "TRADING"
+                    and symbol_info["quoteAsset"] == "USDT"
+                    and "SPOT" in symbol_info["permissions"]
+                ):
+                    usdt_pairs.append(symbol_info["symbol"])
+
+            # Get 24hr ticker data
+            tickers = self.client.get_ticker()
+            ticker_dict = {t["symbol"]: t for t in tickers}
+
+            growth_opportunities = []
+
+            for symbol in usdt_pairs:
+                if symbol in ticker_dict:
+                    ticker = ticker_dict[symbol]
+                    volume_usd = float(ticker["quoteVolume"])
+                    price_change = float(ticker["priceChangePercent"])
+                    current_price = float(ticker["lastPrice"])
+
+                    # Calculate growth potential score
+                    growth_factors = []
+
+                    # 1. Recent momentum (positive changes get higher scores)
+                    momentum_score = 0
+                    if price_change > 0:
+                        momentum_score = min(price_change / 5, 5)  # Cap at 5x
+                    growth_factors.append(("Positive Momentum", momentum_score))
+
+                    # 2. Volume surge potential (lower volume = more room to grow)
+                    volume_score = 0
+                    if volume_usd < 100000:  # Under $100k volume
+                        volume_score = min(100000 / max(volume_usd, 1000), 10)
+                    growth_factors.append(("Volume Surge Potential", volume_score))
+
+                    # 3. Volatility (higher volatility = more growth potential)
+                    volatility_score = min(abs(price_change) / 2, 5)
+                    growth_factors.append(("Volatility Potential", volatility_score))
+
+                    # 4. Price level (lower prices often have more % growth potential)
+                    price_score = 0
+                    if current_price < 1:
+                        price_score = min(1 / max(current_price, 0.0001), 10)
+                    growth_factors.append(("Low Price Advantage", price_score))
+
+                    # 5. Meme/narrative bonus
+                    token_name = symbol.replace("USDT", "").lower()
+                    narrative_keywords = [
+                        "ai",
+                        "meme",
+                        "dog",
+                        "cat",
+                        "pepe",
+                        "shib",
+                        "doge",
+                        "floki",
+                        "moon",
+                        "rocket",
+                        "safe",
+                        "baby",
+                        "mini",
+                        "meta",
+                        "web3",
+                        "defi",
+                        "nft",
+                        "game",
+                        "play",
+                        "earn",
+                        "yield",
+                        "farm",
+                        "anime",
+                        "manga",
+                        "japan",
+                        "kawaii",
+                        "chan",
+                        "senpai",
+                    ]
+                    narrative_score = 0
+                    for keyword in narrative_keywords:
+                        if keyword in token_name:
+                            narrative_score += 1
+                    growth_factors.append(("Narrative Potential", narrative_score))
+
+                    # Calculate total growth score
+                    total_growth_score = sum(factor[1] for factor in growth_factors)
+
+                    if total_growth_score > 2:  # Only consider promising opportunities
+                        growth_opportunities.append(
+                            {
+                                "symbol": symbol,
+                                "volume_usd": volume_usd,
+                                "price_change_24h": price_change,
+                                "current_price": current_price,
+                                "growth_score": total_growth_score,
+                                "factors": growth_factors,
+                                "reasoning": f"Growth Score: {total_growth_score:.1f} - "
+                                + ", ".join(
+                                    [f[0] for f in growth_factors if f[1] > 0.5]
+                                ),
+                            }
+                        )
+
+            # Sort by growth score
+            growth_opportunities.sort(key=lambda x: x["growth_score"], reverse=True)
+
+            self.logger.info(
+                f"📈 Found {len(growth_opportunities)} growth opportunities"
+            )
+            return growth_opportunities[:30]  # Top 30
+
+        except Exception as e:
+            self.logger.error(f"Error finding growth opportunities: {e}")
+            return []
+
+    def calculate_optimal_allocation(
+        self, portfolio: Dict, opportunities: List[Dict]
+    ) -> List[Dict]:
+        """Calculate optimal allocation to maximize growth"""
+        try:
+            total_value = portfolio["total_value"]
+            current_usdt = 0
+
+            # Find current USDT balance
+            for token in portfolio["tokens"]:
+                if token["asset"] == "USDT":
+                    current_usdt = token["usd_value"]
+                    break
+
+            # Calculate how much we can reallocate
+            # Option 1: Use existing USDT
+            # Option 2: Sell underperforming positions
+
+            trades_to_execute = []
+            available_capital = current_usdt
+
+            # Identify underperforming positions to potentially sell
+            underperformers = []
+            for token in portfolio["tokens"]:
+                if token["asset"] != "USDT" and token["usd_value"] > 10:
+                    # Check current performance of this token
+                    try:
+                        symbol = token["asset"] + "USDT"
+                        ticker = self.client.get_symbol_ticker(symbol=symbol)
+                        current_change = float(
+                            self.client.get_ticker(symbol=symbol)["priceChangePercent"]
+                        )
+
+                        if current_change < -2:  # Losing more than 2%
+                            underperformers.append(
+                                {
+                                    "symbol": symbol,
+                                    "asset": token["asset"],
+                                    "usd_value": token["usd_value"],
+                                    "performance": current_change,
+                                    "amount": token["amount"],
+                                }
+                            )
+                    except:
+                        pass
+
+            # Sort underperformers by worst performance
+            underperformers.sort(key=lambda x: x["performance"])
+
+            # Plan trades
+            target_positions = []
+
+            # Top growth opportunities to buy
+            for i, opportunity in enumerate(opportunities[:5]):  # Top 5 opportunities
+                target_allocation = min(
+                    total_value * 0.2, available_capital * 0.8
+                )  # Max 20% per position
+
+                if target_allocation >= self.min_trade_usd:
+                    target_positions.append(
+                        {
+                            "action": "BUY",
+                            "symbol": opportunity["symbol"],
+                            "target_usd": target_allocation,
+                            "growth_score": opportunity["growth_score"],
+                            "reasoning": opportunity["reasoning"],
+                        }
+                    )
+
+            # Underperformers to sell
+            sell_amount = 0
+            for underperformer in underperformers[:3]:  # Sell worst 3
+                if underperformer["usd_value"] >= self.min_trade_usd:
+                    target_positions.append(
+                        {
+                            "action": "SELL",
+                            "symbol": underperformer["symbol"],
+                            "asset": underperformer["asset"],
+                            "amount": underperformer["amount"],
+                            "usd_value": underperformer["usd_value"],
+                            "performance": underperformer["performance"],
+                            "reasoning": f"Underperforming: {underperformer['performance']:.2f}%",
+                        }
+                    )
+                    sell_amount += underperformer["usd_value"]
+
+            # Update available capital from sales
+            available_capital += sell_amount
+
+            # Adjust buy amounts based on total available capital
+            buy_positions = [p for p in target_positions if p["action"] == "BUY"]
+            if buy_positions:
+                total_buy_allocation = sum(p["target_usd"] for p in buy_positions)
+                if total_buy_allocation > available_capital:
+                    # Scale down proportionally
+                    scale_factor = available_capital / total_buy_allocation
+                    for pos in buy_positions:
+                        pos["target_usd"] *= scale_factor
+
+            return target_positions
+
+        except Exception as e:
+            self.logger.error(f"Error calculating allocation: {e}")
+            return []
+
+    def execute_rebalancing_trades(self, trades: List[Dict]) -> bool:
+        """Execute the calculated trades"""
+        try:
+            executed_trades = []
+
+            print("🚀 EXECUTING PORTFOLIO GROWTH REBALANCING!")
+            print("=" * 60)
+
+            # Execute SELL orders first
+            for trade in trades:
+                if trade["action"] == "SELL":
+                    print(f"🔻 SELLING {trade['asset']}: ${trade['usd_value']:.2f}")
+                    print(f"   Reason: {trade['reasoning']}")
+
+                    try:
+                        # Execute market sell
+                        order = self.client.order_market_sell(
+                            symbol=trade["symbol"], quantity=trade["amount"]
+                        )
+
+                        print(f"   ✅ SOLD - Order ID: {order['orderId']}")
+                        executed_trades.append(
+                            {
+                                "action": "SELL",
+                                "symbol": trade["symbol"],
+                                "order_id": order["orderId"],
+                                "amount": trade["amount"],
+                            }
+                        )
+                        time.sleep(1)  # Rate limiting
+
+                    except Exception as e:
+                        print(f"   ❌ SELL FAILED: {e}")
+                        continue
+
+            # Wait a moment for settlement
+            if executed_trades:
+                print("⏳ Waiting for settlement...")
+                time.sleep(3)
+
+            # Execute BUY orders
+            for trade in trades:
+                if trade["action"] == "BUY":
+                    print(f"🔺 BUYING {trade['symbol']}: ${trade['target_usd']:.2f}")
+                    print(f"   Growth Score: {trade['growth_score']:.1f}")
+                    print(f"   Reason: {trade['reasoning']}")
+
+                    try:
+                        # Execute market buy
+                        order = self.client.order_market_buy(
+                            symbol=trade["symbol"], quoteOrderQty=trade["target_usd"]
+                        )
+
+                        print(f"   ✅ BOUGHT - Order ID: {order['orderId']}")
+                        executed_trades.append(
+                            {
+                                "action": "BUY",
+                                "symbol": trade["symbol"],
+                                "order_id": order["orderId"],
+                                "usd_amount": trade["target_usd"],
+                            }
+                        )
+                        time.sleep(1)  # Rate limiting
+
+                    except Exception as e:
+                        print(f"   ❌ BUY FAILED: {e}")
+                        continue
+
+            # Save trade record
+            if executed_trades:
+                trade_record = {
+                    "timestamp": datetime.now().isoformat(),
+                    "trades": executed_trades,
+                    "strategy": "Portfolio Growth Maximizer",
+                }
+
+                filename = (
+                    f"growth_trades_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                )
+                with open(filename, "w") as f:
+                    json.dump(trade_record, f, indent=2, default=str)
+
+                print(f"💾 Trade record saved to: {filename}")
+                return True
+            else:
+                print("❌ No trades executed")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"Error executing trades: {e}")
+            return False
+
+    def run_growth_session(self):
+        """Run the portfolio growth maximization session"""
+        try:
+            print("📈 PORTFOLIO GROWTH MAXIMIZER")
+            print("=" * 50)
+            print("🎯 MISSION: MAKE THE NUMBERS GO UP!")
+            print("Strategy: Sell underperformers, buy high-growth potential tokens")
+            print()
+
+            # Get current portfolio
+            print("📊 Analyzing current portfolio...")
+            portfolio = self.get_full_portfolio()
+
+            if portfolio["total_value"] < 10:
+                print(f"❌ Portfolio too small: ${portfolio['total_value']:.2f}")
+                return
+
+            print(f"💰 Current Portfolio Value: ${portfolio['total_value']:.2f}")
+            print("\n🏦 CURRENT HOLDINGS:")
+            print("-" * 40)
+            for token in portfolio["tokens"]:
+                pct = (token["usd_value"] / portfolio["total_value"]) * 100
+                print(f"{token['asset']:8s} | ${token['usd_value']:8.2f} ({pct:5.1f}%)")
+
+            # Find growth opportunities
+            print("\n🔍 Finding growth opportunities...")
+            opportunities = self.find_growth_opportunities()
+
+            if not opportunities:
+                print("❌ No suitable growth opportunities found")
+                return
+
+            print("\n📈 TOP GROWTH OPPORTUNITIES:")
+            print("-" * 60)
+            for i, opp in enumerate(opportunities[:10], 1):
+                print(
+                    f"{i:2d}. {opp['symbol']:12s} | Score: {opp['growth_score']:5.1f} | "
+                    f"24h: {opp['price_change_24h']:+6.2f}% | Vol: ${opp['volume_usd']:,.0f}"
+                )
+
+            # Calculate optimal allocation
+            print("\n🧮 Calculating optimal rebalancing...")
+            trades = self.calculate_optimal_allocation(portfolio, opportunities)
+
+            if not trades:
+                print("❌ No beneficial trades identified")
+                return
+
+            print("\n📋 PROPOSED TRADES:")
+            print("-" * 50)
+            total_sell_value = 0
+            total_buy_value = 0
+
+            for trade in trades:
+                if trade["action"] == "SELL":
+                    total_sell_value += trade["usd_value"]
+                    print(
+                        f"🔻 SELL {trade['asset']:8s} | ${trade['usd_value']:8.2f} | {trade['reasoning']}"
+                    )
+                else:
+                    total_buy_value += trade["target_usd"]
+                    print(
+                        f"🔺 BUY  {trade['symbol']:8s} | ${trade['target_usd']:8.2f} | Score: {trade['growth_score']:.1f}"
+                    )
+
+            print(f"\nTotal Selling: ${total_sell_value:.2f}")
+            print(f"Total Buying:  ${total_buy_value:.2f}")
+            print(f"Net Change:    ${total_buy_value - total_sell_value:.2f}")
+
+            # Confirmation
+            print(
+                "\n⚠️  This will rebalance your portfolio for maximum growth potential!"
+            )
+            confirm = input("Type 'MAKE NUMBERS GO UP' to execute: ")
+
+            if confirm != "MAKE NUMBERS GO UP":
+                print("❌ Growth session cancelled")
+                return
+
+            # Execute trades
+            success = self.execute_rebalancing_trades(trades)
+
+            if success:
+                print("\n🎉 PORTFOLIO REBALANCING COMPLETE!")
+                print("📈 Your portfolio is now optimized for growth!")
+                print("🚀 NUMBERS SHOULD GO UP! 🚀")
+
+                # Show new portfolio
+                time.sleep(2)
+                print("\n📊 NEW PORTFOLIO SNAPSHOT:")
+                new_portfolio = self.get_full_portfolio()
+                for token in new_portfolio["tokens"]:
+                    pct = (token["usd_value"] / new_portfolio["total_value"]) * 100
+                    print(
+                        f"{token['asset']:8s} | ${token['usd_value']:8.2f} ({pct:5.1f}%)"
+                    )
+
+                print(f"\n💰 New Total Value: ${new_portfolio['total_value']:.2f}")
+            else:
+                print("❌ Rebalancing failed - portfolio unchanged")
+
+        except KeyboardInterrupt:
+            print("\n👋 Growth session cancelled by user")
+        except Exception as e:
+            self.logger.error(f"Growth session error: {e}")
+
+
+def main():
+    """Main function"""
+    growth_maximizer = PortfolioGrowthMaximizer()
+    growth_maximizer.run_growth_session()
+
+
+if __name__ == "__main__":
+    main()

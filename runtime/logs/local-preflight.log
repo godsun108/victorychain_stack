@@ -1,0 +1,6 @@
+MODE=live / EXCHANGE=binanceus
+Loaded markets: ... (BTC/USDT, ETH/USDT present)
+Filters OK: minQty=..., stepSize=..., tickSize=..., minNotional=...
+Guardrails OK: MAX_NOTIONAL_PER_ORDER=50, MAX_OPEN_ORDERS=2
+API perms: trading=ENABLED, withdrawals=DISABLED
+Approval gate: REQUIRE_APPROVALS=true

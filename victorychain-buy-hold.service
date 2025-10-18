@@ -1,0 +1,25 @@
+[Unit]
+Description=VictoryChain Buy and Hold Automation
+After=network.target
+
+[Service]
+Type=simple
+User=nicholaskramer
+WorkingDirectory=/Users/nicholaskramer/Downloads/victorychain_stack
+Environment=PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/opt/homebrew/bin/python3 buy_hold_scheduler.py start
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits
+MemoryMax=512M
+CPUQuota=50%
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

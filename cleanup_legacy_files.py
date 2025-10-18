@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+
+"""
+VictoryChain Legacy File Cleanup Script
+Removes files that don't meet senior developer standards
+Author: Senior Developer
+Version: 1.0.0
+"""
+
+import os
+import shutil
+import logging
+from pathlib import Path
+from typing import List
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
+class LegacyFileCleanup:
+    """Safely removes legacy files that don't meet senior dev standards"""
+
+    def __init__(self, workspace_path: str):
+        self.workspace_path = Path(workspace_path)
+        self.removed_files = []
+        self.backup_dir = self.workspace_path / "removed_legacy_files_backup"
+
+    def create_backup_directory(self):
+        """Create backup directory for safety"""
+        if not self.backup_dir.exists():
+            self.backup_dir.mkdir(exist_ok=True)
+            logger.info(f"Created backup directory: {self.backup_dir}")
+
+    def get_files_to_remove(self) -> List[str]:
+        """
+        Define files that should be removed based on senior dev standards:
+        - Old/simple versions of files that have been rewritten
+        - Demo/test files not needed for production
+        - Backup and temporary files
+        - Legacy analyzers and bots superseded by core system
+        """
+        files_to_remove = [
+            # Legacy core files (superseded by v2)
+            "victorychain_core.py",  # Superseded by victorychain_core_v2.py
+            "momentum_trader.py",  # Superseded by momentum_trader_v2.py
+            "launch_live_trading.py",  # Superseded by launch_live_trading_v2.py
+            # Demo and test files
+            "demo_system.py",
+            "test_ai_integration.sh",
+            "test_claude_api.py",
+            "test_claude_support.py",
+            "test_imports.py",
+            "test_stop_loss.py",
+            "test_system.py",
+            # Simple/simplified versions
+            "simple_growth_booster.py",
+            "simple_statistical_analyzer.py",
+            "simplified_statistical_analyzer.py",
+            "advanced_data_analyst_simplified.py",
+            # Legacy trading bots (superseded by core system)
+            "aggressive_portfolio_multiplier.py",
+            "ai_gains_only_bot.py",
+            "ai_non_popular_hunter.py",
+            "balanced_trading_bot.py",
+            "automated_holding_system.py",
+            "automated_trading_system.py",
+            "cross_asset_arbitrage_bot.py",
+            "direct_auto_trader.py",
+            "enhanced_trading_bot.py",
+            "full_portfolio_trading_bot.py",
+            "intelligent_momentum_trader.py",
+            "integrated_momentum_trader.py",
+            "live_24_7_trading_bot.py",
+            "live_trading_bot.py",
+            "master_trading_bot.py",
+            "multi_asset_trading_bot.py",
+            "ultimate_trading_orchestrator.py",
+            "volume_categorized_bot.py",
+            "yolo_max_allocation_trader.py",
+            # Legacy analyzers (superseded by core system)
+            "advanced_data_analyst.py",
+            "advanced_scoring_engine.py",
+            "analyze_non_popular_tokens.py",
+            "complete_binance_analyzer.py",
+            "complete_token_scanner.py",
+            "comprehensive_momentum_scanner.py",
+            "comprehensive_token_analyzer.py",
+            "enhanced_momentum_analyzer.py",
+            "enhanced_statistical_analyzer.py",
+            "expanded_all_tokens_analyzer.py",
+            "expert_market_analyst.py",
+            "live_trading_analyzer.py",
+            "market_microstructure_analyzer.py",
+            "master_advanced_analysis.py",
+            "momentum_scanner.py",
+            "momentum_surge_scanner.py",
+            "moonshot_detector.py",
+            "quantum_data_analyst.py",
+            "statistical_analyzer.py",
+            "statistical_arbitrage_system.py",
+            "top_gainer_study_system.py",
+            "trading_opportunity_scanner.py",
+            "winner_trait_learning_system.py",
+            # Specialized bots not needed
+            "claude_comprehensive_analyst.py",
+            "claude_momentum_analyzer.py",
+            "claude_non_popular_trader.py",
+            "complete_consolidator.py",
+            "micro_allocation_booster.py",
+            "portfolio_growth_maximizer.py",
+            "position_multiplier.py",
+            "smart_accumulator.py",
+            "smart_gains_bot.py",
+            # Old scripts and launchers
+            "auto_start_trading.py",
+            "execute_momentum_strategy.py",
+            "final_loka_buy.py",
+            "magicusdt_winner_analysis.py",
+            "show_all_unexpected_tokens.py",
+            # Temporary/output files
+            "all_tokens_analysis_20250802_204924.csv",
+            "claude_analysis_20250804_030732.txt",
+            "performance_report_20250802_214621.txt",
+            "top_opportunities_20250802_204711.csv",
+            "trade_history.json",
+            # Old config files
+            "config_test.toml",
+            "live_trading_config.json",
+            # Shell scripts that are outdated
+            "cleanup_files.sh",
+            "deploy.sh",
+            "deploy_24_7_trading.sh",
+            "install_advanced_deps.sh",
+            "launch.sh",
+            "launch_multi_asset_trading.sh",
+            "launch_trading_bot.sh",
+            "live_momentum_trading.sh",
+            "live_trading.sh",
+            "momentum_system.sh",
+            "run_ai_bot.sh",
+            "run_all_tokens_analysis.sh",
+            "run_capital_gains_bot.sh",
+            "run_momentum.sh",
+            "statistical_momentum.sh",
+            "victorychain_launcher.sh",
+            # JSON analysis files (old outputs)
+            "claude_token_analysis_20250804_102519.json",
+            "claude_token_analysis_20250804_103047.json",
+            "claude_token_analysis_20250804_104207.json",
+            "claude_token_analysis_20250804_105124.json",
+            "victorychain_analysis_20250804_102105.json",
+            "victorychain_analysis_20250804_102136.json",
+            "victorychain_ultimate_analysis_20250804_102437.json",
+            "victorychain_ultimate_analysis_20250804_102531.json",
+            "victorychain_ultimate_analysis_20250804_103000.json",
+            "victorychain_ultimate_analysis_20250804_103426.json",
+            "victorychain_ultimate_analysis_20250804_103531.json",
+            "victorychain_ultimate_analysis_20250804_103948.json",
+            "victorychain_ultimate_analysis_20250804_104057.json",
+            "victorychain_ultimate_analysis_20250804_104715.json",
+            "victorychain_ultimate_analysis_20250804_123247.json",
+            # Log files
+            "victorychain_ultimate_20250804_102437.log",
+            "victorychain_ultimate_20250804_102531.log",
+            "victorychain_ultimate_20250804_102958.log",
+            "victorychain_ultimate_20250804_103424.log",
+            "victorychain_ultimate_20250804_103530.log",
+            "victorychain_ultimate_20250804_103946.log",
+            "victorychain_ultimate_20250804_104055.log",
+            "victorychain_ultimate_20250804_104714.log",
+            "victorychain_ultimate_20250804_123246.log",
+            # Enhanced/Ultimate versions (superseded by core)
+            "victorychain_ultimate_enhanced.py",
+        ]
+
+        return files_to_remove
+
+    def backup_and_remove_file(self, filename: str) -> bool:
+        """Backup file to safety directory and remove from workspace"""
+        file_path = self.workspace_path / filename
+
+        if not file_path.exists():
+            logger.info(f"File not found (already removed?): {filename}")
+            return True
+
+        try:
+            # Create backup
+            backup_path = self.backup_dir / filename
+            shutil.copy2(file_path, backup_path)
+            logger.info(f"Backed up: {filename}")
+
+            # Remove original
+            file_path.unlink()
+            logger.info(f"Removed: {filename}")
+            self.removed_files.append(filename)
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to remove {filename}: {e}")
+            return False
+
+    def remove_backup_directory(self) -> bool:
+        """Remove backup directory if requested"""
+        try:
+            if self.backup_dir.exists():
+                shutil.rmtree(self.backup_dir)
+                logger.info(f"Removed backup directory: {self.backup_dir}")
+                return True
+        except Exception as e:
+            logger.error(f"Failed to remove backup directory: {e}")
+            return False
+
+    def cleanup_legacy_files(self, create_backup: bool = True) -> None:
+        """Main cleanup function"""
+        logger.info("Starting legacy file cleanup...")
+
+        if create_backup:
+            self.create_backup_directory()
+
+        files_to_remove = self.get_files_to_remove()
+
+        success_count = 0
+        for filename in files_to_remove:
+            if self.backup_and_remove_file(filename):
+                success_count += 1
+
+        logger.info(
+            f"Cleanup complete! Removed {success_count}/{len(files_to_remove)} files"
+        )
+
+        if self.removed_files:
+            print("\n📋 REMOVED FILES:")
+            for filename in sorted(self.removed_files):
+                print(f"  ❌ {filename}")
+
+        print(f"\n✅ Cleanup Summary:")
+        print(f"  - Files targeted: {len(files_to_remove)}")
+        print(f"  - Files removed: {success_count}")
+        print(f"  - Backup location: {self.backup_dir}")
+
+
+def main():
+    """Run the cleanup script"""
+    workspace_path = "/Users/nicholaskramer/Downloads/victorychain_stack"
+
+    cleanup = LegacyFileCleanup(workspace_path)
+
+    print("🧹 VictoryChain Legacy File Cleanup")
+    print("=" * 50)
+    print("This will remove legacy files that don't meet senior dev standards.")
+    print("Files will be backed up before removal for safety.")
+    print()
+
+    response = input("Continue with cleanup? (y/N): ").strip().lower()
+
+    if response == "y":
+        cleanup.cleanup_legacy_files(create_backup=True)
+        print("\n🎉 Legacy cleanup complete!")
+        print("Core v2 files and Claude automation remain intact.")
+    else:
+        print("Cleanup cancelled.")
+
+
+if __name__ == "__main__":
+    main()

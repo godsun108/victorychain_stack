@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-08-05T19:08:12.534065",
+  "overall_performance": {
+    "total_allocations": 3,
+    "success_rate": 1.0,
+    "average_gain": 0.16733333333333333,
+    "average_loss": NaN,
+    "total_profit_usd": 457.0,
+    "active_positions": 0
+  },
+  "token_performance": {
+    "MAGICUSDT": {
+      "total_allocations": 2,
+      "success_rate": 1.0,
+      "avg_gain": 0.161,
+      "total_profit": 292.0,
+      "current_weight": 1.0
+    },
+    "GALAUSDT": {
+      "total_allocations": 1,
+      "success_rate": 1.0,
+      "avg_gain": 0.18,
+      "total_profit": 165.0,
+      "current_weight": 0.85
+    }
+  },
+  "learning_metrics": {
+    "model_accuracy": 0.8433333333333334,
+    "prediction_accuracy": 0.9832666666666667,
+    "adaptation_score": 0.5,
+    "confidence_calibration": 0.5
+  },
+  "current_opportunities": [],
+  "learning_parameters": {
+    "min_confidence_threshold": 0.7,
+    "max_position_hold_hours": 72,
+    "reallocation_opportunity_threshold": 0.15,
+    "learning_rate": 0.001,
+    "adaptation_frequency_minutes": 5,
+    "pattern_memory_depth": 1000,
+    "momentum_weight": 0.85,
+    "volume_weight": 0.75,
+    "gaming_sector_weight": 0.9,
+    "stop_loss_adaptation_rate": 0.02
+  },
+  "recent_adaptations": []
+}

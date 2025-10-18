@@ -1,0 +1,173 @@
+{
+  "timestamp": "2025-08-05T14:25:39.460538",
+  "magic_profile": {
+    "symbol": "MAGIC",
+    "full_name": "Magic (Treasure)",
+    "blockchain": "Arbitrum",
+    "contract_address": "0x539bdE0d7Dbd336b79148AA742883198BBF60342",
+    "price": 0.0,
+    "market_cap": 0.0,
+    "volume_24h": 0.0,
+    "circulating_supply": 0.0,
+    "total_supply": 347428570.0,
+    "rsi_14": 0.0,
+    "macd_signal": "NEUTRAL",
+    "bollinger_position": 0.0,
+    "sma_20": 0.0,
+    "sma_50": 0.0,
+    "sma_200": 0.0,
+    "ema_12": 0.0,
+    "ema_26": 0.0,
+    "volatility_7d": 0.0,
+    "volatility_30d": 0.0,
+    "sharpe_ratio": 0.0,
+    "sortino_ratio": 0.0,
+    "max_drawdown": 0.0,
+    "gaming_ecosystem_score": 8.5,
+    "nft_integration_score": 9.2,
+    "treasure_dao_activity": 7.8,
+    "bridgeworld_usage": 8.1,
+    "social_sentiment": 0.75,
+    "twitter_followers": 0,
+    "discord_members": 0,
+    "reddit_subscribers": 0,
+    "github_activity": 0.0,
+    "active_addresses": 15420,
+    "transaction_count": 89234,
+    "whale_activity": 6.7,
+    "holder_distribution": {
+      "whales_>1M": 0.0,
+      "large_100k-1M": 0.0,
+      "medium_10k-100k": 0.0,
+      "small_1k-10k": 0.0,
+      "retail_<1k": 0.0
+    },
+    "ai_trend_prediction": 0.0,
+    "ai_confidence_score": 0.0,
+    "ai_risk_assessment": 0.0,
+    "ai_recommendation": "HOLD"
+  },
+  "technical_summary": {
+    "overall_trend": "BEARISH",
+    "rsi_signal": "OVERSOLD",
+    "macd_signal": "NEUTRAL",
+    "price_vs_sma20": 0,
+    "price_vs_sma50": 0,
+    "volatility_rating": "LOW"
+  },
+  "gaming_analysis": {
+    "ecosystem_strength": 8.4,
+    "gaming_score": 8.5,
+    "nft_integration": 9.2,
+    "dao_activity": 7.8,
+    "bridgeworld_usage": 8.1,
+    "overall_rating": "EXCELLENT"
+  },
+  "risk_assessment": {
+    "overall_risk_score": 5.666666666666667,
+    "volatility_risk": 0.0,
+    "technical_risk": 7.0,
+    "market_cap_risk": 10.0,
+    "risk_level": "MEDIUM",
+    "max_position_size": 0.3
+  },
+  "trading_signals": {
+    "primary_signal": "HOLD",
+    "confidence": 0.5,
+    "entry_price": 0.0,
+    "stop_loss": 0.0,
+    "take_profit": 0.0,
+    "position_size": 0.05,
+    "timeframe": "MEDIUM"
+  },
+  "ai_analysis": {
+    "status": "success",
+    "analysis": {
+      "analysis": {
+        "technical_analysis": {
+          "summary": "Unable to provide precise technical analysis due to missing price data. However, strong on-chain metrics with 15,420 active addresses and high daily transactions (89,234) suggest healthy network activity.",
+          "on_chain_strength": 8.2,
+          "whale_confidence": 6.7
+        },
+        "gaming_ecosystem": {
+          "overall_score": 8.4,
+          "strengths": [
+            "Strong NFT integration (9.2/10)",
+            "Solid gaming fundamentals (8.5/10)",
+            "Healthy Bridgeworld usage metrics",
+            "Active TreasureDAO participation"
+          ],
+          "ecosystem_health": "ROBUST"
+        },
+        "price_predictions": {
+          "short_term": {
+            "timeframe": "1-7 days",
+            "direction": "BULLISH",
+            "confidence": 7.2,
+            "note": "Based on ecosystem metrics and on-chain activity"
+          },
+          "medium_term": {
+            "timeframe": "1-4 weeks",
+            "direction": "BULLISH",
+            "confidence": 6.8,
+            "catalysts": "Gaming adoption and NFT integration"
+          },
+          "long_term": {
+            "timeframe": "1-6 months",
+            "direction": "BULLISH",
+            "confidence": 7.5,
+            "growth_potential": "HIGH"
+          }
+        },
+        "risk_assessment": {
+          "score": 6.8,
+          "factors": [
+            "Gaming market volatility",
+            "NFT market dependency",
+            "Crypto market correlation"
+          ]
+        },
+        "trading_recommendation": {
+          "action": "BUY",
+          "confidence": 7.5,
+          "reasoning": [
+            "Strong gaming ecosystem metrics",
+            "Healthy on-chain activity",
+            "Solid NFT integration",
+            "Active community engagement"
+          ]
+        },
+        "technical_levels": {
+          "note": "Unable to provide specific support/resistance levels due to missing price data",
+          "recommendation": "Wait for price data stabilization before setting exact levels"
+        },
+        "trading_strategy": {
+          "entry_strategy": "Gradual accumulation",
+          "position_sizing": "Maximum 5% of portfolio",
+          "risk_management": {
+            "stop_loss": "Set at -15% from entry",
+            "take_profit": "Multiple targets at +30%, +50%, +100%",
+            "trailing_stop": "Implement after +30% gain"
+          }
+        }
+      },
+      "final_remarks": "Strong fundamentals in gaming and NFT sectors, but exercise caution due to missing price data. Focus on ecosystem metrics for entry timing."
+    },
+    "raw_response": "{\n    \"analysis\": {\n        \"technical_analysis\": {\n            \"summary\": \"Unable to provide precise technical analysis due to missing price data. However, strong on-chain metrics with 15,420 active addresses and high daily transactions (89,234) suggest healthy network activity.\",\n            \"on_chain_strength\": 8.2,\n            \"whale_confidence\": 6.7\n        },\n        \n        \"gaming_ecosystem\": {\n            \"overall_score\": 8.4,\n            \"strengths\": [\n                \"Strong NFT integration (9.2/10)\",\n                \"Solid gaming fundamentals (8.5/10)\",\n                \"Healthy Bridgeworld usage metrics\",\n                \"Active TreasureDAO participation\"\n            ],\n            \"ecosystem_health\": \"ROBUST\"\n        },\n        \n        \"price_predictions\": {\n            \"short_term\": {\n                \"timeframe\": \"1-7 days\",\n                \"direction\": \"BULLISH\",\n                \"confidence\": 7.2,\n                \"note\": \"Based on ecosystem metrics and on-chain activity\"\n            },\n            \"medium_term\": {\n                \"timeframe\": \"1-4 weeks\",\n                \"direction\": \"BULLISH\",\n                \"confidence\": 6.8,\n                \"catalysts\": \"Gaming adoption and NFT integration\"\n            },\n            \"long_term\": {\n                \"timeframe\": \"1-6 months\",\n                \"direction\": \"BULLISH\",\n                \"confidence\": 7.5,\n                \"growth_potential\": \"HIGH\"\n            }\n        },\n        \n        \"risk_assessment\": {\n            \"score\": 6.8,\n            \"factors\": [\n                \"Gaming market volatility\",\n                \"NFT market dependency\",\n                \"Crypto market correlation\"\n            ]\n        },\n        \n        \"trading_recommendation\": {\n            \"action\": \"BUY\",\n            \"confidence\": 7.5,\n            \"reasoning\": [\n                \"Strong gaming ecosystem metrics\",\n                \"Healthy on-chain activity\",\n                \"Solid NFT integration\",\n                \"Active community engagement\"\n            ]\n        },\n        \n        \"technical_levels\": {\n            \"note\": \"Unable to provide specific support/resistance levels due to missing price data\",\n            \"recommendation\": \"Wait for price data stabilization before setting exact levels\"\n        },\n        \n        \"trading_strategy\": {\n            \"entry_strategy\": \"Gradual accumulation\",\n            \"position_sizing\": \"Maximum 5% of portfolio\",\n            \"risk_management\": {\n                \"stop_loss\": \"Set at -15% from entry\",\n                \"take_profit\": \"Multiple targets at +30%, +50%, +100%\",\n                \"trailing_stop\": \"Implement after +30% gain\"\n            }\n        }\n    },\n    \n    \"final_remarks\": \"Strong fundamentals in gaming and NFT sectors, but exercise caution due to missing price data. Focus on ecosystem metrics for entry timing.\"\n}"
+  },
+  "recommendation": {
+    "recommendation": "STRONG BUY",
+    "confidence_score": 7.75,
+    "technical_score": 7.0,
+    "gaming_ecosystem_score": 8.5,
+    "key_factors": [
+      "RSI: 0.0",
+      "Gaming Score: 8.5/10",
+      "Price vs SMA20: 0.0%",
+      "MACD: NEUTRAL"
+    ],
+    "target_price_1w": 0.0,
+    "target_price_1m": 0.0,
+    "max_recommended_allocation": 0.15
+  }
+}

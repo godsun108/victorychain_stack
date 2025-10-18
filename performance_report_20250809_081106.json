@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-08-09T08:11:06.454124",
+  "system_status": "ACTIVE",
+  "uptime_seconds": 60.002831,
+  "capital": {
+    "initial": 100000,
+    "current": 100000,
+    "profit_realized": 21912.11773839619,
+    "roi_percentage": 21.91211773839619
+  },
+  "opportunities": {
+    "total_detected": 11,
+    "total_capitalized": 11,
+    "capitalization_rate": 100.0
+  },
+  "trading": {
+    "total_trades": 10,
+    "win_rate": 100.0,
+    "avg_profit_per_trade": 2191.211773839619
+  },
+  "components": {
+    "token_scanner": null,
+    "opportunity_maximizer": {
+      "status": "ACTIVE",
+      "last_scan": "2025-08-09 08:10:36.455191",
+      "opportunities_found": 11,
+      "scan_frequency": 30
+    },
+    "position_optimizer": null,
+    "bot_communicator": {
+      "status": "ACTIVE",
+      "connected": true,
+      "orders_sent": 0,
+      "orders_executed": 10,
+      "total_profit": 21912.11773839619
+    },
+    "performance_monitor": {
+      "status": "ACTIVE",
+      "monitoring_frequency": 60,
+      "last_report": "2025-08-09 08:10:06.452847",
+      "reports_generated": 1
+    }
+  },
+  "risk_metrics": {
+    "current_risk": 0.05,
+    "max_daily_risk": 0.1,
+    "emergency_stop_level": 0.15
+  }
+}

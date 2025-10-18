@@ -1,0 +1,67 @@
+{
+  "timestamp": "2025-08-04T12:32:47.817965",
+  "system_version": "VictoryChain Ultimate v2.0 - MAXIMUM CAPITAL DEPLOYMENT",
+  "magicusdt_reference": {
+    "performance": 32.32,
+    "momentum_score": 0.998,
+    "range_position": 0.882,
+    "pattern_type": "MOMENTUM_SURGE",
+    "controlled_volatility": true,
+    "technical_alignment": true,
+    "similarity_threshold": 70.0
+  },
+  "smart_gains_config": {
+    "confidence_threshold": 0.7,
+    "min_gain_target": 3.0,
+    "max_loss_tolerance": 2.0,
+    "win_rate_target": 0.65,
+    "position_size_pct": 0.9
+  },
+  "analysis": {
+    "opportunities": [
+      {
+        "symbol": "MAGICUSDT",
+        "magicusdt_similarity": 83.78130584858677,
+        "price_change": 33.426,
+        "range_position": 0.9471488178025035,
+        "current_price": 0.2411,
+        "volume": 4013.29823,
+        "volume_category": "low",
+        "momentum_score": 1.0,
+        "strength_score": 0.9471488178025035,
+        "volatility": 0.2982165076731647,
+        "confidence": 1.0,
+        "risk_score": 3.2464209877191297,
+        "smart_gains_approved": true,
+        "scores": {
+          "performance": 35.0,
+          "momentum": 25.0,
+          "position": 18.94297635605007,
+          "volume": 0.8026596460000001,
+          "volatility": 4.035669846536706
+        }
+      }
+    ],
+    "total_analyzed": 180,
+    "smart_gains_filtered": 1,
+    "analysis_method": "enhanced_pattern_matching_with_smart_gains",
+    "magicusdt_reference": {
+      "performance": 32.32,
+      "momentum_score": 0.998,
+      "range_position": 0.882,
+      "pattern_type": "MOMENTUM_SURGE",
+      "controlled_volatility": true,
+      "technical_alignment": true,
+      "similarity_threshold": 70.0
+    }
+  },
+  "total_tokens_analyzed": 180,
+  "enhancement_features": [
+    "Enhanced MAGICUSDT Pattern Recognition",
+    "Smart Gains-Only Logic",
+    "Advanced Risk Management",
+    "Multi-Strategy Analysis",
+    "Claude AI Integration",
+    "Real-time Position Sizing"
+  ]
+}

@@ -1,0 +1,114 @@
+import threading
+import logging
+from typing import Optional
+from . import approvals
+import os
+from datetime import datetime, timezone
+
+# Add prompt versioning for immutable ledger events
+try:
+    from . import prompt_version as _pv
+except Exception:  # pragma: no cover
+    _pv = None
+
+_lock = threading.RLock()
+_state = {
+    "locked": False,
+    "reason": None,
+    "trace_id": None,
+    "since": None,  # ISO8601 timestamp when lockdown engaged
+    "by": None,  # actor identifier (best effort)
+}
+
+logger = logging.getLogger(__name__)
+
+
+def _append_ledger(event: str, extra: Optional[dict] = None) -> None:
+    """Append an immutable ledger event if prompt_version is available."""
+    if _pv is None:
+        return
+    try:
+        ph = _pv.compute_prompt_hash()
+        commit = _pv.get_git_commit()
+        _pv.append_ledger_event(event, "vault", ph, commit, extra or {})
+    except Exception:
+        # Do not raise; logging only
+        pass
+
+
+def is_locked() -> bool:
+    with _lock:
+        return bool(_state["locked"])
+
+
+def lockdown(reason: str, trace_id: Optional[str] = None) -> None:
+    """Engage emergency lockdown: trading halted via shared state.
+    Services should check is_locked() and honor deny-all risk gating.
+    Emits immutable LOCKDOWN event in logs with trace_id.
+    """
+    with _lock:
+        _state["locked"] = True
+        _state["reason"] = reason
+        _state["trace_id"] = trace_id
+        _state["since"] = datetime.now(timezone.utc).isoformat()
+        # Try to capture an actor indicator without leaking secrets
+        _state["by"] = (
+            os.environ.get("LOCK_ACTOR")
+            or os.environ.get("USER")
+            or os.environ.get("USERNAME")
+        )
+    logger.error(f"LOCKDOWN engaged | reason={reason} | trace_id={trace_id}")
+    # Immutable ledger event
+    _append_ledger(
+        "LOCKDOWN",
+        {
+            "reason": reason,
+            "trace_id": trace_id,
+            "by": _state["by"],
+            "since": _state["since"],
+        },
+    )
+
+
+def unlock(token: str) -> None:
+    # Log immutable attempt without secrets
+    current_trace = None
+    with _lock:
+        current_trace = _state.get("trace_id")
+    logger.info(f"UNLOCK_ATTEMPT event=vault.unlock trace_id={current_trace}")
+    _append_ledger("UNLOCK_ATTEMPT", {"trace_id": current_trace})
+    try:
+        approvals.require(token, action="vault.unlock")
+        with _lock:
+            _state["locked"] = False
+            _state["reason"] = None
+            _state["trace_id"] = None
+            _state["since"] = None
+            _state["by"] = None
+        logger.warning("LOCKDOWN cleared via approved unlock")
+        _append_ledger("UNLOCKED", {"result": "success"})
+    except Exception as e:
+        logger.error(
+            f"UNLOCK_ATTEMPT_FAILED event=vault.unlock trace_id={current_trace}"
+        )
+        _append_ledger("UNLOCK_FAILED", {"trace_id": current_trace, "error": str(e)})
+        raise
+
+
+def deny_all() -> bool:
+    """Convenience for risk engine: when True, block all trading activity."""
+    return is_locked()
+
+
+def status() -> dict:
+    """Return a snapshot of the current vault lockdown state.
+    Keys: locked, reason, trace_id, since, by
+    """
+    with _lock:
+        return {
+            "locked": bool(_state["locked"]),
+            "reason": _state["reason"],
+            "trace_id": _state["trace_id"],
+            "since": _state["since"],
+            "by": _state["by"],
+        }

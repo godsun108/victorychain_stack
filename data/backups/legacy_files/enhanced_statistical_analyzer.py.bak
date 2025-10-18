@@ -1,0 +1,525 @@
+#!/usr/bin/env python3
+"""
+Enhanced VictoryChain Statistical Momentum Analyzer
+Advanced probability calculations with standard deviation and optimal token selection
+"""
+
+import requests
+import numpy as np
+import json
+import os
+import time
+from datetime import datetime, timedelta
+from typing import List, Dict, Tuple, Optional
+from scipy import stats
+import statistics
+import math
+
+class EnhancedStatisticalAnalyzer:
+    def __init__(self):
+        self.claude_api_key = os.getenv('CLAUDE_API_KEY', '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')
+        self.binance_us_base = "https://api.binance.us"
+        
+    def get_all_usdt_pairs(self) -> List[str]:
+        """Get all USDT trading pairs from Binance US"""
+        try:
+            response = requests.get(f"{self.binance_us_base}/api/v3/exchangeInfo")
+            if response.status_code == 200:
+                data = response.json()
+                usdt_pairs = []
+                for symbol_info in data['symbols']:
+                    if (symbol_info['quoteAsset'] == 'USDT' and 
+                        symbol_info['status'] == 'TRADING' and
+                        symbol_info['symbol'] not in ['USDCUSDT', 'TUSDUSDT', 'BUSDUSDT']):
+                        usdt_pairs.append(symbol_info['symbol'])
+                return sorted(usdt_pairs)
+            return []
+        except Exception as e:
+            print(f"Error getting USDT pairs: {e}")
+            return []
+
+    def get_enhanced_kline_data(self, symbol: str, interval: str = '1h', limit: int = 336) -> List[Dict]:
+        """Get extended historical data for better statistical analysis (14 days)"""
+        try:
+            url = f"{self.binance_us_base}/api/v3/klines"
+            params = {
+                'symbol': symbol,
+                'interval': interval,
+                'limit': limit
+            }
+            
+            response = requests.get(url, params=params)
+            if response.status_code == 200:
+                klines = response.json()
+                processed_data = []
+                
+                for kline in klines:
+                    processed_data.append({
+                        'timestamp': int(kline[0]),
+                        'open': float(kline[1]),
+                        'high': float(kline[2]),
+                        'low': float(kline[3]),
+                        'close': float(kline[4]),
+                        'volume': float(kline[5]),
+                        'returns': 0.0,
+                        'log_returns': 0.0,
+                        'volatility': 0.0
+                    })
+                
+                # Calculate returns and log returns
+                for i in range(1, len(processed_data)):
+                    price_change = (processed_data[i]['close'] - processed_data[i-1]['close']) / processed_data[i-1]['close']
+                    processed_data[i]['returns'] = price_change * 100
+                    processed_data[i]['log_returns'] = math.log(processed_data[i]['close'] / processed_data[i-1]['close']) * 100
+                
+                # Calculate rolling volatility (24-hour window)
+                for i in range(24, len(processed_data)):
+                    returns_window = [processed_data[j]['returns'] for j in range(i-23, i+1)]
+                    processed_data[i]['volatility'] = np.std(returns_window)
+                
+                return processed_data[1:]  # Remove first entry
+            else:
+                print(f"Failed to get kline data for {symbol}: {response.status_code}")
+                return []
+        except Exception as e:
+            print(f"Error getting kline data for {symbol}: {e}")
+            return []
+
+    def calculate_advanced_statistics(self, data: List[Dict]) -> Dict:
+        """Calculate comprehensive statistical metrics with advanced probability models"""
+        if len(data) < 50:
+            return {}
+        
+        returns = np.array([d['returns'] for d in data])
+        log_returns = np.array([d['log_returns'] for d in data])
+        prices = np.array([d['close'] for d in data])
+        volumes = np.array([d['volume'] for d in data])
+        
+        # Basic statistics
+        mean_return = np.mean(returns)
+        std_dev = np.std(returns)
+        skewness = stats.skew(returns)
+        kurtosis = stats.kurtosis(returns)
+        
+        # Advanced volatility measures
+        realized_volatility = np.sqrt(np.sum(log_returns**2))
+        garch_volatility = self.estimate_garch_volatility(returns)
+        
+        # Multi-timeframe analysis
+        returns_1h = returns[-1] if len(returns) > 0 else 0
+        returns_6h = np.sum(returns[-6:]) if len(returns) >= 6 else 0
+        returns_24h = np.sum(returns[-24:]) if len(returns) >= 24 else 0
+        returns_7d = np.sum(returns[-168:]) if len(returns) >= 168 else 0
+        
+        # Standard deviation analysis at different timeframes
+        std_1h = std_dev
+        std_6h = np.std(returns[-6:]) if len(returns) >= 6 else std_dev
+        std_24h = np.std(returns[-24:]) if len(returns) >= 24 else std_dev
+        std_7d = np.std(returns[-168:]) if len(returns) >= 168 else std_dev
+        
+        # Risk-adjusted returns
+        sharpe_ratio = mean_return / std_dev if std_dev > 0 else 0
+        sortino_ratio = mean_return / np.std(returns[returns < 0]) if len(returns[returns < 0]) > 0 else 0
+        
+        # Momentum indicators
+        momentum_1h = returns_1h / std_1h if std_1h > 0 else 0
+        momentum_6h = returns_6h / std_6h if std_6h > 0 else 0
+        momentum_24h = returns_24h / std_24h if std_24h > 0 else 0
+        momentum_7d = returns_7d / std_7d if std_7d > 0 else 0
+        
+        # Statistical significance tests
+        t_stat, p_value = stats.ttest_1samp(returns, 0)
+        jarque_bera_stat, jarque_bera_p = stats.jarque_bera(returns)
+        
+        # Probability distributions
+        win_rate = len(returns[returns > 0]) / len(returns)
+        loss_rate = len(returns[returns < 0]) / len(returns)
+        avg_win = np.mean(returns[returns > 0]) if len(returns[returns > 0]) > 0 else 0
+        avg_loss = np.mean(returns[returns < 0]) if len(returns[returns < 0]) > 0 else 0
+        
+        # Tail risk measures
+        var_95 = np.percentile(returns, 5)  # Value at Risk 95%
+        var_99 = np.percentile(returns, 1)  # Value at Risk 99%
+        cvar_95 = np.mean(returns[returns <= var_95])  # Conditional VaR
+        
+        # Trend analysis
+        linear_trend = stats.linregress(range(len(prices)), prices)
+        trend_strength = linear_trend.rvalue
+        trend_slope = linear_trend.slope
+        
+        # Volume analysis
+        volume_trend = stats.linregress(range(len(volumes)), volumes)
+        avg_volume = np.mean(volumes)
+        volume_volatility = np.std(volumes) / avg_volume if avg_volume > 0 else 0
+        
+        # Regime detection (bull/bear market phases)
+        regime_prob = self.detect_market_regime(returns, prices)
+        
+        return {
+            'symbol': data[0].get('symbol', 'UNKNOWN'),
+            'current_price': float(prices[-1]),
+            'data_points': len(data),
+            
+            # Basic statistics
+            'mean_return': float(mean_return),
+            'std_dev': float(std_dev),
+            'skewness': float(skewness),
+            'kurtosis': float(kurtosis),
+            
+            # Multi-timeframe returns
+            'returns_1h': float(returns_1h),
+            'returns_6h': float(returns_6h),
+            'returns_24h': float(returns_24h),
+            'returns_7d': float(returns_7d),
+            
+            # Multi-timeframe volatility
+            'std_1h': float(std_1h),
+            'std_6h': float(std_6h),
+            'std_24h': float(std_24h),
+            'std_7d': float(std_7d),
+            
+            # Advanced volatility
+            'realized_volatility': float(realized_volatility),
+            'garch_volatility': float(garch_volatility),
+            
+            # Risk-adjusted metrics
+            'sharpe_ratio': float(sharpe_ratio),
+            'sortino_ratio': float(sortino_ratio),
+            
+            # Momentum indicators
+            'momentum_1h': float(momentum_1h),
+            'momentum_6h': float(momentum_6h),
+            'momentum_24h': float(momentum_24h),
+            'momentum_7d': float(momentum_7d),
+            
+            # Statistical tests
+            'p_value': float(p_value),
+            'jarque_bera_p': float(jarque_bera_p),
+            'normal_distribution': jarque_bera_p > 0.05,
+            
+            # Probability metrics
+            'win_rate': float(win_rate),
+            'loss_rate': float(loss_rate),
+            'avg_win': float(avg_win),
+            'avg_loss': float(avg_loss),
+            'profit_factor': abs(avg_win * win_rate / (avg_loss * loss_rate)) if avg_loss != 0 and loss_rate > 0 else 0,
+            
+            # Risk measures
+            'var_95': float(var_95),
+            'var_99': float(var_99),
+            'cvar_95': float(cvar_95),
+            
+            # Trend analysis
+            'trend_strength': float(trend_strength),
+            'trend_slope': float(trend_slope),
+            
+            # Volume analysis
+            'avg_volume': float(avg_volume),
+            'volume_volatility': float(volume_volatility),
+            'volume_trend': float(volume_trend.slope),
+            
+            # Market regime
+            'bull_market_prob': float(regime_prob['bull_prob']),
+            'bear_market_prob': float(regime_prob['bear_prob']),
+            'sideways_prob': float(regime_prob['sideways_prob'])
+        }
+
+    def estimate_garch_volatility(self, returns: np.ndarray, window: int = 50) -> float:
+        """Simple GARCH(1,1) volatility estimation"""
+        if len(returns) < window:
+            return np.std(returns)
+        
+        # Simple exponentially weighted volatility
+        weights = np.exp(np.linspace(-1, 0, window))
+        weights = weights / np.sum(weights)
+        
+        recent_returns = returns[-window:]
+        weighted_variance = np.sum(weights * (recent_returns - np.mean(recent_returns))**2)
+        return np.sqrt(weighted_variance)
+
+    def detect_market_regime(self, returns: np.ndarray, prices: np.ndarray) -> Dict:
+        """Detect current market regime (bull, bear, sideways)"""
+        if len(returns) < 50:
+            return {'bull_prob': 0.33, 'bear_prob': 0.33, 'sideways_prob': 0.34}
+        
+        # Recent trend analysis
+        recent_returns = returns[-50:]
+        recent_prices = prices[-50:]
+        
+        # Calculate trend metrics
+        trend = stats.linregress(range(len(recent_prices)), recent_prices)
+        trend_strength = abs(trend.rvalue)
+        trend_slope = trend.slope
+        
+        # Volatility regime
+        volatility = np.std(recent_returns)
+        mean_return = np.mean(recent_returns)
+        
+        # Classify regime
+        bull_prob = 0
+        bear_prob = 0
+        sideways_prob = 0
+        
+        if trend_strength > 0.7:  # Strong trend
+            if trend_slope > 0 and mean_return > 0:
+                bull_prob = 0.8
+                bear_prob = 0.1
+                sideways_prob = 0.1
+            elif trend_slope < 0 and mean_return < 0:
+                bull_prob = 0.1
+                bear_prob = 0.8
+                sideways_prob = 0.1
+            else:
+                sideways_prob = 0.6
+                bull_prob = 0.2
+                bear_prob = 0.2
+        else:  # Weak trend
+            if mean_return > volatility * 0.5:
+                bull_prob = 0.5
+                bear_prob = 0.2
+                sideways_prob = 0.3
+            elif mean_return < -volatility * 0.5:
+                bull_prob = 0.2
+                bear_prob = 0.5
+                sideways_prob = 0.3
+            else:
+                sideways_prob = 0.6
+                bull_prob = 0.2
+                bear_prob = 0.2
+        
+        return {
+            'bull_prob': bull_prob,
+            'bear_prob': bear_prob,
+            'sideways_prob': sideways_prob
+        }
+
+    def calculate_optimal_probability_score(self, metrics: Dict) -> Dict:
+        """Advanced probability-based scoring with standard deviation integration"""
+        
+        # Base probability calculations
+        prob_10_gain = self.calculate_gain_probability(metrics, 10, 24)  # 10% in 24h
+        prob_20_gain = self.calculate_gain_probability(metrics, 20, 48)  # 20% in 48h
+        prob_30_gain = self.calculate_gain_probability(metrics, 30, 72)  # 30% in 72h
+        
+        # Risk-adjusted probabilities
+        risk_adjusted_10 = prob_10_gain * (1 - min(abs(metrics['var_95']) / 20, 0.5))
+        risk_adjusted_20 = prob_20_gain * (1 - min(abs(metrics['var_95']) / 15, 0.6))
+        risk_adjusted_30 = prob_30_gain * (1 - min(abs(metrics['var_95']) / 10, 0.7))
+        
+        # Multi-timeframe momentum score
+        momentum_score = (
+            metrics['momentum_1h'] * 0.4 +
+            metrics['momentum_6h'] * 0.3 +
+            metrics['momentum_24h'] * 0.2 +
+            metrics['momentum_7d'] * 0.1
+        )
+        
+        # Volatility-adjusted scoring
+        volatility_factor = 1 / (1 + metrics['std_24h'] / 5)  # Penalize high volatility
+        
+        # Statistical significance bonus
+        significance_bonus = 1.2 if metrics['p_value'] < 0.05 else 1.0
+        
+        # Market regime adjustment
+        regime_adjustment = (
+            metrics['bull_market_prob'] * 1.3 +
+            metrics['sideways_prob'] * 1.0 +
+            metrics['bear_market_prob'] * 0.7
+        )
+        
+        # Final composite score
+        composite_score = (
+            risk_adjusted_10 * 0.5 +
+            risk_adjusted_20 * 0.3 +
+            risk_adjusted_30 * 0.2
+        ) * volatility_factor * significance_bonus * regime_adjustment
+        
+        # Expected value calculation
+        expected_return_24h = metrics['mean_return'] * 24
+        expected_return_7d = metrics['mean_return'] * 168
+        
+        # Risk metrics
+        max_drawdown_prob = self.calculate_drawdown_probability(metrics, -10)  # 10% loss
+        
+        return {
+            'composite_score': float(min(composite_score, 100)),
+            'prob_10_gain_24h': float(prob_10_gain),
+            'prob_20_gain_48h': float(prob_20_gain),
+            'prob_30_gain_72h': float(prob_30_gain),
+            'risk_adjusted_10': float(risk_adjusted_10),
+            'risk_adjusted_20': float(risk_adjusted_20),
+            'risk_adjusted_30': float(risk_adjusted_30),
+            'momentum_score': float(momentum_score),
+            'volatility_factor': float(volatility_factor),
+            'regime_adjustment': float(regime_adjustment),
+            'expected_return_24h': float(expected_return_24h),
+            'expected_return_7d': float(expected_return_7d),
+            'max_drawdown_prob': float(max_drawdown_prob),
+            'sharpe_score': float(min(metrics['sharpe_ratio'] * 10, 20)),
+            'profit_factor_score': float(min(metrics['profit_factor'] * 5, 15))
+        }
+
+    def calculate_gain_probability(self, metrics: Dict, target_gain: float, hours: int) -> float:
+        """Calculate probability of achieving target gain in specified hours"""
+        mean_hourly_return = metrics['mean_return']
+        std_hourly = metrics['std_dev']
+        
+        if std_hourly <= 0:
+            return 0
+        
+        # Required hourly return to achieve target
+        required_hourly = target_gain / hours
+        
+        # Z-score calculation
+        z_score = (required_hourly - mean_hourly_return) / std_hourly
+        
+        # Base probability using normal distribution
+        base_prob = (1 - stats.norm.cdf(z_score)) * 100
+        
+        # Adjust for skewness (positive skew increases upside probability)
+        skew_adjustment = 1 + (metrics['skewness'] * 0.1)
+        
+        # Adjust for momentum
+        momentum_total = (metrics['momentum_1h'] + metrics['momentum_6h'] + 
+                         metrics['momentum_24h']) / 3
+        momentum_adjustment = 1 + (momentum_total * 0.05)
+        
+        # Adjust for market regime
+        regime_adjustment = metrics['bull_market_prob'] * 1.2 + 0.8
+        
+        # Final probability
+        adjusted_prob = base_prob * skew_adjustment * momentum_adjustment * regime_adjustment
+        
+        return min(max(adjusted_prob, 0), 95)  # Cap between 0-95%
+
+    def calculate_drawdown_probability(self, metrics: Dict, target_loss: float) -> float:
+        """Calculate probability of experiencing target loss"""
+        std_dev = metrics['std_dev']
+        mean_return = metrics['mean_return']
+        
+        if std_dev <= 0:
+            return 0
+        
+        # Z-score for the loss threshold
+        z_score = (target_loss - mean_return) / std_dev
+        
+        # Probability of loss
+        loss_prob = stats.norm.cdf(z_score) * 100
+        
+        # Adjust for negative skewness (increases downside risk)
+        skew_adjustment = 1 - (metrics['skewness'] * 0.1)
+        
+        return min(loss_prob * skew_adjustment, 95)
+
+    def analyze_all_tokens(self, max_tokens: int = 50) -> List[Dict]:
+        """Analyze all USDT pairs and return ranked results"""
+        print("🔍 Getting all USDT trading pairs...")
+        all_pairs = self.get_all_usdt_pairs()
+        
+        if not all_pairs:
+            print("❌ Failed to get trading pairs")
+            return []
+        
+        print(f"📊 Found {len(all_pairs)} USDT pairs. Analyzing top {min(max_tokens, len(all_pairs))}...")
+        
+        results = []
+        analyzed_count = 0
+        
+        for symbol in all_pairs[:max_tokens]:
+            try:
+                print(f"📈 Analyzing {symbol} ({analyzed_count + 1}/{min(max_tokens, len(all_pairs))})")
+                
+                # Get historical data
+                data = self.get_enhanced_kline_data(symbol)
+                if not data:
+                    continue
+                
+                # Calculate statistical metrics
+                stats_metrics = self.calculate_advanced_statistics(data)
+                if not stats_metrics:
+                    continue
+                
+                # Calculate probability scores
+                prob_scores = self.calculate_optimal_probability_score(stats_metrics)
+                
+                # Combine results
+                result = {
+                    **stats_metrics,
+                    **prob_scores,
+                    'analysis_timestamp': datetime.now().isoformat()
+                }
+                
+                results.append(result)
+                analyzed_count += 1
+                
+                # Rate limiting
+                time.sleep(0.1)
+                
+            except Exception as e:
+                print(f"❌ Error analyzing {symbol}: {e}")
+                continue
+        
+        # Sort by composite score
+        results.sort(key=lambda x: x['composite_score'], reverse=True)
+        
+        print(f"✅ Analysis complete! {len(results)} tokens analyzed.")
+        return results
+
+    def print_top_opportunities(self, results: List[Dict], top_n: int = 10):
+        """Print top trading opportunities with detailed statistics"""
+        if not results:
+            print("❌ No results to display")
+            return
+        
+        print(f"\n🏆 TOP {min(top_n, len(results))} TRADING OPPORTUNITIES")
+        print("=" * 100)
+        
+        for i, token in enumerate(results[:top_n], 1):
+            print(f"\n#{i} {token['symbol']}")
+            print(f"   💰 Current Price: ${token['current_price']:.6f}")
+            print(f"   📊 Composite Score: {token['composite_score']:.1f}/100")
+            print(f"   📈 Probabilities: 10% in 24h: {token['prob_10_gain_24h']:.1f}% | 20% in 48h: {token['prob_20_gain_48h']:.1f}% | 30% in 72h: {token['prob_30_gain_72h']:.1f}%")
+            print(f"   🎯 Risk-Adjusted: 10%: {token['risk_adjusted_10']:.1f}% | 20%: {token['risk_adjusted_20']:.1f}% | 30%: {token['risk_adjusted_30']:.1f}%")
+            print(f"   📊 Momentum: 1h: {token['momentum_1h']:.2f} | 6h: {token['momentum_6h']:.2f} | 24h: {token['momentum_24h']:.2f}")
+            print(f"   📉 Volatility: 1h: {token['std_1h']:.2f}% | 24h: {token['std_24h']:.2f}%")
+            print(f"   🔥 Sharpe Ratio: {token['sharpe_ratio']:.2f} | Win Rate: {token['win_rate']:.1%}")
+            print(f"   🎢 Market Regime: Bull: {token['bull_market_prob']:.1%} | Bear: {token['bear_market_prob']:.1%} | Sideways: {token['sideways_prob']:.1%}")
+            print(f"   💡 Expected 24h Return: {token['expected_return_24h']:.2f}%")
+
+def main():
+    """Main execution function"""
+    print("🚀 VictoryChain Enhanced Statistical Momentum Analyzer")
+    print("=" * 60)
+    
+    analyzer = EnhancedStatisticalAnalyzer()
+    
+    # Analyze all tokens
+    results = analyzer.analyze_all_tokens(max_tokens=50)
+    
+    if results:
+        # Print top opportunities
+        analyzer.print_top_opportunities(results, top_n=15)
+        
+        # Save results to file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"enhanced_statistical_analysis_{timestamp}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(results, f, indent=2, default=str)
+        
+        print(f"\n💾 Results saved to: {filename}")
+        
+        # Print summary statistics
+        if len(results) >= 5:
+            avg_score = np.mean([r['composite_score'] for r in results])
+            top_5_avg = np.mean([r['composite_score'] for r in results[:5]])
+            
+            print(f"\n📊 SUMMARY STATISTICS")
+            print(f"   Average Composite Score: {avg_score:.1f}")
+            print(f"   Top 5 Average Score: {top_5_avg:.1f}")
+            print(f"   Best Opportunity: {results[0]['symbol']} ({results[0]['composite_score']:.1f})")
+    else:
+        print("❌ No analysis results generated")
+
+if __name__ == "__main__":
+    main()

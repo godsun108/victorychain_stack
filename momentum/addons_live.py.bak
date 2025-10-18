@@ -1,0 +1,325 @@
+# momentum/addons_live.py
+# Step 1–3: unrealized PnL/exposure metrics + websocket price cache + VaR95 gate
+from __future__ import annotations
+import asyncio, json, logging, threading, time, os, math
+from collections import deque, defaultdict
+from typing import Dict, Optional, Iterable, Tuple
+
+# NEW: numpy (with graceful fallback)
+try:
+    import numpy as np  # type: ignore
+except Exception:  # pragma: no cover
+    np = None  # type: ignore
+
+try:
+    from prometheus_client import Gauge, Counter
+except Exception:
+    # Minimal stubs if metrics not present
+    class _N: 
+        def __init__(self,*a,**k): pass
+        def labels(self,*a,**k): return self
+        def set(self,*a,**k): pass
+        def inc(self,*a,**k): pass
+    Gauge = Counter = _N
+
+# -----------------------------
+# Metrics
+# -----------------------------
+g_unreal_usd   = Gauge("momentum_unrealized_pnl_usd", "Unrealized PnL (USD) total")
+g_exposure_usd = Gauge("momentum_exposure_usd", "Gross exposure (USD) total")
+g_pos_exposure = Gauge("momentum_symbol_exposure_usd", "Per-symbol exposure (USD)", ["symbol"])
+g_pos_unreal   = Gauge("momentum_symbol_unrealized_usd", "Per-symbol unrealized PnL (USD)", ["symbol"])
+g_var95_usd    = Gauge("momentum_var95_usd", "Portfolio 95% 1m VaR (USD)")
+c_var_breach   = Counter("momentum_var_breach_total", "VaR limit breaches")
+g_price_stale  = Gauge("momentum_price_stale_seconds", "Seconds since last mid update", ["symbol"])
+
+# Additional VaR contribution metrics
+try:
+    from prometheus_client import Gauge as _G2  # reuse import if available
+    try:
+        VAR95_SYM_USD = _G2("momentum_var95_symbol_usd", "Standalone VaR (95%) USD per symbol", ["symbol"])
+    except Exception:
+        VAR95_SYM_USD = g_unreal_usd  # harmless fallback
+    try:
+        VAR95_CONTRIB_USD = _G2("momentum_var95_contrib_usd", "Euler VaR contribution (95%) USD per symbol", ["symbol"])
+    except Exception:
+        VAR95_CONTRIB_USD = g_unreal_usd
+except Exception:  # pragma: no cover
+    VAR95_SYM_USD = VAR95_CONTRIB_USD = g_unreal_usd
+
+# -----------------------------
+# Thread-safe price cache
+# -----------------------------
+class PriceCache:
+    def __init__(self, max_stale_sec: float = None):
+        self._lock = threading.RLock()
+        self._mid: Dict[str, Tuple[float, float]] = {}  # symbol -> (mid, ts)
+        self.max_stale_sec = float(os.getenv("MAX_TICK_STALENESS_SEC", "2")) if max_stale_sec is None else max_stale_sec
+
+    @staticmethod
+    def _to_stream_pair(symbol: str) -> str:
+        # "XRP/USDT" -> "xrpusdt"
+        return symbol.replace("/", "").lower()
+
+    def update_mid(self, symbol: str, mid: float, ts: Optional[float] = None):
+        ts = ts or time.time()
+        with self._lock:
+            self._mid[symbol] = (float(mid), float(ts))
+
+    def get_mid(self, symbol: str) -> Optional[float]:
+        with self._lock:
+            tup = self._mid.get(symbol)
+        if not tup:
+            return None
+        mid, ts = tup
+        staleness = time.time() - ts
+        g_price_stale.labels(symbol).set(max(0.0, staleness))
+        if staleness > self.max_stale_sec:
+            return None
+        return mid
+
+    def last_ts(self, symbol: str) -> Optional[float]:
+        with self._lock:
+            tup = self._mid.get(symbol)
+            return tup[1] if tup else None
+
+# -----------------------------
+# WebSocket client (Binance.US public bookTicker)
+# -----------------------------
+class WSClient:
+    def __init__(self, price_cache: PriceCache, symbols: Iterable[str]):
+        self.cache = price_cache
+        self.symbols = list(symbols)
+        self._stop = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+
+    def start(self):
+        if os.getenv("WS_ENABLED", "1") != "1":
+            logging.warning("WSClient disabled via WS_ENABLED=0")
+            return
+        self._thread = threading.Thread(target=self._run, name="WSClient", daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._stop.set()
+
+    def _streams_url(self) -> str:
+        pairs = [self.cache._to_stream_pair(s) + "@bookTicker" for s in self.symbols]
+        stream = "/".join(pairs)
+        return f"wss://stream.binance.us:9443/stream?streams={stream}"
+
+    def _run(self):
+        try:
+            import websockets  # type: ignore
+        except Exception:
+            logging.warning("websockets lib not installed; WSClient inactive")
+            return
+
+        backoff = 1.0
+        while not self._stop.is_set():
+            url = self._streams_url()
+            try:
+                asyncio.run(self._session(url))
+                backoff = 1.0
+            except Exception as e:
+                logging.warning("WSClient reconnect in %.1fs (%s)", backoff, e)
+                self._stop.wait(backoff)
+                backoff = min(backoff * 2, 30.0)
+
+    async def _session(self, url: str):
+        import websockets  # type: ignore
+        async with websockets.connect(url, ping_interval=20, ping_timeout=20, max_queue=1000) as ws:
+            logging.info("WSClient connected: %s", url)
+            while not self._stop.is_set():
+                msg = await asyncio.wait_for(ws.recv(), timeout=30)
+                self._handle_msg(msg)
+
+    def _handle_msg(self, msg: str):
+        try:
+            d = json.loads(msg)
+            x = d.get("data") or {}
+            if x.get("e") == "bookTicker" or "u" in x:
+                s_pair = x.get("s", "").upper()         # e.g. "XRPUSDT"
+                bid = float(x.get("b", 0.0))
+                ask = float(x.get("a", 0.0))
+                if bid and ask:
+                    sym = f"{s_pair[:-4]}/USDT" if s_pair.endswith("USDT") else None
+                    if sym:
+                        mid = (bid + ask) / 2.0
+                        self.cache.update_mid(sym, mid)
+        except Exception as e:
+            logging.debug("WS parse error: %s", e)
+
+# -----------------------------
+# VaR + unrealized PnL manager
+# -----------------------------
+class RiskManager:
+    def __init__(self, price_cache: PriceCache):
+        self.cache = price_cache
+        self.ret_win_secs = float(os.getenv("VAR_RET_WINDOW_SECS", "3600"))  # 1h of 1m bars
+        self.bucket_secs  = float(os.getenv("VAR_BUCKET_SECS", "60"))        # 1m buckets
+        self._buckets: Dict[str, Tuple[float, float]] = {}  # symbol -> (last_bucket_ts, last_mid)
+        self._rets: Dict[str, deque] = defaultdict(lambda: deque(maxlen= int(self.ret_win_secs//self.bucket_secs)))
+
+    def _percentile(self, arr, q):
+        if not arr:
+            return 0.0
+        s = sorted(arr)
+        k = (len(s) - 1) * q
+        f = math.floor(k); c = math.ceil(k)
+        if f == c: return s[int(k)]
+        return s[f] + (s[c] - s[f]) * (k - f)
+
+    def record_price(self, symbol: str, ts: float = None):
+        mid = self.cache.get_mid(symbol)
+        if mid is None or mid <= 0:
+            return
+        ts = ts or time.time()
+        bucket = math.floor(ts / self.bucket_secs) * self.bucket_secs
+        last_bucket, last_mid = self._buckets.get(symbol, (None, None))
+        if last_bucket is None:
+            self._buckets[symbol] = (bucket, mid); return
+        if bucket != last_bucket and last_mid and last_mid > 0:
+            r = math.log(mid / last_mid)
+            self._rets[symbol].append(r)
+            self._buckets[symbol] = (bucket, mid)
+
+    def compute_unreal_and_exposure(self, positions: Dict[str, Dict]) -> Tuple[float, float, Dict[str, Tuple[float,float]]]:
+        total_unreal = 0.0
+        total_expo   = 0.0
+        per = {}
+        for sym, pos in positions.items():
+            qty = float(pos.get("qty", 0.0))
+            avg = float(pos.get("avg", 0.0))  # average entry
+            if not qty:
+                continue
+            mid = self.cache.get_mid(sym)
+            if mid is None:
+                continue
+            expo = abs(qty) * mid
+            pnl  = (mid - avg) * qty  # signed
+            total_expo += expo
+            total_unreal += pnl
+            per[sym] = (expo, pnl)
+        return total_unreal, total_expo, per
+
+    def compute_var95_usd(self, positions: Dict[str, Dict]) -> float:
+        # Historical (empirical) VaR using current symbol exposures as weights
+        weights = {}
+        curr_prices = {}
+        total_abs = 0.0
+        for sym, pos in positions.items():
+            qty = float(pos.get("qty", 0.0))
+            mid = self.cache.get_mid(sym)
+            if not qty or mid is None:
+                continue
+            w = abs(qty * mid)  # USD absolute exposure weight
+            if w > 0:
+                weights[sym] = w
+                curr_prices[sym] = mid
+                total_abs += w
+        if total_abs == 0.0:
+            return 0.0
+
+        # Build portfolio 1m return series by weighted sum across symbols
+        L = max((len(self._rets[s]) for s in weights.keys()), default=0)
+        if L == 0:
+            return 0.0
+        port = []
+        for i in range(-L, 0):
+            r_sum = 0.0
+            for sym, w in weights.items():
+                sr = self._rets[sym]
+                try:
+                    r_i = sr[i]
+                except IndexError:
+                    r_i = 0.0
+                r_sum += (w / total_abs) * r_i
+            port.append(r_sum)
+        # 5th percentile loss (VaR at 95%)
+        var_r = - self._percentile(port, 0.05)  # convert to +USD loss number
+        # Scale by current gross exposure (total_abs)
+        return float(var_r * total_abs)
+
+    def compute_var95_contrib(self, positions: Dict[str, Dict]) -> Tuple[float, Dict[str,float], Dict[str,float]]:
+        """Variance-covariance portfolio VaR and Euler contributions.
+        Returns: (portfolio_var_usd, {sym: standalone_var_usd}, {sym: contrib_usd})
+        """
+        if np is None:
+            return 0.0, {}, {}
+        # leverage existing compute_unreal_and_exposure for exposures
+        try:
+            _, _, per_sym = self.compute_unreal_and_exposure(positions)
+        except Exception:
+            return 0.0, {}, {}
+        syms: list[str] = []
+        exposures: list[float] = []
+        series_lengths = []
+        for s,(expo_usd,_unr) in per_sym.items():
+            buf = self._rets.get(s)
+            if not buf:
+                continue
+            if abs(expo_usd) < getattr(self,'min_expo_usd',1.0):
+                continue
+            if len(buf) < max(5, self.maxlen//6 if hasattr(self,'maxlen') else 5):
+                continue
+            syms.append(s)
+            exposures.append(float(expo_usd))
+            series_lengths.append(len(buf))
+        if not syms:
+            return 0.0, {}, {}
+        L = min(series_lengths)
+        if L < 5:
+            return 0.0, {}, {}
+        try:
+            R = np.column_stack([np.array(self._rets[s], dtype=float)[-L:] for s in syms])  # shape (L,N)
+            if R.shape[0] < 2:
+                return 0.0, {}, {}
+            Σ = np.cov(R, rowvar=False)
+        except Exception:
+            return 0.0, {}, {}
+        w_vec = np.array(exposures, dtype=float)
+        try:
+            port_var = float(w_vec @ Σ @ w_vec)
+        except Exception:
+            return 0.0, {}, {}
+        if port_var <= 0:
+            return 0.0, {}, {}
+        z = getattr(self,'z',1.645)
+        σ_p = math.sqrt(port_var)
+        var_p = z * σ_p
+        # standalone
+        diag = np.clip(np.diag(Σ), 0, np.inf)
+        sigmas = np.sqrt(diag)
+        var_sym = {s: float(z * abs(wi) * si) for s, wi, si in zip(syms, w_vec, sigmas)}
+        Σw = Σ @ w_vec
+        contrib = {s: float(z * (wi * Σw_i) / max(σ_p,1e-12)) for s, wi, Σw_i in zip(syms, w_vec, Σw)}
+        return float(var_p), var_sym, contrib
+
+    def set_metrics_and_gate(self, positions: Dict[str, Dict], equity_usd: float) -> Tuple[bool, str]:
+        unreal, expo, per = self.compute_unreal_and_exposure(positions)
+        g_unreal_usd.set(unreal)
+        g_exposure_usd.set(expo)
+        for sym, (e, u) in per.items():
+            g_pos_exposure.labels(sym).set(e)
+            g_pos_unreal.labels(sym).set(u)
+
+        var_usd = self.compute_var95_usd(positions)
+        g_var95_usd.set(var_usd)
+
+        # Gates
+        limit_usd = os.getenv("PORTFOLIO_VAR95_MAX_USD")
+        limit_pct = os.getenv("PORTFOLIO_VAR95_MAX_PCT_EQUITY")
+        if limit_usd:
+            try:
+                if var_usd > float(limit_usd):
+                    c_var_breach.inc()
+                    return False, "risk_var_usd"
+            except Exception: pass
+        if limit_pct and equity_usd > 0:
+            try:
+                if (var_usd / equity_usd) * 100.0 > float(limit_pct):
+                    c_var_breach.inc()
+                    return False, "risk_var_pct"
+            except Exception: pass
+        return True, ""

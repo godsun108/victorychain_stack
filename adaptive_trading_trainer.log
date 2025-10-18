@@ -1,0 +1,292 @@
+2025-08-09 08:31:58,646 - INFO - 🚀 Starting adaptive trading parameter training simulation
+2025-08-09 08:31:58,646 - INFO - 
+📊 Processing trade 1/5: NEAR
+2025-08-09 08:31:58,646 - INFO - 📝 Recording trade execution: NEAR - BUY
+2025-08-09 08:31:58,646 - INFO - ✅ Trade recorded. Success score: 1.00
+2025-08-09 08:31:59,647 - INFO - 
+📊 Processing trade 2/5: MNGO
+2025-08-09 08:31:59,648 - INFO - 📝 Recording trade execution: MNGO - BUY
+2025-08-09 08:31:59,648 - INFO - ✅ Trade recorded. Success score: 0.97
+2025-08-09 08:32:00,649 - INFO - 
+📊 Processing trade 3/5: RAY
+2025-08-09 08:32:00,649 - INFO - 📝 Recording trade execution: RAY - BUY
+2025-08-09 08:32:00,649 - INFO - ✅ Trade recorded. Success score: 1.00
+2025-08-09 08:32:00,649 - INFO - 
+⚙️ Current optimized parameters:
+2025-08-09 08:32:00,650 - INFO -    min_profit_threshold: 100.0
+2025-08-09 08:32:00,650 - INFO -    max_gas_ratio: 0.1
+2025-08-09 08:32:00,650 - INFO -    position_size_multiplier: 1.0
+2025-08-09 08:32:00,650 - INFO -    risk_tolerance: 0.75
+2025-08-09 08:32:00,650 - INFO -    urgency_threshold: 0.8
+2025-08-09 08:32:00,650 - INFO -    confidence_threshold: 0.7
+2025-08-09 08:32:00,650 - INFO -    market_volatility_factor: 1.0
+2025-08-09 08:32:00,650 - INFO -    scaling_factor: 1.0
+2025-08-09 08:32:00,650 - INFO -    profit_target_multiplier: 1.2
+2025-08-09 08:32:00,650 - INFO -    stop_loss_percentage: 0.05
+2025-08-09 08:32:01,651 - INFO - 
+📊 Processing trade 4/5: ILV
+2025-08-09 08:32:01,652 - INFO - 📝 Recording trade execution: ILV - BUY
+2025-08-09 08:32:01,653 - INFO - ✅ Trade recorded. Success score: 0.47
+2025-08-09 08:32:01,653 - INFO - 
+⚙️ Current optimized parameters:
+2025-08-09 08:32:01,653 - INFO -    min_profit_threshold: 100.0
+2025-08-09 08:32:01,653 - INFO -    max_gas_ratio: 0.1
+2025-08-09 08:32:01,653 - INFO -    position_size_multiplier: 1.0
+2025-08-09 08:32:01,653 - INFO -    risk_tolerance: 0.75
+2025-08-09 08:32:01,653 - INFO -    urgency_threshold: 0.8
+2025-08-09 08:32:01,653 - INFO -    confidence_threshold: 0.7
+2025-08-09 08:32:01,654 - INFO -    market_volatility_factor: 1.0
+2025-08-09 08:32:01,654 - INFO -    scaling_factor: 1.0
+2025-08-09 08:32:01,654 - INFO -    profit_target_multiplier: 1.2
+2025-08-09 08:32:01,654 - INFO -    stop_loss_percentage: 0.05
+2025-08-09 08:32:02,655 - INFO - 
+📊 Processing trade 5/5: COPE
+2025-08-09 08:32:02,656 - INFO - 📝 Recording trade execution: COPE - BUY
+2025-08-09 08:32:02,656 - INFO - 🧠 Training adaptive learning models...
+2025-08-09 08:32:02,796 - INFO - 📊 Model Performance - R² Score: 0.930
+2025-08-09 08:32:02,796 - INFO - ✅ Trade recorded. Success score: 0.00
+2025-08-09 08:32:02,796 - INFO - 
+⚙️ Current optimized parameters:
+2025-08-09 08:32:02,796 - INFO -    min_profit_threshold: 100.0
+2025-08-09 08:32:02,796 - INFO -    max_gas_ratio: 0.1
+2025-08-09 08:32:02,796 - INFO -    position_size_multiplier: 1.0
+2025-08-09 08:32:02,796 - INFO -    risk_tolerance: 0.75
+2025-08-09 08:32:02,796 - INFO -    urgency_threshold: 0.8
+2025-08-09 08:32:02,796 - INFO -    confidence_threshold: 0.7
+2025-08-09 08:32:02,796 - INFO -    market_volatility_factor: 1.0
+2025-08-09 08:32:02,796 - INFO -    scaling_factor: 1.0
+2025-08-09 08:32:02,796 - INFO -    profit_target_multiplier: 1.2
+2025-08-09 08:32:02,796 - INFO -    stop_loss_percentage: 0.05
+2025-08-09 08:32:03,798 - INFO - 
+🔮 Testing trade outcome prediction:
+2025-08-09 08:32:03,818 - INFO -    Predicted profit: $560.30
+2025-08-09 08:32:03,818 - INFO -    Predicted risk: 12.73%
+2025-08-09 08:32:03,818 - INFO -    Optimal scaling: 1.35
+2025-08-09 08:32:03,818 - INFO -    Confidence: 80.00%
+2025-08-09 08:32:03,830 - INFO - 📊 Position optimization for TEST:
+2025-08-09 08:32:03,830 - INFO -    Base size: $4000.00
+2025-08-09 08:32:03,830 - INFO -    Scaling factor: 1.35
+2025-08-09 08:32:03,830 - INFO -    Risk adjustment: 0.93
+2025-08-09 08:32:03,830 - INFO -    Confidence: 0.80
+2025-08-09 08:32:03,830 - INFO -    Final size: $4027.63
+2025-08-09 08:32:03,834 - INFO - 
+🎯 ADAPTIVE TRAINING COMPLETED
+2025-08-09 08:32:03,834 - INFO - ============================================================
+2025-08-09 08:32:03,834 - INFO - 📊 Total trades processed: 5
+2025-08-09 08:32:03,834 - INFO - 🎯 Current win rate: 60.0%
+2025-08-09 08:32:03,834 - INFO - 💰 Average profit per trade: $435.80
+2025-08-09 08:32:03,834 - INFO - ⚙️ Parameter adjustments made: 0
+2025-08-09 08:32:03,834 - INFO - 🧠 Learning iterations: 1
+2025-08-09 08:32:03,834 - INFO - 📝 Report saved to: adaptive_training_report.json
+2025-08-09 08:34:59,860 - INFO - No existing optimization state found - starting fresh
+2025-08-09 08:34:59,860 - INFO - 🚀 ADAPTIVE GAS OPTIMIZATION DEMONSTRATION
+2025-08-09 08:34:59,860 - INFO - ============================================================
+2025-08-09 08:34:59,860 - INFO - 
+📊 Optimizing NEAR...
+2025-08-09 08:34:59,860 - INFO - 📊 Position optimization for NEAR:
+2025-08-09 08:34:59,860 - INFO -    Base size: $3898.00
+2025-08-09 08:34:59,860 - INFO -    Scaling factor: 1.00
+2025-08-09 08:34:59,860 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:34:59,860 - INFO -    Confidence: 0.50
+2025-08-09 08:34:59,860 - INFO -    Final size: $1656.65
+2025-08-09 08:34:59,860 - INFO -    Original size: $3898.00
+2025-08-09 08:34:59,860 - INFO -    Optimized size: $1656.65
+2025-08-09 08:34:59,860 - INFO -    Scaling factor: 0.42
+2025-08-09 08:34:59,860 - INFO -    Expected profit: $343.02
+2025-08-09 08:34:59,860 - INFO -    Gas efficiency: 0.5%
+2025-08-09 08:34:59,860 - INFO -    Decision: SKIP
+2025-08-09 08:34:59,861 - INFO -    Recommendation: 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:35:00,361 - INFO - 
+📊 Optimizing MNGO...
+2025-08-09 08:35:00,362 - INFO - 📊 Position optimization for MNGO:
+2025-08-09 08:35:00,362 - INFO -    Base size: $3856.00
+2025-08-09 08:35:00,362 - INFO -    Scaling factor: 1.00
+2025-08-09 08:35:00,362 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:35:00,362 - INFO -    Confidence: 0.50
+2025-08-09 08:35:00,363 - INFO -    Final size: $1638.80
+2025-08-09 08:35:00,363 - INFO -    Original size: $3856.00
+2025-08-09 08:35:00,363 - INFO -    Optimized size: $1638.80
+2025-08-09 08:35:00,363 - INFO -    Scaling factor: 0.42
+2025-08-09 08:35:00,363 - INFO -    Expected profit: $301.39
+2025-08-09 08:35:00,363 - INFO -    Gas efficiency: 0.5%
+2025-08-09 08:35:00,363 - INFO -    Decision: SKIP
+2025-08-09 08:35:00,363 - INFO -    Recommendation: 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:35:00,865 - INFO - 
+📊 Optimizing RAY...
+2025-08-09 08:35:00,866 - INFO - 📊 Position optimization for RAY:
+2025-08-09 08:35:00,866 - INFO -    Base size: $3813.00
+2025-08-09 08:35:00,866 - INFO -    Scaling factor: 1.00
+2025-08-09 08:35:00,866 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:35:00,866 - INFO -    Confidence: 0.50
+2025-08-09 08:35:00,867 - INFO -    Final size: $1620.52
+2025-08-09 08:35:00,867 - INFO -    Original size: $3813.00
+2025-08-09 08:35:00,867 - INFO -    Optimized size: $1620.52
+2025-08-09 08:35:00,867 - INFO -    Scaling factor: 0.42
+2025-08-09 08:35:00,867 - INFO -    Expected profit: $173.48
+2025-08-09 08:35:00,867 - INFO -    Gas efficiency: 0.9%
+2025-08-09 08:35:00,867 - INFO -    Decision: SKIP
+2025-08-09 08:35:00,867 - INFO -    Recommendation: 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:35:01,369 - INFO - 
+📊 Optimizing COPE...
+2025-08-09 08:35:01,371 - INFO - 📊 Position optimization for COPE:
+2025-08-09 08:35:01,371 - INFO -    Base size: $3723.00
+2025-08-09 08:35:01,371 - INFO -    Scaling factor: 1.00
+2025-08-09 08:35:01,371 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:35:01,371 - INFO -    Confidence: 0.50
+2025-08-09 08:35:01,372 - INFO -    Final size: $1582.27
+2025-08-09 08:35:01,372 - INFO -    Original size: $3723.00
+2025-08-09 08:35:01,372 - INFO -    Optimized size: $1582.27
+2025-08-09 08:35:01,372 - INFO -    Scaling factor: 0.42
+2025-08-09 08:35:01,372 - INFO -    Expected profit: $82.14
+2025-08-09 08:35:01,372 - INFO -    Gas efficiency: 1.9%
+2025-08-09 08:35:01,373 - INFO -    Decision: SKIP
+2025-08-09 08:35:01,373 - INFO -    Recommendation: 🚫 SKIP: Profit $82.14 below threshold $148.80
+2025-08-09 08:35:01,880 - INFO - 💾 Saved adaptive gas optimization state
+2025-08-09 08:35:01,880 - INFO - 
+🎯 ADAPTIVE GAS OPTIMIZATION DEMONSTRATION COMPLETE
+2025-08-09 08:35:01,880 - INFO - ============================================================
+2025-08-09 08:35:01,880 - INFO - ✅ Tested 4 allocations
+2025-08-09 08:35:01,880 - INFO - ✅ Recommended 0 trades
+2025-08-09 08:35:01,880 - INFO - ✅ Protected against 4 marginal trades
+2025-08-09 08:35:01,880 - INFO - ✅ Learning system active with 0 trades
+2025-08-09 08:35:01,880 - INFO - 📊 Report saved to: adaptive_gas_optimization_demo.json
+2025-08-09 08:35:10,604 - INFO - ✅ Loaded existing adaptive gas optimization state
+2025-08-09 08:35:10,604 - INFO - 🧠 STARTING ADAPTIVE GAS OPTIMIZATION CYCLE
+2025-08-09 08:35:10,604 - INFO - ================================================================================
+2025-08-09 08:35:10,604 - INFO - 🔥 PROCESSING NEW ALLOCATIONS WITH ADAPTIVE LEARNING
+2025-08-09 08:35:10,604 - INFO - ============================================================
+2025-08-09 08:35:10,604 - INFO - 📊 Position optimization for NEAR:
+2025-08-09 08:35:10,604 - INFO -    Base size: $3898.00
+2025-08-09 08:35:10,604 - INFO -    Scaling factor: 1.00
+2025-08-09 08:35:10,604 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:35:10,604 - INFO -    Confidence: 0.50
+2025-08-09 08:35:10,604 - INFO -    Final size: $1656.65
+2025-08-09 08:35:10,604 - INFO - 🚫 NEAR: SKIP - 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:35:10,604 - INFO - 📊 Position optimization for MNGO:
+2025-08-09 08:35:10,604 - INFO -    Base size: $3856.00
+2025-08-09 08:35:10,604 - INFO -    Scaling factor: 1.00
+2025-08-09 08:35:10,604 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:35:10,604 - INFO -    Confidence: 0.50
+2025-08-09 08:35:10,604 - INFO -    Final size: $1638.80
+2025-08-09 08:35:10,604 - INFO - 🚫 MNGO: SKIP - 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:35:10,604 - INFO - 📊 Position optimization for RAY:
+2025-08-09 08:35:10,604 - INFO -    Base size: $3813.00
+2025-08-09 08:35:10,604 - INFO -    Scaling factor: 1.00
+2025-08-09 08:35:10,604 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:35:10,604 - INFO -    Confidence: 0.50
+2025-08-09 08:35:10,604 - INFO -    Final size: $1620.52
+2025-08-09 08:35:10,604 - INFO - 🚫 RAY: SKIP - 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:35:10,605 - INFO - 📊 Position optimization for ILV:
+2025-08-09 08:35:10,605 - INFO -    Base size: $3732.00
+2025-08-09 08:35:10,605 - INFO -    Scaling factor: 1.00
+2025-08-09 08:35:10,605 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:35:10,605 - INFO -    Confidence: 0.50
+2025-08-09 08:35:10,605 - INFO -    Final size: $1586.10
+2025-08-09 08:35:10,605 - INFO - 🚫 ILV: SKIP - 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:35:10,605 - INFO - 📊 Position optimization for COPE:
+2025-08-09 08:35:10,605 - INFO -    Base size: $3723.00
+2025-08-09 08:35:10,605 - INFO -    Scaling factor: 1.00
+2025-08-09 08:35:10,605 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:35:10,605 - INFO -    Confidence: 0.50
+2025-08-09 08:35:10,605 - INFO -    Final size: $1582.27
+2025-08-09 08:35:10,605 - INFO - 🚫 COPE: SKIP - 🚫 SKIP: Profit $82.14 below threshold $152.40
+2025-08-09 08:35:10,605 - INFO - 
+🚀 PROCESSING EXISTING POSITIONS WITH ADAPTIVE LEARNING
+2025-08-09 08:35:10,605 - INFO - ============================================================
+2025-08-09 08:35:10,605 - INFO - 📊 BTC Position Analysis:
+2025-08-09 08:35:10,605 - INFO -    🎯 Action: CONSIDER_SELL
+2025-08-09 08:35:10,605 - INFO -    💰 Current Net P&L: $682.50
+2025-08-09 08:35:10,605 - INFO -    📈 ML Risk Prediction: 30.0%
+2025-08-09 08:35:10,605 - INFO -    💡 💰 STRONG PROFIT: $682.50 after gas - consider full exit
+2025-08-09 08:35:10,605 - INFO - 📊 ETH Position Analysis:
+2025-08-09 08:35:10,605 - INFO -    🎯 Action: CONSIDER_SELL
+2025-08-09 08:35:10,605 - INFO -    💰 Current Net P&L: $375.60
+2025-08-09 08:35:10,605 - INFO -    📈 ML Risk Prediction: 30.0%
+2025-08-09 08:35:10,605 - INFO -    💡 💰 STRONG PROFIT: $375.60 after gas - consider full exit
+2025-08-09 08:35:10,605 - INFO - 📊 ADA Position Analysis:
+2025-08-09 08:35:10,605 - INFO -    🎯 Action: CONSIDER_SELL
+2025-08-09 08:35:10,605 - INFO -    💰 Current Net P&L: $466.40
+2025-08-09 08:35:10,605 - INFO -    📈 ML Risk Prediction: 30.0%
+2025-08-09 08:35:10,605 - INFO -    💡 💰 STRONG PROFIT: $466.40 after gas - consider full exit
+2025-08-09 08:35:10,608 - INFO - 💾 Saved adaptive gas optimization state
+2025-08-09 08:35:10,608 - INFO - 
+💾 ADAPTIVE OPTIMIZATION CYCLE COMPLETE
+2025-08-09 08:35:10,608 - INFO - ============================================================
+2025-08-09 08:35:10,608 - INFO - 📊 Decisions analyzed: 8
+2025-08-09 08:35:10,608 - INFO - ✅ Trades recommended: 0
+2025-08-09 08:35:10,608 - INFO - 🚫 Trades skipped: 5
+2025-08-09 08:35:10,608 - INFO - 💰 Position exits recommended: 3
+2025-08-09 08:35:10,608 - INFO - 🧠 Learning from: 0 trades
+2025-08-09 08:35:10,608 - INFO - 🎯 Current win rate: 0.0%
+2025-08-09 08:35:10,608 - INFO - ⚙️ Parameter adjustments: 0
+2025-08-09 08:35:10,608 - INFO - 📝 Report saved to: enhanced_gas_optimized_allocation_report.json
+2025-08-09 08:37:01,633 - INFO - ✅ Loaded existing adaptive gas optimization state
+2025-08-09 08:37:01,633 - INFO - 🧠 STARTING ADAPTIVE GAS OPTIMIZATION CYCLE
+2025-08-09 08:37:01,633 - INFO - ================================================================================
+2025-08-09 08:37:01,633 - INFO - 🔥 PROCESSING NEW ALLOCATIONS WITH ADAPTIVE LEARNING
+2025-08-09 08:37:01,633 - INFO - ============================================================
+2025-08-09 08:37:01,633 - INFO - 📊 Position optimization for NEAR:
+2025-08-09 08:37:01,633 - INFO -    Base size: $3898.00
+2025-08-09 08:37:01,633 - INFO -    Scaling factor: 1.00
+2025-08-09 08:37:01,633 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:37:01,633 - INFO -    Confidence: 0.50
+2025-08-09 08:37:01,633 - INFO -    Final size: $1656.65
+2025-08-09 08:37:01,633 - INFO - 🚫 NEAR: SKIP - 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:37:01,633 - INFO - 📊 Position optimization for MNGO:
+2025-08-09 08:37:01,633 - INFO -    Base size: $3856.00
+2025-08-09 08:37:01,633 - INFO -    Scaling factor: 1.00
+2025-08-09 08:37:01,633 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:37:01,633 - INFO -    Confidence: 0.50
+2025-08-09 08:37:01,633 - INFO -    Final size: $1638.80
+2025-08-09 08:37:01,633 - INFO - 🚫 MNGO: SKIP - 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:37:01,633 - INFO - 📊 Position optimization for RAY:
+2025-08-09 08:37:01,633 - INFO -    Base size: $3813.00
+2025-08-09 08:37:01,633 - INFO -    Scaling factor: 1.00
+2025-08-09 08:37:01,633 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:37:01,633 - INFO -    Confidence: 0.50
+2025-08-09 08:37:01,633 - INFO -    Final size: $1620.52
+2025-08-09 08:37:01,633 - INFO - 🚫 RAY: SKIP - 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:37:01,633 - INFO - 📊 Position optimization for ILV:
+2025-08-09 08:37:01,633 - INFO -    Base size: $3732.00
+2025-08-09 08:37:01,633 - INFO -    Scaling factor: 1.00
+2025-08-09 08:37:01,633 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:37:01,633 - INFO -    Confidence: 0.50
+2025-08-09 08:37:01,633 - INFO -    Final size: $1586.10
+2025-08-09 08:37:01,633 - INFO - 🚫 ILV: SKIP - 🚫 SKIP: Confidence 50.0% too low
+2025-08-09 08:37:01,633 - INFO - 📊 Position optimization for COPE:
+2025-08-09 08:37:01,634 - INFO -    Base size: $3723.00
+2025-08-09 08:37:01,634 - INFO -    Scaling factor: 1.00
+2025-08-09 08:37:01,634 - INFO -    Risk adjustment: 0.85
+2025-08-09 08:37:01,634 - INFO -    Confidence: 0.50
+2025-08-09 08:37:01,634 - INFO -    Final size: $1582.27
+2025-08-09 08:37:01,634 - INFO - 🚫 COPE: SKIP - 🚫 SKIP: Profit $82.14 below threshold $152.40
+2025-08-09 08:37:01,634 - INFO - 
+🚀 PROCESSING EXISTING POSITIONS WITH ADAPTIVE LEARNING
+2025-08-09 08:37:01,634 - INFO - ============================================================
+2025-08-09 08:37:01,634 - INFO - 📊 BTC Position Analysis:
+2025-08-09 08:37:01,634 - INFO -    🎯 Action: CONSIDER_SELL
+2025-08-09 08:37:01,634 - INFO -    💰 Current Net P&L: $682.50
+2025-08-09 08:37:01,634 - INFO -    📈 ML Risk Prediction: 30.0%
+2025-08-09 08:37:01,634 - INFO -    💡 💰 STRONG PROFIT: $682.50 after gas - consider full exit
+2025-08-09 08:37:01,634 - INFO - 📊 ETH Position Analysis:
+2025-08-09 08:37:01,634 - INFO -    🎯 Action: CONSIDER_SELL
+2025-08-09 08:37:01,634 - INFO -    💰 Current Net P&L: $375.60
+2025-08-09 08:37:01,634 - INFO -    📈 ML Risk Prediction: 30.0%
+2025-08-09 08:37:01,634 - INFO -    💡 💰 STRONG PROFIT: $375.60 after gas - consider full exit
+2025-08-09 08:37:01,634 - INFO - 📊 ADA Position Analysis:
+2025-08-09 08:37:01,634 - INFO -    🎯 Action: CONSIDER_SELL
+2025-08-09 08:37:01,634 - INFO -    💰 Current Net P&L: $466.40
+2025-08-09 08:37:01,634 - INFO -    📈 ML Risk Prediction: 30.0%
+2025-08-09 08:37:01,634 - INFO -    💡 💰 STRONG PROFIT: $466.40 after gas - consider full exit
+2025-08-09 08:37:01,643 - INFO - 💾 Saved adaptive gas optimization state
+2025-08-09 08:37:01,643 - INFO - 
+💾 ADAPTIVE OPTIMIZATION CYCLE COMPLETE
+2025-08-09 08:37:01,643 - INFO - ============================================================
+2025-08-09 08:37:01,643 - INFO - 📊 Decisions analyzed: 8
+2025-08-09 08:37:01,643 - INFO - ✅ Trades recommended: 0
+2025-08-09 08:37:01,643 - INFO - 🚫 Trades skipped: 5
+2025-08-09 08:37:01,643 - INFO - 💰 Position exits recommended: 3
+2025-08-09 08:37:01,643 - INFO - 🧠 Learning from: 0 trades
+2025-08-09 08:37:01,643 - INFO - 🎯 Current win rate: 0.0%
+2025-08-09 08:37:01,643 - INFO - ⚙️ Parameter adjustments: 0
+2025-08-09 08:37:01,644 - INFO - 📝 Report saved to: enhanced_gas_optimized_allocation_report.json

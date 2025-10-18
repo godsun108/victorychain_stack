@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VictoryBot Dashboard</title>
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #181a20;
+      color: #f1f1f1;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .dashboard-container {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: #23272f;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px #0008;
+      padding: 32px 36px 24px 36px;
+    }
+    h1 {
+      color: #2e8bff;
+      margin-bottom: 8px;
+      font-size: 2.2rem;
+    }
+    .cycle-time {
+      color: #aaa;
+      font-size: 1rem;
+      margin-bottom: 24px;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 24px;
+    }
+    .tab {
+      background: #23272f;
+      color: #f1f1f1;
+      border-radius: 6px 6px 0 0;
+      padding: 10px 24px;
+      margin-right: 2px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 1.1rem;
+      border: none;
+      outline: none;
+    }
+    .tab.active {
+      background: #2e8bff;
+      color: #fff;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #23272f;
+      text-align: left;
+    }
+    th {
+      background: #23272f;
+      color: #2e8bff;
+      font-weight: 700;
+    }
+    tr:hover {
+      background: #23272f;
+    }
+    .regime-box {
+      background: #2e8bff;
+      color: #fff;
+      display: inline-block;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      margin-bottom: 18px;
+      margin-top: 8px;
+    }
+    .footer {
+      color: #888;
+      font-size: 0.95rem;
+      text-align: right;
+      margin-top: 32px;
+    }
+    .regime-section {
+      margin-top: 18px;
+    }
+    .ensemble-section {
+      margin-top: 10px;
+    }
+    @media (max-width: 700px) {
+      .dashboard-container { padding: 12px 4px; }
+      th, td { padding: 7px 4px; font-size: 0.95rem; }
+      .tab { padding: 8px 8px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>VictoryBot Dashboard</h1>
+    <div class="cycle-time" id="cycleTime">Loading...</div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab(0)">Allocations</button>
+      <button class="tab" onclick="showTab(1)">Signals</button>
+      <button class="tab" onclick="showTab(2)">Analytics</button>
+      <button class="tab" onclick="showTab(3)">Regime</button>
+      <button class="tab" onclick="showTab(4)">Metrics</button>
+    </div>
+    <div class="tab-content active" id="tab0">
+      <table id="allocTable">
+        <thead><tr><th>Symbol</th><th>Allocation (USD)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="tab1">
+      <table id="signalsTable">
+        <thead><tr><th>Signal</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="tab2">
+      <table id="analyticsTable">
+        <thead><tr><th>Symbol</th><th>Volatility</th><th>Trend</th><th>Liquidity</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="tab-content" id="tab3">
+      <div class="regime-box" id="regimeBox">Loading...</div>
+      <div class="regime-section">
+        <b>Active Strategies:</b> <span id="activeStrategies">Loading...</span>
+      </div>
+      <div class="ensemble-section">
+        <b>Ensemble Symbols:</b> <span id="ensembleSymbols">Loading...</span>
+      </div>
+    </div>
+    <div class="tab-content" id="tab4">
+      <h2 style="color:#2e8bff;">Live Trade Metrics</h2>
+      <table id="metricsTable">
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="footer">VictoryBot &copy; 2025 | Church's Victory Trading</div>
+  </div>
+  <script>
+    let dashboardData = null;
+    function showTab(idx) {
+      document.querySelectorAll('.tab').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+      document.querySelectorAll('.tab-content').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+    }
+    async function fetchDashboard() {
+      try {
+        const resp = await fetch('runtime/dashboard_results.json?_=' + Date.now());
+        if (!resp.ok) throw new Error('Not found');
+        dashboardData = await resp.json();
+        renderDashboard();
+      } catch (e) {
+        document.getElementById('cycleTime').textContent = 'No data available.';
+      }
+    }
+    function renderDashboard() {
+      if (!dashboardData) return;
+      document.getElementById('cycleTime').textContent = 'Cycle Time: ' + (dashboardData.cycle_time || 'N/A');
+      // Allocations
+      const allocTbody = document.querySelector('#allocTable tbody');
+      allocTbody.innerHTML = '';
+      for (const [sym, amt] of Object.entries(dashboardData.allocations || {})) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${sym}</td><td>$${amt.toFixed(2)}</td>`;
+        allocTbody.appendChild(tr);
+      }
+      // Signals
+      const signalsTbody = document.querySelector('#signalsTable tbody');
+      signalsTbody.innerHTML = '';
+      (dashboardData.signals || []).forEach(sig => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${sig}</td>`;
+        signalsTbody.appendChild(tr);
+      });
+      // Analytics
+      const analyticsTbody = document.querySelector('#analyticsTable tbody');
+      analyticsTbody.innerHTML = '';
+      (dashboardData.analytics || []).forEach(row => {
+        const [sym, vol, trend, liq] = row;
+        analyticsTbody.innerHTML += `<tr><td>${sym}</td><td>${typeof vol === 'number' ? vol.toFixed(4) : vol}</td><td>${typeof trend === 'number' ? trend.toFixed(4) : trend}</td><td>${typeof liq === 'number' ? liq.toLocaleString() : liq}</td></tr>`;
+      });
+      // Regime
+      document.getElementById('regimeBox').textContent = dashboardData.regime || 'N/A';
+      document.getElementById('activeStrategies').textContent = (dashboardData.active_strategies || []).join(', ');
+      document.getElementById('ensembleSymbols').textContent = (dashboardData.ensemble_symbols || []).join(', ');
+    }
+    async function fetchMetrics() {
+      try {
+        const resp = await fetch('runtime/metrics.json?_=' + Date.now());
+        if (!resp.ok) throw new Error('Not found');
+        const metrics = await resp.json();
+        const tbody = document.querySelector('#metricsTable tbody');
+        tbody.innerHTML = '';
+        for (const [k, v] of Object.entries(metrics)) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${k.replace(/_/g,' ')}</td><td>${v}</td>`;
+          tbody.appendChild(tr);
+        }
+      } catch (e) {
+        const tbody = document.querySelector('#metricsTable tbody');
+        tbody.innerHTML = '<tr><td colspan="2">No metrics available. Is the bot running?</td></tr>';
+      }
+    }
+    fetchDashboard();
+    fetchMetrics();
+    setInterval(fetchDashboard, 30000); // Refresh every 30s
+    setInterval(fetchMetrics, 30000); // Refresh metrics every 30s
+  </script>
+</body>
+</html>

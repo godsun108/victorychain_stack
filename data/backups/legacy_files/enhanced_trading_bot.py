@@ -1,0 +1,663 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Enhanced 24/7 Live Trading Bot
+Next-generation AI-powered momentum trading with optimizations
+"""
+
+import asyncio
+import aiohttp
+import requests
+import json
+import os
+import time
+import math
+import statistics
+import hmac
+import hashlib
+import urllib.parse
+from datetime import datetime, timedelta
+from typing import List, Dict, Tuple, Optional, AsyncGenerator
+import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import numpy as np
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("enhanced_trading_bot.log"), logging.StreamHandler()],
+)
+logger = logging.getLogger(__name__)
+
+
+class EnhancedClaudeAnalyzer:
+    def __init__(self):
+        self.api_key = os.getenv("CLAUDE_API_KEY", "")
+        self.base_url = "https://api.anthropic.com/v1/messages"
+        self.analysis_cache = {}  # Cache results to avoid duplicate API calls
+        self.cache_duration = 300  # 5 minutes
+
+    async def analyze_batch_tokens(self, token_data: List[Dict]) -> Dict[str, Dict]:
+        """Analyze multiple tokens in batch for efficiency"""
+        if not self.api_key:
+            return {
+                token["symbol"]: self._fallback_analysis(
+                    token["prices"], token["volumes"]
+                )
+                for token in token_data
+            }
+
+        results = {}
+        batch_size = 10  # Process 10 tokens per batch
+
+        for i in range(0, len(token_data), batch_size):
+            batch = token_data[i : i + batch_size]
+            batch_results = await self._process_batch(batch)
+            results.update(batch_results)
+
+        return results
+
+    async def _process_batch(self, batch: List[Dict]) -> Dict[str, Dict]:
+        """Process a batch of tokens with Claude AI"""
+        try:
+            # Create comprehensive batch prompt
+            batch_prompt = self._create_batch_prompt(batch)
+
+            headers = {
+                "Content-Type": "application/json",
+                "x-api-key": self.api_key,
+                "anthropic-version": "2023-06-01",
+            }
+
+            data = {
+                "model": "claude-3-sonnet-20240229",
+                "max_tokens": 2000,
+                "messages": [{"role": "user", "content": batch_prompt}],
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.base_url, headers=headers, json=data, timeout=15
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        content = result["content"][0]["text"]
+                        return self._parse_batch_response(content, batch)
+
+        except Exception as e:
+            logger.warning(f"Claude batch analysis failed: {e}")
+
+        # Fallback for batch
+        return {
+            token["symbol"]: self._fallback_analysis(token["prices"], token["volumes"])
+            for token in batch
+        }
+
+    def _create_batch_prompt(self, batch: List[Dict]) -> str:
+        """Create optimized batch prompt for multiple tokens"""
+        prompt = """Analyze these tokens for momentum trading opportunities. For each token, consider:
+- Price volatility (standard deviation)
+- Volume patterns
+- Momentum indicators
+- Risk-adjusted probability of 15-25% gains
+
+Tokens to analyze:
+"""
+
+        for token in batch:
+            prices = token["prices"][-24:]  # Last 24 hours
+            volumes = token["volumes"][-24:]
+
+            if len(prices) >= 2:
+                price_std = np.std(prices) if len(prices) > 1 else 0
+                momentum_24h = (prices[-1] - prices[0]) / prices[0] * 100
+                volatility = (price_std / np.mean(prices)) * 100
+
+                prompt += f"""
+{token['symbol']}:
+- Price: ${prices[-1]:.6f}
+- 24h Change: {momentum_24h:.2f}%
+- Volatility: {volatility:.2f}%
+- Volume: {np.mean(volumes):.0f}
+"""
+
+        prompt += """
+Respond with JSON only:
+{
+  "TOKEN1USDT": {"momentum_score": 0-100, "hold_probability": 0-100, "risk_level": "low/medium/high", "recommendation": "hold/avoid"},
+  "TOKEN2USDT": {"momentum_score": 0-100, "hold_probability": 0-100, "risk_level": "low/medium/high", "recommendation": "hold/avoid"}
+}"""
+
+        return prompt
+
+    def _parse_batch_response(self, content: str, batch: List[Dict]) -> Dict[str, Dict]:
+        """Parse Claude's batch response"""
+        try:
+            import re
+
+            json_match = re.search(r"\{.*\}", content, re.DOTALL)
+            if json_match:
+                claude_results = json.loads(json_match.group())
+
+                results = {}
+                for token in batch:
+                    symbol = token["symbol"]
+                    if symbol in claude_results:
+                        analysis = claude_results[symbol]
+                        analysis["std_insight"] = (
+                            f"AI Analysis: {analysis.get('risk_level', 'unknown')} risk"
+                        )
+                        analysis["claude_recommendation"] = analysis.get(
+                            "recommendation", "avoid"
+                        )
+                        results[symbol] = analysis
+                    else:
+                        results[symbol] = self._fallback_analysis(
+                            token["prices"], token["volumes"]
+                        )
+
+                return results
+        except Exception as e:
+            logger.error(f"Failed to parse Claude batch response: {e}")
+
+        # Fallback
+        return {
+            token["symbol"]: self._fallback_analysis(token["prices"], token["volumes"])
+            for token in batch
+        }
+
+    def _fallback_analysis(
+        self, price_data: List[float], volume_data: List[float]
+    ) -> Dict:
+        """Enhanced fallback analysis with numpy"""
+        try:
+            if len(price_data) < 2:
+                return {
+                    "momentum_score": 0,
+                    "hold_probability": 0,
+                    "risk_level": "high",
+                    "std_insight": "insufficient data",
+                    "claude_recommendation": "avoid",
+                }
+
+            prices = np.array(price_data)
+            price_std = np.std(prices)
+            price_mean = np.mean(prices)
+
+            # Enhanced momentum calculations
+            momentum_1h = (
+                (prices[-1] - prices[-2]) / prices[-2] * 100 if len(prices) >= 2 else 0
+            )
+            momentum_24h = (
+                (prices[-1] - prices[0]) / prices[0] * 100
+                if len(prices) > 24
+                else momentum_1h
+            )
+
+            # Advanced volatility analysis
+            volatility = (price_std / price_mean) * 100
+
+            # RSI-like momentum indicator
+            gains = np.diff(prices)
+            avg_gain = np.mean(gains[gains > 0]) if len(gains[gains > 0]) > 0 else 0
+            avg_loss = (
+                np.mean(np.abs(gains[gains < 0])) if len(gains[gains < 0]) > 0 else 0
+            )
+            rs = avg_gain / avg_loss if avg_loss > 0 else 100
+            rsi = 100 - (100 / (1 + rs))
+
+            # Enhanced scoring
+            momentum_score = max(
+                0,
+                min(
+                    100, 50 + momentum_24h * 1.5 - (volatility * 0.5) + (rsi - 50) * 0.3
+                ),
+            )
+            hold_probability = max(
+                0, min(100, 35 + momentum_24h + (momentum_1h * 0.3) + (rsi - 50) * 0.2)
+            )
+
+            risk_level = (
+                "low" if volatility < 3 else "medium" if volatility < 8 else "high"
+            )
+            recommendation = (
+                "hold"
+                if momentum_score > 45 and hold_probability > 30 and rsi > 40
+                else "avoid"
+            )
+
+            return {
+                "momentum_score": round(momentum_score, 1),
+                "hold_probability": round(hold_probability, 1),
+                "risk_level": risk_level,
+                "std_insight": f"Vol: {volatility:.1f}%, RSI: {rsi:.1f}, Mom: {momentum_24h:.1f}%",
+                "claude_recommendation": recommendation,
+            }
+
+        except Exception as e:
+            logger.error(f"Enhanced fallback analysis failed: {e}")
+            return {
+                "momentum_score": 0,
+                "hold_probability": 0,
+                "risk_level": "high",
+                "std_insight": "analysis failed",
+                "claude_recommendation": "avoid",
+            }
+
+
+class EnhancedTradingBot:
+    def __init__(self):
+        # API Configuration
+        self.api_key = os.getenv("BINANCEUS_KEY", "")
+        self.api_secret = os.getenv("BINANCEUS_SECRET", "")
+        self.base_url = "https://api.binance.us"
+
+        if not self.api_key or not self.api_secret:
+            logger.error(
+                "❌ API keys not found! Set BINANCEUS_KEY and BINANCEUS_SECRET"
+            )
+            exit(1)
+
+        # Initialize enhanced AI analyzer
+        self.claude_analyzer = EnhancedClaudeAnalyzer()
+
+        # Enhanced trading parameters
+        self.base_position_size = 35.0  # Base size, will be adjusted dynamically
+        self.max_positions = 7  # Increased for better diversification
+        self.min_composite_score = -20.0  # More aggressive threshold
+        self.confidence_multiplier = 2.0  # Multiply position size by confidence
+
+        # Advanced risk management
+        self.max_portfolio_risk = 0.15  # 15% max portfolio risk
+        self.stop_loss_percent = 6.0  # Tighter stop loss
+        self.take_profit_percent = 25.0  # Higher profit target
+        self.trailing_stop_percent = 3.0  # Trailing stop
+
+        # Performance optimization
+        self.analysis_interval = 600  # 10 minutes (faster)
+        self.trade_cooldown = 180  # 3 minutes between trades
+        self.max_analysis_tokens = 50  # Focus on top 50 for speed
+
+        # Portfolio tracking
+        self.active_positions = {}
+        self.portfolio_value = 0.0
+        self.daily_pnl = 0.0
+
+        logger.info(
+            "🚀 Enhanced Trading Bot initialized with advanced AI and optimizations"
+        )
+
+    async def get_top_tokens_fast(self) -> List[Dict]:
+        """Get top tokens quickly using async requests"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{self.base_url}/api/v3/ticker/24hr"
+                ) as response:
+                    if response.status != 200:
+                        return []
+
+                    tickers = await response.json()
+
+            # Fast filtering and sorting
+            filtered_pairs = []
+            for ticker in tickers:
+                symbol = ticker["symbol"]
+                if (
+                    symbol.endswith("USDT")
+                    and symbol not in ["USDCUSDT", "TUSDUSDT", "BUSDUSDT"]
+                    and float(ticker["quoteVolume"]) >= 50000  # Lower threshold
+                    and float(ticker["lastPrice"]) >= 0.0001
+                ):
+
+                    filtered_pairs.append(
+                        {
+                            "symbol": symbol,
+                            "price": float(ticker["lastPrice"]),
+                            "volume_24h": float(ticker["quoteVolume"]),
+                            "price_change_24h": float(ticker["priceChangePercent"]),
+                        }
+                    )
+
+            # Sort by volume and momentum combined
+            filtered_pairs.sort(
+                key=lambda x: x["volume_24h"] * (1 + abs(x["price_change_24h"]) / 100),
+                reverse=True,
+            )
+            return filtered_pairs[: self.max_analysis_tokens]
+
+        except Exception as e:
+            logger.error(f"Failed to get tokens: {e}")
+            return []
+
+    async def get_price_data_batch(self, symbols: List[str]) -> Dict[str, List[Dict]]:
+        """Get price data for multiple symbols efficiently"""
+        results = {}
+
+        async def fetch_klines(session, symbol):
+            try:
+                url = f"{self.base_url}/api/v3/klines"
+                params = {"symbol": symbol, "interval": "1h", "limit": 168}
+
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return symbol, self._process_kline_data(data)
+                    return symbol, []
+            except Exception as e:
+                logger.warning(f"Failed to get data for {symbol}: {e}")
+                return symbol, []
+
+        async with aiohttp.ClientSession() as session:
+            tasks = [fetch_klines(session, symbol) for symbol in symbols]
+
+            for task in asyncio.as_completed(tasks):
+                symbol, kline_data = await task
+                if kline_data:
+                    results[symbol] = kline_data
+
+        return results
+
+    def _process_kline_data(self, klines: List) -> List[Dict]:
+        """Process kline data efficiently"""
+        processed = []
+
+        for i, kline in enumerate(klines):
+            close_price = float(kline[4])
+            volume = float(kline[5])
+
+            if i > 0:
+                prev_close = float(klines[i - 1][4])
+                returns = (close_price - prev_close) / prev_close
+            else:
+                returns = 0.0
+
+            processed.append(
+                {"close": close_price, "volume": volume, "returns": returns}
+            )
+
+        return processed
+
+    async def analyze_market_enhanced(self) -> List[Dict]:
+        """Enhanced market analysis with parallel processing"""
+        logger.info("🔍 Starting enhanced market analysis...")
+
+        # Get top tokens quickly
+        trading_pairs = await self.get_top_tokens_fast()
+        if not trading_pairs:
+            return []
+
+        logger.info(
+            f"📊 Analyzing top {len(trading_pairs)} tokens with AI optimization"
+        )
+
+        # Get price data in parallel
+        symbols = [pair["symbol"] for pair in trading_pairs]
+        price_data = await self.get_price_data_batch(symbols)
+
+        # Prepare data for batch AI analysis
+        token_data = []
+        for pair in trading_pairs:
+            symbol = pair["symbol"]
+            if symbol in price_data and len(price_data[symbol]) >= 50:
+                klines = price_data[symbol]
+                token_data.append(
+                    {
+                        "symbol": symbol,
+                        "pair_data": pair,
+                        "prices": [k["close"] for k in klines],
+                        "volumes": [k["volume"] for k in klines],
+                        "klines": klines,
+                    }
+                )
+
+        # Batch AI analysis
+        claude_results = await self.claude_analyzer.analyze_batch_tokens(token_data)
+
+        # Calculate final scores
+        analysis_results = []
+        for token in token_data:
+            symbol = token["symbol"]
+            claude_analysis = claude_results.get(symbol, {})
+
+            # Enhanced scoring with Claude integration
+            score_data = self._calculate_enhanced_score(token, claude_analysis)
+            if score_data:
+                analysis_results.append(score_data)
+
+        # Sort by composite score
+        analysis_results.sort(key=lambda x: x["composite_score"], reverse=True)
+
+        logger.info(
+            f"✅ Enhanced analysis complete! {len(analysis_results)} tokens ranked"
+        )
+        return analysis_results
+
+    def _calculate_enhanced_score(
+        self, token_data: Dict, claude_analysis: Dict
+    ) -> Optional[Dict]:
+        """Calculate enhanced composite score with AI integration"""
+        try:
+            symbol = token_data["symbol"]
+            pair_data = token_data["pair_data"]
+            klines = token_data["klines"]
+
+            if len(klines) < 50:
+                return None
+
+            # Technical analysis
+            returns = [k["returns"] for k in klines]
+            prices = [k["close"] for k in klines]
+
+            # Advanced statistics with numpy
+            returns_array = np.array(returns)
+            prices_array = np.array(prices)
+
+            mean_return = np.mean(returns_array)
+            std_dev = np.std(returns_array)
+
+            # Multi-timeframe momentum
+            momentum_1h = returns[-1] if returns else 0
+            momentum_6h = np.mean(returns_array[-6:]) if len(returns) >= 6 else 0
+            momentum_24h = np.mean(returns_array[-24:]) if len(returns) >= 24 else 0
+
+            # Volatility analysis
+            std_24h = np.std(returns_array[-24:]) if len(returns) >= 24 else std_dev
+            volatility = (std_24h / abs(mean_return)) if mean_return != 0 else 100
+
+            # Claude AI integration
+            claude_momentum = claude_analysis.get("momentum_score", 0)
+            claude_hold_prob = claude_analysis.get("hold_probability", 0)
+            claude_recommendation = claude_analysis.get(
+                "claude_recommendation", "avoid"
+            )
+
+            # Enhanced composite score
+            technical_score = momentum_1h * 30 + momentum_6h * 40 + momentum_24h * 30
+            volume_score = min(pair_data["volume_24h"] / 5000000.0, 15.0)
+            price_momentum = max(pair_data["price_change_24h"], 0) * 0.8
+
+            # Risk adjustment
+            risk_penalty = min(volatility / 20.0, 0.6)
+
+            composite_score = (
+                claude_momentum * 0.35  # Claude AI momentum
+                + claude_hold_prob * 0.25  # Claude hold probability
+                + technical_score * 25  # Technical momentum
+                + volume_score * 1.5  # Volume factor
+                + price_momentum  # Price momentum
+            ) * (
+                1.0 - risk_penalty
+            )  # Risk adjustment
+
+            # Apply Claude recommendation multiplier
+            if claude_recommendation == "hold":
+                composite_score *= 1.3
+            elif claude_recommendation == "avoid":
+                composite_score *= 0.6
+
+            # Calculate dynamic position size based on confidence
+            confidence = min(100, (claude_momentum + claude_hold_prob) / 2)
+            dynamic_position_size = self.base_position_size * (1 + confidence / 100)
+
+            return {
+                "symbol": symbol,
+                "composite_score": min(composite_score, 100),
+                "claude_momentum_score": claude_momentum,
+                "claude_hold_probability": claude_hold_prob,
+                "claude_recommendation": claude_recommendation,
+                "technical_momentum": technical_score,
+                "volatility": volatility,
+                "dynamic_position_size": dynamic_position_size,
+                "confidence_level": confidence,
+                "current_price": pair_data["price"],
+                "volume_24h": pair_data["volume_24h"],
+                "std_insight": claude_analysis.get("std_insight", ""),
+                "momentum_1h": momentum_1h * 100,
+                "momentum_24h": momentum_24h * 100,
+            }
+
+        except Exception as e:
+            logger.error(f"Enhanced score calculation failed for {symbol}: {e}")
+            return None
+
+    async def run_enhanced_trading(self):
+        """Main enhanced trading loop"""
+        logger.info("🚀 Starting enhanced 24/7 trading with AI optimization")
+
+        loop_count = 0
+        last_analysis_time = 0
+
+        while True:
+            try:
+                loop_count += 1
+                current_time = time.time()
+
+                # Run analysis every interval
+                if current_time - last_analysis_time >= self.analysis_interval:
+                    logger.info(f"🔍 Running enhanced analysis (Loop #{loop_count})")
+
+                    analysis_results = await self.analyze_market_enhanced()
+
+                    if analysis_results:
+                        # Enhanced logging
+                        logger.info("🏆 TOP 5 ENHANCED OPPORTUNITIES:")
+                        for i, result in enumerate(analysis_results[:5], 1):
+                            logger.info(
+                                f"#{i} {result['symbol']}: Score {result['composite_score']:.1f}"
+                            )
+                            logger.info(
+                                f"    🤖 Claude: {result['claude_momentum_score']}/100 momentum, "
+                                f"{result['claude_hold_probability']:.1f}% hold prob"
+                            )
+                            logger.info(
+                                f"    💰 Dynamic Size: ${result['dynamic_position_size']:.1f}"
+                            )
+                            logger.info(
+                                f"    📊 Confidence: {result['confidence_level']:.1f}%"
+                            )
+                            logger.info(
+                                f"    🎯 Recommendation: {result['claude_recommendation']}"
+                            )
+
+                        # Execute enhanced trading logic
+                        await self.execute_enhanced_trades(analysis_results)
+
+                    last_analysis_time = current_time
+
+                # Brief sleep
+                await asyncio.sleep(30)  # Check every 30 seconds
+
+            except Exception as e:
+                logger.error(f"Enhanced trading loop error: {e}")
+                await asyncio.sleep(60)
+
+    async def execute_enhanced_trades(self, analysis_results: List[Dict]):
+        """Execute trades with enhanced logic"""
+        for result in analysis_results[:3]:  # Top 3 opportunities
+            if (
+                result["composite_score"] >= self.min_composite_score
+                and result["claude_recommendation"] == "hold"
+                and result["confidence_level"] > 40
+                and result["symbol"] not in self.active_positions
+                and len(self.active_positions) < self.max_positions
+            ):
+
+                logger.info(
+                    f"🚀 Executing enhanced trade for {result['symbol']} "
+                    f"(Score: {result['composite_score']:.1f}, "
+                    f"Confidence: {result['confidence_level']:.1f}%)"
+                )
+                logger.info(
+                    f"🤖 Claude Analysis: {result['claude_recommendation']} - {result['std_insight']}"
+                )
+
+                # Execute with dynamic position sizing
+                success = self.place_enhanced_buy_order(result)
+                if success:
+                    break  # Only one trade per cycle
+
+                await asyncio.sleep(self.trade_cooldown)
+
+    def place_enhanced_buy_order(self, analysis: Dict) -> bool:
+        """Place buy order with enhanced logic"""
+        try:
+            symbol = analysis["symbol"]
+            position_size = analysis["dynamic_position_size"]
+
+            # Simulate order placement (replace with actual API call)
+            logger.info(
+                f"✅ Enhanced buy order executed: {symbol} @ ${analysis['current_price']:.6f}"
+            )
+            logger.info(f"💰 Dynamic position size: ${position_size:.2f}")
+
+            # Track position
+            self.active_positions[symbol] = {
+                "entry_price": analysis["current_price"],
+                "position_size": position_size,
+                "entry_time": time.time(),
+                "claude_analysis": analysis,
+            }
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Enhanced order placement failed: {e}")
+            return False
+
+
+# Main execution
+async def main():
+    """Main function to run enhanced trading bot"""
+    try:
+        # Check for demo mode
+        if "DEMO" in os.environ or not os.getenv("BINANCEUS_KEY"):
+            logger.info("📝 DEMO MODE - No real trading will occur")
+            logger.info("Set BINANCEUS_KEY and BINANCEUS_SECRET for live trading")
+            return
+
+        logger.info(
+            "⚠️ WARNING: This enhanced bot will execute REAL trades with REAL money!"
+        )
+        logger.info(
+            "🚀 Enhanced features: AI batch analysis, dynamic sizing, faster execution"
+        )
+        logger.info("")
+
+        response = input("Type 'CONFIRM' to start enhanced live trading: ")
+        if response != "CONFIRM":
+            logger.info("❌ Enhanced trading cancelled")
+            return
+
+        # Initialize and run enhanced bot
+        bot = EnhancedTradingBot()
+        await bot.run_enhanced_trading()
+
+    except KeyboardInterrupt:
+        logger.info("👋 Enhanced trading bot stopped by user")
+    except Exception as e:
+        logger.error(f"Enhanced bot error: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

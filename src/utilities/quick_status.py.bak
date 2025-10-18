@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""
+Quick Trading Status Monitor
+Check automated trading performance without interrupting the main system
+"""
+
+import os
+import json
+import time
+from datetime import datetime, timedelta
+from binance.client import Client
+from dotenv import load_dotenv
+
+def quick_status_check():
+    """Quick status check of portfolio and recent performance"""
+    load_dotenv()
+    
+    client = Client(
+        api_key=os.getenv('BINANCEUS_KEY'),
+        api_secret=os.getenv('BINANCEUS_SECRET'),
+        tld='us'
+    )
+    
+    print("⚡ QUICK TRADING STATUS")
+    print("=" * 40)
+    print(f"🕐 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print()
+    
+    try:
+        # Current portfolio
+        account = client.get_account()
+        total_value = 0
+        positions = []
+        
+        for balance in account['balances']:
+            free = float(balance['free'])
+            locked = float(balance['locked'])
+            total_amount = free + locked
+            
+            if total_amount > 0.01:
+                if balance['asset'] == 'USDT':
+                    usd_value = total_amount
+                    positions.append({
+                        'asset': balance['asset'],
+                        'amount': total_amount,
+                        'usd_value': usd_value,
+                        'change_24h': 0
+                    })
+                    total_value += usd_value
+                else:
+                    try:
+                        ticker = client.get_symbol_ticker(symbol=balance['asset'] + 'USDT')
+                        price = float(ticker['price'])
+                        usd_value = total_amount * price
+                        
+                        if usd_value > 0.5:
+                            # Get 24h change
+                            ticker_24h = client.get_ticker(symbol=balance['asset'] + 'USDT')
+                            change_24h = float(ticker_24h['priceChangePercent'])
+                            
+                            positions.append({
+                                'asset': balance['asset'],
+                                'amount': total_amount,
+                                'usd_value': usd_value,
+                                'change_24h': change_24h
+                            })
+                            total_value += usd_value
+                    except:
+                        continue
+        
+        # Sort by value
+        positions.sort(key=lambda x: x['usd_value'], reverse=True)
+        
+        print("💼 CURRENT POSITIONS:")
+        print("-" * 40)
+        for pos in positions:
+            change_emoji = "🟢" if pos['change_24h'] > 0 else "🔴" if pos['change_24h'] < 0 else "⚪"
+            print(f"{pos['asset']:8s} | ${pos['usd_value']:8.2f} | {change_emoji} {pos['change_24h']:+6.2f}%")
+        
+        print("-" * 40)
+        print(f"TOTAL: ${total_value:.2f}")
+        print()
+        
+        # Check for recent trading state files
+        today = datetime.now().strftime('%Y%m%d')
+        state_file = f"automated_trading_state_{today}.json"
+        
+        if os.path.exists(state_file):
+            with open(state_file, 'r') as f:
+                state = json.load(f)
+            
+            print("🤖 AUTOMATED TRADING STATUS:")
+            print("-" * 40)
+            
+            recent_trades = state.get('trade_history', [])
+            if recent_trades:
+                print(f"Recent trades: {len(recent_trades)}")
+                
+                # Show last 3 trades
+                for trade in recent_trades[-3:]:
+                    timestamp = datetime.fromisoformat(trade['timestamp']).strftime('%H:%M')
+                    action_emoji = "🟢" if trade['action'] == 'buy' else "🔴"
+                    print(f"  {timestamp} {action_emoji} {trade['action'].upper()} {trade['asset']} ${trade['amount']:.2f}")
+            else:
+                print("No recent trades")
+            
+            print()
+            
+            # Performance metrics
+            metrics = state.get('performance_metrics', {})
+            if metrics:
+                latest_key = max(metrics.keys())
+                latest_metrics = metrics[latest_key]
+                print(f"Last cycle: {datetime.fromisoformat(latest_key).strftime('%H:%M')}")
+                print(f"Actions considered: {latest_metrics.get('actions_considered', 0)}")
+                print(f"Trades executed: {latest_metrics.get('trades_executed', 0)}")
+        
+        else:
+            print("🤖 No automated trading state found")
+            print("(System may not be running)")
+        
+        print()
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+if __name__ == "__main__":
+    quick_status_check()

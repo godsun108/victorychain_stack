@@ -1,0 +1,413 @@
+#!/usr/bin/env python3
+
+"""
+MICRO-CAP UNIVERSE SCANNER
+=========================
+Specialized scanner for BTC-free micro-cap framework
+- Identify $10M-$100M market cap tokens
+- Build MicroCap-30 hedge basket
+- Real-time micro-cap breadth analysis
+- Social sentiment and catalyst tracking
+"""
+
+import ccxt
+import asyncio
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import json
+import requests
+from typing import Dict, List, Optional
+import time
+
+class MicroCapUniverseScanner:
+    """Comprehensive micro-cap token scanner for hedge basket building"""
+    
+    def __init__(self):
+        self.exchange = None
+        self.microcap_tokens = {}
+        self.hedge_candidates = []
+        self.quality_longs = []
+        
+    def setup_exchange(self):
+        """Initialize exchange connection"""
+        try:
+            self.exchange = ccxt.binanceus({
+                'rateLimit': 1200,
+                'enableRateLimit': True,
+            })
+            print("✅ Exchange initialized for micro-cap scanning")
+        except Exception as e:
+            print(f"❌ Exchange setup failed: {e}")
+    
+    async def get_market_cap_data(self, symbol: str) -> Optional[Dict]:
+        """Get market cap data from CoinGecko (free tier)"""
+        try:
+            base_asset = symbol.replace('USDT', '').lower()
+            
+            # CoinGecko API (free tier - 10-50 calls/minute)
+            url = f"https://api.coingecko.com/api/v3/simple/price"
+            params = {
+                'ids': base_asset,
+                'vs_currencies': 'usd',
+                'include_market_cap': 'true',
+                'include_24hr_vol': 'true',
+                'include_24hr_change': 'true'
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if base_asset in data:
+                    return {
+                        'market_cap': data[base_asset].get('usd_market_cap', 0),
+                        'volume_24h': data[base_asset].get('usd_24h_vol', 0),
+                        'price_change_24h': data[base_asset].get('usd_24h_change', 0)
+                    }
+            
+            await asyncio.sleep(1.2)  # Rate limiting
+            return None
+            
+        except Exception as e:
+            return None
+    
+    async def scan_binance_us_microcaps(self) -> Dict:
+        """Scan Binance US for micro-cap tokens"""
+        print("🔍 Scanning Binance US for micro-caps ($10M-$100M)...")
+        
+        if not self.exchange:
+            self.setup_exchange()
+        
+        try:
+            # Get all tickers
+            tickers = self.exchange.fetch_tickers()
+            microcaps = {}
+            
+            usdt_pairs = [symbol for symbol in tickers.keys() if symbol.endswith('USDT')]
+            print(f"Found {len(usdt_pairs)} USDT pairs to analyze")
+            
+            for i, symbol in enumerate(usdt_pairs):
+                try:
+                    ticker = tickers[symbol]
+                    base_asset = symbol.replace('USDT', '')
+                    
+                    # Get basic market data
+                    price = float(ticker['last'] or 0)
+                    volume_24h = float(ticker['quoteVolume'] or 0)
+                    price_change = float(ticker['percentage'] or 0)
+                    
+                    if price <= 0 or volume_24h < 100000:  # Min $100k volume
+                        continue
+                    
+                    # Get market cap from CoinGecko
+                    market_data = await self.get_market_cap_data(symbol)
+                    
+                    if market_data and market_data['market_cap']:
+                        market_cap = market_data['market_cap']
+                        
+                        # Filter for micro-caps
+                        if 10_000_000 <= market_cap <= 100_000_000:
+                            microcaps[symbol] = {
+                                'symbol': symbol,
+                                'base_asset': base_asset,
+                                'price': price,
+                                'market_cap': market_cap,
+                                'volume_24h_binance': volume_24h,
+                                'volume_24h_coingecko': market_data.get('volume_24h', 0),
+                                'price_change_24h': price_change,
+                                'high_24h': float(ticker['high'] or 0),
+                                'low_24h': float(ticker['low'] or 0),
+                                'bid': float(ticker['bid'] or 0),
+                                'ask': float(ticker['ask'] or 0),
+                                'spread_pct': ((float(ticker['ask'] or 0) - float(ticker['bid'] or 0)) / price * 100) if price > 0 else 0,
+                                'timestamp': datetime.now().isoformat()
+                            }
+                    
+                    # Progress indicator
+                    if i % 10 == 0:
+                        print(f"  Processed {i}/{len(usdt_pairs)} pairs, found {len(microcaps)} micro-caps")
+                    
+                except Exception as e:
+                    continue
+            
+            self.microcap_tokens = microcaps
+            print(f"✅ Found {len(microcaps)} micro-cap tokens")
+            
+            return microcaps
+            
+        except Exception as e:
+            print(f"❌ Micro-cap scan failed: {e}")
+            return {}
+    
+    def analyze_token_quality(self, token_data: Dict) -> Dict:
+        """Analyze token quality for long vs hedge classification"""
+        symbol = token_data['symbol']
+        base_asset = token_data['base_asset']
+        
+        # Quality scoring (higher = better for longs)
+        quality_score = 0
+        negative_factors = []
+        positive_factors = []
+        
+        # Volume quality
+        if token_data['volume_24h_binance'] > 1_000_000:
+            quality_score += 15
+            positive_factors.append("High volume (>$1M)")
+        elif token_data['volume_24h_binance'] < 500_000:
+            quality_score -= 10
+            negative_factors.append("Low volume (<$500k)")
+        
+        # Spread quality
+        if token_data['spread_pct'] < 0.5:
+            quality_score += 10
+            positive_factors.append("Tight spread (<0.5%)")
+        elif token_data['spread_pct'] > 2.0:
+            quality_score -= 15
+            negative_factors.append("Wide spread (>2%)")
+        
+        # Price momentum
+        if token_data['price_change_24h'] > 5:
+            quality_score += 20
+            positive_factors.append("Strong momentum (+5%)")
+        elif token_data['price_change_24h'] < -10:
+            quality_score -= 20
+            negative_factors.append("Weak momentum (-10%)")
+        
+        # Market cap size (within micro-cap range)
+        if token_data['market_cap'] > 50_000_000:
+            quality_score += 10
+            positive_factors.append("Upper micro-cap (>$50M)")
+        elif token_data['market_cap'] < 20_000_000:
+            quality_score -= 5
+            negative_factors.append("Lower micro-cap (<$20M)")
+        
+        # Volatility assessment (high = risky but potentially profitable)
+        price_range = token_data['high_24h'] - token_data['low_24h']
+        volatility_pct = (price_range / token_data['price']) * 100 if token_data['price'] > 0 else 0
+        
+        if volatility_pct > 20:
+            quality_score -= 10
+            negative_factors.append("High volatility (>20%)")
+        elif 5 <= volatility_pct <= 15:
+            quality_score += 5
+            positive_factors.append("Moderate volatility (5-15%)")
+        
+        # Name-based heuristics (basic sentiment analysis)
+        risky_keywords = ['doge', 'shib', 'pepe', 'floki', 'bonk', 'meme', 'baby', 'safe', 'moon']
+        quality_keywords = ['eth', 'btc', 'sol', 'ada', 'dot', 'link', 'uni', 'avax']
+        
+        base_lower = base_asset.lower()
+        
+        for keyword in risky_keywords:
+            if keyword in base_lower:
+                quality_score -= 15
+                negative_factors.append(f"Meme/risky keyword: {keyword}")
+                break
+        
+        for keyword in quality_keywords:
+            if keyword in base_lower:
+                quality_score += 10
+                positive_factors.append(f"Quality keyword: {keyword}")
+                break
+        
+        return {
+            'quality_score': quality_score,
+            'positive_factors': positive_factors,
+            'negative_factors': negative_factors,
+            'volatility_pct': volatility_pct,
+            'classification': 'quality_long' if quality_score > 0 else 'hedge_candidate'
+        }
+    
+    def build_microcap_30_basket(self) -> List[str]:
+        """Build the worst 30 micro-caps for hedge basket"""
+        print("🏗️ Building MicroCap-30 hedge basket...")
+        
+        if not self.microcap_tokens:
+            print("❌ No micro-cap tokens to analyze")
+            return []
+        
+        scored_tokens = []
+        
+        for symbol, token_data in self.microcap_tokens.items():
+            analysis = self.analyze_token_quality(token_data)
+            
+            # For hedge basket, we want LOWEST quality scores
+            hedge_score = -analysis['quality_score']  # Invert for worst tokens
+            
+            # Add additional negative factors for hedge candidates
+            if analysis['volatility_pct'] > 15:
+                hedge_score += 10  # Higher volatility = better hedge
+            
+            if token_data['volume_24h_binance'] < 750_000:
+                hedge_score += 5  # Lower liquidity = more unstable
+            
+            if token_data['price_change_24h'] < -5:
+                hedge_score += 15  # Already declining = good short candidate
+            
+            scored_tokens.append({
+                'symbol': symbol,
+                'hedge_score': hedge_score,
+                'quality_analysis': analysis,
+                'market_cap': token_data['market_cap'],
+                'volume_24h': token_data['volume_24h_binance'],
+                'price_change_24h': token_data['price_change_24h']
+            })
+        
+        # Sort by hedge score (highest = worst quality = best for shorting)
+        scored_tokens.sort(key=lambda x: x['hedge_score'], reverse=True)
+        
+        # Take top 30 for hedge basket
+        self.hedge_candidates = scored_tokens[:30]
+        hedge_symbols = [token['symbol'] for token in self.hedge_candidates]
+        
+        print(f"✅ MicroCap-30 hedge basket built")
+        print("Top 10 hedge candidates:")
+        for i, token in enumerate(self.hedge_candidates[:10]):
+            print(f"  {i+1:2d}. {token['symbol']:12s} | Score: {token['hedge_score']:6.1f} | "
+                  f"Cap: ${token['market_cap']/1e6:5.1f}M | Change: {token['price_change_24h']:6.1f}%")
+        
+        return hedge_symbols
+    
+    def identify_quality_longs(self) -> List[str]:
+        """Identify highest quality micro-caps for long positions"""
+        print("🎯 Identifying quality long candidates...")
+        
+        quality_tokens = []
+        
+        for symbol, token_data in self.microcap_tokens.items():
+            analysis = self.analyze_token_quality(token_data)
+            
+            if analysis['classification'] == 'quality_long' and analysis['quality_score'] > 10:
+                quality_tokens.append({
+                    'symbol': symbol,
+                    'quality_score': analysis['quality_score'],
+                    'analysis': analysis,
+                    'market_cap': token_data['market_cap'],
+                    'volume_24h': token_data['volume_24h_binance'],
+                    'price_change_24h': token_data['price_change_24h'],
+                    'spread_pct': token_data['spread_pct']
+                })
+        
+        # Sort by quality score
+        quality_tokens.sort(key=lambda x: x['quality_score'], reverse=True)
+        
+        self.quality_longs = quality_tokens[:20]  # Top 20 quality longs
+        
+        print(f"✅ Found {len(self.quality_longs)} quality long candidates")
+        print("Top 10 long candidates:")
+        for i, token in enumerate(self.quality_longs[:10]):
+            print(f"  {i+1:2d}. {token['symbol']:12s} | Score: {token['quality_score']:6.1f} | "
+                  f"Cap: ${token['market_cap']/1e6:5.1f}M | Change: {token['price_change_24h']:6.1f}%")
+        
+        return [token['symbol'] for token in self.quality_longs]
+    
+    def calculate_breadth_metrics(self) -> Dict:
+        """Calculate micro-cap breadth metrics"""
+        if not self.microcap_tokens:
+            return {}
+        
+        total_tokens = len(self.microcap_tokens)
+        
+        # Tokens hitting 24h highs
+        at_highs = sum(1 for token in self.microcap_tokens.values() 
+                      if token['price'] >= token['high_24h'] * 0.98)
+        
+        # Tokens with positive momentum
+        positive_momentum = sum(1 for token in self.microcap_tokens.values() 
+                               if token['price_change_24h'] > 0)
+        
+        # High volume tokens (>2x average)
+        avg_volume = np.mean([token['volume_24h_binance'] for token in self.microcap_tokens.values()])
+        high_volume = sum(1 for token in self.microcap_tokens.values() 
+                         if token['volume_24h_binance'] > avg_volume * 2)
+        
+        # Market cap distribution
+        market_caps = [token['market_cap'] for token in self.microcap_tokens.values()]
+        
+        breadth_metrics = {
+            'total_microcaps': total_tokens,
+            'at_24h_highs': at_highs,
+            'at_highs_pct': (at_highs / total_tokens) * 100,
+            'positive_momentum': positive_momentum,
+            'positive_momentum_pct': (positive_momentum / total_tokens) * 100,
+            'high_volume_count': high_volume,
+            'high_volume_pct': (high_volume / total_tokens) * 100,
+            'avg_market_cap': np.mean(market_caps),
+            'median_market_cap': np.median(market_caps),
+            'avg_volume_24h': avg_volume,
+            'total_microcap_volume': sum(token['volume_24h_binance'] for token in self.microcap_tokens.values())
+        }
+        
+        return breadth_metrics
+    
+    async def run_complete_scan(self):
+        """Run complete micro-cap universe analysis"""
+        print("🚀 Starting Micro-Cap Universe Scan")
+        print("=" * 40)
+        
+        start_time = time.time()
+        
+        # Step 1: Scan for micro-caps
+        await self.scan_binance_us_microcaps()
+        
+        if not self.microcap_tokens:
+            print("❌ No micro-cap tokens found")
+            return
+        
+        # Step 2: Build hedge basket
+        hedge_basket = self.build_microcap_30_basket()
+        
+        # Step 3: Identify quality longs
+        quality_longs = self.identify_quality_longs()
+        
+        # Step 4: Calculate breadth metrics
+        breadth = self.calculate_breadth_metrics()
+        
+        scan_time = time.time() - start_time
+        
+        # Compile results
+        results = {
+            'scan_timestamp': datetime.now().isoformat(),
+            'scan_duration_seconds': round(scan_time, 2),
+            'summary': {
+                'total_microcaps_found': len(self.microcap_tokens),
+                'hedge_basket_size': len(hedge_basket),
+                'quality_longs_count': len(quality_longs),
+                'breadth_at_highs_pct': breadth.get('at_highs_pct', 0),
+                'total_microcap_volume_24h': breadth.get('total_microcap_volume', 0)
+            },
+            'microcap_tokens': self.microcap_tokens,
+            'hedge_basket': {
+                'symbols': hedge_basket,
+                'detailed_analysis': self.hedge_candidates
+            },
+            'quality_longs': {
+                'symbols': quality_longs,
+                'detailed_analysis': self.quality_longs
+            },
+            'breadth_metrics': breadth
+        }
+        
+        # Save results
+        with open('microcap_universe_scan.json', 'w') as f:
+            json.dump(results, f, indent=2, default=str)
+        
+        print(f"\n📊 SCAN COMPLETE")
+        print("=" * 20)
+        print(f"Total micro-caps found: {len(self.microcap_tokens)}")
+        print(f"Hedge basket candidates: {len(hedge_basket)}")
+        print(f"Quality long candidates: {len(quality_longs)}")
+        print(f"Breadth (at highs): {breadth.get('at_highs_pct', 0):.1f}%")
+        print(f"Scan duration: {scan_time:.1f} seconds")
+        print(f"💾 Results saved to microcap_universe_scan.json")
+        
+        return results
+
+async def main():
+    """Demo the micro-cap universe scanner"""
+    scanner = MicroCapUniverseScanner()
+    await scanner.run_complete_scan()
+
+if __name__ == "__main__":
+    asyncio.run(main())

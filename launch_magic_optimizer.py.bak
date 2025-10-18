@@ -1,0 +1,299 @@
+#!/usr/bin/env python3
+"""
+MAGIC POSITION OPTIMIZER LAUNCHER
+================================
+
+🚀 LAUNCH SCRIPT FOR 24/7 AUTONOMOUS OPTIMIZATION
+💰 INTELLIGENT POSITION SWITCHING & PROFIT MAXIMIZATION
+⚡ SAFETY CHECKS & ENVIRONMENT VALIDATION
+
+FEATURES:
+✅ Environment validation and setup
+✅ API configuration verification
+✅ Safety checks before live trading
+✅ Automatic dependency installation
+✅ Graceful startup and monitoring
+"""
+
+import os
+import sys
+import json
+import subprocess
+import logging
+import asyncio
+from datetime import datetime
+import signal
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+class OptimizerLauncher:
+    """Launch and manage the MAGIC Position Optimizer"""
+    
+    def __init__(self):
+        self.config_file = 'advanced_optimizer_config.json'
+        self.optimizer_script = 'magic_position_optimizer.py'
+        self.requirements_file = 'requirements_optimizer.txt'
+        self.is_running = True
+        
+    def check_dependencies(self) -> bool:
+        """Check and install required dependencies"""
+        try:
+            logger.info("🔍 Checking dependencies...")
+            
+            # Check if requirements file exists
+            if not os.path.exists(self.requirements_file):
+                logger.error(f"❌ Requirements file not found: {self.requirements_file}")
+                return False
+            
+            # Try importing critical packages
+            critical_packages = [
+                'ccxt', 'pandas', 'numpy', 'aiohttp', 'scipy'
+            ]
+            
+            missing_packages = []
+            for package in critical_packages:
+                try:
+                    __import__(package)
+                    logger.info(f"✅ {package} - OK")
+                except ImportError:
+                    missing_packages.append(package)
+                    logger.warning(f"⚠️ {package} - Missing")
+            
+            # Check TA-Lib separately (more complex installation)
+            try:
+                import talib
+                logger.info("✅ TA-Lib - OK")
+            except ImportError:
+                logger.warning("⚠️ TA-Lib - Missing (complex installation required)")
+                missing_packages.append('TA-Lib')
+            
+            if missing_packages:
+                logger.info(f"📦 Installing missing packages: {', '.join(missing_packages)}")
+                return self.install_dependencies()
+            
+            logger.info("✅ All dependencies satisfied")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Dependency check error: {e}")
+            return False
+    
+    def install_dependencies(self) -> bool:
+        """Install missing dependencies"""
+        try:
+            logger.info("📦 Installing dependencies from requirements...")
+            
+            # Install via pip
+            result = subprocess.run([
+                sys.executable, '-m', 'pip', 'install', '-r', self.requirements_file
+            ], capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                logger.info("✅ Dependencies installed successfully")
+                return True
+            else:
+                logger.error(f"❌ Dependency installation failed: {result.stderr}")
+                
+                # Special handling for TA-Lib
+                if 'TA-Lib' in result.stderr:
+                    logger.info("💡 TA-Lib installation help:")
+                    logger.info("   macOS: brew install ta-lib && pip install TA-Lib")
+                    logger.info("   Ubuntu: sudo apt-get install libta-lib-dev && pip install TA-Lib")
+                    logger.info("   Windows: Download from https://www.lfd.uci.edu/~gohlke/pythonlibs/#ta-lib")
+                
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Dependency installation error: {e}")
+            return False
+    
+    def validate_configuration(self) -> bool:
+        """Validate configuration file"""
+        try:
+            logger.info("⚙️ Validating configuration...")
+            
+            if not os.path.exists(self.config_file):
+                logger.error(f"❌ Configuration file not found: {self.config_file}")
+                return False
+            
+            with open(self.config_file, 'r') as f:
+                config = json.load(f)
+            
+            # Validate required sections
+            required_sections = [
+                'trading_settings', 'position_switching', 'gas_optimization',
+                'iso_20022_reserves', 'cycle_timing', 'binance_us_api'
+            ]
+            
+            for section in required_sections:
+                if section not in config['advanced_position_optimizer_config']:
+                    logger.error(f"❌ Missing configuration section: {section}")
+                    return False
+                logger.info(f"✅ {section} - OK")
+            
+            # Check API configuration
+            api_config = config['advanced_position_optimizer_config']['binance_us_api']
+            
+            if api_config.get('testnet', True):
+                logger.info("📝 TESTNET MODE - Safe for testing")
+            else:
+                if not api_config.get('api_key') or api_config['api_key'] == 'your_binance_us_api_key_here':
+                    logger.warning("⚠️ Real money mode requires valid API credentials")
+                    logger.info("💡 Update api_key and api_secret in configuration for live trading")
+            
+            logger.info("✅ Configuration validated")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Configuration validation error: {e}")
+            return False
+    
+    def display_startup_info(self):
+        """Display startup information"""
+        print("🚀 MAGIC POSITION OPTIMIZER LAUNCHER")
+        print("====================================")
+        print()
+        print("💰 CONTINUOUS MAGIC POSITION ANALYSIS")
+        print("⚡ INTELLIGENT TOKEN SWITCHING")
+        print("🏦 ISO 20022 PROFIT BANKING")
+        print("🌍 24/7/365 AUTONOMOUS OPERATION")
+        print()
+        
+        # Load and display configuration summary
+        try:
+            with open(self.config_file, 'r') as f:
+                config = json.load(f)['advanced_position_optimizer_config']
+            
+            print("📊 CONFIGURATION SUMMARY:")
+            print(f"  💰 Starting Capital: ${config['trading_settings']['starting_capital']:,.2f}")
+            print(f"  🎯 Min Switch Profit: {config['position_switching']['min_switch_profit_percent']}%")
+            print(f"  ⚡ Max Gas Cost: {config['gas_optimization']['max_gas_cost_percent']}%")
+            print(f"  🏦 Profit to Reserves: {config['iso_20022_reserves']['profit_to_reserves_percent']}%")
+            print(f"  📊 Testnet Mode: {'ON' if config['binance_us_api']['testnet'] else 'OFF'}")
+            print()
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Could not load configuration summary: {e}")
+    
+    def setup_signal_handlers(self):
+        """Setup signal handlers for graceful shutdown"""
+        def signal_handler(signum, frame):
+            logger.info(f"📡 Received signal {signum}")
+            logger.info("⏹️ Initiating graceful shutdown...")
+            self.is_running = False
+        
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+    
+    async def launch_optimizer(self):
+        """Launch the MAGIC Position Optimizer"""
+        try:
+            logger.info("🚀 Launching MAGIC Position Optimizer...")
+            
+            # Import and run the optimizer
+            sys.path.append('.')
+            
+            # Dynamic import to avoid import errors during setup
+            magic_optimizer = __import__('magic_position_optimizer')
+            
+            # Create and run optimizer
+            optimizer = magic_optimizer.MagicPositionOptimizer(self.config_file)
+            await optimizer.run_continuous_optimization()
+            
+        except KeyboardInterrupt:
+            logger.info("⏹️ Optimizer stopped by user")
+        except Exception as e:
+            logger.error(f"❌ Optimizer launch error: {e}")
+            raise
+    
+    def run_safety_checks(self) -> bool:
+        """Run comprehensive safety checks"""
+        try:
+            logger.info("🛡️ Running safety checks...")
+            
+            # Check if this is a live trading environment
+            with open(self.config_file, 'r') as f:
+                config = json.load(f)['advanced_position_optimizer_config']
+            
+            if not config['binance_us_api']['testnet']:
+                logger.warning("🚨 REAL MONEY MODE DETECTED")
+                logger.warning("⚠️ This will execute real trades with real money")
+                
+                response = input("🔐 Type 'CONFIRM_REAL_MONEY' to proceed with live trading: ")
+                
+                if response != 'CONFIRM_REAL_MONEY':
+                    logger.info("❌ Live trading not confirmed - exiting")
+                    return False
+                
+                logger.info("✅ Live trading confirmed")
+            
+            # Check portfolio limits
+            starting_capital = config['trading_settings']['starting_capital']
+            if starting_capital > 10000 and not config['binance_us_api']['testnet']:
+                logger.warning(f"⚠️ Large starting capital detected: ${starting_capital:,.2f}")
+                
+                response = input(f"🔐 Confirm trading with ${starting_capital:,.2f} (y/N): ")
+                if response.lower() != 'y':
+                    logger.info("❌ Large capital trading not confirmed - exiting")
+                    return False
+            
+            logger.info("✅ Safety checks passed")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Safety check error: {e}")
+            return False
+    
+    async def run(self):
+        """Main launcher execution"""
+        try:
+            # Setup
+            self.setup_signal_handlers()
+            self.display_startup_info()
+            
+            # Pre-flight checks
+            if not self.check_dependencies():
+                logger.error("❌ Dependency check failed")
+                return False
+            
+            if not self.validate_configuration():
+                logger.error("❌ Configuration validation failed")
+                return False
+            
+            if not self.run_safety_checks():
+                logger.error("❌ Safety checks failed")
+                return False
+            
+            # Launch optimizer
+            logger.info("🚀 All checks passed - launching optimizer...")
+            await self.launch_optimizer()
+            
+        except Exception as e:
+            logger.error(f"❌ Launcher error: {e}")
+            return False
+        
+        logger.info("🏁 MAGIC Position Optimizer shutdown complete")
+        return True
+
+async def main():
+    """Main execution function"""
+    launcher = OptimizerLauncher()
+    success = await launcher.run()
+    
+    if not success:
+        logger.error("❌ Launch failed")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n⏹️ Launcher interrupted by user")
+    except Exception as e:
+        logger.error(f"❌ Fatal error: {e}")
+        sys.exit(1)

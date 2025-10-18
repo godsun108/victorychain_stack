@@ -1,0 +1,22 @@
+2025-09-26 00:52:57.004 | INFO     | __main__:main:871 - Momentum bot started; mode=paper, quotes=['USDT', 'USD', 'USDC'], caps notional=$15.0 open_trades=1 trail=300bps
+2025-09-26 00:52:57.013 | INFO     | __main__:_tick:444 - Loaded approval token from runtime/APPROVAL_TOKEN.txt
+/Users/nicholaskramer/Downloads/victorychain_stack/trillion_bot_momentum.py:214: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'ts': datetime.utcnow().isoformat() + 'Z',
+2025-09-26 00:52:57.028 | INFO     | __main__:_mint_and_store:429 - Auto-minted approval token (ttl=300s)
+/Users/nicholaskramer/Downloads/victorychain_stack/trillion_bot_momentum.py:484: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = ts or datetime.utcnow().replace(tzinfo=timezone.utc)
+/Users/nicholaskramer/Downloads/victorychain_stack/trillion_bot_momentum.py:519: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'ts': int(datetime.utcnow().replace(tzinfo=timezone.utc).timestamp()),
+/Users/nicholaskramer/Downloads/victorychain_stack/trillion_bot_momentum.py:214: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'ts': datetime.utcnow().isoformat() + 'Z',
+2025-09-26 00:52:57.360 | INFO     | __main__:emit_session_summary:546 - Session summary exported: runtime/exports/session_summary.json
+/Users/nicholaskramer/Downloads/victorychain_stack/trillion_bot_momentum.py:581: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'as_of': datetime.utcnow().isoformat() + 'Z',
+2025-09-26 00:52:57.374 | INFO     | __main__:write_iso_reserves_snapshot:590 - ISO reserves snapshot exported: runtime/exports/iso_reserves.json
+/Users/nicholaskramer/Downloads/victorychain_stack/trillion_bot_momentum.py:484: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = ts or datetime.utcnow().replace(tzinfo=timezone.utc)
+/Users/nicholaskramer/Downloads/victorychain_stack/trillion_bot_momentum.py:519: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'ts': int(datetime.utcnow().replace(tzinfo=timezone.utc).timestamp()),
+/Users/nicholaskramer/Downloads/victorychain_stack/trillion_bot_momentum.py:214: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'ts': datetime.utcnow().isoformat() + 'Z',
+2025-09-26 00:52:57.390 | INFO     | __main__:emit_session_summary:546 - Session summary exported: runtime/exports/session_summary.json

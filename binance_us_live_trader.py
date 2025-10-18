@@ -1,0 +1,616 @@
+#!/usr/bin/env python3
+"""
+BINANCE US LIVE TRADING SETUP AND ACTIVATION
+============================================
+
+Updated specifically for Binance US accounts with proper API endpoints.
+
+⚠️  EXTREME RISK: REAL MONEY TRADING ACTIVATION
+🎯 Goal: Maximum ROI toward $1 trillion using Binance US
+
+BINANCE US SPECIFIC FEATURES:
+✅ Proper Binance US API endpoints
+✅ US regulatory compliance
+✅ USD-based trading pairs
+✅ Reduced leverage (US regulations)
+✅ Spot trading focus
+"""
+
+import os
+import sys
+import json
+import subprocess
+import asyncio
+import time
+import numpy as np
+import pandas as pd
+import ccxt
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("binance_us_live_trading.log"),
+        logging.StreamHandler(),
+    ],
+)
+logger = logging.getLogger(__name__)
+
+
+class BinanceUSLiveTrader:
+    """
+    Binance US Live Trading System
+
+    🚀 Maximum ROI optimization for US users
+    ⚠️  EXTREME RISK - REAL MONEY TRADING
+    """
+
+    def __init__(self):
+        self.binance_us_client = None
+        self.portfolio_value = 0.0
+        self.target_value = 1000000000000.0  # $1T
+        self.starting_capital = 0.0
+
+        # US-specific trading parameters (lower leverage due to regulations)
+        self.max_position_percent = 10.0  # 10% max position (US regulation friendly)
+        self.max_leverage = 1.0  # No leverage on Binance US for most assets
+        self.confidence_threshold = 0.80  # Higher confidence for safety
+        self.max_daily_trades = 30  # Reduced for US regulatory comfort
+
+        # Safety limits
+        self.daily_loss_limit = 2000.0  # $2k daily loss limit
+        self.total_stop_loss = 10000.0  # $10k total stop loss
+        self.max_positions = 6  # Max concurrent positions
+
+        # Performance tracking
+        self.trades_today = 0
+        self.total_trades = 0
+        self.winning_trades = 0
+        self.daily_roi = 0.0
+        self.total_roi = 0.0
+
+        # Active positions
+        self.active_positions = {}
+
+        logger.warning("🇺🇸 BINANCE US LIVE TRADER INITIALIZED")
+        logger.warning("🎯 TARGET: $1 TRILLION")
+        logger.warning("⚠️  REAL MONEY TRADING ENABLED")
+
+    def connect_to_binance_us(self, api_key: str, api_secret: str) -> bool:
+        """Connect to Binance US with proper endpoints"""
+        try:
+            # Binance US specific configuration
+            self.binance_us_client = ccxt.binanceus(
+                {
+                    "apiKey": api_key,
+                    "secret": api_secret,
+                    "sandbox": False,  # LIVE TRADING
+                    "enableRateLimit": True,
+                    "timeout": 30000,
+                    "options": {
+                        "defaultType": "spot",  # Spot trading only
+                    },
+                }
+            )
+
+            # Test connection
+            balance = self.binance_us_client.fetch_balance()
+
+            # Calculate total portfolio value
+            total_usd_value = 0.0
+            holdings_summary = {}
+
+            for asset, amounts in balance["total"].items():
+                if amounts > 0:
+                    if asset == "USD":
+                        total_usd_value += amounts
+                        holdings_summary[asset] = {
+                            "amount": amounts,
+                            "usd_value": amounts,
+                        }
+                    elif asset == "USDT":
+                        total_usd_value += amounts  # Assume 1:1 with USD
+                        holdings_summary[asset] = {
+                            "amount": amounts,
+                            "usd_value": amounts,
+                        }
+                    else:
+                        try:
+                            # Get USD price for the asset
+                            ticker_symbol = f"{asset}/USD"
+                            if ticker_symbol in self.binance_us_client.markets:
+                                ticker = self.binance_us_client.fetch_ticker(
+                                    ticker_symbol
+                                )
+                                usd_value = amounts * ticker["last"]
+                                total_usd_value += usd_value
+                                holdings_summary[asset] = {
+                                    "amount": amounts,
+                                    "price": ticker["last"],
+                                    "usd_value": usd_value,
+                                }
+                            else:
+                                # Try USDT pair if USD pair doesn't exist
+                                ticker_symbol = f"{asset}/USDT"
+                                if ticker_symbol in self.binance_us_client.markets:
+                                    ticker = self.binance_us_client.fetch_ticker(
+                                        ticker_symbol
+                                    )
+                                    usd_value = amounts * ticker["last"]
+                                    total_usd_value += usd_value
+                                    holdings_summary[asset] = {
+                                        "amount": amounts,
+                                        "price": ticker["last"],
+                                        "usd_value": usd_value,
+                                    }
+                        except Exception as e:
+                            logger.warning(f"Could not get price for {asset}: {e}")
+                            holdings_summary[asset] = {
+                                "amount": amounts,
+                                "usd_value": 0,
+                            }
+
+            self.portfolio_value = total_usd_value
+            self.starting_capital = total_usd_value
+
+            logger.info("✅ BINANCE US CONNECTION SUCCESSFUL")
+            logger.info(f"💰 Total Portfolio Value: ${total_usd_value:,.2f}")
+            logger.info("📊 Current Holdings:")
+
+            for asset, info in holdings_summary.items():
+                if info["usd_value"] > 1:  # Only show significant holdings
+                    logger.info(
+                        f"   {asset}: {info['amount']:.6f} (${info['usd_value']:,.2f})"
+                    )
+
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ Binance US connection failed: {e}")
+            return False
+
+    def get_available_trading_pairs(self) -> List[str]:
+        """Get available trading pairs on Binance US"""
+        try:
+            markets = self.binance_us_client.load_markets()
+
+            # Focus on major USD pairs available on Binance US
+            preferred_pairs = [
+                "BTC/USD",
+                "ETH/USD",
+                "BNB/USD",
+                "ADA/USD",
+                "DOT/USD",
+                "LINK/USD",
+                "XRP/USD",
+                "LTC/USD",
+                "BCH/USD",
+                "AVAX/USD",
+                "MATIC/USD",
+                "ATOM/USD",
+                "ALGO/USD",
+                "VET/USD",
+                "FIL/USD",
+            ]
+
+            available_pairs = []
+            for pair in preferred_pairs:
+                if pair in markets and markets[pair]["active"]:
+                    available_pairs.append(pair)
+
+            logger.info(f"📊 Available trading pairs: {len(available_pairs)}")
+            for pair in available_pairs[:10]:  # Show first 10
+                logger.info(f"   ✅ {pair}")
+
+            return available_pairs
+
+        except Exception as e:
+            logger.error(f"❌ Error getting trading pairs: {e}")
+            return []
+
+    async def detect_trading_opportunities(self) -> List[Dict]:
+        """Detect trading opportunities on Binance US"""
+        opportunities = []
+
+        try:
+            trading_pairs = self.get_available_trading_pairs()
+
+            for symbol in trading_pairs[:15]:  # Analyze top 15 pairs
+                try:
+                    # Get current market data
+                    ticker = self.binance_us_client.fetch_ticker(symbol)
+
+                    # Get recent price history for analysis
+                    ohlcv = self.binance_us_client.fetch_ohlcv(symbol, "1h", limit=24)
+                    df = pd.DataFrame(
+                        ohlcv,
+                        columns=["timestamp", "open", "high", "low", "close", "volume"],
+                    )
+
+                    if len(df) < 10:
+                        continue
+
+                    # Calculate technical indicators
+                    current_price = ticker["last"]
+                    price_change_24h = ticker["percentage"]
+                    volume_24h = ticker["quoteVolume"]
+
+                    # Simple momentum strategy
+                    recent_high = df["high"].tail(6).max()
+                    recent_low = df["low"].tail(6).min()
+                    price_position = (
+                        (current_price - recent_low) / (recent_high - recent_low)
+                        if recent_high > recent_low
+                        else 0.5
+                    )
+
+                    # Volatility calculation
+                    volatility = df["close"].pct_change().std() * 100
+
+                    # Simple moving averages
+                    sma_short = df["close"].tail(6).mean()
+                    sma_long = df["close"].tail(12).mean()
+
+                    # Trading signals
+                    momentum_signal = abs(price_change_24h) >= 3.0  # 3% momentum
+                    volatility_signal = volatility >= 8.0  # 8% volatility
+                    trend_signal = sma_short > sma_long if sma_long > 0 else False
+                    volume_signal = volume_24h >= 1000000  # $1M+ volume
+
+                    # Calculate confidence score
+                    confidence_factors = [
+                        momentum_signal,
+                        volatility_signal,
+                        trend_signal,
+                        volume_signal,
+                        price_position > 0.2
+                        and price_position < 0.8,  # Not at extremes
+                    ]
+
+                    confidence = sum(confidence_factors) / len(confidence_factors)
+
+                    # Only consider opportunities above threshold
+                    if confidence >= self.confidence_threshold:
+
+                        # Determine trade direction
+                        if price_change_24h > 0 and trend_signal:
+                            side = "buy"
+                        elif price_change_24h < 0 and not trend_signal:
+                            side = "sell"
+                        else:
+                            side = "buy"  # Default to buy for spot trading
+
+                        # Calculate expected ROI (conservative estimate)
+                        expected_roi = min(
+                            0.08, abs(price_change_24h) / 100 * 0.6
+                        )  # 60% of recent momentum
+
+                        opportunity = {
+                            "symbol": symbol,
+                            "side": side,
+                            "current_price": current_price,
+                            "confidence": confidence,
+                            "expected_roi": expected_roi,
+                            "momentum": price_change_24h,
+                            "volatility": volatility,
+                            "volume_24h": volume_24h,
+                            "signal_strength": sum(confidence_factors),
+                            "max_position_size": self._calculate_position_size(
+                                confidence
+                            ),
+                        }
+
+                        opportunities.append(opportunity)
+
+                except Exception as e:
+                    logger.warning(f"Error analyzing {symbol}: {e}")
+                    continue
+
+            # Sort by confidence * expected_roi
+            opportunities.sort(
+                key=lambda x: x["confidence"] * x["expected_roi"], reverse=True
+            )
+
+            logger.info(f"🎯 Found {len(opportunities)} high-confidence opportunities")
+
+            return opportunities[:5]  # Return top 5
+
+        except Exception as e:
+            logger.error(f"❌ Error detecting opportunities: {e}")
+            return []
+
+    def _calculate_position_size(self, confidence: float) -> float:
+        """Calculate position size based on confidence and portfolio"""
+        base_size = self.portfolio_value * (self.max_position_percent / 100)
+        confidence_adjusted = base_size * confidence
+        return min(confidence_adjusted, 5000)  # Cap at $5k per position
+
+    async def execute_trade(self, opportunity: Dict) -> bool:
+        """Execute a trade on Binance US"""
+        try:
+            symbol = opportunity["symbol"]
+            side = opportunity["side"]
+            confidence = opportunity["confidence"]
+            current_price = opportunity["current_price"]
+            position_size_usd = opportunity["max_position_size"]
+
+            # For spot trading, we can only buy if we have USD/USDT
+            # and sell if we have the asset
+            if side == "sell":
+                # Check if we own the asset to sell
+                base_asset = symbol.split("/")[0]
+                balance = self.binance_us_client.fetch_balance()
+                available_amount = balance.get(base_asset, {}).get("free", 0)
+
+                if available_amount * current_price < 50:  # Less than $50 worth
+                    logger.info(f"Skipping sell of {symbol} - insufficient holdings")
+                    return False
+
+                # Sell what we have (up to position size)
+                sell_amount = min(available_amount, position_size_usd / current_price)
+
+                if sell_amount * current_price < 10:  # Less than $10
+                    return False
+
+                order = self.binance_us_client.create_market_sell_order(
+                    symbol, sell_amount
+                )
+
+            else:  # Buy order
+                # Check available USD/USDT balance
+                balance = self.binance_us_client.fetch_balance()
+                usd_available = balance.get("USD", {}).get("free", 0)
+                usdt_available = balance.get("USDT", {}).get("free", 0)
+
+                available_cash = usd_available + usdt_available
+
+                if available_cash < 50:  # Less than $50 available
+                    logger.warning("Insufficient cash for new positions")
+                    return False
+
+                # Use smaller of: available cash, intended position size
+                actual_position_size = min(
+                    available_cash * 0.8, position_size_usd
+                )  # Use 80% of available
+
+                if actual_position_size < 25:  # Less than $25
+                    return False
+
+                # Calculate quantity to buy
+                quantity = actual_position_size / current_price
+
+                order = self.binance_us_client.create_market_buy_order(symbol, quantity)
+
+            # Track the trade
+            self.trades_today += 1
+            self.total_trades += 1
+
+            logger.info("🚀 TRADE EXECUTED:")
+            logger.info(f"   Symbol: {symbol}")
+            logger.info(f"   Side: {side}")
+            logger.info(f"   Price: ${current_price:.4f}")
+            logger.info(f"   Position Size: ${position_size_usd:.2f}")
+            logger.info(f"   Confidence: {confidence:.2%}")
+            logger.info(f"   Expected ROI: {opportunity['expected_roi']:.2%}")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ Trade execution failed: {e}")
+            return False
+
+    def check_safety_limits(self) -> bool:
+        """Check if trading should continue based on safety limits"""
+        try:
+            current_value = self._get_current_portfolio_value()
+
+            # Daily P&L check (simplified - would use daily starting value in production)
+            daily_pnl = current_value - self.starting_capital
+
+            if daily_pnl < -self.daily_loss_limit:
+                logger.error(f"🛑 DAILY LOSS LIMIT HIT: ${daily_pnl:.2f}")
+                return False
+
+            # Total P&L check
+            total_pnl = current_value - self.starting_capital
+            if total_pnl < -self.total_stop_loss:
+                logger.error(f"🛑 TOTAL STOP LOSS HIT: ${total_pnl:.2f}")
+                return False
+
+            # Trade count check
+            if self.trades_today >= self.max_daily_trades:
+                logger.warning(f"Daily trade limit reached: {self.trades_today}")
+                return False
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error checking safety limits: {e}")
+            return False
+
+    def _get_current_portfolio_value(self) -> float:
+        """Get current portfolio value"""
+        try:
+            balance = self.binance_us_client.fetch_balance()
+            total_value = 0.0
+
+            for asset, amounts in balance["total"].items():
+                if amounts > 0:
+                    if asset in ["USD", "USDT"]:
+                        total_value += amounts
+                    else:
+                        try:
+                            # Get current USD price
+                            ticker_symbol = f"{asset}/USD"
+                            if ticker_symbol in self.binance_us_client.markets:
+                                ticker = self.binance_us_client.fetch_ticker(
+                                    ticker_symbol
+                                )
+                                total_value += amounts * ticker["last"]
+                        except:
+                            pass  # Skip if can't get price
+
+            return total_value
+
+        except Exception as e:
+            logger.error(f"Error getting portfolio value: {e}")
+            return self.portfolio_value
+
+    def update_performance_metrics(self):
+        """Update performance tracking"""
+        current_value = self._get_current_portfolio_value()
+
+        # Update portfolio value
+        self.portfolio_value = current_value
+
+        # Calculate ROI
+        self.total_roi = (current_value - self.starting_capital) / self.starting_capital
+
+        # Daily ROI (simplified)
+        self.daily_roi = self.total_roi  # Would be more sophisticated in production
+
+    def log_performance(self):
+        """Log current performance"""
+        progress_to_target = (self.portfolio_value / self.target_value) * 100
+
+        logger.info("=" * 60)
+        logger.info("🇺🇸 BINANCE US LIVE TRADING STATUS")
+        logger.info("=" * 60)
+        logger.info(f"💰 Portfolio Value: ${self.portfolio_value:,.2f}")
+        logger.info(f"🎯 Target Value: ${self.target_value:,.2f}")
+        logger.info(f"📈 Total ROI: {self.total_roi:.4%}")
+        logger.info(f"📊 Progress to $1T: {progress_to_target:.8f}%")
+        logger.info(f"🔥 Trades Today: {self.trades_today}")
+        logger.info(f"📊 Total Trades: {self.total_trades}")
+
+        if self.total_trades > 0:
+            win_rate = (self.winning_trades / self.total_trades) * 100
+            logger.info(f"🎯 Win Rate: {win_rate:.1f}%")
+
+        # Estimate time to target
+        if self.daily_roi > 0:
+            days_to_target = np.log(self.target_value / self.portfolio_value) / np.log(
+                1 + self.daily_roi
+            )
+            logger.info(f"⏱️  Days to $1T at current rate: {days_to_target:.0f}")
+
+        logger.info("=" * 60)
+
+    async def start_live_trading(self):
+        """Main live trading loop"""
+        logger.warning("🚀 STARTING BINANCE US LIVE TRADING")
+        logger.warning("🎯 GOAL: MAXIMUM ROI TOWARD $1T")
+
+        while True:
+            try:
+                # Safety check first
+                if not self.check_safety_limits():
+                    logger.error("🛑 Safety limits breached - stopping trading")
+                    break
+
+                # Detect opportunities
+                opportunities = await self.detect_trading_opportunities()
+
+                # Execute top opportunities
+                for opportunity in opportunities[:3]:  # Top 3 opportunities
+                    if len(self.active_positions) < self.max_positions:
+                        success = await self.execute_trade(opportunity)
+                        if success:
+                            # Add small delay between trades
+                            await asyncio.sleep(2)
+
+                # Update performance
+                self.update_performance_metrics()
+
+                # Log progress every 10 trades or 5 minutes
+                if self.trades_today % 5 == 0:
+                    self.log_performance()
+
+                # Wait before next cycle (30 seconds for active trading)
+                await asyncio.sleep(30)
+
+            except Exception as e:
+                logger.error(f"❌ Error in trading loop: {e}")
+                await asyncio.sleep(60)  # Wait longer on errors
+
+
+async def main():
+    """Main function to start Binance US live trading"""
+
+    print("🇺🇸" * 30)
+    print("BINANCE US LIVE TRADING ACTIVATION")
+    print("REAL MONEY - PATH TO $1T")
+    print("🇺🇸" * 30)
+    print()
+    print("⚠️  CRITICAL WARNING: REAL MONEY TRADING")
+    print("🎯 OBJECTIVE: MAXIMUM ROI WITH YOUR CURRENT HOLDINGS")
+    print("💀 RISK: TOTAL LOSS POSSIBLE")
+    print()
+    print("BINANCE US FEATURES:")
+    print("🇺🇸 US regulatory compliant")
+    print("💰 Uses your current portfolio")
+    print("📊 Optimized for USD trading pairs")
+    print("🛡️ Conservative leverage (spot trading)")
+    print("🎯 Maximum 30 trades per day")
+    print("📈 10% maximum position sizing")
+    print()
+    print("SAFETY FEATURES:")
+    print("🛡️ $2,000 daily loss limit")
+    print("🛡️ $10,000 total stop loss")
+    print("🛡️ Maximum 6 concurrent positions")
+    print("🛡️ 80% confidence threshold")
+    print()
+
+    # Get API credentials
+    print("Enter your Binance US API credentials:")
+    api_key = input("Binance US API Key: ").strip()
+    api_secret = input("Binance US API Secret: ").strip()
+
+    if not api_key or not api_secret:
+        print("❌ API credentials required")
+        return
+
+    print("\n🚨 FINAL RISK ACKNOWLEDGMENT:")
+    print("You are about to activate REAL MONEY trading on Binance US")
+    print("This will trade with your actual holdings")
+    print("Total loss of capital is possible")
+    print()
+    confirmation = input("Type 'START BINANCE US LIVE TRADING' to proceed: ")
+
+    if confirmation != "START BINANCE US LIVE TRADING":
+        print("❌ Activation cancelled")
+        return
+
+    print("\n🚀 INITIALIZING BINANCE US LIVE TRADER...")
+
+    # Create and initialize trader
+    trader = BinanceUSLiveTrader()
+
+    # Connect to Binance US
+    if not trader.connect_to_binance_us(api_key, api_secret):
+        print("❌ Failed to connect to Binance US")
+        return
+
+    print("✅ Binance US live trading activated!")
+    print("🎯 Starting maximum ROI trading with your current holdings...")
+    print("📊 Monitor logs for real-time performance...")
+
+    # Start live trading
+    try:
+        await trader.start_live_trading()
+    except KeyboardInterrupt:
+        print("\n🛑 Trading stopped by user")
+    except Exception as e:
+        print(f"\n❌ Trading error: {e}")
+
+    # Final performance report
+    print("\n📊 FINAL PERFORMANCE SUMMARY:")
+    trader.log_performance()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

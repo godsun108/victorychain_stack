@@ -1,0 +1,615 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Full Portfolio Trading Bot
+Trades with ALL available crypto holdings, not just USDT
+Maximizes capital utilization across entire portfolio
+"""
+
+import os
+import sys
+import json
+import time
+import asyncio
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
+from dotenv import load_dotenv
+import requests
+import hmac
+import hashlib
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+log_filename = f'full_portfolio_trading_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(), logging.FileHandler(log_filename)],
+)
+logger = logging.getLogger(__name__)
+
+
+class FullPortfolioTradingBot:
+    def __init__(self):
+        # API Configuration
+        self.binance_us_base = "https://api.binance.us"
+        self.api_key = os.getenv("BINANCEUS_KEY")
+        self.secret_key = os.getenv("BINANCEUS_SECRET")
+        self.claude_api_key = os.getenv("CLAUDE_API_KEY")
+
+        if not self.api_key or not self.secret_key:
+            raise ValueError("Binance API keys not found")
+
+        # Portfolio Configuration
+        self.total_portfolio_value = 238.51  # Your full portfolio
+        self.min_trade_value = 10.0  # Minimum $10 per trade
+        self.max_positions = 8  # More positions with larger portfolio
+        self.position_size_pct = 0.15  # 15% per position (~$35 each)
+        self.stop_loss_pct = 0.08  # 8% stop loss
+        self.take_profit_pct = 0.20  # 20% take profit (higher with more capital)
+
+        # Asset Management
+        self.tradeable_assets = {}  # Current holdings that can be traded
+        self.asset_prices = {}  # Current prices
+        self.active_trades = {}  # Active trading positions
+
+        # Trading Strategy
+        self.momentum_threshold = 3.0  # 3% minimum momentum
+        self.volume_threshold = 100000  # $100K minimum volume
+        self.rebalance_interval = 3600  # Rebalance every hour
+
+        # Performance Tracking
+        self.portfolio_history = []
+        self.trade_history = []
+        self.total_pnl = 0.0
+        self.start_portfolio_value = 238.51
+
+        logger.info("🚀 Full Portfolio Trading Bot initialized")
+        logger.info(f"💎 Total Portfolio Value: ${self.total_portfolio_value:.2f}")
+        logger.info(
+            f"🎯 Target Position Size: ${self.total_portfolio_value * self.position_size_pct:.2f}"
+        )
+
+    def get_signed_request(
+        self, endpoint: str, params: Dict = None, method: str = "GET"
+    ) -> requests.Response:
+        """Make authenticated request to Binance US API"""
+        if params is None:
+            params = {}
+
+        timestamp = int(time.time() * 1000)
+        params["timestamp"] = timestamp
+
+        query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+        signature = hmac.new(
+            self.secret_key.encode(), query_string.encode(), hashlib.sha256
+        ).hexdigest()
+
+        params["signature"] = signature
+
+        headers = {"X-MBX-APIKEY": self.api_key}
+        url = f"{self.binance_us_base}{endpoint}"
+
+        if method == "GET":
+            return requests.get(url, params=params, headers=headers, timeout=30)
+        elif method == "POST":
+            return requests.post(url, params=params, headers=headers, timeout=30)
+
+    async def get_full_portfolio_status(self) -> Dict:
+        """Get complete portfolio status with current values"""
+        try:
+            # Get account balances
+            account_response = self.get_signed_request("/api/v3/account")
+            if account_response.status_code != 200:
+                return {}
+
+            account_data = account_response.json()
+
+            # Get current prices
+            prices_response = requests.get(
+                f"{self.binance_us_base}/api/v3/ticker/price"
+            )
+            if prices_response.status_code != 200:
+                return {}
+
+            prices = {}
+            for ticker in prices_response.json():
+                prices[ticker["symbol"]] = float(ticker["price"])
+
+            self.asset_prices = prices
+
+            # Calculate portfolio
+            portfolio = {
+                "assets": {},
+                "total_value": 0.0,
+                "tradeable_value": 0.0,
+                "asset_count": 0,
+            }
+
+            for balance in account_data["balances"]:
+                free = float(balance["free"])
+                locked = float(balance["locked"])
+                total = free + locked
+
+                if total > 0:
+                    asset = balance["asset"]
+
+                    # Calculate USDT value
+                    if asset == "USDT":
+                        usdt_value = total
+                    else:
+                        pair_symbol = f"{asset}USDT"
+                        if pair_symbol in prices:
+                            usdt_value = total * prices[pair_symbol]
+                        else:
+                            usdt_value = 0
+
+                    if usdt_value > 0.01:
+                        portfolio["assets"][asset] = {
+                            "free": free,
+                            "locked": locked,
+                            "total": total,
+                            "usdt_value": usdt_value,
+                            "tradeable": free > 0
+                            and usdt_value >= self.min_trade_value,
+                        }
+
+                        portfolio["total_value"] += usdt_value
+                        if free > 0:
+                            portfolio["tradeable_value"] += usdt_value
+                        portfolio["asset_count"] += 1
+
+            self.tradeable_assets = {
+                k: v for k, v in portfolio["assets"].items() if v["tradeable"]
+            }
+
+            return portfolio
+
+        except Exception as e:
+            logger.error(f"Error getting portfolio status: {e}")
+            return {}
+
+    async def find_trading_opportunities(self) -> List[Dict]:
+        """Find trading opportunities across all available pairs"""
+        try:
+            # Get 24h ticker data
+            ticker_response = requests.get(f"{self.binance_us_base}/api/v3/ticker/24hr")
+            if ticker_response.status_code != 200:
+                return []
+
+            tickers = ticker_response.json()
+            opportunities = []
+
+            for ticker in tickers:
+                symbol = ticker["symbol"]
+                if not symbol.endswith("USDT") or symbol == "USDT":
+                    continue
+
+                volume_usdt = float(ticker["quoteVolume"])
+                price_change = float(ticker["priceChangePercent"])
+
+                # Filter for momentum and volume
+                if (
+                    volume_usdt >= self.volume_threshold
+                    and abs(price_change) >= self.momentum_threshold
+                ):
+
+                    base_asset = symbol.replace("USDT", "")
+
+                    opportunities.append(
+                        {
+                            "symbol": symbol,
+                            "base_asset": base_asset,
+                            "price": float(ticker["lastPrice"]),
+                            "change_24h": price_change,
+                            "volume_24h": volume_usdt,
+                            "high_24h": float(ticker["highPrice"]),
+                            "low_24h": float(ticker["lowPrice"]),
+                            "momentum_score": abs(price_change)
+                            * (volume_usdt / 1000000),
+                            "direction": "bullish" if price_change > 0 else "bearish",
+                            "can_trade_from_holdings": base_asset
+                            in self.tradeable_assets,
+                        }
+                    )
+
+            # Sort by momentum score
+            opportunities.sort(key=lambda x: x["momentum_score"], reverse=True)
+
+            logger.info(f"🎯 Found {len(opportunities)} trading opportunities")
+            logger.info(
+                f"💰 {len([o for o in opportunities if o['can_trade_from_holdings']])} can be traded from current holdings"
+            )
+
+            return opportunities[:20]  # Top 20 opportunities
+
+        except Exception as e:
+            logger.error(f"Error finding opportunities: {e}")
+            return []
+
+    async def analyze_opportunities_with_ai(
+        self, opportunities: List[Dict]
+    ) -> Dict[str, Dict]:
+        """Use Claude AI to analyze trading opportunities"""
+        if not opportunities or not self.claude_api_key:
+            return self.fallback_analysis(opportunities)
+
+        try:
+            # Get current portfolio status
+            portfolio = await self.get_full_portfolio_status()
+
+            prompt = f"""Full Portfolio Trading Analysis - ${portfolio.get('total_value', 238.51):.2f} Portfolio
+
+PORTFOLIO STATUS:
+- Total Value: ${portfolio.get('total_value', 238.51):.2f}
+- Tradeable Assets: {len(self.tradeable_assets)}
+- Active Positions: {len(self.active_trades)}
+- Target Position Size: ${self.total_portfolio_value * self.position_size_pct:.2f}
+
+CURRENT HOLDINGS (Major):
+"""
+
+            # Add major holdings to context
+            if "assets" in portfolio:
+                for asset, data in sorted(
+                    portfolio["assets"].items(),
+                    key=lambda x: x[1]["usdt_value"],
+                    reverse=True,
+                )[:5]:
+                    tradeable = "✅" if data["tradeable"] else "🔒"
+                    prompt += f"{tradeable} {asset}: ${data['usdt_value']:.2f} ({data['free']:.6f} available)\n"
+
+            prompt += f"""
+TRADING OPPORTUNITIES:
+"""
+
+            for opp in opportunities[:8]:  # Analyze top 8
+                can_sell = (
+                    "✅ CAN SELL" if opp["can_trade_from_holdings"] else "🛒 BUY ONLY"
+                )
+                prompt += f"""
+{opp['symbol']} {can_sell}:
+- Price: ${opp['price']:.6f}
+- 24h Change: {opp['change_24h']:.2f}%
+- Volume: ${opp['volume_24h']:,.0f}
+- Momentum Score: {opp['momentum_score']:.2f}
+- Direction: {opp['direction']}
+"""
+
+            prompt += f"""
+FULL PORTFOLIO STRATEGY:
+- Can sell existing holdings to buy better opportunities
+- Can hold profitable positions longer
+- Focus on maximum capital utilization
+- Target {self.take_profit_pct*100}% profit, {self.stop_loss_pct*100}% stop loss
+
+For each token, determine:
+1. BUY action (with USDT or from selling other assets)
+2. SELL action (if we hold the asset and better opportunities exist)
+3. HOLD action (if we hold and should keep holding)
+
+Respond with JSON only:
+{{
+  "TOKEN1USDT": {{"action": "buy/sell/hold", "confidence": 0-100, "priority": 1-5, "reason": "brief explanation"}},
+  "TOKEN2USDT": {{"action": "buy/sell/hold", "confidence": 0-100, "priority": 1-5, "reason": "brief explanation"}}
+}}"""
+
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "content-type": "application/json",
+            }
+
+            payload = {
+                "model": "claude-3-sonnet-20240229",
+                "max_tokens": 3000,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+
+            response = requests.post(
+                "https://api.anthropic.com/v1/messages",
+                headers=headers,
+                json=payload,
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                content = result["content"][0]["text"]
+
+                import re
+
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if json_match:
+                    claude_results = json.loads(json_match.group())
+                    logger.info(
+                        f"🤖 Claude analyzed {len(opportunities)} opportunities"
+                    )
+                    return claude_results
+
+        except Exception as e:
+            logger.error(f"AI analysis failed: {e}")
+
+        return self.fallback_analysis(opportunities)
+
+    def fallback_analysis(self, opportunities: List[Dict]) -> Dict[str, Dict]:
+        """Fallback analysis without AI"""
+        results = {}
+
+        for opp in opportunities[:8]:
+            symbol = opp["symbol"]
+            momentum = abs(opp["change_24h"])
+            volume_score = min(100, opp["volume_24h"] / 1000000 * 20)
+
+            # Calculate confidence based on momentum and volume
+            confidence = min(100, momentum * 10 + volume_score)
+
+            # Determine action
+            if opp["can_trade_from_holdings"] and opp["direction"] == "bearish":
+                action = "sell"  # Sell declining assets we hold
+                priority = 5 if momentum > 8 else 3
+                reason = f"Sell declining asset (-{momentum:.1f}%)"
+            elif opp["direction"] == "bullish" and momentum > 5:
+                action = "buy"  # Buy rising assets
+                priority = 4 if momentum > 10 else 2
+                reason = f"Buy momentum (+{momentum:.1f}%)"
+            else:
+                action = "hold"  # Hold or skip
+                priority = 1
+                reason = "Insufficient momentum"
+
+            results[symbol] = {
+                "action": action,
+                "confidence": round(confidence, 1),
+                "priority": priority,
+                "reason": reason,
+            }
+
+        return results
+
+    async def execute_portfolio_trades(
+        self, analysis: Dict[str, Dict], opportunities: List[Dict]
+    ):
+        """Execute trades based on analysis"""
+        if not analysis:
+            return
+
+        # Sort by priority and confidence
+        sorted_trades = sorted(
+            analysis.items(),
+            key=lambda x: (x[1]["priority"], x[1]["confidence"]),
+            reverse=True,
+        )
+
+        executed_trades = 0
+
+        for symbol, trade_data in sorted_trades:
+            if executed_trades >= 3:  # Limit to 3 trades per cycle
+                break
+
+            action = trade_data["action"]
+            confidence = trade_data["confidence"]
+
+            if confidence < 70:  # Only high confidence trades
+                continue
+
+            try:
+                if action == "buy":
+                    if await self.execute_buy_trade(symbol, trade_data):
+                        executed_trades += 1
+                elif action == "sell":
+                    if await self.execute_sell_trade(symbol, trade_data):
+                        executed_trades += 1
+                elif action == "hold":
+                    logger.info(f"💎 HOLDING {symbol}: {trade_data['reason']}")
+
+            except Exception as e:
+                logger.error(f"Error executing {action} for {symbol}: {e}")
+
+        if executed_trades > 0:
+            logger.info(f"✅ Executed {executed_trades} portfolio trades")
+        else:
+            logger.info("📊 No trades executed this cycle")
+
+    async def execute_buy_trade(self, symbol: str, trade_data: Dict) -> bool:
+        """Execute a buy trade"""
+        try:
+            base_asset = symbol.replace("USDT", "")
+
+            # Calculate position size
+            position_value = self.total_portfolio_value * self.position_size_pct
+
+            # Get current price
+            if symbol in self.asset_prices:
+                current_price = self.asset_prices[symbol]
+            else:
+                price_response = requests.get(
+                    f"{self.binance_us_base}/api/v3/ticker/price",
+                    params={"symbol": symbol},
+                )
+                if price_response.status_code != 200:
+                    return False
+                current_price = float(price_response.json()["price"])
+
+            quantity = position_value / current_price
+
+            logger.info(f"🔥 EXECUTING BUY ORDER:")
+            logger.info(f"   Symbol: {symbol}")
+            logger.info(f"   Reason: {trade_data['reason']}")
+            logger.info(f"   Confidence: {trade_data['confidence']:.1f}%")
+            logger.info(f"   Price: ${current_price:.6f}")
+            logger.info(f"   Quantity: {quantity:.6f}")
+            logger.info(f"   Value: ${position_value:.2f}")
+
+            # Track the trade (SIMULATION - replace with real API call)
+            self.active_trades[symbol] = {
+                "action": "buy",
+                "entry_price": current_price,
+                "quantity": quantity,
+                "entry_time": time.time(),
+                "stop_loss": current_price * (1 - self.stop_loss_pct),
+                "take_profit": current_price * (1 + self.take_profit_pct),
+                "reason": trade_data["reason"],
+            }
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Buy trade execution failed for {symbol}: {e}")
+            return False
+
+    async def execute_sell_trade(self, symbol: str, trade_data: Dict) -> bool:
+        """Execute a sell trade"""
+        try:
+            base_asset = symbol.replace("USDT", "")
+
+            # Check if we have this asset
+            if base_asset not in self.tradeable_assets:
+                return False
+
+            holding = self.tradeable_assets[base_asset]
+            quantity = holding["free"]
+
+            # Get current price
+            if symbol in self.asset_prices:
+                current_price = self.asset_prices[symbol]
+            else:
+                price_response = requests.get(
+                    f"{self.binance_us_base}/api/v3/ticker/price",
+                    params={"symbol": symbol},
+                )
+                if price_response.status_code != 200:
+                    return False
+                current_price = float(price_response.json()["price"])
+
+            trade_value = quantity * current_price
+
+            logger.info(f"🔥 EXECUTING SELL ORDER:")
+            logger.info(f"   Symbol: {symbol} ({base_asset})")
+            logger.info(f"   Reason: {trade_data['reason']}")
+            logger.info(f"   Confidence: {trade_data['confidence']:.1f}%")
+            logger.info(f"   Price: ${current_price:.6f}")
+            logger.info(f"   Quantity: {quantity:.6f}")
+            logger.info(f"   Value: ${trade_value:.2f}")
+
+            # Track the trade (SIMULATION - replace with real API call)
+            self.active_trades[f"SELL_{symbol}"] = {
+                "action": "sell",
+                "entry_price": current_price,
+                "quantity": quantity,
+                "entry_time": time.time(),
+                "reason": trade_data["reason"],
+            }
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Sell trade execution failed for {symbol}: {e}")
+            return False
+
+    async def monitor_portfolio(self):
+        """Monitor portfolio and active trades"""
+        portfolio = await self.get_full_portfolio_status()
+
+        if portfolio:
+            logger.info(f"💎 PORTFOLIO STATUS:")
+            logger.info(f"   Total Value: ${portfolio['total_value']:.2f}")
+            logger.info(f"   Tradeable Value: ${portfolio['tradeable_value']:.2f}")
+            logger.info(f"   Assets: {portfolio['asset_count']}")
+            logger.info(f"   Active Trades: {len(self.active_trades)}")
+
+            # Show top holdings
+            if "assets" in portfolio:
+                top_assets = sorted(
+                    portfolio["assets"].items(),
+                    key=lambda x: x[1]["usdt_value"],
+                    reverse=True,
+                )[:5]
+                logger.info(f"   Top Holdings:")
+                for asset, data in top_assets:
+                    logger.info(f"     {asset}: ${data['usdt_value']:.2f}")
+
+    async def run_full_portfolio_trading(self):
+        """Main full portfolio trading loop"""
+        logger.info("🚀 Starting Full Portfolio Trading Bot")
+        logger.info(f"💎 Managing ${self.total_portfolio_value:.2f} portfolio")
+
+        cycle_count = 0
+
+        while True:
+            try:
+                cycle_count += 1
+                current_time = datetime.now()
+
+                logger.info(
+                    f"🔄 Portfolio Trading Cycle #{cycle_count} - {current_time.strftime('%H:%M:%S')}"
+                )
+
+                # Monitor current portfolio
+                await self.monitor_portfolio()
+
+                # Find trading opportunities
+                opportunities = await self.find_trading_opportunities()
+
+                if opportunities:
+                    # Analyze with AI
+                    analysis = await self.analyze_opportunities_with_ai(opportunities)
+
+                    # Execute trades
+                    await self.execute_portfolio_trades(analysis, opportunities)
+                else:
+                    logger.info("📊 No trading opportunities found")
+
+                # Wait before next cycle (15 minutes)
+                logger.info("💤 Waiting 15 minutes for next cycle...")
+                await asyncio.sleep(900)
+
+            except KeyboardInterrupt:
+                logger.info("👋 Full portfolio trading stopped by user")
+                break
+            except Exception as e:
+                logger.error(f"Main loop error: {e}")
+                await asyncio.sleep(300)  # Wait 5 minutes on error
+
+
+# Main execution
+async def main():
+    """Main function"""
+    print("💎 VictoryChain Full Portfolio Trading Bot")
+    print("=" * 50)
+    print("🚀 TRADING WITH YOUR ENTIRE $238.51 PORTFOLIO!")
+    print("")
+    print("💰 Your Holdings:")
+    print("   • BTC: $74.16")
+    print("   • CRV: $73.52")
+    print("   • 1000REKT: $44.62")
+    print("   • USDT: $42.67")
+    print("   • + 12 other altcoins")
+    print("")
+    print("🎯 Strategy:")
+    print("   • Trade with ALL assets, not just USDT")
+    print("   • Sell declining assets, buy rising ones")
+    print("   • 15% position sizes (~$35 each)")
+    print("   • 8% stop loss, 20% take profit")
+    print("   • Up to 8 simultaneous positions")
+    print("")
+
+    response = input("Type 'TRADE FULL PORTFOLIO' to start: ")
+    if response != "TRADE FULL PORTFOLIO":
+        print("❌ Full portfolio trading cancelled")
+        return
+
+    try:
+        # Initialize and run bot
+        bot = FullPortfolioTradingBot()
+        await bot.run_full_portfolio_trading()
+
+    except KeyboardInterrupt:
+        logger.info("👋 Full portfolio bot stopped")
+    except Exception as e:
+        logger.error(f"Full portfolio bot error: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

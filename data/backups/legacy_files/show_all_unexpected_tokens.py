@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+"""
+Show More Unexpected Tokens - Extended Analysis
+"""
+import os
+import json
+from datetime import datetime
+from binance.client import Client
+from dotenv import load_dotenv
+
+load_dotenv()
+client = Client(
+    api_key=os.getenv("BINANCEUS_KEY"),
+    api_secret=os.getenv("BINANCEUS_SECRET"),
+    tld="us",
+)
+
+
+def find_all_unexpected_tokens():
+    """Find ALL unexpected tokens with detailed analysis"""
+    try:
+        # Get all symbols
+        exchange_info = client.get_exchange_info()
+        usdt_pairs = []
+
+        for symbol_info in exchange_info["symbols"]:
+            if (
+                symbol_info["status"] == "TRADING"
+                and symbol_info["quoteAsset"] == "USDT"
+                and "SPOT" in symbol_info["permissions"]
+            ):
+                usdt_pairs.append(symbol_info["symbol"])
+
+        # Get 24hr ticker data
+        tickers = client.get_ticker()
+        ticker_dict = {t["symbol"]: t for t in tickers}
+
+        unexpected_tokens = []
+
+        for symbol in usdt_pairs:
+            if symbol in ticker_dict:
+                ticker = ticker_dict[symbol]
+                volume_usd = float(ticker["quoteVolume"])
+                price_change = float(ticker["priceChangePercent"])
+
+                # Categorize by volume levels
+                category = ""
+                if volume_usd < 500:
+                    category = "🔥 ULTRA MICRO"
+                elif volume_usd < 2000:
+                    category = "💎 MICRO"
+                elif volume_usd < 10000:
+                    category = "⚡ LOW"
+                elif volume_usd < 50000:
+                    category = "📊 MID"
+                else:
+                    category = "🌊 HIGH"
+
+                # Calculate "unexpectedness score"
+                volume_score = 1 / max(volume_usd, 100)  # Lower volume = higher score
+                volatility_score = (
+                    abs(price_change) / 100
+                )  # Higher volatility = more unexpected
+
+                # Special bonus for weird token names (meme potential)
+                name_bonus = 0
+                token_name = symbol.replace("USDT", "").lower()
+                weird_keywords = [
+                    "mog",
+                    "pepe",
+                    "shib",
+                    "doge",
+                    "moon",
+                    "rocket",
+                    "safe",
+                    "inu",
+                    "floki",
+                    "elon",
+                    "cat",
+                    "frog",
+                    "wojak",
+                    "anime",
+                    "bonk",
+                    "babydoge",
+                    "squid",
+                    "meme",
+                    "chad",
+                    "cope",
+                    "wojak",
+                    "pnut",
+                    "nyan",
+                    "grumpy",
+                ]
+                if any(keyword in token_name for keyword in weird_keywords):
+                    name_bonus = 0.5
+
+                # High volatility bonus
+                volatility_bonus = 0
+                if abs(price_change) > 5:
+                    volatility_bonus = abs(price_change) / 20
+
+                unexpectedness_score = (
+                    (volume_score * 1000)
+                    + volatility_score
+                    + name_bonus
+                    + volatility_bonus
+                )
+
+                unexpected_tokens.append(
+                    {
+                        "symbol": symbol,
+                        "category": category,
+                        "volume_usd": volume_usd,
+                        "price_change_24h": price_change,
+                        "current_price": float(ticker["lastPrice"]),
+                        "unexpectedness_score": unexpectedness_score,
+                        "name_bonus": name_bonus > 0,
+                        "high_volatility": abs(price_change) > 5,
+                    }
+                )
+
+        # Sort by unexpectedness score (highest first)
+        unexpected_tokens.sort(key=lambda x: x["unexpectedness_score"], reverse=True)
+
+        return unexpected_tokens
+
+    except Exception as e:
+        print(f"Error finding unexpected tokens: {e}")
+        return []
+
+
+def main():
+    print("🎯 ALL UNEXPECTED TOKENS ON BINANCE US")
+    print("=" * 80)
+
+    unexpected_tokens = find_all_unexpected_tokens()
+
+    if not unexpected_tokens:
+        print("❌ No unexpected tokens found")
+        return
+
+    # Show top 50 most unexpected
+    print(f"📊 Found {len(unexpected_tokens)} total USDT pairs")
+    print("🔥 TOP 50 MOST UNEXPECTED TOKENS:")
+    print("-" * 80)
+    print(
+        f"{'Rank':<4} {'Token':<12} {'Category':<15} {'Volume':<10} {'24h %':<8} {'Price':<12} {'Score':<6}"
+    )
+    print("-" * 80)
+
+    for i, token in enumerate(unexpected_tokens[:50], 1):
+        meme_flag = "🎭" if token["name_bonus"] else "  "
+        volatility_flag = "🌋" if token["high_volatility"] else "  "
+
+        print(
+            f"{i:3d}. {token['symbol']:<12} {token['category']:<15} "
+            f"${token['volume_usd']:<9.0f} {token['price_change_24h']:+7.2f}% "
+            f"${token['current_price']:<11.6f} {token['unexpectedness_score']:5.2f} {meme_flag}{volatility_flag}"
+        )
+
+    # Categorize by volume
+    print("\n🔍 BREAKDOWN BY VOLUME CATEGORIES:")
+    print("-" * 50)
+
+    categories = {}
+    for token in unexpected_tokens:
+        cat = token["category"]
+        if cat not in categories:
+            categories[cat] = []
+        categories[cat].append(token)
+
+    for category, tokens in categories.items():
+        print(f"\n{category} ({len(tokens)} tokens):")
+        for token in tokens[:10]:  # Show top 10 in each category
+            meme_flag = "🎭" if token["name_bonus"] else "  "
+            print(
+                f"  {token['symbol']:<12} Vol: ${token['volume_usd']:<6.0f} | "
+                f"24h: {token['price_change_24h']:+6.2f}% | "
+                f"Score: {token['unexpectedness_score']:5.2f} {meme_flag}"
+            )
+
+    # Save full analysis
+    filename = f"all_unexpected_tokens_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(filename, "w") as f:
+        json.dump(unexpected_tokens, f, indent=2, default=str)
+
+    print(f"\n💾 Full analysis saved to: {filename}")
+    print(f"🎯 Total tokens analyzed: {len(unexpected_tokens)}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,196 @@
+{
+  "timestamp": "2025-08-06T23:03:52.530833",
+  "system_config": {
+    "target_portfolio_value": 100000,
+    "max_positions": 20,
+    "min_position_size": 1000
+  },
+  "market_analysis": {
+    "total_tokens": 172,
+    "quality_longs": [
+      "SOLUSDT",
+      "ADAUSDT",
+      "LTCUSDT",
+      "BNBUSDT",
+      "USDCUSDT",
+      "HYPEUSDT",
+      "UNIUSDT"
+    ],
+    "hedge_basket": [
+      "SHIBUSDT",
+      "FLOKIUSDT",
+      "BONKUSDT",
+      "PEPEUSDT",
+      "MAGICUSDT",
+      "LTOUSDT",
+      "TLMUSDT",
+      "LOKAUSDT",
+      "VITEUSDT",
+      "LAZIOUSDT",
+      "PORTOUSDT",
+      "DOGEUSDT",
+      "STMXUSDT",
+      "ILVUSDT",
+      "HBARUSDT",
+      "VETUSDT",
+      "ROSEUSDT",
+      "DGBUSDT",
+      "1000REKTUSDT",
+      "XDCUSDT",
+      "RVNUSDT",
+      "SUIUSDT",
+      "THETAUSDT",
+      "OPUSDT",
+      "SPXUSDT",
+      "WIFUSDT",
+      "FETUSDT",
+      "ONEUSDT",
+      "IOTAUSDT",
+      "TRUMPUSDT"
+    ]
+  },
+  "portfolio_allocation": {
+    "JAMUSDT": {
+      "side": "long",
+      "size_usd": 4666.666666666667,
+      "confidence": 1.0,
+      "expected_return": 7054146.865196371,
+      "risk_score": 352707.3432598187
+    },
+    "REEFUSDT": {
+      "side": "long",
+      "size_usd": 4666.666666666667,
+      "confidence": 1.0,
+      "expected_return": 729939.2729324924,
+      "risk_score": 36496.96364662462
+    },
+    "1000MOGUSDT": {
+      "side": "long",
+      "size_usd": 4666.666666666667,
+      "confidence": 1.0,
+      "expected_return": 646654.8191170146,
+      "risk_score": 32332.74095585073
+    },
+    "VITEUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 1.0,
+      "expected_return": 274418.6738694884,
+      "risk_score": 13720.93369347442
+    },
+    "VTHOUSDT": {
+      "side": "long",
+      "size_usd": 4666.666666666667,
+      "confidence": 1.0,
+      "expected_return": 167875.49824158897,
+      "risk_score": 8393.774912079449
+    },
+    "MXCUSDT": {
+      "side": "long",
+      "size_usd": 4666.666666666667,
+      "confidence": 1.0,
+      "expected_return": 110305.0092255663,
+      "risk_score": 5515.250461278314
+    },
+    "TURBOUSDT": {
+      "side": "long",
+      "size_usd": 4666.666666666667,
+      "confidence": 1.0,
+      "expected_return": 104845.8638275014,
+      "risk_score": 5242.29319137507
+    },
+    "IOSTUSDT": {
+      "side": "long",
+      "size_usd": 4666.666666666667,
+      "confidence": 1.0,
+      "expected_return": 103907.5604852185,
+      "risk_score": 5195.3780242609255
+    },
+    "TLMUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 1.0,
+      "expected_return": 86633.49298725899,
+      "risk_score": 4331.67464936295
+    },
+    "IOTXUSDT": {
+      "side": "long",
+      "size_usd": 4666.666666666667,
+      "confidence": 1.0,
+      "expected_return": 27722.054875991063,
+      "risk_score": 1386.102743799553
+    },
+    "SHIBUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 0.1,
+      "expected_return": 0.0,
+      "risk_score": 0.0
+    },
+    "FLOKIUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 1.0,
+      "expected_return": -396519.66285310243,
+      "risk_score": 19825.98314265512
+    },
+    "BONKUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 0.1,
+      "expected_return": 0.0,
+      "risk_score": 0.0
+    },
+    "PEPEUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 0.1,
+      "expected_return": 0.0,
+      "risk_score": 0.0
+    },
+    "MAGICUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 1.0,
+      "expected_return": 1538.052671022851,
+      "risk_score": 76.90263355114254
+    },
+    "LTOUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 1.0,
+      "expected_return": 26544.644214253203,
+      "risk_score": 1327.2322107126602
+    },
+    "LOKAUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 1.0,
+      "expected_return": 1224.5605394523784,
+      "risk_score": 61.22802697261892
+    },
+    "LAZIOUSDT": {
+      "side": "short",
+      "size_usd": 3000.0,
+      "confidence": 1.0,
+      "expected_return": 669.7138881533688,
+      "risk_score": 33.48569440766844
+    }
+  },
+  "risk_metrics": {
+    "max_position_pct": 4.666666666666667,
+    "avg_confidence": 0.8500000000000001,
+    "portfolio_expected_return": 496661.46773434844,
+    "return_volatility": 1608579.5980984846,
+    "avg_risk_score": 27035.960402568,
+    "net_exposure_pct": 7.333333333333336,
+    "long_short_ratio": 1.2444444444444445,
+    "total_positions": 18,
+    "diversification_score": 0.9533333333333334
+  },
+  "prediction_summary": {
+    "total_predictions": 172,
+    "avg_confidence": 0.9790697674418605,
+    "buy_signals": 110
+  }
+}

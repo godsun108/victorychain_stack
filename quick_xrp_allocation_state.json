@@ -1,0 +1,15 @@
+{
+  "symbol": "XRP/USDT",
+  "buy_price": 3.1142,
+  "amount": 11.600000000000001,
+  "tp1_pct": 0.03,
+  "tp2_pct": 0.05,
+  "sell_order_ids": [
+    "248981934",
+    "248981935"
+  ],
+  "buy_order_id": "248981932",
+  "timestamp": "2025-08-17T04:18:03.398066",
+  "quote_ccy": "USDT",
+  "banked_flags": {}
+}

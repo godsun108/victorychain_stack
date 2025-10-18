@@ -1,0 +1,92 @@
+{
+  "timestamp": "2025-08-09T08:19:34.393764",
+  "gas_optimization_summary": {
+    "total_decisions_analyzed": 8,
+    "new_trades_executed": 4,
+    "new_trades_skipped": 1,
+    "positions_held": 0,
+    "gas_efficiency_improvement": "15.4%",
+    "total_gas_saved": "$6.24",
+    "net_profit_protected": "$2411.08"
+  },
+  "new_allocation_decisions": [
+    {
+      "symbol": "NEAR",
+      "action": "BUY",
+      "position_size": "$3898",
+      "expected_net_profit": "$804.54",
+      "gas_efficiency": "0.8%",
+      "recommendation": "\u2705 EXCELLENT: High return with ultra-low gas impact",
+      "urgency": "HIGH"
+    },
+    {
+      "symbol": "MNGO",
+      "action": "BUY",
+      "position_size": "$3856",
+      "expected_net_profit": "$707.12",
+      "gas_efficiency": "0.9%",
+      "recommendation": "\u2705 EXCELLENT: High return with ultra-low gas impact",
+      "urgency": "HIGH"
+    },
+    {
+      "symbol": "RAY",
+      "action": "BUY",
+      "position_size": "$3813",
+      "expected_net_profit": "$405.56",
+      "gas_efficiency": "1.5%",
+      "recommendation": "\u2705 GOOD: Solid return with acceptable gas ratio",
+      "urgency": "MEDIUM"
+    },
+    {
+      "symbol": "ILV",
+      "action": "BUY",
+      "position_size": "$3732",
+      "expected_net_profit": "$493.85",
+      "gas_efficiency": "1.2%",
+      "recommendation": "\u2705 GOOD: Solid return with acceptable gas ratio",
+      "urgency": "MEDIUM"
+    },
+    {
+      "symbol": "COPE",
+      "action": "SKIP",
+      "position_size": "$3723",
+      "expected_net_profit": "$191.08",
+      "gas_efficiency": "3.2%",
+      "recommendation": "\u26a0\ufe0f MARGINAL: Profit margins too thin after gas costs",
+      "urgency": "LOW"
+    }
+  ],
+  "existing_position_decisions": [
+    {
+      "symbol": "BTC",
+      "action": "CONSIDER_SELL",
+      "current_net_pnl": "$694.55",
+      "min_exit_price": "$43295.61",
+      "recommendation": "\ud83d\udcb0 STRONG PROFIT: $694.55 after gas - consider partial exit",
+      "urgency": "MEDIUM"
+    },
+    {
+      "symbol": "ETH",
+      "action": "CONSIDER_SELL",
+      "current_net_pnl": "$383.98",
+      "min_exit_price": "$3126.64",
+      "recommendation": "\ud83d\udcb0 STRONG PROFIT: $383.98 after gas - consider partial exit",
+      "urgency": "MEDIUM"
+    },
+    {
+      "symbol": "ADA",
+      "action": "CONSIDER_SELL",
+      "current_net_pnl": "$471.46",
+      "min_exit_price": "$1.20",
+      "recommendation": "\ud83d\udcb0 STRONG PROFIT: $471.46 after gas - consider partial exit",
+      "urgency": "MEDIUM"
+    }
+  ],
+  "gas_protection_stats": {
+    "min_profit_threshold": "$100",
+    "max_gas_ratio": "10.0%",
+    "min_position_size": "$500",
+    "safety_margin": "50%",
+    "total_protection_effectiveness": "100% - Zero net losses to gas fees"
+  }
+}

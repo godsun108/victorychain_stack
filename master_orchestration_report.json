@@ -1,0 +1,117 @@
+{
+  "generated_at": "2025-08-05T21:51:45.461773",
+  "orchestration_status": {
+    "system_health": "RUNNING",
+    "active_tokens": [
+      "SAND",
+      "MANA",
+      "AXS",
+      "ENJ",
+      "GALA",
+      "MAGIC",
+      "MATIC",
+      "LINK"
+    ],
+    "total_allocation": 100.0,
+    "learning_confidence": 0.3,
+    "gas_savings": 218.87775781885875,
+    "pending_rebalances": 0,
+    "last_update": "2025-08-05T21:51:35.508373",
+    "performance_summary": {
+      "total_return": 0.0,
+      "sharpe_ratio": 0.0,
+      "max_drawdown": 0.0,
+      "win_rate": 0.0,
+      "avg_trade_return": 0.0,
+      "gas_efficiency": 0.0
+    }
+  },
+  "portfolio_analysis": {
+    "total_value": 100000.0,
+    "token_allocations": {
+      "SAND": 15.0,
+      "MANA": 12.0,
+      "AXS": 18.0,
+      "ENJ": 8.0,
+      "GALA": 20.0,
+      "MAGIC": 22.0,
+      "MATIC": 5.0,
+      "LINK": 0.0
+    },
+    "sector_exposure": {
+      "gaming": 75.0,
+      "metaverse": 12.0,
+      "nft": 8.0,
+      "infrastructure": 5.0,
+      "oracle": 0.0
+    },
+    "risk_metrics": {},
+    "performance_metrics": {}
+  },
+  "performance_metrics": {
+    "total_return": 0.0,
+    "sharpe_ratio": 0.0,
+    "max_drawdown": 0.0,
+    "win_rate": 0.0,
+    "avg_trade_return": 0.0,
+    "gas_efficiency": 0.0
+  },
+  "learning_insights": {
+    "total_tokens_learned": 8,
+    "avg_learning_confidence": 0.3,
+    "top_performing_tokens": [
+      {
+        "symbol": "AXS",
+        "performance": 50.10876646975281,
+        "confidence": 0.3
+      },
+      {
+        "symbol": "MAGIC",
+        "performance": 26.11066803813874,
+        "confidence": 0.3
+      },
+      {
+        "symbol": "ENJ",
+        "performance": 24.802287610404576,
+        "confidence": 0.3
+      },
+      {
+        "symbol": "LINK",
+        "performance": -3.005614134532303,
+        "confidence": 0.3
+      },
+      {
+        "symbol": "MATIC",
+        "performance": -6.537464393394534,
+        "confidence": 0.3
+      }
+    ],
+    "gas_optimization_achievements": {
+      "total_savings_usd": 218.87775781885875,
+      "efficiency_score": 8.5,
+      "optimal_execution_rate": 0.85
+    }
+  },
+  "strategic_recommendations": [
+    "Increase allocation to high-confidence gaming tokens during market uptrend",
+    "Implement layer-2 migration for gas optimization (potential 90% savings)",
+    "Expand learning dataset with DeFi and infrastructure tokens",
+    "Enhance momentum detection algorithms for earlier entry signals",
+    "Implement cross-chain arbitrage opportunities identification"
+  ],
+  "risk_assessment": {
+    "portfolio_risk_level": "MODERATE",
+    "concentration_risk": "LOW",
+    "sector_diversification": "GOOD",
+    "gas_price_risk": "LOW",
+    "learning_model_risk": "LOW",
+    "overall_risk_score": 6.5
+  },
+  "future_optimizations": [
+    "Implement machine learning models for better price prediction",
+    "Add social sentiment analysis for enhanced allocation decisions",
+    "Develop cross-exchange arbitrage detection",
+    "Implement automated yield farming optimization",
+    "Add regulatory risk assessment for token evaluation"
+  ]
+}

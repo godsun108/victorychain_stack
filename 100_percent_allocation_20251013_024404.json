@@ -1,0 +1,155 @@
+{
+  "timestamp": "2025-10-13T02:44:04.858377",
+  "strategy": "100_PERCENT_ALL_IN_ALLOCATION",
+  "primary_target": {
+    "symbol": "MAGICUSDT",
+    "price": 0.238,
+    "volume_24h": 7119.8652,
+    "confidence_score": 70.0,
+    "magic_similarity": 51.25,
+    "gaming_correlation": 1.0,
+    "ecosystem_strength": 0.85,
+    "momentum_score": 5.0376717712421435,
+    "allocation_percentage": 50.0,
+    "entry_strategy": "CONSERVATIVE_ALL_IN",
+    "risk_mitigation": {
+      "tight_stop_loss": -10.0,
+      "profit_taking_levels": [
+        25.0,
+        50.0,
+        100.0
+      ],
+      "position_monitoring": "REAL_TIME",
+      "exit_trigger": "IMMEDIATE"
+    },
+    "expected_gains": [
+      30.0,
+      50.0,
+      100.0,
+      200.0
+    ],
+    "reasoning": [
+      "GOOD CONFIDENCE: Suitable for significant allocation",
+      "Gaming sector dominance matches MAGIC's 8.5/10 gaming score",
+      "Exceptional ecosystem strength (8.5/10) rivals MAGIC"
+    ]
+  },
+  "position": {
+    "symbol": "MAGICUSDT",
+    "allocation_percentage": 50.0,
+    "entry_price": 0.238,
+    "entry_time": "2025-10-13 02:44:04.858377",
+    "stop_loss": 0.2142,
+    "target_prices": [
+      0.3094,
+      0.357,
+      0.476,
+      0.714
+    ],
+    "confidence_score": 70.0,
+    "magic_pattern_match": 51.25,
+    "position_id": "c70626f0-b38b-4324-8ba9-03ff3a5788d1",
+    "status": "ACTIVE"
+  },
+  "risk_management": {
+    "stop_loss_price": 0.2142,
+    "target_prices": [
+      0.3094,
+      0.357,
+      0.476,
+      0.714
+    ],
+    "monitoring_frequency": "REAL_TIME",
+    "exit_conditions": {
+      "tight_stop_loss": -10.0,
+      "profit_taking_levels": [
+        25.0,
+        50.0,
+        100.0
+      ],
+      "position_monitoring": "REAL_TIME",
+      "exit_trigger": "IMMEDIATE"
+    }
+  },
+  "execution_details": {
+    "total_allocation": 50.0,
+    "remaining_cash": 50.0,
+    "position_size": "MAXIMUM",
+    "leverage": "NONE",
+    "execution_type": "SIMULATED"
+  },
+  "alternative_targets": [
+    {
+      "symbol": "GALAUSDT",
+      "price": 0.01513,
+      "volume_24h": 4233.05627,
+      "confidence_score": 70.0,
+      "magic_similarity": 57.5,
+      "gaming_correlation": 1.0,
+      "ecosystem_strength": 0.7,
+      "momentum_score": 3.9029540415871855,
+      "allocation_percentage": 50.0,
+      "entry_strategy": "CONSERVATIVE_ALL_IN",
+      "risk_mitigation": {
+        "tight_stop_loss": -10.0,
+        "profit_taking_levels": [
+          25.0,
+          50.0,
+          100.0
+        ],
+        "position_monitoring": "REAL_TIME",
+        "exit_trigger": "IMMEDIATE"
+      },
+      "expected_gains": [
+        30.0,
+        50.0,
+        100.0,
+        200.0
+      ],
+      "reasoning": [
+        "GOOD CONFIDENCE: Suitable for significant allocation",
+        "Gaming sector dominance matches MAGIC's 8.5/10 gaming score",
+        "Strong ecosystem foundation (7.0/10)"
+      ]
+    },
+    {
+      "symbol": "AXSUSDT",
+      "price": 2.278,
+      "volume_24h": 1368.03012,
+      "confidence_score": 70.0,
+      "magic_similarity": 57.5,
+      "gaming_correlation": 1.0,
+      "ecosystem_strength": 0.7,
+      "momentum_score": 3.3424956593766355,
+      "allocation_percentage": 50.0,
+      "entry_strategy": "CONSERVATIVE_ALL_IN",
+      "risk_mitigation": {
+        "tight_stop_loss": -10.0,
+        "profit_taking_levels": [
+          25.0,
+          50.0,
+          100.0
+        ],
+        "position_monitoring": "REAL_TIME",
+        "exit_trigger": "IMMEDIATE"
+      },
+      "expected_gains": [
+        30.0,
+        50.0,
+        100.0,
+        200.0
+      ],
+      "reasoning": [
+        "GOOD CONFIDENCE: Suitable for significant allocation",
+        "Gaming sector dominance matches MAGIC's 8.5/10 gaming score",
+        "Strong ecosystem foundation (7.0/10)"
+      ]
+    }
+  ],
+  "learning_integration": {
+    "magic_parameters_applied": true,
+    "gaming_sector_focus": true,
+    "ecosystem_strength_weighted": true,
+    "risk_management_enhanced": true
+  }
+}

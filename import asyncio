@@ -1,0 +1,12 @@
+import asyncio
+
+price_cache = {}
+price_cache_lock = asyncio.Lock()
+
+async def update_price(symbol: str, price: float):
+    async with price_cache_lock:
+        price_cache[symbol] = price
+
+async def get_price(symbol: str) -> float:
+    async with price_cache_lock:
+        return price_cache.get(symbol)

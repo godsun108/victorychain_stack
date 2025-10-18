@@ -1,0 +1,252 @@
+#!/usr/bin/env python3
+
+"""
+🔧 JESSE MCP STRATEGY
+VictoryChain integration for Jesse trading framework
+"""
+
+from jesse.strategies import Strategy
+import jesse.indicators as ta
+from jesse import utils
+import numpy as np
+import asyncio
+import aiohttp
+import json
+from typing import Dict, Optional
+
+class VictoryChainMCPStrategy(Strategy):
+    """
+    Jesse strategy powered by VictoryChain MCP server
+    Advanced risk management with AI integration
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.mcp_server_url = "http://localhost:8080"
+        self.mcp_cache = {}
+        self.last_mcp_update = 0
+    
+    @property
+    def rsi_period(self):
+        return 14
+    
+    @property
+    def rsi_upper(self):
+        return 75
+    
+    @property
+    def rsi_lower(self):
+        return 30
+    
+    @property
+    def risk_threshold(self):
+        return 8.0
+    
+    async def get_mcp_analysis(self, symbol: str) -> Optional[Dict]:
+        """Get analysis from VictoryChain MCP server"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                # Call MCP analyze_token tool
+                payload = {
+                    "method": "tools/call",
+                    "params": {
+                        "name": "analyze_token",
+                        "arguments": {
+                            "symbol": symbol,
+                            "timeframe": "1h",
+                            "include_technical": True,
+                            "include_sentiment": True
+                        }
+                    }
+                }
+                
+                async with session.post(
+                    f"{self.mcp_server_url}/mcp",
+                    json=payload
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data.get("result", {})
+            return None
+        except Exception:
+            return None
+    
+    def should_long(self) -> bool:
+        """Entry logic combining TA and MCP signals"""
+        
+        # Traditional technical analysis
+        rsi = ta.rsi(self.candles, period=self.rsi_period)
+        macd_line, macd_signal, macd_histogram = ta.macd(self.candles)
+        
+        # Basic TA conditions
+        ta_bullish = (
+            rsi[-1] < self.rsi_lower and
+            macd_line[-1] > macd_signal[-1] and
+            macd_histogram[-1] > macd_histogram[-2]
+        )
+        
+        if not ta_bullish:
+            return False
+        
+        # MCP AI enhancement (simplified sync version)
+        try:
+            symbol = self.symbol.replace('-', '')
+            
+            # Check cache for recent MCP data
+            if symbol in self.mcp_cache:
+                mcp_data = self.mcp_cache[symbol]
+                
+                # AI signal confirmation
+                if mcp_data.get('technical_indicators', {}).get('macd_signal') == 'BEARISH':
+                    return False
+                
+                # Risk management check
+                if mcp_data.get('risk_score', 5.0) > self.risk_threshold:
+                    return False
+                
+                # Sentiment confirmation
+                sentiment = mcp_data.get('sentiment', {}).get('social_sentiment', 'NEUTRAL')
+                if sentiment == 'VERY_NEGATIVE':
+                    return False
+        
+        except Exception:
+            pass  # Continue with TA-only decision if MCP fails
+        
+        return ta_bullish
+    
+    def should_short(self) -> bool:
+        """Short logic (disabled for spot trading)"""
+        return False
+    
+    def should_cancel_entry(self) -> bool:
+        """Cancel entry based on changing conditions"""
+        
+        # Get current MCP risk assessment
+        try:
+            symbol = self.symbol.replace('-', '')
+            if symbol in self.mcp_cache:
+                mcp_data = self.mcp_cache[symbol]
+                
+                # Cancel if risk suddenly increased
+                if mcp_data.get('risk_score', 5.0) > 9.0:
+                    return True
+                
+                # Cancel if sentiment turned very negative
+                sentiment = mcp_data.get('sentiment', {}).get('social_sentiment', 'NEUTRAL')
+                if sentiment == 'VERY_NEGATIVE':
+                    return True
+        
+        except Exception:
+            pass
+        
+        return False
+    
+    def go_long(self):
+        """Execute long position with MCP-based position sizing"""
+        
+        # Base position size
+        base_qty = utils.size_to_qty(
+            self.balance * 0.95,  # Use 95% of balance
+            self.price,
+            fee_rate=self.fee_rate
+        )
+        
+        # Adjust based on MCP risk analysis
+        try:
+            symbol = self.symbol.replace('-', '')
+            if symbol in self.mcp_cache:
+                mcp_data = self.mcp_cache[symbol]
+                risk_score = mcp_data.get('risk_score', 5.0)
+                
+                # Reduce position size for higher risk
+                if risk_score > 7.5:
+                    base_qty *= 0.5  # Half size for high risk
+                elif risk_score > 6.5:
+                    base_qty *= 0.75  # Reduced size
+        
+        except Exception:
+            pass
+        
+        # Execute the trade
+        self.buy = base_qty, self.price
+    
+    def go_short(self):
+        """Short positions disabled for spot trading"""
+        pass
+    
+    def update_position(self):
+        """Update position based on MCP analysis"""
+        
+        if not self.is_long:
+            return
+        
+        # Traditional TA exit signals
+        rsi = ta.rsi(self.candles, period=self.rsi_period)
+        macd_line, macd_signal, _ = ta.macd(self.candles)
+        
+        # RSI overbought exit
+        if rsi[-1] > self.rsi_upper:
+            self.liquidate()
+            return
+        
+        # MACD bearish crossover
+        if macd_line[-1] < macd_signal[-1] and macd_line[-2] > macd_signal[-2]:
+            self.liquidate()
+            return
+        
+        # MCP-based exit logic
+        try:
+            symbol = self.symbol.replace('-', '')
+            if symbol in self.mcp_cache:
+                mcp_data = self.mcp_cache[symbol]
+                
+                # Exit on high risk
+                if mcp_data.get('risk_score', 5.0) > 8.5:
+                    self.liquidate()
+                    return
+                
+                # Exit on negative AI signal
+                if mcp_data.get('ai_signal') == 'SELL':
+                    self.liquidate()
+                    return
+                
+                # Exit on sentiment deterioration
+                sentiment = mcp_data.get('sentiment', {}).get('social_sentiment', 'NEUTRAL')
+                if sentiment == 'VERY_NEGATIVE':
+                    self.liquidate()
+                    return
+        
+        except Exception:
+            pass
+    
+    def before(self) -> None:
+        """Called before each candle - update MCP data"""
+        
+        try:
+            import time
+            current_time = time.time()
+            
+            # Update MCP cache every 5 minutes
+            if current_time - self.last_mcp_update > 300:
+                symbol = self.symbol.replace('-', '')
+                
+                # Simulate async MCP call (in real implementation, use proper async handling)
+                # For now, use cached/simulated data
+                self.mcp_cache[symbol] = {
+                    'risk_score': 7.2,
+                    'technical_indicators': {
+                        'rsi': 65.5,
+                        'macd_signal': 'BULLISH'
+                    },
+                    'sentiment': {
+                        'social_sentiment': 'POSITIVE',
+                        'news_sentiment': 'NEUTRAL'
+                    },
+                    'ai_signal': 'HOLD',
+                    'confidence': 0.75
+                }
+                
+                self.last_mcp_update = current_time
+        
+        except Exception:
+            pass  # Silently continue if MCP update fails

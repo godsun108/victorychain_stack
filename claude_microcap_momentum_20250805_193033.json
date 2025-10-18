@@ -1,0 +1,164 @@
+{
+  "timestamp": "2025-08-05T19:30:33.168060",
+  "strategy": "CLAUDE_MICROCAP_MOMENTUM",
+  "risk_level": "EXTREME",
+  "claude_analysis": {
+    "analysis_timestamp": "2025-08-05T19:30:33.167971",
+    "top_momentum_picks": [
+      {
+        "symbol": "FLOKIUSDT",
+        "rank": 1,
+        "confidence_score": 9.5,
+        "momentum_rating": "MEDIUM",
+        "risk_level": "EXTREME",
+        "recommended_allocation": 5.0,
+        "entry_price_range": [
+          0.0001000776,
+          0.00010416240000000001
+        ],
+        "stop_loss": 8.7e-05,
+        "profit_targets": [
+          0.000153,
+          0.000204,
+          0.000306
+        ],
+        "momentum_factors": [
+          "High volume indicates strong interest"
+        ],
+        "risk_factors": [
+          "Ultra-microcap extreme volatility risk",
+          "High-risk microcap investment"
+        ],
+        "time_horizon": "1-7 days",
+        "expected_return": "25-100%",
+        "reasoning": "Claude AI identifies FLOKIUSDT as medium momentum opportunity with 9.5/10 confidence. Ultra Microcap category with strong volume indicators."
+      },
+      {
+        "symbol": "PENGUUSDT",
+        "rank": 2,
+        "confidence_score": 9.5,
+        "momentum_rating": "MEDIUM",
+        "risk_level": "HIGH",
+        "recommended_allocation": 5.0,
+        "entry_price_range": [
+          0.03271436,
+          0.034049640000000006
+        ],
+        "stop_loss": 0.028375,
+        "profit_targets": [
+          0.050073,
+          0.066764,
+          0.100146
+        ],
+        "momentum_factors": [
+          "High volume indicates strong interest"
+        ],
+        "risk_factors": [
+          "High-risk microcap investment"
+        ],
+        "time_horizon": "1-7 days",
+        "expected_return": "25-100%",
+        "reasoning": "Claude AI identifies PENGUUSDT as medium momentum opportunity with 9.5/10 confidence. Micro Cap category with strong volume indicators."
+      },
+      {
+        "symbol": "BONKUSDT",
+        "rank": 3,
+        "confidence_score": 9.5,
+        "momentum_rating": "MEDIUM",
+        "risk_level": "EXTREME",
+        "recommended_allocation": 5.0,
+        "entry_price_range": [
+          2.39414e-05,
+          2.4918600000000002e-05
+        ],
+        "stop_loss": 2.1e-05,
+        "profit_targets": [
+          3.7e-05,
+          4.9e-05,
+          7.3e-05
+        ],
+        "momentum_factors": [],
+        "risk_factors": [
+          "Ultra-microcap extreme volatility risk",
+          "High-risk microcap investment"
+        ],
+        "time_horizon": "1-7 days",
+        "expected_return": "25-100%",
+        "reasoning": "Claude AI identifies BONKUSDT as medium momentum opportunity with 9.5/10 confidence. Ultra Microcap category with strong volume indicators."
+      }
+    ],
+    "market_overview": "Current microcap market shows strong momentum opportunities with elevated risk. Gaming and DeFi sectors showing particular strength.",
+    "risk_warning": "EXTREME RISK: Microcap trading involves potential 100% loss. Only allocate capital you can afford to lose completely. High volatility and low liquidity create significant risks.",
+    "analysis_method": "Simulated Claude AI (replace with actual API in production)",
+    "total_candidates_analyzed": 20
+  },
+  "selected_positions": [
+    {
+      "symbol": "FLOKIUSDT",
+      "allocation_percentage": 5.0,
+      "claude_confidence": 9.5,
+      "entry_strategy": "IMMEDIATE",
+      "risk_management": {
+        "stop_loss": 8.7e-05,
+        "targets": [
+          0.000153,
+          0.000204,
+          0.000306
+        ],
+        "position_monitoring": "CONTINUOUS"
+      },
+      "expected_outcomes": {
+        "return_range": "25-100%",
+        "time_horizon": "1-7 days",
+        "momentum_rating": "MEDIUM"
+      }
+    },
+    {
+      "symbol": "PENGUUSDT",
+      "allocation_percentage": 5.0,
+      "claude_confidence": 9.5,
+      "entry_strategy": "IMMEDIATE",
+      "risk_management": {
+        "stop_loss": 0.028375,
+        "targets": [
+          0.050073,
+          0.066764,
+          0.100146
+        ],
+        "position_monitoring": "CONTINUOUS"
+      },
+      "expected_outcomes": {
+        "return_range": "25-100%",
+        "time_horizon": "1-7 days",
+        "momentum_rating": "MEDIUM"
+      }
+    },
+    {
+      "symbol": "BONKUSDT",
+      "allocation_percentage": 5.0,
+      "claude_confidence": 9.5,
+      "entry_strategy": "IMMEDIATE",
+      "risk_management": {
+        "stop_loss": 2.1e-05,
+        "targets": [
+          3.7e-05,
+          4.9e-05,
+          7.3e-05
+        ],
+        "position_monitoring": "CONTINUOUS"
+      },
+      "expected_outcomes": {
+        "return_range": "25-100%",
+        "time_horizon": "1-7 days",
+        "momentum_rating": "MEDIUM"
+      }
+    }
+  ],
+  "total_allocation": 15.0,
+  "risk_management": {
+    "max_single_position": 20.0,
+    "total_microcap_exposure": 50.0,
+    "stop_loss_strategy": "TIGHT_STOPS",
+    "profit_taking": "GRADUATED_TARGETS"
+  }
+}

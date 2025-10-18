@@ -1,0 +1,273 @@
+{
+  "strategy_evaluation": {
+    "strategy_results": {
+      "maximize_sharpe_ratio": {
+        "weights": {
+          "SHIBUSDT": 0.15981369335233855,
+          "FLOKIUSDT": 0.16549573833903689,
+          "BONKUSDT": 0.172273743385183,
+          "PEPEUSDT": 0.1690834915901082,
+          "ADAUSDT": 0.3333333333333333
+        },
+        "expected_return": 0.1802252594429043,
+        "expected_volatility": 0.36804182426691046,
+        "sharpe_ratio": 0.43534524849737216,
+        "portfolio_metrics": {
+          "expected_return": 0.1802252594429043,
+          "volatility": 0.36804182426691046,
+          "sharpe_ratio": 0.43534524849737216,
+          "beta": 1.414251999347261,
+          "diversification_ratio": 1.3471985180674777,
+          "var_95": 0.605374929515264,
+          "number_of_assets": "5",
+          "max_weight": 0.3333333333333333,
+          "min_weight": 0.15981369335233855,
+          "weight_concentration": 0.22230783689065542
+        },
+        "risk_contributions": {
+          "SHIBUSDT": 0.2219180445505325,
+          "FLOKIUSDT": 0.20672988440352127,
+          "BONKUSDT": 0.2040366503422686,
+          "PEPEUSDT": 0.17836776038628402,
+          "ADAUSDT": 0.1889476603173936
+        },
+        "optimization_objective": "maximize_sharpe_ratio",
+        "constraints_applied": true
+      },
+      "minimize_volatility": {
+        "weights": {
+          "SHIBUSDT": 0.05974402164961126,
+          "FLOKIUSDT": 0.16247820057261098,
+          "BONKUSDT": 0.2222222222222222,
+          "PEPEUSDT": 0.22222222222222224,
+          "ADAUSDT": 0.33333333333333337
+        },
+        "expected_return": 0.17522860926101125,
+        "expected_volatility": 0.3614579297484015,
+        "sharpe_ratio": 0.42945138696794,
+        "portfolio_metrics": {
+          "expected_return": 0.17522860926101125,
+          "volatility": 0.3614579297484015,
+          "sharpe_ratio": 0.42945138696794,
+          "beta": 1.378615470996589,
+          "diversification_ratio": 1.3364514391498086,
+          "var_95": 0.5945453867370286,
+          "number_of_assets": "5",
+          "max_weight": 0.33333333333333337,
+          "min_weight": 0.05974402164961126,
+          "weight_concentration": 0.2398450569940594
+        },
+        "risk_contributions": {
+          "SHIBUSDT": 0.07534209720133016,
+          "FLOKIUSDT": 0.20482519792319176,
+          "BONKUSDT": 0.27790246872721663,
+          "PEPEUSDT": 0.24798278233312562,
+          "ADAUSDT": 0.19394745381513578
+        },
+        "optimization_objective": "minimize_volatility",
+        "constraints_applied": true
+      },
+      "risk_parity": {
+        "weights": {
+          "SHIBUSDT": 0.1455173109291042,
+          "FLOKIUSDT": 0.16116059709918035,
+          "BONKUSDT": 0.17028633224106504,
+          "PEPEUSDT": 0.1897024263973171,
+          "ADAUSDT": 0.33333333333333337
+        },
+        "expected_return": 0.1791595975345266,
+        "expected_volatility": 0.36600194212590537,
+        "sharpe_ratio": 0.43485998082429683,
+        "portfolio_metrics": {
+          "expected_return": 0.1791595975345266,
+          "volatility": 0.36600194212590537,
+          "sharpe_ratio": 0.43485998082429683,
+          "beta": 1.4074676770155843,
+          "diversification_ratio": 1.347628808072498,
+          "var_95": 0.6020196219770781,
+          "number_of_assets": "5",
+          "max_weight": 0.33333333333333337,
+          "min_weight": 0.1455173109291042,
+          "weight_concentration": 0.22324358247765697
+        },
+        "risk_contributions": {
+          "SHIBUSDT": 0.2003235532767987,
+          "FLOKIUSDT": 0.20177060041417744,
+          "BONKUSDT": 0.20271324068300467,
+          "PEPEUSDT": 0.20454294281515573,
+          "ADAUSDT": 0.19064966281086346
+        },
+        "optimization_objective": "risk_parity",
+        "constraints_applied": true
+      },
+      "maximize_diversification": {
+        "weights": {
+          "SHIBUSDT": 0.15090194832636583,
+          "FLOKIUSDT": 0.15409446146022932,
+          "BONKUSDT": 0.16408760129826713,
+          "PEPEUSDT": 0.1975826555818044,
+          "ADAUSDT": 0.3333333333333334
+        },
+        "expected_return": 0.1790915084091538,
+        "expected_volatility": 0.3659181640322228,
+        "sharpe_ratio": 0.43477346589207355,
+        "portfolio_metrics": {
+          "expected_return": 0.1790915084091538,
+          "volatility": 0.3659181640322228,
+          "sharpe_ratio": 0.43477346589207355,
+          "beta": 1.4075884317524192,
+          "diversification_ratio": 1.3477527975005312,
+          "var_95": 0.6018818192758254,
+          "number_of_assets": "5",
+          "max_weight": 0.3333333333333334,
+          "min_weight": 0.15090194832636583,
+          "weight_concentration": 0.22359125885909947
+        },
+        "risk_contributions": {
+          "SHIBUSDT": 0.20885066195145177,
+          "FLOKIUSDT": 0.19179907901317145,
+          "BONKUSDT": 0.19439343912642615,
+          "PEPEUSDT": 0.2142489567501838,
+          "ADAUSDT": 0.19070786315876684
+        },
+        "optimization_objective": "maximize_diversification",
+        "constraints_applied": true
+      }
+    },
+    "ranked_strategies": [
+      [
+        "maximize_diversification",
+        0.9988744154326724
+      ],
+      [
+        "risk_parity",
+        0.9988738022227742
+      ],
+      [
+        "maximize_sharpe_ratio",
+        0.998531960251038
+      ],
+      [
+        "minimize_volatility",
+        0.9892397276183239
+      ]
+    ],
+    "recommendation": [
+      "maximize_diversification",
+      0.9988744154326724
+    ]
+  },
+  "optimal_portfolio": {
+    "weights": {
+      "SHIBUSDT": 0.15090194832636583,
+      "FLOKIUSDT": 0.15409446146022932,
+      "BONKUSDT": 0.16408760129826713,
+      "PEPEUSDT": 0.1975826555818044,
+      "ADAUSDT": 0.3333333333333334
+    },
+    "expected_return": 0.1790915084091538,
+    "expected_volatility": 0.3659181640322228,
+    "sharpe_ratio": 0.43477346589207355,
+    "portfolio_metrics": {
+      "expected_return": 0.1790915084091538,
+      "volatility": 0.3659181640322228,
+      "sharpe_ratio": 0.43477346589207355,
+      "beta": 1.4075884317524192,
+      "diversification_ratio": 1.3477527975005312,
+      "var_95": 0.6018818192758254,
+      "number_of_assets": "5",
+      "max_weight": 0.3333333333333334,
+      "min_weight": 0.15090194832636583,
+      "weight_concentration": 0.22359125885909947
+    },
+    "risk_contributions": {
+      "SHIBUSDT": 0.20885066195145177,
+      "FLOKIUSDT": 0.19179907901317145,
+      "BONKUSDT": 0.19439343912642615,
+      "PEPEUSDT": 0.2142489567501838,
+      "ADAUSDT": 0.19070786315876684
+    },
+    "optimization_objective": "maximize_diversification",
+    "constraints_applied": true
+  },
+  "portfolio_report": {
+    "portfolio_summary": {
+      "current_value": 100000,
+      "initial_value": 100000,
+      "total_return": 0.0,
+      "number_of_assets": 5,
+      "largest_position": 0.3333333333333334,
+      "portfolio_concentration": 0.22359125885909947
+    },
+    "current_allocation": {
+      "SHIBUSDT": 0.15090194832636583,
+      "FLOKIUSDT": 0.15409446146022932,
+      "BONKUSDT": 0.16408760129826713,
+      "PEPEUSDT": 0.1975826555818044,
+      "ADAUSDT": 0.3333333333333334
+    },
+    "optimization_metrics": {
+      "expected_return": 0.1790915084091538,
+      "volatility": 0.3659181640322228,
+      "sharpe_ratio": 0.43477346589207355,
+      "beta": 1.4075884317524192,
+      "diversification_ratio": 1.3477527975005312,
+      "var_95": 0.6018818192758254,
+      "number_of_assets": "5",
+      "max_weight": 0.3333333333333334,
+      "min_weight": 0.15090194832636583,
+      "weight_concentration": 0.22359125885909947
+    },
+    "risk_contributions": {
+      "SHIBUSDT": 0.20885066195145177,
+      "FLOKIUSDT": 0.19179907901317145,
+      "BONKUSDT": 0.19439343912642615,
+      "PEPEUSDT": 0.2142489567501838,
+      "ADAUSDT": 0.19070786315876684
+    },
+    "rebalancing_history": 0,
+    "total_transaction_costs": 0.0010000000000000002
+  },
+  "asset_metrics": [
+    {
+      "symbol": "SHIBUSDT",
+      "expected_return": 0.45,
+      "volatility": 0.65,
+      "sharpe_ratio": 0.6,
+      "momentum_score": 8.1,
+      "sector": "meme"
+    },
+    {
+      "symbol": "FLOKIUSDT",
+      "expected_return": 0.38,
+      "volatility": 0.58,
+      "sharpe_ratio": 0.55,
+      "momentum_score": 7.8,
+      "sector": "meme"
+    },
+    {
+      "symbol": "BONKUSDT",
+      "expected_return": 0.35,
+      "volatility": 0.55,
+      "sharpe_ratio": 0.52,
+      "momentum_score": 7.7,
+      "sector": "meme"
+    },
+    {
+      "symbol": "PEPEUSDT",
+      "expected_return": 0.3,
+      "volatility": 0.5,
+      "sharpe_ratio": 0.48,
+      "momentum_score": 6.9,
+      "sector": "meme"
+    },
+    {
+      "symbol": "ADAUSDT",
+      "expected_return": 0.22,
+      "volatility": 0.35,
+      "sharpe_ratio": 0.45,
+      "momentum_score": 6.1,
+      "sector": "layer1"
+    }
+  ]
+}

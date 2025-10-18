@@ -1,0 +1,54 @@
+
+# VictoryChain Strategy Configuration - ENHANCED ALL-IN MOMENTUM TRADING
+poll_ms = 120000
+exchange_endpoint = "https://api.binance.us"
+risk_free_rate = 0.015
+
+[exchange]
+endpoint = "https://api.binance.us"
+fee_rate = 0.001
+max_position_size = 55.0  # Nearly all available USDT
+live_trading = true  # ENABLED FOR LIVE TRADING
+symbols = ["ALL_USDT_PAIRS"]  # Will scan all USDT pairs automatically
+
+[risk]
+max_drawdown = 0.15  # 15% max drawdown for capital preservation
+var_limit = 40.0     # $40 VaR limit for controlled risk
+max_position_size = 220.0  # Use most available capital for momentum plays
+health_factor_min = 1.2   # Slightly conservative for capital preservation
+
+[basis_arb]
+min_apr = 0.05       # 5% APR minimum (more opportunities)
+max_position_size = 20.0  # $20 position size for immediate trades
+funding_threshold = 0.001  # Very low threshold for immediate opportunities
+
+[theta]
+delta_target = 0.0
+gamma_limit = 0.05    # Higher gamma tolerance for immediate trades
+vega_limit = 100.0    # Higher vega exposure
+theta_threshold = -0.8  # Very aggressive theta harvesting
+
+[stat_arb]
+z_entry = 1.5        # Lower Z-score for immediate opportunities
+z_exit = 0.05        # Very quick exit for immediate profits
+lookback_period = 50  # Shorter for immediate momentum detection
+pairs = ["BTC/ETH", "BTC/SOL", "ETH/SOL", "BTC/ADA", "ETH/ADA", "PEPE/BONK", "SHIB/FLOKI"]
+
+[yield_loop]
+min_net_apr = 0.05   # 5% minimum (many more opportunities)
+leverage_ratio = 3.0 # Higher leverage for immediate trading
+rebalance_threshold = 0.01  # Very frequent rebalancing for immediate trades
+
+# AI Configuration for Statistical Momentum Analysis
+[ai]
+enabled = true  # Enable AI-powered analysis
+primary_strategy = "statistical_momentum"  # Options: "statistical_momentum", "ai_enhanced", "traditional"
+ai_score_threshold = 75.0  # Higher threshold for better tokens (0-100)
+confidence_threshold = 0.7  # Higher confidence requirement (0-1)
+analysis_interval = 300  # Analyze every 5 minutes for better entries
+cache_ttl = 600  # Cache AI results for 10 minutes
+fallback_to_traditional = true  # Use traditional analysis if AI fails
+max_hold_duration_hours = 48.0  # Hold positions up to 48 hours for statistical targets
+min_momentum_threshold = 2.0  # Minimum 2% momentum for entry
+profit_target = 0.20  # Take profits at 20% gain (statistical target)
+stop_loss = 0.10  # Stop loss at 10% loss (volatility-based)

@@ -1,0 +1,175 @@
+{
+  "timestamp": "2025-08-09T08:35:01.875217",
+  "demonstration_summary": {
+    "allocations_tested": 4,
+    "trades_recommended": 0,
+    "trades_skipped": 4,
+    "total_optimized_allocation": 0,
+    "expected_total_profit": 0,
+    "average_gas_efficiency": 0.0
+  },
+  "optimization_results": [
+    {
+      "symbol": "NEAR",
+      "action": "SKIP",
+      "original_position_size": 3898.0,
+      "optimized_position_size": 1656.6499999999999,
+      "expected_profit": 811.0,
+      "optimized_net_profit": 343.01835,
+      "gas_fees": 1.65665,
+      "gas_efficiency": 0.004829625004026753,
+      "adaptive_threshold": 124.8,
+      "adaptive_gas_ratio": 0.1,
+      "ml_prediction": {
+        "predicted_profit": 811.0,
+        "predicted_risk": 0.3,
+        "optimal_scaling": 1.0,
+        "confidence": 0.5
+      },
+      "recommendation": "\ud83d\udeab SKIP: Confidence 50.0% too low",
+      "urgency": "NONE",
+      "should_execute": false,
+      "optimization_factors": {
+        "position_scaling": 0.425,
+        "risk_adjustment": 0.7,
+        "confidence_factor": 0.5,
+        "gas_optimization": 0.9951703749959733
+      }
+    },
+    {
+      "symbol": "MNGO",
+      "action": "SKIP",
+      "original_position_size": 3856.0,
+      "optimized_position_size": 1638.8,
+      "expected_profit": 713.0,
+      "optimized_net_profit": 301.3862,
+      "gas_fees": 1.6388,
+      "gas_efficiency": 0.005437541599449478,
+      "adaptive_threshold": 129.6,
+      "adaptive_gas_ratio": 0.1,
+      "ml_prediction": {
+        "predicted_profit": 713.0,
+        "predicted_risk": 0.3,
+        "optimal_scaling": 1.0,
+        "confidence": 0.5
+      },
+      "recommendation": "\ud83d\udeab SKIP: Confidence 50.0% too low",
+      "urgency": "NONE",
+      "should_execute": false,
+      "optimization_factors": {
+        "position_scaling": 0.425,
+        "risk_adjustment": 0.7,
+        "confidence_factor": 0.5,
+        "gas_optimization": 0.9945624584005506
+      }
+    },
+    {
+      "symbol": "RAY",
+      "action": "SKIP",
+      "original_position_size": 3813.0,
+      "optimized_position_size": 1620.5249999999999,
+      "expected_profit": 412.0,
+      "optimized_net_profit": 173.479475,
+      "gas_fees": 1.620525,
+      "gas_efficiency": 0.009341306803009404,
+      "adaptive_threshold": 120.0,
+      "adaptive_gas_ratio": 0.1,
+      "ml_prediction": {
+        "predicted_profit": 412.0,
+        "predicted_risk": 0.3,
+        "optimal_scaling": 1.0,
+        "confidence": 0.5
+      },
+      "recommendation": "\ud83d\udeab SKIP: Confidence 50.0% too low",
+      "urgency": "NONE",
+      "should_execute": false,
+      "optimization_factors": {
+        "position_scaling": 0.425,
+        "risk_adjustment": 0.7,
+        "confidence_factor": 0.5,
+        "gas_optimization": 0.9906586931969906
+      }
+    },
+    {
+      "symbol": "COPE",
+      "action": "SKIP",
+      "original_position_size": 3723.0,
+      "optimized_position_size": 1582.2749999999999,
+      "expected_profit": 197.0,
+      "optimized_net_profit": 82.142725,
+      "gas_fees": 1.5822749999999999,
+      "gas_efficiency": 0.019262509248384442,
+      "adaptive_threshold": 148.79999999999998,
+      "adaptive_gas_ratio": 0.06999999999999999,
+      "ml_prediction": {
+        "predicted_profit": 197.0,
+        "predicted_risk": 0.3,
+        "optimal_scaling": 1.0,
+        "confidence": 0.5
+      },
+      "recommendation": "\ud83d\udeab SKIP: Profit $82.14 below threshold $148.80",
+      "urgency": "NONE",
+      "should_execute": false,
+      "optimization_factors": {
+        "position_scaling": 0.425,
+        "risk_adjustment": 0.7,
+        "confidence_factor": 0.5,
+        "gas_optimization": 0.9807374907516155
+      }
+    }
+  ],
+  "current_system_state": {
+    "timestamp": "2025-08-09T08:35:01.874884",
+    "adaptive_parameters": {
+      "current_parameters": {
+        "min_profit_threshold": 100.0,
+        "max_gas_ratio": 0.1,
+        "position_size_multiplier": 1.0,
+        "risk_tolerance": 0.75,
+        "urgency_threshold": 0.8,
+        "confidence_threshold": 0.7,
+        "market_volatility_factor": 1.0,
+        "scaling_factor": 1.0,
+        "profit_target_multiplier": 1.2,
+        "stop_loss_percentage": 0.05
+      },
+      "gas_optimization_config": {
+        "min_profit_threshold": 100.0,
+        "max_gas_ratio": 0.1,
+        "safety_margin": 1.5,
+        "dynamic_threshold_adjustment": true,
+        "learning_rate": 0.1,
+        "performance_window": 10
+      },
+      "performance_metrics": {
+        "total_trades": 0,
+        "successful_trades": 0,
+        "total_profit": 0.0,
+        "average_profit_per_trade": 0.0,
+        "win_rate": 0.0,
+        "parameter_adjustments": 0,
+        "learning_iterations": 0
+      }
+    },
+    "learning_status": {
+      "total_trades_learned_from": 0,
+      "models_trained": false,
+      "parameter_adjustments_made": 0,
+      "current_win_rate": 0.0
+    },
+    "optimization_capabilities": {
+      "adaptive_thresholds": true,
+      "ml_predictions": true,
+      "position_size_optimization": true,
+      "symbol_specific_learning": true,
+      "market_condition_adjustment": true
+    }
+  },
+  "adaptive_learning_status": {
+    "system_ready": true,
+    "learning_active": true,
+    "parameter_optimization": true,
+    "gas_protection": true,
+    "scaling_optimization": true
+  }
+}

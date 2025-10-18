@@ -1,0 +1,39 @@
+# VictoryChain Strategy Configuration - SIMULATION MODE FOR TESTING
+poll_ms = 2000          # Smart polling that respects rate limits
+exchange_endpoint = "https://api.binance.us"
+risk_free_rate = 0.015
+
+[exchange]
+endpoint = "https://api.binance.us"
+fee_rate = 0.001
+max_position_size = 0.05  # Increased for immediate trading
+live_trading = false  # DISABLED FOR TESTING
+symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "ADAUSDT", "PEPEUSDT", "BONKUSDT", "SHIBUSDT", "FLOKIUSDT", "RENDERUSDT", "SUIUSDT"]
+
+[risk]
+max_drawdown = 0.08  # 8% max drawdown for aggressive immediate trading
+var_limit = 50.0     # $50 VaR limit (increased)
+max_position_size = 100.0  # $100 max position for immediate opportunities
+health_factor_min = 1.5   # Very aggressive for immediate trading
+
+[basis_arb]
+min_apr = 0.10       # 10% APR minimum (more aggressive)
+max_position_size = 50.0  # Increased position size for immediate trades
+funding_threshold = 0.005  # Lower threshold for immediate opportunities
+
+[theta]
+delta_target = 0.0
+gamma_limit = 0.05    # Higher gamma tolerance for immediate trades
+vega_limit = 100.0    # Higher vega exposure
+theta_threshold = -0.8  # Very aggressive theta harvesting
+
+[stat_arb]
+z_entry = 1.5        # Lower Z-score for immediate opportunities
+z_exit = 0.05        # Very quick exit for immediate profits
+lookback_period = 50  # Shorter for immediate momentum detection
+pairs = ["BTC/ETH", "BTC/SOL", "ETH/SOL", "BTC/ADA", "ETH/ADA", "PEPE/BONK", "SHIB/FLOKI"]
+
+[yield_loop]
+min_net_apr = 0.05   # 5% minimum (many more opportunities)
+leverage_ratio = 3.0 # Higher leverage for immediate trading
+rebalance_threshold = 0.01  # Very frequent rebalancing for immediate trades

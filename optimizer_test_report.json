@@ -1,0 +1,183 @@
+{
+  "test_run": {
+    "timestamp": "2025-08-09T12:15:45.153178",
+    "total_tests": 28,
+    "passed_tests": 28,
+    "failed_tests": 0
+  },
+  "test_results": [
+    {
+      "test": "Python Version",
+      "passed": true,
+      "details": "Python 3.13.5",
+      "timestamp": "2025-08-09T12:15:42.893376"
+    },
+    {
+      "test": "Dependency: ccxt",
+      "passed": true,
+      "details": "Exchange connectivity",
+      "timestamp": "2025-08-09T12:15:43.403403"
+    },
+    {
+      "test": "Dependency: pandas",
+      "passed": true,
+      "details": "Data analysis",
+      "timestamp": "2025-08-09T12:15:43.954637"
+    },
+    {
+      "test": "Dependency: numpy",
+      "passed": true,
+      "details": "Numerical operations",
+      "timestamp": "2025-08-09T12:15:43.954659"
+    },
+    {
+      "test": "Dependency: json",
+      "passed": true,
+      "details": "Configuration parsing",
+      "timestamp": "2025-08-09T12:15:43.954673"
+    },
+    {
+      "test": "Dependency: asyncio",
+      "passed": true,
+      "details": "Async operations",
+      "timestamp": "2025-08-09T12:15:43.954686"
+    },
+    {
+      "test": "Dependency: logging",
+      "passed": true,
+      "details": "Logging system",
+      "timestamp": "2025-08-09T12:15:43.954698"
+    },
+    {
+      "test": "Dependency: datetime",
+      "passed": true,
+      "details": "Time operations",
+      "timestamp": "2025-08-09T12:15:43.954708"
+    },
+    {
+      "test": "Optional: talib",
+      "passed": true,
+      "details": "Technical analysis (critical for optimizer)",
+      "timestamp": "2025-08-09T12:15:43.962286"
+    },
+    {
+      "test": "Optional: scipy",
+      "passed": true,
+      "details": "Statistical functions",
+      "timestamp": "2025-08-09T12:15:43.971335"
+    },
+    {
+      "test": "Optional: aiohttp",
+      "passed": true,
+      "details": "Async HTTP requests",
+      "timestamp": "2025-08-09T12:15:44.119921"
+    },
+    {
+      "test": "Config Section: trading_settings",
+      "passed": true,
+      "details": "Present",
+      "timestamp": "2025-08-09T12:15:44.120332"
+    },
+    {
+      "test": "Config Section: position_switching",
+      "passed": true,
+      "details": "Present",
+      "timestamp": "2025-08-09T12:15:44.120350"
+    },
+    {
+      "test": "Config Section: gas_optimization",
+      "passed": true,
+      "details": "Present",
+      "timestamp": "2025-08-09T12:15:44.120361"
+    },
+    {
+      "test": "Config Section: iso_20022_reserves",
+      "passed": true,
+      "details": "Present",
+      "timestamp": "2025-08-09T12:15:44.120372"
+    },
+    {
+      "test": "Config Section: cycle_timing",
+      "passed": true,
+      "details": "Present",
+      "timestamp": "2025-08-09T12:15:44.120382"
+    },
+    {
+      "test": "Config Section: binance_us_api",
+      "passed": true,
+      "details": "Present",
+      "timestamp": "2025-08-09T12:15:44.120392"
+    },
+    {
+      "test": "API Mode",
+      "passed": true,
+      "details": "Testnet (Safe)",
+      "timestamp": "2025-08-09T12:15:44.120403"
+    },
+    {
+      "test": "Configuration",
+      "passed": true,
+      "details": "All sections valid",
+      "timestamp": "2025-08-09T12:15:44.120412"
+    },
+    {
+      "test": "File Permissions",
+      "passed": true,
+      "details": "Read/write OK",
+      "timestamp": "2025-08-09T12:15:44.121493"
+    },
+    {
+      "test": "Log File Creation",
+      "passed": true,
+      "details": "Can create logs",
+      "timestamp": "2025-08-09T12:15:44.122277"
+    },
+    {
+      "test": "Optimizer Import",
+      "passed": true,
+      "details": "Module loaded successfully",
+      "timestamp": "2025-08-09T12:15:44.976265"
+    },
+    {
+      "test": "Method: analyze_magic_position_strength",
+      "passed": true,
+      "details": "Available",
+      "timestamp": "2025-08-09T12:15:44.984750"
+    },
+    {
+      "test": "Method: scan_alternative_opportunities",
+      "passed": true,
+      "details": "Available",
+      "timestamp": "2025-08-09T12:15:44.984763"
+    },
+    {
+      "test": "Method: calculate_switching_costs",
+      "passed": true,
+      "details": "Available",
+      "timestamp": "2025-08-09T12:15:44.984773"
+    },
+    {
+      "test": "Method: determine_cycle_timing",
+      "passed": true,
+      "details": "Available",
+      "timestamp": "2025-08-09T12:15:44.984783"
+    },
+    {
+      "test": "Basic Functionality",
+      "passed": true,
+      "details": "All methods available",
+      "timestamp": "2025-08-09T12:15:44.984794"
+    },
+    {
+      "test": "Network Connectivity",
+      "passed": true,
+      "details": "Binance US API reachable",
+      "timestamp": "2025-08-09T12:15:45.153073"
+    }
+  ],
+  "environment": {
+    "python_version": "3.13.5",
+    "platform": "darwin",
+    "working_directory": "/Users/nicholaskramer/Downloads/victorychain_stack"
+  }
+}

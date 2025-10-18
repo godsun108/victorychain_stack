@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""
+Convert a percentage of current XRP holdings to the best available quote (from QUOTE_PREFS).
+- Loads .env.live
+- Selects first available symbol among XRP/{QUOTE_PREFS}
+- Computes amount = percent * free XRP
+- Adjusts to exchange filters (minQty, stepSize, minNotional)
+- Mints short-lived approval token and submits a guarded market sell
+
+Usage:
+  python scripts/convert_xrp_to_quote.py --percent 0.9
+"""
+import os
+import sys
+import math
+import json
+from typing import Optional, Dict, Any, List
+
+from dotenv import load_dotenv
+from loguru import logger
+
+from libs.exchange_adapters.binance_us import get_client, guarded_create_order
+
+# Optional governance token mint
+try:
+    from governance.approvals import mint_test_token
+except Exception:
+    mint_test_token = None
+
+
+def load_env():
+    env_file = os.getenv("ENV", ".env.live")
+    if os.path.exists(env_file):
+        load_dotenv(env_file)
+
+
+def parse_args() -> float:
+    p = 0.9
+    for i, a in enumerate(sys.argv):
+        if a == "--percent" and i + 1 < len(sys.argv):
+            try:
+                p = float(sys.argv[i+1])
+            except Exception:
+                pass
+    if not (0 < p <= 1):
+        raise SystemExit("--percent must be in (0,1]")
+    return p
+
+
+def pick_symbol(mkts: Dict[str, Any], quotes: List[str]) -> Optional[str]:
+    for q in quotes:
+        s = f"XRP/{q.upper()}"
+        if s in mkts:
+            return s
+    return None
+
+
+def get_filters(m: Dict[str, Any]) -> Dict[str, Optional[float]]:
+    info = (m or {}).get('info', {})
+    min_qty = step = tick = min_notional = None
+    for f in info.get('filters', []) or []:
+        t = f.get('filterType')
+        if t == 'LOT_SIZE':
+            try:
+                min_qty = float(f.get('minQty') or 0)
+            except Exception:
+                min_qty = None
+            try:
+                step = float(f.get('stepSize') or 0)
+            except Exception:
+                step = None
+        elif t == 'PRICE_FILTER':
+            try:
+                tick = float(f.get('tickSize') or 0)
+            except Exception:
+                tick = None
+        elif t in ('MIN_NOTIONAL','NOTIONAL'):
+            try:
+                min_notional = float(f.get('minNotional') or f.get('notional') or 0)
+            except Exception:
+                min_notional = None
+    return {'min_qty': min_qty, 'step': step, 'tick': tick, 'min_notional': min_notional}
+
+
+def main():
+    load_env()
+    percent = parse_args()
+    mode = os.getenv('MODE', 'paper')
+    if mode.lower() != 'live':
+        logger.error("MODE is not live; set MODE=live in .env.live")
+        sys.exit(2)
+
+    quotes = [s.strip().upper() for s in os.getenv('QUOTE_PREFS', 'USDT,USD,USDC').split(',') if s.strip()]
+    client = get_client(mode)
+    mkts = client.load_markets() or {}
+    sym = pick_symbol(mkts, quotes)
+    if not sym:
+        logger.error("No XRP market found for quotes: {}", quotes)
+        sys.exit(2)
+
+    # Balance
+    bal = client.fetch_balance()
+    free = None
+    try:
+        free = bal.get('free', {}).get('XRP')
+        if free is None and 'XRP' in bal:
+            free = (bal.get('XRP') or {}).get('free')
+    except Exception:
+        free = None
+    free = float(free or 0.0)
+    if free <= 0:
+        logger.error("No free XRP balance to convert.")
+        sys.exit(2)
+
+    amt = free * percent
+
+    # Ticker price
+    tk = client.fetch_ticker(sym) or {}
+    px = float(tk.get('last') or tk.get('close') or 0)
+    if px <= 0:
+        logger.error("No valid price for {}", sym)
+        sys.exit(2)
+
+    # Filters
+    f = get_filters(mkts.get(sym) or {})
+    min_qty = f['min_qty'] or 0.0
+    step = f['step'] or 0.0
+    min_notional = f['min_notional'] or 0.0
+
+    # Enforce min_qty and step
+    if step and step > 0:
+        amt = math.floor(amt / step) * step
+    if min_qty and amt < min_qty:
+        logger.error("Amount {} < min_qty {} for {}", amt, min_qty, sym)
+        sys.exit(2)
+
+    # Enforce min_notional
+    if min_notional and (amt * px) < min_notional:
+        logger.error("Notional {} < min_notional {} for {}", amt * px, min_notional, sym)
+        sys.exit(2)
+
+    # Approval token mint (short-lived)
+    if not os.getenv('APPROVAL_TOKEN'):
+        if not mint_test_token:
+            logger.error("No approval token and cannot mint; run 'make approve' first.")
+            sys.exit(2)
+        ttl = int(os.getenv('APPROVAL_TTL_SECONDS', '180') or 180)
+        try:
+            tok = mint_test_token(action='order.create', ttl_seconds=ttl)
+            os.environ['APPROVAL_TOKEN'] = tok
+            logger.info("Minted approval token (ttl={}s)", ttl)
+        except Exception as e:
+            logger.error("Mint failed: {}", e)
+            sys.exit(2)
+
+    # Submit guarded market sell
+    logger.info("Selling {} XRP on {} (px ~ {})", amt, sym, px)
+    res = guarded_create_order(sym, 'sell', 'market', amt)
+    print(json.dumps({'ok': True, 'symbol': sym, 'sold_amount': amt, 'px': px, 'result': res}, default=str))
+
+
+if __name__ == '__main__':
+    main()

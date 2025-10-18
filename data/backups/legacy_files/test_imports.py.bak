@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""
+Test script to check if all required imports are working
+"""
+
+try:
+    print("Testing imports...")
+    
+    import os
+    print("✅ os imported")
+    
+    import json
+    print("✅ json imported")
+    
+    import requests
+    print("✅ requests imported")
+    
+    from datetime import datetime
+    print("✅ datetime imported")
+    
+    from binance.client import Client
+    print("✅ binance imported")
+    
+    from dotenv import load_dotenv
+    print("✅ dotenv imported")
+    
+    print("\n🎉 All imports successful!")
+    
+    # Test loading .env
+    load_dotenv()
+    api_key = os.getenv('BINANCEUS_KEY')
+    
+    if api_key:
+        print(f"✅ API key loaded: {api_key[:10]}...")
+    else:
+        print("❌ API key not found")
+        
+    print("\n✅ Ready to run trading bot!")
+    
+except Exception as e:
+    print(f"❌ Import error: {e}")
+    import traceback
+    traceback.print_exc()

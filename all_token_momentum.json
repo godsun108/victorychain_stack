@@ -1,0 +1,402 @@
+[
+  {
+    "symbol": "BTC",
+    "momentum_score": 4.43,
+    "price_change_24h": 7.61,
+    "volume_change_24h": -2.83,
+    "technical_score": 7.45,
+    "sentiment_score": 0.97,
+    "timestamp": "2025-08-04T21:51:58.019480",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "ETH",
+    "momentum_score": -6.74,
+    "price_change_24h": 5.17,
+    "volume_change_24h": -25.33,
+    "technical_score": -4.04,
+    "sentiment_score": -0.05,
+    "timestamp": "2025-08-04T21:52:04.043586",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "BNB",
+    "momentum_score": -13.73,
+    "price_change_24h": -6.88,
+    "volume_change_24h": -28.98,
+    "technical_score": -7.63,
+    "sentiment_score": -0.43,
+    "timestamp": "2025-08-04T21:52:10.068228",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "XRP",
+    "momentum_score": -4.78,
+    "price_change_24h": -1.18,
+    "volume_change_24h": -8.74,
+    "technical_score": -5.62,
+    "sentiment_score": -0.11,
+    "timestamp": "2025-08-04T21:52:16.091647",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "ADA",
+    "momentum_score": -2.41,
+    "price_change_24h": -5.12,
+    "volume_change_24h": -6.51,
+    "technical_score": 5.3,
+    "sentiment_score": 0.37,
+    "timestamp": "2025-08-04T21:52:22.129303",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "DOGE",
+    "momentum_score": 27.72,
+    "price_change_24h": 6.16,
+    "volume_change_24h": 90.64,
+    "technical_score": -6.46,
+    "sentiment_score": 0.02,
+    "timestamp": "2025-08-04T21:52:28.153891",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "SOL",
+    "momentum_score": 19.49,
+    "price_change_24h": -13.94,
+    "volume_change_24h": 83.78,
+    "technical_score": -0.21,
+    "sentiment_score": -0.86,
+    "timestamp": "2025-08-04T21:52:34.180415",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "DOT",
+    "momentum_score": 31.0,
+    "price_change_24h": 13.59,
+    "volume_change_24h": 94.27,
+    "technical_score": -9.07,
+    "sentiment_score": 0.69,
+    "timestamp": "2025-08-04T21:52:40.210436",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "AVAX",
+    "momentum_score": 11.18,
+    "price_change_24h": 18.91,
+    "volume_change_24h": 13.68,
+    "technical_score": -1.61,
+    "sentiment_score": 0.73,
+    "timestamp": "2025-08-04T21:52:46.273093",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "MATIC",
+    "momentum_score": 3.34,
+    "price_change_24h": 3.34,
+    "volume_change_24h": 10.0,
+    "technical_score": -3.33,
+    "sentiment_score": -0.7,
+    "timestamp": "2025-08-04T21:52:52.304751",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "LINK",
+    "momentum_score": 18.63,
+    "price_change_24h": 22.74,
+    "volume_change_24h": 23.98,
+    "technical_score": 7.81,
+    "sentiment_score": 0.44,
+    "timestamp": "2025-08-04T21:52:58.351996",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "UNI",
+    "momentum_score": 10.29,
+    "price_change_24h": -13.09,
+    "volume_change_24h": 44.84,
+    "technical_score": 6.92,
+    "sentiment_score": 0.01,
+    "timestamp": "2025-08-04T21:53:04.378350",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "LTC",
+    "momentum_score": 26.78,
+    "price_change_24h": -3.64,
+    "volume_change_24h": 94.95,
+    "technical_score": -0.83,
+    "sentiment_score": 0.71,
+    "timestamp": "2025-08-04T21:53:10.405476",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "BCH",
+    "momentum_score": 17.21,
+    "price_change_24h": 12.98,
+    "volume_change_24h": 49.24,
+    "technical_score": -9.16,
+    "sentiment_score": 0.87,
+    "timestamp": "2025-08-04T21:53:16.434508",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "ALGO",
+    "momentum_score": -3.35,
+    "price_change_24h": 9.91,
+    "volume_change_24h": -18.98,
+    "technical_score": -5.39,
+    "sentiment_score": -0.2,
+    "timestamp": "2025-08-04T21:53:22.472173",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "VET",
+    "momentum_score": 29.31,
+    "price_change_24h": 21.01,
+    "volume_change_24h": 61.04,
+    "technical_score": 8.67,
+    "sentiment_score": 0.68,
+    "timestamp": "2025-08-04T21:53:28.497966",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "ICP",
+    "momentum_score": 11.54,
+    "price_change_24h": -1.11,
+    "volume_change_24h": 34.9,
+    "technical_score": 5.06,
+    "sentiment_score": -0.99,
+    "timestamp": "2025-08-04T21:53:34.523883",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "FTM",
+    "momentum_score": 3.93,
+    "price_change_24h": 20.39,
+    "volume_change_24h": -10.45,
+    "technical_score": -3.63,
+    "sentiment_score": 0.33,
+    "timestamp": "2025-08-04T21:53:40.545875",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "ATOM",
+    "momentum_score": 24.92,
+    "price_change_24h": 20.62,
+    "volume_change_24h": 47.19,
+    "technical_score": 8.4,
+    "sentiment_score": 0.2,
+    "timestamp": "2025-08-04T21:53:46.569600",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "NEAR",
+    "momentum_score": 38.07,
+    "price_change_24h": 20.36,
+    "volume_change_24h": 98.98,
+    "technical_score": 0.78,
+    "sentiment_score": -0.34,
+    "timestamp": "2025-08-04T21:53:52.594208",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "MANA",
+    "momentum_score": 13.83,
+    "price_change_24h": 7.36,
+    "volume_change_24h": 33.71,
+    "technical_score": 2.58,
+    "sentiment_score": -0.93,
+    "timestamp": "2025-08-04T21:53:58.620612",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "SAND",
+    "momentum_score": 5.94,
+    "price_change_24h": -9.77,
+    "volume_change_24h": 39.94,
+    "technical_score": -7.1,
+    "sentiment_score": 0.94,
+    "timestamp": "2025-08-04T21:54:04.644489",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "AXS",
+    "momentum_score": 18.38,
+    "price_change_24h": 15.33,
+    "volume_change_24h": 31.46,
+    "technical_score": 9.38,
+    "sentiment_score": -0.96,
+    "timestamp": "2025-08-04T21:54:10.669741",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "GALA",
+    "momentum_score": 33.83,
+    "price_change_24h": 15.17,
+    "volume_change_24h": 95.21,
+    "technical_score": -2.67,
+    "sentiment_score": 0.23,
+    "timestamp": "2025-08-04T21:54:16.699861",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "ENJ",
+    "momentum_score": 25.15,
+    "price_change_24h": 21.2,
+    "volume_change_24h": 62.29,
+    "technical_score": -6.72,
+    "sentiment_score": -0.29,
+    "timestamp": "2025-08-04T21:54:22.728202",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "CHZ",
+    "momentum_score": 22.29,
+    "price_change_24h": 9.48,
+    "volume_change_24h": 66.98,
+    "technical_score": -5.33,
+    "sentiment_score": -0.71,
+    "timestamp": "2025-08-04T21:54:28.753156",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "BAT",
+    "momentum_score": 22.02,
+    "price_change_24h": 8.23,
+    "volume_change_24h": 55.76,
+    "technical_score": 6.67,
+    "sentiment_score": -0.75,
+    "timestamp": "2025-08-04T21:54:34.776394",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "ZIL",
+    "momentum_score": 6.94,
+    "price_change_24h": -6.6,
+    "volume_change_24h": 30.24,
+    "technical_score": 1.68,
+    "sentiment_score": 0.78,
+    "timestamp": "2025-08-04T21:54:40.799387",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "ONE",
+    "momentum_score": 23.81,
+    "price_change_24h": 4.69,
+    "volume_change_24h": 65.58,
+    "technical_score": 7.55,
+    "sentiment_score": -0.55,
+    "timestamp": "2025-08-04T21:54:46.827882",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "MAGIC",
+    "momentum_score": 0.56,
+    "price_change_24h": -14.55,
+    "volume_change_24h": 23.48,
+    "technical_score": -2.21,
+    "sentiment_score": 0.46,
+    "timestamp": "2025-08-04T21:54:52.854534",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "IMX",
+    "momentum_score": 5.59,
+    "price_change_24h": 23.45,
+    "volume_change_24h": -20.09,
+    "technical_score": 7.46,
+    "sentiment_score": 0.28,
+    "timestamp": "2025-08-04T21:54:58.882554",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "LRC",
+    "momentum_score": 12.83,
+    "price_change_24h": -6.55,
+    "volume_change_24h": 59.77,
+    "technical_score": -8.25,
+    "sentiment_score": 0.05,
+    "timestamp": "2025-08-04T21:55:04.914519",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "CRV",
+    "momentum_score": 3.46,
+    "price_change_24h": 22.98,
+    "volume_change_24h": -22.01,
+    "technical_score": 2.89,
+    "sentiment_score": -0.51,
+    "timestamp": "2025-08-04T21:55:10.943470",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "SUSHI",
+    "momentum_score": 8.08,
+    "price_change_24h": 11.52,
+    "volume_change_24h": 3.11,
+    "technical_score": 8.46,
+    "sentiment_score": 0.94,
+    "timestamp": "2025-08-04T21:55:16.973451",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "YFI",
+    "momentum_score": 10.43,
+    "price_change_24h": -0.9,
+    "volume_change_24h": 44.32,
+    "technical_score": -8.35,
+    "sentiment_score": 0.81,
+    "timestamp": "2025-08-04T21:55:23.000622",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "COMP",
+    "momentum_score": -1.31,
+    "price_change_24h": 10.2,
+    "volume_change_24h": -27.45,
+    "technical_score": 9.48,
+    "sentiment_score": -0.32,
+    "timestamp": "2025-08-04T21:55:29.028542",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "MKR",
+    "momentum_score": 5.38,
+    "price_change_24h": 18.11,
+    "volume_change_24h": 0.93,
+    "technical_score": -7.14,
+    "sentiment_score": 0.32,
+    "timestamp": "2025-08-04T21:55:35.050208",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "SNX",
+    "momentum_score": -6.6,
+    "price_change_24h": -13.44,
+    "volume_change_24h": -12.35,
+    "technical_score": 8.27,
+    "sentiment_score": -0.21,
+    "timestamp": "2025-08-04T21:55:41.074047",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "AAVE",
+    "momentum_score": -2.84,
+    "price_change_24h": -11.79,
+    "volume_change_24h": 12.62,
+    "technical_score": -6.36,
+    "sentiment_score": -0.72,
+    "timestamp": "2025-08-04T21:55:47.101626",
+    "data_source": "simulated"
+  },
+  {
+    "symbol": "BAL",
+    "momentum_score": 16.85,
+    "price_change_24h": 0.73,
+    "volume_change_24h": 57.43,
+    "technical_score": -2.23,
+    "sentiment_score": -0.31,
+    "timestamp": "2025-08-04T21:55:53.127749",
+    "data_source": "simulated"
+  }
+]

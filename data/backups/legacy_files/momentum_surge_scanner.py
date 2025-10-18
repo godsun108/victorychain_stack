@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""
+MAGICUSDT Momentum Surge Strategy Implementation
+Based on the winning traits analysis of MAGICUSDT's +18.81% performance
+"""
+
+import os
+import json
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from dotenv import load_dotenv
+
+
+class MomentumSurgeStrategy:
+    def __init__(self):
+        load_dotenv()
+
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv("BINANCEUS_KEY"),
+            api_secret=os.getenv("BINANCEUS_SECRET"),
+            tld="us",
+        )
+
+        # Strategy parameters based on MAGICUSDT analysis
+        self.strategy_params = {
+            "min_performance_score": 0.8,
+            "min_momentum_score": 0.95,
+            "min_position_score": 0.8,
+            "min_price_change_pct": 5.0,
+            "rsi_range": (50, 80),
+            "max_hold_days": 3,
+            "take_profit_1": 0.15,  # 15%
+            "take_profit_2": 0.25,  # 25%
+            "trailing_stop": 0.05,  # 5%
+            "position_size_pct": 0.03,  # 3% of portfolio
+        }
+
+        print("🚀 MAGICUSDT Momentum Surge Strategy initialized")
+        print(f"🎯 Based on winning traits: MOMENTUM + PERFORMANCE")
+
+    def get_all_usdt_pairs(self) -> List[str]:
+        """Get all USDT trading pairs"""
+        try:
+            exchange_info = self.client.get_exchange_info()
+            usdt_pairs = []
+
+            for symbol_info in exchange_info["symbols"]:
+                symbol = symbol_info["symbol"]
+                if (
+                    symbol.endswith("USDT")
+                    and symbol_info["status"] == "TRADING"
+                    and symbol != "USDTUSDT"
+                ):
+                    usdt_pairs.append(symbol)
+
+            return sorted(usdt_pairs)
+        except Exception as e:
+            print(f"❌ Error getting trading pairs: {e}")
+            return []
+
+    def calculate_momentum_score(self, symbol: str) -> Dict:
+        """Calculate momentum score based on MAGICUSDT winning pattern"""
+        try:
+            # Get ticker data
+            ticker = self.client.get_ticker(symbol=symbol)
+
+            # Get klines for technical analysis
+            klines = self.client.get_klines(symbol=symbol, interval="1h", limit=48)
+
+            if not klines:
+                return None
+
+            # Parse kline data
+            df = pd.DataFrame(
+                klines,
+                columns=[
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "close_time",
+                    "quote_volume",
+                    "count",
+                    "taker_buy_volume",
+                    "taker_buy_quote_volume",
+                    "ignore",
+                ],
+            )
+
+            # Convert to numeric
+            for col in ["open", "high", "low", "close", "volume"]:
+                df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+            current_price = float(ticker["lastPrice"])
+            price_change_pct = float(ticker["priceChangePercent"])
+
+            # Calculate technical indicators
+            close_prices = df["close"]
+
+            # Moving averages
+            sma_20 = close_prices.rolling(window=20).mean()
+            current_sma_20 = sma_20.iloc[-1] if len(sma_20) > 0 else current_price
+
+            # RSI calculation
+            delta = close_prices.diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+
+            # Avoid division by zero
+            loss = loss.replace(0, 0.001)
+            rs = gain / loss
+            rsi = 100 - (100 / (1 + rs))
+            current_rsi = (
+                rsi.iloc[-1] if len(rsi) > 0 and not pd.isna(rsi.iloc[-1]) else 50
+            )
+
+            # Range position
+            high_24h = float(ticker["highPrice"])
+            low_24h = float(ticker["lowPrice"])
+            range_position = (
+                (current_price - low_24h) / (high_24h - low_24h)
+                if high_24h != low_24h
+                else 0.5
+            )
+
+            # Volume analysis
+            volume_24h = float(ticker["volume"])
+            quote_volume_24h = float(ticker["quoteVolume"])
+
+            # Calculate scores based on MAGICUSDT pattern
+            performance_score = min(
+                abs(price_change_pct) / 20.0, 1.0
+            )  # Normalize to 20%
+
+            # Momentum score - higher for strong moves
+            momentum_score = (
+                min(abs(price_change_pct) / 15.0, 1.0) if price_change_pct > 0 else 0
+            )
+
+            # Position score - prefer high range positions
+            position_score = range_position
+
+            # MA score - prefer price above MA
+            ma_score = 1.0 if current_price > current_sma_20 else 0.3
+
+            # RSI score - prefer 50-80 range
+            if 50 <= current_rsi <= 80:
+                rsi_score = 1.0
+            elif 40 <= current_rsi <= 90:
+                rsi_score = 0.7
+            else:
+                rsi_score = 0.3
+
+            # Overall score
+            overall_score = (
+                performance_score
+                + momentum_score
+                + position_score
+                + ma_score
+                + rsi_score
+            ) / 5
+
+            return {
+                "symbol": symbol,
+                "current_price": current_price,
+                "price_change_pct": price_change_pct,
+                "volume_24h": volume_24h,
+                "quote_volume_24h": quote_volume_24h,
+                "range_position": range_position,
+                "current_rsi": current_rsi,
+                "above_ma20": current_price > current_sma_20,
+                "scores": {
+                    "performance_score": performance_score,
+                    "momentum_score": momentum_score,
+                    "position_score": position_score,
+                    "ma_score": ma_score,
+                    "rsi_score": rsi_score,
+                    "overall_score": overall_score,
+                },
+                "meets_criteria": (
+                    performance_score >= self.strategy_params["min_performance_score"]
+                    and momentum_score >= self.strategy_params["min_momentum_score"]
+                    and position_score >= self.strategy_params["min_position_score"]
+                    and price_change_pct >= self.strategy_params["min_price_change_pct"]
+                    and self.strategy_params["rsi_range"][0]
+                    <= current_rsi
+                    <= self.strategy_params["rsi_range"][1]
+                ),
+            }
+
+        except Exception as e:
+            print(f"❌ Error analyzing {symbol}: {e}")
+            return None
+
+    def scan_for_momentum_surge_opportunities(self) -> List[Dict]:
+        """Scan all pairs for momentum surge opportunities"""
+        print("🔍 Scanning for MAGICUSDT-style momentum surge opportunities...")
+
+        pairs = self.get_all_usdt_pairs()
+        opportunities = []
+
+        total_pairs = len(pairs)
+        processed = 0
+
+        for symbol in pairs:
+            processed += 1
+            if processed % 20 == 0:
+                print(f"   📊 Processed {processed}/{total_pairs} pairs...")
+
+            analysis = self.calculate_momentum_score(symbol)
+            if analysis and analysis["meets_criteria"]:
+                opportunities.append(analysis)
+
+            # Rate limiting
+            time.sleep(0.1)
+
+        # Sort by overall score
+        opportunities.sort(key=lambda x: x["scores"]["overall_score"], reverse=True)
+
+        print(
+            f"✅ Scan complete! Found {len(opportunities)} momentum surge opportunities"
+        )
+        return opportunities
+
+    def display_opportunities(self, opportunities: List[Dict]):
+        """Display found opportunities"""
+        if not opportunities:
+            print(
+                "❌ No momentum surge opportunities found matching MAGICUSDT criteria"
+            )
+            return
+
+        print(f"\\n🏆 TOP MOMENTUM SURGE OPPORTUNITIES (MAGICUSDT Pattern)")
+        print("=" * 80)
+
+        for i, opp in enumerate(opportunities[:10], 1):
+            symbol = opp["symbol"]
+            price = opp["current_price"]
+            change_pct = opp["price_change_pct"]
+            volume = opp["quote_volume_24h"]
+            range_pos = opp["range_position"]
+            rsi = opp["current_rsi"]
+            score = opp["scores"]["overall_score"]
+
+            print(f"\\n{i}. {symbol}")
+            print(f"   💰 Price: ${price:.6f} ({change_pct:+.2f}%)")
+            print(f"   📊 Volume: ${volume:,.0f}")
+            print(f"   📈 Range Position: {range_pos:.1%}")
+            print(f"   🎯 RSI: {rsi:.1f}")
+            print(f"   ⭐ Overall Score: {score:.3f}")
+            print(f"   ✅ Above MA20: {opp['above_ma20']}")
+            print(f"   🚀 Momentum Score: {opp['scores']['momentum_score']:.3f}")
+            print(f"   🎯 Performance Score: {opp['scores']['performance_score']:.3f}")
+
+    def run_momentum_surge_scanner(self):
+        """Run the complete momentum surge scanner"""
+        print("🚀 MAGICUSDT MOMENTUM SURGE SCANNER")
+        print("=" * 60)
+        print("🎯 Searching for tokens with MAGICUSDT's winning traits:")
+        print("   • Exceptional performance (>5% moves)")
+        print("   • Strong momentum confirmation")
+        print("   • High range position (>80%)")
+        print("   • Price above 20-period MA")
+        print("   • RSI in healthy range (50-80)")
+        print()
+
+        start_time = time.time()
+
+        # Scan for opportunities
+        opportunities = self.scan_for_momentum_surge_opportunities()
+
+        # Display results
+        self.display_opportunities(opportunities)
+
+        # Save results
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"momentum_surge_opportunities_{timestamp}.json"
+
+        results = {
+            "scan_timestamp": datetime.now().isoformat(),
+            "strategy_based_on": "MAGICUSDT +18.81% winning performance",
+            "criteria": self.strategy_params,
+            "opportunities_found": len(opportunities),
+            "top_opportunities": opportunities[:20],
+            "scan_duration": time.time() - start_time,
+        }
+
+        with open(filename, "w") as f:
+            json.dump(results, f, indent=2)
+
+        print(f"\\n✅ Results saved to: {filename}")
+        print(f"⏱️  Scan duration: {time.time() - start_time:.1f} seconds")
+        print(f"🎉 Found {len(opportunities)} tokens with MAGICUSDT-style potential!")
+
+        if opportunities:
+            print("\\n💡 NEXT STEPS:")
+            print("   1. Monitor top opportunities for entry signals")
+            print("   2. Set up alerts for momentum confirmations")
+            print("   3. Prepare position sizing (3% max per trade)")
+            print("   4. Set stop losses at recent swing lows")
+            print("   5. Take profits at 15-20% levels")
+
+        return opportunities
+
+
+if __name__ == "__main__":
+    scanner = MomentumSurgeStrategy()
+    scanner.run_momentum_surge_scanner()

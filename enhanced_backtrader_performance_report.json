@@ -1,0 +1,35 @@
+{
+  "strategy_name": "Enhanced VictoryChain MCP Strategy",
+  "version": "2.0",
+  "test_date": "2025-08-06T02:37:23.094040",
+  "initial_cash": 1000.0,
+  "final_value": 1001.932203507853,
+  "total_return_pct": 0.19322035078530586,
+  "analyzers": {
+    "sharpe_ratio": null,
+    "max_drawdown": 0.6767585278841659,
+    "total_trades": 20,
+    "won_trades": 10,
+    "lost_trades": 10,
+    "win_rate": 50.0,
+    "avg_win": 2.1671523059260367,
+    "avg_loss": -1.9739319551407384,
+    "sqn": 0.15998243260618336
+  },
+  "data_stats": {
+    "start_date": "2024-01-01T00:00:00",
+    "end_date": "2024-07-01T00:00:00",
+    "total_bars": 4369,
+    "price_range": {
+      "min": 0.12426665485797456,
+      "max": 1.1565950503577525,
+      "avg": 0.410897972776569
+    }
+  },
+  "gas_optimization": {
+    "enabled": true,
+    "min_profit_threshold": 50.0,
+    "gas_monitoring": true,
+    "single_trade_focus": true
+  }
+}

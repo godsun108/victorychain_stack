@@ -1,0 +1,173 @@
+{
+  "trade_history": [],
+  "success_patterns": {
+    "ETH/USDT": {
+      "success_count": 5,
+      "total_trades": 7,
+      "avg_profit": 0.035,
+      "best_volatility_range": [
+        0.03,
+        0.12
+      ],
+      "best_momentum_range": [
+        0.4,
+        0.8
+      ],
+      "best_times": [
+        "09:00",
+        "13:00",
+        "21:00"
+      ],
+      "confidence": 0.75
+    },
+    "BNB/USDT": {
+      "success_count": 4,
+      "total_trades": 6,
+      "avg_profit": 0.028,
+      "best_volatility_range": [
+        0.02,
+        0.1
+      ],
+      "best_momentum_range": [
+        0.3,
+        0.7
+      ],
+      "best_times": [
+        "08:00",
+        "14:00",
+        "20:00"
+      ],
+      "confidence": 0.7
+    },
+    "XRP/USDT": {
+      "success_count": 6,
+      "total_trades": 8,
+      "avg_profit": 0.042,
+      "best_volatility_range": [
+        0.04,
+        0.15
+      ],
+      "best_momentum_range": [
+        0.5,
+        0.9
+      ],
+      "best_times": [
+        "10:00",
+        "16:00",
+        "22:00"
+      ],
+      "confidence": 0.8
+    },
+    "ADA/USDT": {
+      "success_count": 3,
+      "total_trades": 5,
+      "avg_profit": 0.025,
+      "best_volatility_range": [
+        0.03,
+        0.11
+      ],
+      "best_momentum_range": [
+        0.4,
+        0.7
+      ],
+      "best_times": [
+        "11:00",
+        "15:00",
+        "19:00"
+      ],
+      "confidence": 0.65
+    },
+    "SOL/USDT": {
+      "success_count": 7,
+      "total_trades": 9,
+      "avg_profit": 0.038,
+      "best_volatility_range": [
+        0.05,
+        0.18
+      ],
+      "best_momentum_range": [
+        0.6,
+        0.9
+      ],
+      "best_times": [
+        "09:30",
+        "13:30",
+        "21:30"
+      ],
+      "confidence": 0.85
+    },
+    "LTC/USDT": {
+      "success_count": 4,
+      "total_trades": 6,
+      "avg_profit": 0.031,
+      "best_volatility_range": [
+        0.03,
+        0.13
+      ],
+      "best_momentum_range": [
+        0.4,
+        0.8
+      ],
+      "best_times": [
+        "08:30",
+        "14:30",
+        "20:30"
+      ],
+      "confidence": 0.72
+    },
+    "DOGE/USDT": {
+      "success_count": 5,
+      "total_trades": 8,
+      "avg_profit": 0.045,
+      "best_volatility_range": [
+        0.06,
+        0.2
+      ],
+      "best_momentum_range": [
+        0.5,
+        0.8
+      ],
+      "best_times": [
+        "12:00",
+        "18:00",
+        "23:00"
+      ],
+      "confidence": 0.68
+    },
+    "PEPE/USDT": {
+      "success_count": 6,
+      "total_trades": 9,
+      "avg_profit": 0.052,
+      "best_volatility_range": [
+        0.08,
+        0.25
+      ],
+      "best_momentum_range": [
+        0.6,
+        0.9
+      ],
+      "best_times": [
+        "10:30",
+        "16:30",
+        "22:30"
+      ],
+      "confidence": 0.78
+    }
+  },
+  "performance_metrics": {
+    "win_rate": 0.65,
+    "avg_profit_per_trade": 0.035,
+    "best_performing_pairs": [],
+    "optimal_timing_patterns": {},
+    "volatility_preferences": {},
+    "total_learning_trades": 56,
+    "bootstrap_confidence": 0.75
+  },
+  "adaptive_thresholds": {
+    "min_profit_threshold": 0.006,
+    "volatility_preference": 0.02,
+    "momentum_threshold": 0.3,
+    "exit_strategy_trigger": 0.08
+  },
+  "final_timestamp": "2025-08-09T17:15:41.590870"
+}

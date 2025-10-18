@@ -1,0 +1,2 @@
+fn(axum::extract::State<DashboardState>) -> impl futures_util::Future<Output = axum::Json<Vec<PositionInfo>>> {get_positions}
+fn(axum::extract::State<DashboardState>) -> impl futures_util::Future<Output = axum::Json<Vec<PositionInfo>>> {get_positions}: Handler<_, _>

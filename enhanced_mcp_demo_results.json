@@ -1,0 +1,14 @@
+{
+  "final_value": 1000.0,
+  "total_return_pct": 0.0,
+  "mcp_validations": {
+    "approved": 0,
+    "blocked": 0,
+    "emergency_override": 0
+  },
+  "trades_count": 0,
+  "winning_trades": 0,
+  "gas_optimized_exits": 0,
+  "timestamp": "2025-08-06T02:48:58.035056",
+  "strategy_version": "Enhanced MCP V2.1"
+}

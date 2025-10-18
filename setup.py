@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+"""
+🏆 VICTORYCHAIN STACK SETUP
+Professional setup script for the VictoryChain trading system
+Author: Senior Developer
+Version: 2.0.0
+"""
+
+from setuptools import setup, find_packages
+import os
+
+
+# Read the README file
+def read_readme():
+    try:
+        with open("docs/README.md", "r", encoding="utf-8") as fh:
+            return fh.read()
+    except FileNotFoundError:
+        return "VictoryChain - Professional Cryptocurrency Trading System"
+
+
+# Read requirements
+def read_requirements():
+    with open("requirements.txt", "r") as f:
+        return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+
+setup(
+    name="victorychain",
+    version="2.0.0",
+    author="VictoryChain Development Team",
+    author_email="dev@victorychain.com",
+    description="Professional cryptocurrency trading system with AI integration",
+    long_description=read_readme(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/victorychain/trading-system",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Financial and Insurance Industry",
+        "Topic :: Office/Business :: Financial :: Investment",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+    ],
+    python_requires=">=3.9",
+    install_requires=read_requirements(),
+    extras_require={
+        "dev": [
+            "pytest>=7.0.0",
+            "pytest-asyncio>=0.21.0",
+            "black>=23.0.0",
+            "isort>=5.12.0",
+            "flake8>=6.0.0",
+            "mypy>=1.0.0",
+        ],
+        "web": [
+            "Flask>=2.3.0",
+            "Flask-SocketIO>=5.3.0",
+            "eventlet>=0.33.0",
+        ],
+        "ai": [
+            "anthropic>=0.5.0",
+        ],
+    },
+    entry_points={
+        "console_scripts": [
+            "victorychain=core.victorychain_core_v2:main",
+            "victorychain-web=web.web_dashboard:main",
+            "victorychain-momentum=strategies.momentum_trader_v2:main",
+            "victorychain-analyze=utilities.all_tokens_report:main",
+        ],
+    },
+    include_package_data=True,
+    package_data={
+        "web": ["templates/*", "static/*/*"],
+        "config": ["*.toml", "*.env*"],
+    },
+    zip_safe=False,
+)

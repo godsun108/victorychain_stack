@@ -1,0 +1,387 @@
+#!/usr/bin/env python3
+"""
+Smart Accumulator - Accumulate Winners & Add USDT for Growth! 📈
+Works around precision issues by focusing on what we CAN do
+"""
+
+import os
+import json
+import time
+import logging
+from datetime import datetime
+from binance.client import Client
+from dotenv import load_dotenv
+
+
+class SmartAccumulator:
+    def __init__(self):
+        load_dotenv()
+
+        self.client = Client(
+            api_key=os.getenv("BINANCEUS_KEY"),
+            api_secret=os.getenv("BINANCEUS_SECRET"),
+            tld="us",
+        )
+
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
+
+    def analyze_portfolio_performance(self):
+        """Analyze current portfolio for winners and opportunities"""
+        try:
+            account = self.client.get_account()
+            positions = []
+            total_value = 0
+            usdt_balance = 0
+
+            for balance in account["balances"]:
+                free = float(balance["free"])
+                locked = float(balance["locked"])
+                total = free + locked
+
+                if total > 0.01:
+                    if balance["asset"] == "USDT":
+                        usdt_balance = total
+                        total_value += total
+                    else:
+                        try:
+                            symbol = balance["asset"] + "USDT"
+                            ticker = self.client.get_ticker(symbol=symbol)
+                            price = float(ticker["lastPrice"])
+                            momentum = float(ticker["priceChangePercent"])
+                            volume = float(ticker["quoteVolume"])
+                            usd_value = total * price
+
+                            # Calculate performance category
+                            if momentum > 20:
+                                category = "🚀 ROCKET"
+                            elif momentum > 5:
+                                category = "📈 WINNER"
+                            elif momentum > -2:
+                                category = "💎 STABLE"
+                            elif momentum > -10:
+                                category = "📉 DECLINING"
+                            else:
+                                category = "💥 FALLING"
+
+                            positions.append(
+                                {
+                                    "asset": balance["asset"],
+                                    "symbol": symbol,
+                                    "amount": total,
+                                    "price": price,
+                                    "usd_value": usd_value,
+                                    "momentum": momentum,
+                                    "volume": volume,
+                                    "category": category,
+                                    "accumulation_score": self.calculate_accumulation_score(
+                                        momentum, volume, usd_value
+                                    ),
+                                }
+                            )
+
+                            total_value += usd_value
+
+                        except Exception as e:
+                            continue
+
+            return {
+                "positions": sorted(
+                    positions, key=lambda x: x["accumulation_score"], reverse=True
+                ),
+                "total_value": total_value,
+                "usdt_balance": usdt_balance,
+            }
+
+        except Exception as e:
+            self.logger.error(f"Error analyzing portfolio: {e}")
+            return {"positions": [], "total_value": 0, "usdt_balance": 0}
+
+    def calculate_accumulation_score(self, momentum, volume, value):
+        """Calculate how good a position is for accumulation"""
+        score = 0
+
+        # Momentum component (positive momentum gets higher scores)
+        if momentum > 20:
+            score += 50
+        elif momentum > 10:
+            score += 30
+        elif momentum > 5:
+            score += 20
+        elif momentum > 0:
+            score += 10
+
+        # Volume component (higher volume = more liquid = easier to accumulate)
+        if volume > 1000000:
+            score += 20
+        elif volume > 100000:
+            score += 15
+        elif volume > 10000:
+            score += 10
+        else:
+            score += 5
+
+        # Position size component (existing meaningful positions get bonus)
+        if value > 50:
+            score += 15
+        elif value > 20:
+            score += 10
+        elif value > 10:
+            score += 5
+
+        return score
+
+    def find_new_opportunities(self):
+        """Find new opportunities to add to portfolio"""
+        try:
+            tickers = self.client.get_ticker()
+
+            opportunities = []
+            for ticker in tickers:
+                if ticker["symbol"].endswith("USDT"):
+                    momentum = float(ticker["priceChangePercent"])
+                    volume = float(ticker["quoteVolume"])
+                    price = float(ticker["lastPrice"])
+
+                    # Focus on strong performers
+                    if momentum > 10 and volume > 5000:
+                        opportunities.append(
+                            {
+                                "symbol": ticker["symbol"],
+                                "momentum": momentum,
+                                "volume": volume,
+                                "price": price,
+                                "opportunity_score": momentum
+                                + (volume / 50000),  # Boost for volume
+                            }
+                        )
+
+            return sorted(
+                opportunities, key=lambda x: x["opportunity_score"], reverse=True
+            )[:10]
+
+        except Exception as e:
+            self.logger.error(f"Error finding opportunities: {e}")
+            return []
+
+    def accumulate_position(self, symbol, amount_usd):
+        """Add to an existing position or create new one"""
+        try:
+            print(f"📈 ACCUMULATING {symbol}: ${amount_usd:.2f}")
+
+            order = self.client.order_market_buy(
+                symbol=symbol, quoteOrderQty=amount_usd
+            )
+
+            print(f"✅ ACCUMULATED! Order ID: {order['orderId']}")
+            return True
+
+        except Exception as e:
+            print(f"❌ ACCUMULATION FAILED: {e}")
+            return False
+
+    def run_accumulation_strategy(self):
+        """Run the smart accumulation strategy"""
+        try:
+            print("📈 SMART ACCUMULATOR")
+            print("=" * 50)
+            print("💡 Strategy: Accumulate winners + Add to strong positions!")
+            print()
+
+            # Analyze current portfolio
+            analysis = self.analyze_portfolio_performance()
+
+            print(f"💰 Total Portfolio: ${analysis['total_value']:.2f}")
+            print(f"💵 Available USDT: ${analysis['usdt_balance']:.2f}")
+
+            if not analysis["positions"]:
+                print("❌ No positions found")
+                return
+
+            print("\n🏆 CURRENT POSITIONS (by accumulation score):")
+            print("-" * 70)
+
+            categories = {}
+            for pos in analysis["positions"]:
+                cat = pos["category"]
+                if cat not in categories:
+                    categories[cat] = []
+                categories[cat].append(pos)
+
+            for category, positions in categories.items():
+                print(f"\n{category}:")
+                for pos in positions:
+                    pct = (pos["usd_value"] / analysis["total_value"]) * 100
+                    print(
+                        f"  {pos['asset']:8s} | ${pos['usd_value']:8.2f} ({pct:4.1f}%) | "
+                        f"{pos['momentum']:+6.2f}% | Score: {pos['accumulation_score']:3.0f}"
+                    )
+
+            # Find new opportunities
+            print("\n🔍 Finding accumulation opportunities...")
+            opportunities = self.find_new_opportunities()
+
+            if opportunities:
+                print("\n🎯 NEW ACCUMULATION OPPORTUNITIES:")
+                print("-" * 60)
+                for i, opp in enumerate(opportunities[:5], 1):
+                    print(
+                        f"{i}. {opp['symbol']:12s} | {opp['momentum']:+6.2f}% | "
+                        f"Vol: ${opp['volume']:,.0f} | Score: {opp['opportunity_score']:.1f}"
+                    )
+
+            # Strategy options
+            print("\n💡 ACCUMULATION STRATEGIES:")
+            print("1. 🎯 Add to BEST performing position")
+            print("2. 🚀 Add to TOP 3 performing positions")
+            print("3. 🆕 Buy NEW opportunity with highest momentum")
+            print("4. 💎 Custom allocation")
+
+            available = analysis["usdt_balance"]
+            if available < 3:
+                print(f"\n⚠️  Low USDT balance: ${available:.2f}")
+                print("💡 Consider depositing more USDT for better accumulation power!")
+
+                if available < 1:
+                    print("❌ Insufficient USDT for meaningful accumulation")
+                    return
+
+            choice = input(
+                f"\nChoose strategy (1-4) [Available: ${available:.2f}]: "
+            ).strip()
+
+            executed_trades = 0
+
+            if choice == "1" and available >= 1:
+                # Add to best performer
+                if analysis["positions"]:
+                    best = analysis["positions"][0]
+                    amount = min(available * 0.95, 50)  # Use 95% or max $50
+
+                    print(f"\n🎯 ADDING TO BEST PERFORMER: {best['asset']}")
+                    print(f"Current momentum: {best['momentum']:+.2f}%")
+
+                    confirm = input(f"Add ${amount:.2f} to {best['asset']}? (y/n): ")
+                    if confirm.lower() == "y":
+                        if self.accumulate_position(best["symbol"], amount):
+                            executed_trades = 1
+
+            elif choice == "2" and available >= 2:
+                # Split among top 3
+                top_3 = analysis["positions"][:3]
+                amount_each = (available * 0.95) / len(top_3)
+
+                if amount_each >= 0.5:  # Minimum per position
+                    print(f"\n🚀 ADDING TO TOP 3 PERFORMERS:")
+                    for pos in top_3:
+                        print(
+                            f"  {pos['asset']:8s} | {pos['momentum']:+6.2f}% | +${amount_each:.2f}"
+                        )
+
+                    confirm = input("Execute top 3 accumulation? (y/n): ")
+                    if confirm.lower() == "y":
+                        for pos in top_3:
+                            if self.accumulate_position(pos["symbol"], amount_each):
+                                executed_trades += 1
+                                time.sleep(1)
+
+            elif choice == "3" and available >= 1:
+                # Buy new opportunity
+                if opportunities:
+                    new_opp = opportunities[0]
+                    amount = min(available * 0.95, 30)  # Conservative for new position
+
+                    print(f"\n🆕 NEW OPPORTUNITY: {new_opp['symbol']}")
+                    print(f"Momentum: {new_opp['momentum']:+.2f}%")
+                    print(f"Volume: ${new_opp['volume']:,.0f}")
+
+                    confirm = input(
+                        f"Invest ${amount:.2f} in {new_opp['symbol']}? (y/n): "
+                    )
+                    if confirm.lower() == "y":
+                        if self.accumulate_position(new_opp["symbol"], amount):
+                            executed_trades = 1
+
+            elif choice == "4":
+                # Custom allocation
+                print("\n💎 CUSTOM ACCUMULATION:")
+                print("Choose token and amount...")
+
+                # Show all options
+                all_options = analysis["positions"] + [
+                    {
+                        "asset": opp["symbol"].replace("USDT", ""),
+                        "symbol": opp["symbol"],
+                        "momentum": opp["momentum"],
+                    }
+                    for opp in opportunities[:3]
+                ]
+
+                for i, opt in enumerate(all_options[:8], 1):
+                    symbol = opt.get("symbol", opt["asset"] + "USDT")
+                    momentum = opt.get("momentum", 0)
+                    print(f"{i}. {symbol:12s} | {momentum:+6.2f}%")
+
+                try:
+                    token_idx = int(input("Choose token (number): ")) - 1
+                    amount = float(input(f"Amount to invest (max ${available:.2f}): $"))
+
+                    if 0 <= token_idx < len(all_options) and 0 < amount <= available:
+                        selected = all_options[token_idx]
+                        symbol = selected.get("symbol", selected["asset"] + "USDT")
+
+                        if self.accumulate_position(symbol, amount):
+                            executed_trades = 1
+                    else:
+                        print("❌ Invalid selection")
+
+                except:
+                    print("❌ Invalid input")
+            else:
+                print("❌ Invalid choice or insufficient balance")
+                return
+
+            if executed_trades > 0:
+                print(f"\n🎉 ACCUMULATION COMPLETE!")
+                print(f"📈 Executed {executed_trades} accumulation trades!")
+                print("💎 YOUR NUMBERS SHOULD GROW STRONGER!")
+
+                # Save trade record
+                trade_record = {
+                    "timestamp": datetime.now().isoformat(),
+                    "strategy": f"Smart Accumulator Strategy {choice}",
+                    "trades_executed": executed_trades,
+                    "starting_balance": analysis["usdt_balance"],
+                }
+
+                filename = (
+                    f"accumulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                )
+                with open(filename, "w") as f:
+                    json.dump(trade_record, f, indent=2, default=str)
+
+                print(f"💾 Trade record: {filename}")
+
+                # Show tips for more growth
+                print("\n💡 TIPS TO MAKE NUMBERS GO UP EVEN MORE:")
+                print("• Deposit more USDT for stronger accumulation power")
+                print("• Run this accumulator regularly during high momentum periods")
+                print("• Focus on your best performers (highest scores)")
+                print("• Consider DCA (Dollar Cost Averaging) into winners")
+
+            else:
+                print("❌ No accumulation trades executed")
+
+        except KeyboardInterrupt:
+            print("\n👋 Accumulation cancelled")
+        except Exception as e:
+            self.logger.error(f"Accumulation error: {e}")
+
+
+def main():
+    accumulator = SmartAccumulator()
+    accumulator.run_accumulation_strategy()
+
+
+if __name__ == "__main__":
+    main()

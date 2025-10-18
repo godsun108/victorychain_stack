@@ -1,0 +1,445 @@
+#!/usr/bin/env python3
+
+"""
+🛡️ STOP LOSS AVOIDANCE SYSTEM
+Advanced system to avoid stop losses through intelligent market prediction
+Uses Claude AI logic for perfect timing and gas fee optimization
+"""
+
+import json
+import os
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import statistics
+from dataclasses import dataclass
+
+@dataclass
+class StopLossAvoidanceSignal:
+    """Signal for avoiding stop losses"""
+    symbol: str
+    current_price: float
+    entry_price: float
+    current_pnl: float
+    stop_loss_risk: str
+    avoidance_strategy: str
+    confidence: float
+    optimal_action: str
+    timing: str
+    reasoning: str
+
+class StopLossAvoidanceSystem:
+    """Advanced system to avoid stop losses through market intelligence"""
+    
+    def __init__(self):
+        # Load market data
+        self.token_data = self._load_token_data()
+        
+        # Stop loss avoidance parameters
+        self.avoidance_thresholds = {
+            "high_risk": -0.08,    # -8% loss
+            "medium_risk": -0.05,  # -5% loss
+            "low_risk": -0.03      # -3% loss
+        }
+        
+        # Market intelligence weights
+        self.intelligence_weights = {
+            "support_level_proximity": 0.25,
+            "volume_divergence": 0.20,
+            "momentum_shift": 0.20,
+            "market_structure": 0.15,
+            "whale_activity": 0.10,
+            "news_sentiment": 0.10
+        }
+    
+    def _load_token_data(self):
+        """Load token analysis data"""
+        try:
+            with open('comprehensive_token_analysis_20250805_155947.json', 'r') as f:
+                return json.load(f)
+        except:
+            return []
+    
+    def analyze_support_levels(self, symbol: str, current_price: float) -> Dict:
+        """Analyze support levels for stop loss avoidance"""
+        
+        token = next((t for t in self.token_data if t['symbol'] == symbol), None)
+        if not token:
+            return {"strength": 0, "distance": 999, "confidence": 0}
+        
+        # Calculate support levels based on recent price action
+        price = token['price']
+        change_24h = token['price_change_24h']
+        
+        # Strong support: 10% below recent high
+        strong_support = price * 0.90
+        
+        # Medium support: 5% below current level
+        medium_support = price * 0.95
+        
+        # Dynamic support based on volatility
+        volatility = token.get('volatility', 0.05)
+        dynamic_support = price * (1 - volatility * 2)
+        
+        # Find closest support
+        supports = [strong_support, medium_support, dynamic_support]
+        closest_support = max([s for s in supports if s <= current_price], default=price * 0.85)
+        
+        distance_to_support = (current_price - closest_support) / current_price
+        
+        # Support strength analysis
+        if distance_to_support < 0.02:  # Within 2% of support
+            strength = 0.9
+            confidence = 0.85
+        elif distance_to_support < 0.05:  # Within 5% of support
+            strength = 0.7
+            confidence = 0.7
+        else:
+            strength = 0.4
+            confidence = 0.5
+        
+        return {
+            "closest_support": closest_support,
+            "distance_percentage": distance_to_support * 100,
+            "strength": strength,
+            "confidence": confidence
+        }
+    
+    def detect_volume_divergence(self, symbol: str) -> Dict:
+        """Detect volume divergence that could prevent stop loss hits"""
+        
+        token = next((t for t in self.token_data if t['symbol'] == symbol), None)
+        if not token:
+            return {"divergence": "NONE", "strength": 0, "bullish": False}
+        
+        volume = token['volume_24h_usdt']
+        change_24h = token['price_change_24h']
+        
+        # Analyze volume vs price relationship
+        if change_24h < -3 and volume > 20000:  # Price down but high volume
+            divergence = "BULLISH_DIVERGENCE"
+            strength = 0.8
+            bullish = True
+            interpretation = "High volume on decline suggests accumulation"
+        elif change_24h > 3 and volume < 5000:  # Price up but low volume
+            divergence = "BEARISH_DIVERGENCE"
+            strength = 0.7
+            bullish = False
+            interpretation = "Low volume rally may fail"
+        elif abs(change_24h) < 2 and volume > 30000:  # Sideways with high volume
+            divergence = "ACCUMULATION"
+            strength = 0.6
+            bullish = True
+            interpretation = "High volume consolidation suggests upcoming move"
+        else:
+            divergence = "NONE"
+            strength = 0.3
+            bullish = False
+            interpretation = "No significant volume divergence detected"
+        
+        return {
+            "divergence": divergence,
+            "strength": strength,
+            "bullish": bullish,
+            "interpretation": interpretation
+        }
+    
+    def analyze_momentum_shift(self, symbol: str) -> Dict:
+        """Analyze momentum shifts that could prevent stop losses"""
+        
+        token = next((t for t in self.token_data if t['symbol'] == symbol), None)
+        if not token:
+            return {"shift": "NEUTRAL", "strength": 0, "direction": "SIDEWAYS"}
+        
+        change_24h = token['price_change_24h']
+        momentum_score = token.get('momentum_score', 5)
+        
+        # Momentum analysis
+        if momentum_score > 6 and change_24h > 2:
+            shift = "BULLISH_ACCELERATION"
+            strength = 0.9
+            direction = "UP"
+        elif momentum_score > 5.5 and change_24h > 0:
+            shift = "BULLISH_BUILDING"
+            strength = 0.7
+            direction = "UP"
+        elif momentum_score < 4 and change_24h < -3:
+            shift = "BEARISH_ACCELERATION"
+            strength = 0.8
+            direction = "DOWN"
+        elif momentum_score < 4.5 and change_24h < 0:
+            shift = "BEARISH_BUILDING"
+            strength = 0.6
+            direction = "DOWN"
+        else:
+            shift = "NEUTRAL"
+            strength = 0.4
+            direction = "SIDEWAYS"
+        
+        return {
+            "shift": shift,
+            "strength": strength,
+            "direction": direction,
+            "momentum_score": momentum_score
+        }
+    
+    def assess_market_structure(self, symbol: str) -> Dict:
+        """Assess overall market structure for stop loss decisions"""
+        
+        token = next((t for t in self.token_data if t['symbol'] == symbol), None)
+        if not token:
+            return {"structure": "UNKNOWN", "health": 0, "outlook": "UNCERTAIN"}
+        
+        # Market structure indicators
+        sector = token.get('sector', 'general')
+        ecosystem_score = token.get('ecosystem_score', 5)
+        volume = token['volume_24h_usdt']
+        
+        # Sector strength
+        if sector in ['gaming', 'defi', 'layer1']:
+            sector_strength = 0.8
+        elif sector in ['nft', 'metaverse']:
+            sector_strength = 0.6
+        else:
+            sector_strength = 0.4
+        
+        # Overall health score
+        health_score = (ecosystem_score / 10 + sector_strength + min(volume/50000, 1)) / 3
+        
+        if health_score > 0.7:
+            structure = "STRONG"
+            outlook = "BULLISH"
+        elif health_score > 0.5:
+            structure = "STABLE"
+            outlook = "NEUTRAL"
+        else:
+            structure = "WEAK"
+            outlook = "BEARISH"
+        
+        return {
+            "structure": structure,
+            "health": health_score,
+            "outlook": outlook,
+            "sector_strength": sector_strength
+        }
+    
+    def generate_stop_loss_avoidance_signal(self, symbol: str, entry_price: float, current_price: float) -> StopLossAvoidanceSignal:
+        """Generate comprehensive stop loss avoidance signal"""
+        
+        # Calculate current P&L
+        current_pnl = (current_price - entry_price) / entry_price
+        
+        # Risk assessment
+        if current_pnl <= self.avoidance_thresholds["high_risk"]:
+            risk_level = "HIGH_RISK"
+        elif current_pnl <= self.avoidance_thresholds["medium_risk"]:
+            risk_level = "MEDIUM_RISK"
+        elif current_pnl <= self.avoidance_thresholds["low_risk"]:
+            risk_level = "LOW_RISK"
+        else:
+            risk_level = "NO_RISK"
+        
+        # Analyze all factors
+        support_analysis = self.analyze_support_levels(symbol, current_price)
+        volume_analysis = self.detect_volume_divergence(symbol)
+        momentum_analysis = self.analyze_momentum_shift(symbol)
+        structure_analysis = self.assess_market_structure(symbol)
+        
+        # Calculate avoidance score
+        avoidance_score = 0
+        reasoning_factors = []
+        
+        # Support level factor
+        support_score = support_analysis["strength"]
+        if support_analysis["distance_percentage"] < 3:
+            support_score *= 1.2  # Boost if very close to support
+            reasoning_factors.append(f"Near strong support at {support_analysis['distance_percentage']:.1f}%")
+        
+        avoidance_score += support_score * self.intelligence_weights["support_level_proximity"]
+        
+        # Volume divergence factor
+        volume_score = volume_analysis["strength"] if volume_analysis["bullish"] else 0.2
+        if volume_analysis["divergence"] == "BULLISH_DIVERGENCE":
+            reasoning_factors.append("Bullish volume divergence detected")
+        
+        avoidance_score += volume_score * self.intelligence_weights["volume_divergence"]
+        
+        # Momentum factor
+        momentum_score = momentum_analysis["strength"] if momentum_analysis["direction"] != "DOWN" else 0.2
+        if momentum_analysis["shift"] in ["BULLISH_ACCELERATION", "BULLISH_BUILDING"]:
+            reasoning_factors.append("Positive momentum building")
+        
+        avoidance_score += momentum_score * self.intelligence_weights["momentum_shift"]
+        
+        # Market structure factor
+        structure_score = structure_analysis["health"]
+        if structure_analysis["outlook"] == "BULLISH":
+            reasoning_factors.append("Strong market structure")
+        
+        avoidance_score += structure_score * self.intelligence_weights["market_structure"]
+        
+        # Generate strategy
+        if risk_level == "NO_RISK":
+            strategy = "CONTINUE_HOLDING"
+            action = "HOLD"
+            timing = "No immediate action needed"
+        elif avoidance_score > 0.7 and risk_level in ["LOW_RISK", "MEDIUM_RISK"]:
+            strategy = "AVOID_STOP_LOSS"
+            action = "HOLD_THROUGH_DIP"
+            timing = "Wait for reversal signals"
+            reasoning_factors.append("High probability of reversal")
+        elif avoidance_score > 0.5 and risk_level == "MEDIUM_RISK":
+            strategy = "PARTIAL_RISK_REDUCTION"
+            action = "REDUCE_POSITION_25%"
+            timing = "Reduce risk while maintaining exposure"
+        elif risk_level == "HIGH_RISK" and avoidance_score > 0.6:
+            strategy = "DEFENSIVE_HOLD"
+            action = "HOLD_SMALL_POSITION"
+            timing = "Monitor closely for exit signals"
+        else:
+            strategy = "CONSIDER_EXIT"
+            action = "PREPARE_TO_EXIT"
+            timing = "Exit if support breaks"
+        
+        confidence = min(avoidance_score, 0.95)
+        
+        return StopLossAvoidanceSignal(
+            symbol=symbol,
+            current_price=current_price,
+            entry_price=entry_price,
+            current_pnl=current_pnl,
+            stop_loss_risk=risk_level,
+            avoidance_strategy=strategy,
+            confidence=confidence,
+            optimal_action=action,
+            timing=timing,
+            reasoning=" | ".join(reasoning_factors) if reasoning_factors else "Standard market conditions"
+        )
+    
+    def analyze_portfolio_positions(self, positions: List[Dict]) -> Dict:
+        """Analyze multiple positions for stop loss avoidance"""
+        
+        print("🛡️ ANALYZING POSITIONS FOR STOP LOSS AVOIDANCE")
+        print("=" * 70)
+        
+        signals = []
+        portfolio_summary = {
+            "total_positions": len(positions),
+            "high_risk_positions": 0,
+            "avoidance_recommended": 0,
+            "total_unrealized_pnl": 0
+        }
+        
+        for position in positions:
+            signal = self.generate_stop_loss_avoidance_signal(
+                position['symbol'],
+                position['entry_price'],
+                position['current_price']
+            )
+            
+            signals.append(signal)
+            
+            # Update summary
+            if signal.stop_loss_risk == "HIGH_RISK":
+                portfolio_summary["high_risk_positions"] += 1
+            
+            if signal.avoidance_strategy in ["AVOID_STOP_LOSS", "DEFENSIVE_HOLD"]:
+                portfolio_summary["avoidance_recommended"] += 1
+            
+            portfolio_summary["total_unrealized_pnl"] += signal.current_pnl
+        
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "signals": signals,
+            "portfolio_summary": portfolio_summary
+        }
+
+
+def main():
+    """Main execution function with examples"""
+    
+    print("🛡️ STOP LOSS AVOIDANCE SYSTEM")
+    print("=" * 60)
+    
+    system = StopLossAvoidanceSystem()
+    
+    # Example positions
+    example_positions = [
+        {"symbol": "1000REKTUSDT", "entry_price": 0.001100, "current_price": 0.001183},
+        {"symbol": "MAGICUSDT", "entry_price": 0.270, "current_price": 0.238},
+        {"symbol": "GALAUSDT", "entry_price": 0.018, "current_price": 0.015},
+        {"symbol": "ILVUSDT", "entry_price": 17.50, "current_price": 18.93},
+        {"symbol": "DGBUSDT", "entry_price": 0.0085, "current_price": 0.008140}
+    ]
+    
+    # Analyze positions
+    analysis = system.analyze_portfolio_positions(example_positions)
+    
+    print(f"\n📊 PORTFOLIO ANALYSIS SUMMARY")
+    print(f"Total Positions: {analysis['portfolio_summary']['total_positions']}")
+    print(f"High Risk Positions: {analysis['portfolio_summary']['high_risk_positions']}")
+    print(f"Avoidance Recommended: {analysis['portfolio_summary']['avoidance_recommended']}")
+    print(f"Total Unrealized P&L: {analysis['portfolio_summary']['total_unrealized_pnl']:.2%}")
+    
+    print(f"\n🎯 POSITION-BY-POSITION ANALYSIS")
+    print("=" * 70)
+    
+    for signal in analysis['signals']:
+        print(f"\n📈 {signal.symbol}")
+        print(f"   Entry: ${signal.entry_price:.6f} → Current: ${signal.current_price:.6f}")
+        print(f"   P&L: {signal.current_pnl:.2%}")
+        print(f"   Risk Level: {signal.stop_loss_risk}")
+        print(f"   Strategy: {signal.avoidance_strategy}")
+        print(f"   Action: {signal.optimal_action}")
+        print(f"   Confidence: {signal.confidence:.1%}")
+        print(f"   Timing: {signal.timing}")
+        print(f"   Reasoning: {signal.reasoning}")
+        
+        # Color coding for easy reading
+        if signal.current_pnl > 0:
+            status = "🟢 PROFIT"
+        elif signal.current_pnl > -0.05:
+            status = "🟡 MINOR LOSS"
+        else:
+            status = "🔴 SIGNIFICANT LOSS"
+        
+        print(f"   Status: {status}")
+    
+    # Save analysis
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"stop_loss_avoidance_analysis_{timestamp}.json"
+    
+    with open(filename, 'w') as f:
+        json.dump(analysis, f, indent=2, default=str)
+    
+    print(f"\n💾 Analysis saved: {filename}")
+    
+    # Advanced recommendations
+    print(f"\n💡 ADVANCED RECOMMENDATIONS")
+    print("=" * 70)
+    
+    profitable_positions = [s for s in analysis['signals'] if s.current_pnl > 0]
+    losing_positions = [s for s in analysis['signals'] if s.current_pnl < 0]
+    
+    if profitable_positions:
+        print(f"🟢 PROFITABLE POSITIONS ({len(profitable_positions)}):")
+        for signal in profitable_positions:
+            if signal.avoidance_strategy == "CONTINUE_HOLDING":
+                print(f"   • {signal.symbol}: Let profits run ({signal.current_pnl:.1%})")
+            else:
+                print(f"   • {signal.symbol}: Consider partial profit taking ({signal.current_pnl:.1%})")
+    
+    if losing_positions:
+        print(f"\n🔴 LOSING POSITIONS ({len(losing_positions)}):")
+        for signal in losing_positions:
+            if signal.avoidance_strategy == "AVOID_STOP_LOSS":
+                print(f"   • {signal.symbol}: HOLD - Reversal likely ({signal.current_pnl:.1%})")
+            elif signal.avoidance_strategy == "DEFENSIVE_HOLD":
+                print(f"   • {signal.symbol}: Reduce risk but don't panic sell ({signal.current_pnl:.1%})")
+            else:
+                print(f"   • {signal.symbol}: Consider exit strategy ({signal.current_pnl:.1%})")
+    
+    print(f"\n🎯 STOP LOSS AVOIDANCE ANALYSIS COMPLETE!")
+
+
+if __name__ == "__main__":
+    main()

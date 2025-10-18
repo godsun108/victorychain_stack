@@ -1,0 +1,55 @@
+# VictoryChain Core Configuration
+# Consolidated configuration for all trading operations
+
+[trading]
+# Minimum USDT balance to trade
+min_balance = 10.0
+
+# Maximum percentage of balance per position
+max_position_pct = 0.8
+
+# Risk management
+stop_loss_pct = 0.08      # 8% stop loss
+take_profit_pct = 0.15    # 15% take profit
+
+# Analysis thresholds
+momentum_threshold = 5.0       # Minimum 5% price change
+similarity_threshold = 50.0    # Minimum 50% similarity to reference pattern
+
+[analysis]
+# Reference pattern (MAGICUSDT winning traits)
+reference_performance = 18.81
+reference_momentum = 0.998
+reference_range_position = 0.97
+
+# Analysis parameters
+scan_interval_minutes = 5
+max_opportunities = 10
+claude_analysis = true
+
+[api]
+# Rate limiting
+max_requests_per_minute = 60
+request_delay_ms = 1000
+
+# Retry settings
+max_retries = 3
+retry_delay_seconds = 5
+
+[logging]
+# Log level (DEBUG, INFO, WARNING, ERROR)
+log_level = "INFO"
+
+# Log file settings
+log_to_file = true
+log_file_path = "victorychain.log"
+max_log_size_mb = 50
+
+[alerts]
+# Enable notifications
+enable_alerts = false
+webhook_url = ""
+
+# Alert thresholds
+high_similarity_threshold = 80.0
+exceptional_gain_threshold = 20.0

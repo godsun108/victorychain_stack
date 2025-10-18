@@ -1,0 +1,58 @@
+{
+  "symbol": "MATIC",
+  "acquisition_date": "2025-08-05T21:50:05.464971",
+  "initial_price": 0.8258377670270962,
+  "current_price": 0.7718489170604953,
+  "price_performance": {
+    "1d": 0.0,
+    "7d": 0.0,
+    "30d": 0.0,
+    "90d": 0.0,
+    "total": -6.537464393394534,
+    "last_update": "2025-08-05T21:56:53.118285"
+  },
+  "volume_patterns": {
+    "avg_daily": 63133764.19887161,
+    "volatility": 83.39442348373034,
+    "liquidity_score": 6.4754241439982145,
+    "current": 180000000
+  },
+  "volatility_evolution": [
+    83.39442348373034,
+    46.10347098027489,
+    82.51334571215989,
+    70.27232187983607,
+    45
+  ],
+  "correlation_matrix": {},
+  "optimal_entry_points": [
+    0.7718489170604953
+  ],
+  "optimal_exit_points": [
+    0.7659112600674907,
+    0.7580471182548654
+  ],
+  "successful_allocation_sizes": [],
+  "gas_cost_history": [],
+  "sector_influence": {
+    "infrastructure": 1.0
+  },
+  "whale_behavior_patterns": [],
+  "social_sentiment_correlation": {},
+  "news_impact_scores": [],
+  "success_prediction_accuracy": 0.5,
+  "allocation_optimization_score": 0.5,
+  "gas_savings_achieved": 0.0,
+  "learning_confidence": 0.3,
+  "fibonacci_retracement_accuracy": {},
+  "support_resistance_reliability": {},
+  "breakout_pattern_success": {},
+  "mean_reversion_tendency": 0.5,
+  "correlation_insights": {},
+  "sector_spillover_effects": {},
+  "market_cycle_behavior": {},
+  "optimal_transaction_times": [],
+  "gas_price_sensitivity": 0.5,
+  "batch_efficiency_scores": {},
+  "layer2_migration_benefits": {}
+}

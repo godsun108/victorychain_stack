@@ -1,0 +1,114 @@
+import os
+import functools
+import logging
+from typing import Callable, Any, Dict, Optional
+
+try:
+    from governance import vault
+    from governance import approvals as gov_approvals
+    from governance import prompt_version as _pv
+except Exception:
+    vault = None
+    gov_approvals = None
+    _pv = None
+
+# Resolve approval secret env name
+try:
+    APPROVAL_SECRET_ENV = getattr(
+        gov_approvals, "APPROVAL_SECRET_ENV", "APPROVAL_SECRET"
+    )
+except Exception:
+    APPROVAL_SECRET_ENV = "APPROVAL_SECRET"
+
+try:
+    # Local centralized approvals lib (same algo as governance.approvals)
+    from libs.common.approvals import verify as central_verify
+except Exception:
+    central_verify = None
+
+logger = logging.getLogger(__name__)
+
+MODE_ENV = "MODE"
+APPROVAL_TOKEN_ENV = "APPROVAL_TOKEN"
+
+
+def _append_ledger(event: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    if not _pv:
+        return
+    try:
+        ph = _pv.compute_prompt_hash()
+        commit = _pv.get_git_commit()
+        _pv.append_ledger_event(event, "guards", ph, commit, extra or {})
+    except Exception:
+        pass
+
+
+def deny_all_if_lockdown() -> bool:
+    """Return True if global lockdown is active and we must block actions."""
+    if vault and getattr(vault, "deny_all", None):
+        try:
+            return bool(vault.deny_all())
+        except Exception:
+            return False
+    return False
+
+
+def require_approval(
+    action: str, params_provider: Optional[Callable[[], Dict[str, Any]]] = None
+) -> Callable:
+    """Decorator to require approval for live actions.
+    - Honors MODE (default paper). If MODE != 'live', the wrapped function will log and skip.
+    - If MODE == 'live', requires APPROVAL_TOKEN that verifies for the given action.
+    - Denies all if governance vault lockdown is active.
+    - Enforces real APPROVAL_SECRET present for any live usage (no fallback in guards).
+    The wrapped function should handle being skipped (e.g., by returning None or a stub result).
+    """
+
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            mode = os.getenv(MODE_ENV, "paper").lower()
+            if deny_all_if_lockdown():
+                logger.error(
+                    "LOCKDOWN active: deny-all; blocking live action %s", action
+                )
+                _append_ledger("LOCKDOWN_BLOCK", {"action": action})
+                raise PermissionError("lockdown_active")
+            if mode != "live":
+                logger.info("Paper mode: skipping live action %s", action)
+                return None
+            # Live-only: require a real approval secret in env
+            if not os.getenv(APPROVAL_SECRET_ENV):
+                logger.error("Missing APPROVAL_SECRET; blocking live action %s", action)
+                _append_ledger(
+                    "APPROVAL_FAILED",
+                    {"action": action, "reason": "missing_approval_secret"},
+                )
+                raise PermissionError("missing_approval_secret")
+            token = os.getenv(APPROVAL_TOKEN_ENV, "")
+            params = params_provider() if params_provider else {}
+            # Prefer governance.approvals if present, else central lib
+            verifier = None
+            if gov_approvals and getattr(gov_approvals, "verify", None):
+                verifier = gov_approvals.verify
+            elif central_verify:
+                verifier = central_verify
+            if verifier is None:
+                logger.error(
+                    "No approval verifier available; blocking action %s", action
+                )
+                _append_ledger(
+                    "APPROVAL_FAILED", {"action": action, "reason": "missing_verifier"}
+                )
+                raise PermissionError("missing_verifier")
+            res = verifier(token, action=action, params=params)
+            if not res.ok:
+                reason = getattr(res, "reason", "unknown")
+                logger.error("Approval failed for action %s: %s", action, reason)
+                _append_ledger("APPROVAL_FAILED", {"action": action, "reason": reason})
+                raise PermissionError(f"approval_failed:{reason}")
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

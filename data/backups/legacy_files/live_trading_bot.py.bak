@@ -1,0 +1,716 @@
+#!/usr/bin/env python3
+"""
+VictoryChain 24/7 Live Trading Bot
+Statistical momentum analysis with automated trading execution
+"""
+
+import requests
+import json
+import os
+import time
+import math
+import statistics
+import hmac
+import hashlib
+import urllib.parse
+from datetime import datetime, timedelta
+from typing import List, Dict, Tuple, Optional
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('live_trading_bot.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+class ClaudeAnalyzer:
+    def __init__(self):
+        self.api_key = os.getenv('CLAUDE_API_KEY', '')
+        self.base_url = "https://api.anthropic.com/v1/messages"
+        
+    def analyze_token_momentum(self, symbol: str, price_data: List[float], volume_data: List[float]) -> Dict:
+        """Use Claude AI to analyze token momentum with standard deviation"""
+        if not self.api_key:
+            return self._fallback_analysis(price_data, volume_data)
+            
+        try:
+            # Calculate statistical metrics
+            price_std = statistics.stdev(price_data) if len(price_data) > 1 else 0
+            volume_std = statistics.stdev(volume_data) if len(volume_data) > 1 else 0
+            price_mean = statistics.mean(price_data)
+            volume_mean = statistics.mean(volume_data)
+            
+            # Recent momentum indicators
+            recent_prices = price_data[-24:] if len(price_data) >= 24 else price_data
+            momentum_1h = (price_data[-1] - price_data[-2]) / price_data[-2] * 100 if len(price_data) >= 2 else 0
+            momentum_24h = (price_data[-1] - recent_prices[0]) / recent_prices[0] * 100 if len(recent_prices) > 0 else 0
+            
+            prompt = f"""Analyze the statistical momentum for token {symbol}:
+
+STATISTICAL DATA:
+- Price Standard Deviation: {price_std:.6f}
+- Volume Standard Deviation: {volume_std:.0f}
+- Price Mean: {price_mean:.6f}
+- Volume Mean: {volume_mean:.0f}
+- 1h Momentum: {momentum_1h:.2f}%
+- 24h Momentum: {momentum_24h:.2f}%
+- Price Volatility: {(price_std/price_mean)*100:.2f}%
+
+RECENT PRICE DATA: {price_data[-10:]}
+RECENT VOLUME DATA: {volume_data[-10:]}
+
+Based on standard deviation analysis and momentum patterns, provide:
+1. Momentum Score (0-100): Statistical likelihood of continued momentum
+2. Hold Probability (%): Chance this token will gain 15-25% when held
+3. Risk Assessment: Volatility-adjusted recommendation
+4. Standard Deviation Insight: How price volatility affects holding strategy
+
+Respond in JSON format:
+{{"momentum_score": number, "hold_probability": number, "risk_level": "low/medium/high", "std_insight": "brief analysis", "claude_recommendation": "hold/avoid"}}"""
+
+            headers = {
+                'Content-Type': 'application/json',
+                'x-api-key': self.api_key,
+                'anthropic-version': '2023-06-01'
+            }
+            
+            data = {
+                'model': 'claude-3-sonnet-20240229',
+                'max_tokens': 300,
+                'messages': [{'role': 'user', 'content': prompt}]
+            }
+            
+            response = requests.post(self.base_url, headers=headers, json=data, timeout=10)
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result['content'][0]['text']
+                
+                # Extract JSON from Claude's response
+                try:
+                    import re
+                    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                    if json_match:
+                        claude_analysis = json.loads(json_match.group())
+                        logger.info(f"🤖 Claude analysis for {symbol}: Score {claude_analysis.get('momentum_score', 0)}")
+                        return claude_analysis
+                except:
+                    pass
+                    
+            return self._fallback_analysis(price_data, volume_data)
+            
+        except Exception as e:
+            logger.warning(f"Claude API failed for {symbol}: {e}")
+            return self._fallback_analysis(price_data, volume_data)
+    
+    def _fallback_analysis(self, price_data: List[float], volume_data: List[float]) -> Dict:
+        """Fallback statistical analysis when Claude API is unavailable"""
+        try:
+            if len(price_data) < 2:
+                return {"momentum_score": 0, "hold_probability": 0, "risk_level": "high", "std_insight": "insufficient data", "claude_recommendation": "avoid"}
+                
+            price_std = statistics.stdev(price_data)
+            price_mean = statistics.mean(price_data)
+            
+            # Calculate momentum indicators
+            momentum_1h = (price_data[-1] - price_data[-2]) / price_data[-2] * 100
+            momentum_24h = (price_data[-1] - price_data[0]) / price_data[0] * 100 if len(price_data) > 24 else momentum_1h
+            
+            # Volatility analysis
+            volatility = (price_std / price_mean) * 100
+            
+            # Score based on momentum and volatility
+            momentum_score = max(0, min(100, 50 + momentum_24h * 2 - volatility))
+            hold_probability = max(0, min(100, 30 + momentum_24h + (momentum_1h * 0.5)))
+            
+            risk_level = "low" if volatility < 5 else "medium" if volatility < 10 else "high"
+            recommendation = "hold" if momentum_score > 40 and hold_probability > 25 else "avoid"
+            
+            return {
+                "momentum_score": round(momentum_score, 1),
+                "hold_probability": round(hold_probability, 1),
+                "risk_level": risk_level,
+                "std_insight": f"Volatility: {volatility:.1f}%, Momentum: {momentum_24h:.1f}%",
+                "claude_recommendation": recommendation
+            }
+            
+        except Exception as e:
+            logger.error(f"Fallback analysis failed: {e}")
+            return {"momentum_score": 0, "hold_probability": 0, "risk_level": "high", "std_insight": "analysis failed", "claude_recommendation": "avoid"}
+
+class LiveTradingBot:
+    def __init__(self):
+        # API Configuration
+        self.api_key = os.getenv('BINANCEUS_KEY', '')
+        self.api_secret = os.getenv('BINANCEUS_SECRET', '')
+        self.base_url = "https://api.binance.us"
+        
+        if not self.api_key or not self.api_secret:
+            logger.error("❌ API keys not found! Set BINANCEUS_KEY and BINANCEUS_SECRET")
+            exit(1)
+            
+        # Initialize Claude AI analyzer
+        self.claude_analyzer = ClaudeAnalyzer()
+        
+        # Trading parameters
+        self.position_size_usdt = 45.0  # Smaller positions for more diversification
+        self.max_positions = 5  # Increased for more diversification
+        self.min_composite_score = -30.0  # Lowered for demo trading
+        self.min_volume_24h = 0.0  # No minimum volume - analyze ALL tokens!
+        self.max_volatility = 15.0
+        self.stop_loss_percent = 8.0
+        self.take_profit_percent = 20.0
+        
+        # Bot state
+        self.active_positions = {}
+        self.last_analysis_time = 0
+        self.analysis_interval = 900  # 15 minutes (900 seconds)
+        self.trade_cooldown = 300  # 5 minutes between trades
+        self.last_trade_time = 0
+        self.total_trades = 0
+        self.winning_trades = 0
+        self.total_pnl = 0.0
+        
+        # Emergency stop
+        self.max_daily_loss = 50.0
+        self.daily_loss = 0.0
+        self.daily_reset_time = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        logger.info("🚀 Live Trading Bot initialized")
+        logger.info(f"💰 Position size: ${self.position_size_usdt}")
+        logger.info(f"📊 Max positions: {self.max_positions}")
+        logger.info(f"🛡️ Stop loss: {self.stop_loss_percent}%")
+        logger.info(f"🎯 Take profit: {self.take_profit_percent}%")
+
+    def generate_signature(self, query_string: str) -> str:
+        """Generate HMAC signature for authenticated requests"""
+        return hmac.new(
+            self.api_secret.encode('utf-8'),
+            query_string.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+
+    def make_authenticated_request(self, method: str, endpoint: str, params: Dict = None) -> Dict:
+        """Make authenticated API request"""
+        if params is None:
+            params = {}
+        
+        params['timestamp'] = int(time.time() * 1000)
+        query_string = urllib.parse.urlencode(params)
+        signature = self.generate_signature(query_string)
+        
+        headers = {
+            'X-MBX-APIKEY': self.api_key
+        }
+        
+        url = f"{self.base_url}{endpoint}?{query_string}&signature={signature}"
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers)
+            elif method == 'POST':
+                response = requests.post(url, headers=headers)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers)
+            
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"API request failed: {e}")
+            return {}
+
+    def get_account_balance(self) -> float:
+        """Get USDT account balance"""
+        try:
+            account = self.make_authenticated_request('GET', '/api/v3/account')
+            for balance in account.get('balances', []):
+                if balance['asset'] == 'USDT':
+                    return float(balance['free'])
+            return 0.0
+        except Exception as e:
+            logger.error(f"Failed to get balance: {e}")
+            return 0.0
+
+    def get_all_usdt_pairs(self) -> List[Dict]:
+        """Get ALL possible USDT trading pairs from Binance US"""
+        try:
+            # Get 24hr ticker data
+            response = requests.get(f"{self.base_url}/api/v3/ticker/24hr")
+            if response.status_code != 200:
+                return []
+            
+            tickers = response.json()
+            filtered_pairs = []
+            
+            for ticker in tickers:
+                symbol = ticker['symbol']
+                # Include ALL USDT pairs except stablecoins
+                if (symbol.endswith('USDT') and 
+                    symbol not in ['USDCUSDT', 'TUSDUSDT', 'BUSDUSDT', 'FDUSDUSDT']):
+                    
+                    # No volume or price filters - include everything!
+                    filtered_pairs.append({
+                        'symbol': symbol,
+                        'price': float(ticker['lastPrice']),
+                        'volume_24h': float(ticker['quoteVolume']),
+                        'price_change_24h': float(ticker['priceChangePercent'])
+                    })
+            
+            # Sort by volume (highest volume first for better liquidity)
+            filtered_pairs.sort(key=lambda x: x['volume_24h'], reverse=True)
+            
+            logger.info(f"🔍 Found {len(filtered_pairs)} tradable USDT pairs on Binance US")
+            return filtered_pairs  # ALL possible tokens
+            
+        except Exception as e:
+            logger.error(f"Failed to get trading pairs: {e}")
+            return []
+
+    def get_kline_data(self, symbol: str, interval: str = '1h', limit: int = 168) -> List[Dict]:
+        """Get historical price data"""
+        try:
+            url = f"{self.base_url}/api/v3/klines"
+            params = {'symbol': symbol, 'interval': interval, 'limit': limit}
+            
+            response = requests.get(url, params=params)
+            if response.status_code == 200:
+                klines = response.json()
+                processed_data = []
+                
+                for kline in klines:
+                    processed_data.append({
+                        'timestamp': int(kline[0]),
+                        'close': float(kline[4]),
+                        'volume': float(kline[5]),
+                        'returns': 0.0
+                    })
+                
+                # Calculate returns
+                for i in range(1, len(processed_data)):
+                    if processed_data[i-1]['close'] > 0:
+                        processed_data[i]['returns'] = (
+                            (processed_data[i]['close'] - processed_data[i-1]['close']) / 
+                            processed_data[i-1]['close'] * 100.0
+                        )
+                
+                return processed_data[1:]
+            return []
+        except Exception as e:
+            logger.error(f"Failed to get kline data for {symbol}: {e}")
+            return []
+
+    def calculate_statistical_score(self, symbol: str, pair_data: Dict, kline_data: List[Dict]) -> Dict:
+        """Calculate statistical momentum score with Claude AI analysis"""
+        if len(kline_data) < 50:
+            return {}
+        
+        returns = [d['returns'] for d in kline_data]
+        prices = [float(d['close']) for d in kline_data]
+        volumes = [float(d['volume']) for d in kline_data]
+        
+        # Get Claude AI analysis for momentum prediction
+        claude_analysis = self.claude_analyzer.analyze_token_momentum(symbol, prices, volumes)
+        
+        # Basic statistics
+        mean_return = statistics.mean(returns)
+        std_dev = statistics.stdev(returns) if len(returns) > 1 else 0
+        
+        # Multi-timeframe analysis
+        returns_1h = returns[-1] if returns else 0
+        returns_6h = sum(returns[-6:]) if len(returns) >= 6 else 0
+        returns_24h = sum(returns[-24:]) if len(returns) >= 24 else 0
+        
+        # Volatility at different timeframes
+        std_24h = statistics.stdev(returns[-24:]) if len(returns) >= 24 else std_dev
+        
+        # Momentum indicators
+        momentum_1h = returns_1h / std_dev if std_dev > 0 else 0
+        momentum_24h = returns_24h / std_24h if std_24h > 0 else 0
+        
+        # Probability calculations enhanced by Claude
+        prob_20_48h = self.calculate_gain_probability(mean_return, std_dev, 20.0, 48)
+        
+        # Risk adjustment with Claude's insight
+        volatility_penalty = min(std_24h / 10.0, 0.5)
+        risk_adjusted_prob = prob_20_48h * (1.0 - volatility_penalty)
+        
+        # Integrate Claude's momentum score and hold probability
+        claude_momentum_score = claude_analysis.get('momentum_score', 0)
+        claude_hold_prob = claude_analysis.get('hold_probability', 0)
+        
+        # Enhanced composite score with Claude AI
+        volume_score = min(pair_data['volume_24h'] / 10000000.0, 10.0)
+        momentum_score = (momentum_1h + momentum_24h) / 2
+        
+        composite_score = (
+            risk_adjusted_prob * 0.4 +                    # Technical probability
+            claude_hold_prob * 0.4 +                      # Claude hold probability
+            claude_momentum_score * 0.6 +                 # Claude momentum score
+            momentum_score * 15 +                         # Technical momentum
+            volume_score * 2 +                            # Volume factor
+            max(pair_data['price_change_24h'], 0) * 0.3   # Price change
+        )
+        
+        # Apply Claude recommendation adjustment
+        if claude_analysis.get('claude_recommendation') == 'avoid':
+            composite_score *= 0.5  # Reduce score if Claude recommends avoiding
+        elif claude_analysis.get('claude_recommendation') == 'hold':
+            composite_score *= 1.2  # Boost score if Claude recommends holding
+        
+        return {
+            'symbol': symbol,
+            'composite_score': min(composite_score, 100),
+            'prob_20_48h': prob_20_48h,
+            'risk_adjusted_prob': risk_adjusted_prob,
+            'std_24h': std_24h,
+            'momentum_24h': momentum_24h,
+            'current_price': pair_data['price'],
+            'volume_24h': pair_data['volume_24h'],
+            'claude_analysis': claude_analysis,  # Include Claude's full analysis
+            'claude_momentum_score': claude_momentum_score,
+            'claude_hold_probability': claude_hold_prob,
+            'claude_recommendation': claude_analysis.get('claude_recommendation', 'unknown'),
+            'std_insight': claude_analysis.get('std_insight', '')
+        }
+
+    def calculate_gain_probability(self, mean_hourly: float, std_hourly: float, target_gain: float, hours: int) -> float:
+        """Calculate probability of achieving target gain"""
+        if std_hourly <= 0:
+            return 0
+        
+        required_hourly = target_gain / hours
+        z_score = (required_hourly - mean_hourly) / std_hourly
+        base_prob = (1.0 - self.normal_cdf_approx(z_score)) * 100.0
+        
+        return max(min(base_prob, 95.0), 0.0)
+
+    def normal_cdf_approx(self, x: float) -> float:
+        """Approximate normal CDF"""
+        return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
+    def analyze_market(self) -> List[Dict]:
+        """Analyze all tokens and return ranked opportunities"""
+        logger.info("🔍 Starting market analysis...")
+        
+        pairs = self.get_all_usdt_pairs()
+        if not pairs:
+            logger.error("❌ No trading pairs found")
+            return []
+        
+        results = []
+        
+        for i, pair in enumerate(pairs, 1):
+            try:
+                symbol = pair['symbol']
+                logger.info(f"📊 Analyzing {symbol} ({i}/{len(pairs)})")
+                
+                kline_data = self.get_kline_data(symbol)
+                if not kline_data:
+                    continue
+                
+                analysis = self.calculate_statistical_score(symbol, pair, kline_data)
+                if analysis:
+                    results.append(analysis)
+                
+                time.sleep(0.1)  # Rate limiting
+                
+            except Exception as e:
+                logger.error(f"Error analyzing {pair['symbol']}: {e}")
+        
+        # Sort by composite score
+        results.sort(key=lambda x: x['composite_score'], reverse=True)
+        
+        logger.info(f"✅ Analysis complete! {len(results)} tokens analyzed")
+        return results
+
+    def place_buy_order(self, symbol: str, quantity: float) -> bool:
+        """Place a market buy order"""
+        try:
+            params = {
+                'symbol': symbol,
+                'side': 'BUY',
+                'type': 'MARKET',
+                'quoteOrderQty': self.position_size_usdt  # Buy with USDT amount
+            }
+            
+            result = self.make_authenticated_request('POST', '/api/v3/order', params)
+            
+            if result and 'orderId' in result:
+                executed_qty = float(result.get('executedQty', 0))
+                avg_price = float(result.get('fills', [{}])[0].get('price', 0)) if result.get('fills') else 0
+                
+                logger.info(f"✅ Buy order executed: {executed_qty} {symbol} @ ${avg_price:.6f}")
+                
+                # Record position
+                self.active_positions[symbol] = {
+                    'quantity': executed_qty,
+                    'entry_price': avg_price,
+                    'entry_time': time.time(),
+                    'stop_loss': avg_price * (1 - self.stop_loss_percent / 100),
+                    'take_profit': avg_price * (1 + self.take_profit_percent / 100)
+                }
+                
+                return True
+            else:
+                logger.error(f"❌ Buy order failed for {symbol}: {result}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Buy order error for {symbol}: {e}")
+            return False
+
+    def place_sell_order(self, symbol: str, quantity: float) -> bool:
+        """Place a market sell order"""
+        try:
+            params = {
+                'symbol': symbol,
+                'side': 'SELL',
+                'type': 'MARKET',
+                'quantity': f"{quantity:.8f}"
+            }
+            
+            result = self.make_authenticated_request('POST', '/api/v3/order', params)
+            
+            if result and 'orderId' in result:
+                executed_qty = float(result.get('executedQty', 0))
+                avg_price = float(result.get('fills', [{}])[0].get('price', 0)) if result.get('fills') else 0
+                
+                logger.info(f"✅ Sell order executed: {executed_qty} {symbol} @ ${avg_price:.6f}")
+                
+                # Calculate PnL
+                if symbol in self.active_positions:
+                    entry_price = self.active_positions[symbol]['entry_price']
+                    pnl = (avg_price - entry_price) * executed_qty
+                    self.total_pnl += pnl
+                    
+                    if pnl > 0:
+                        self.winning_trades += 1
+                        logger.info(f"💰 Profit: ${pnl:.2f}")
+                    else:
+                        self.daily_loss += abs(pnl)
+                        logger.info(f"💸 Loss: ${pnl:.2f}")
+                    
+                    del self.active_positions[symbol]
+                
+                self.total_trades += 1
+                return True
+            else:
+                logger.error(f"❌ Sell order failed for {symbol}: {result}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Sell order error for {symbol}: {e}")
+            return False
+
+    def check_positions(self):
+        """Check active positions for stop loss/take profit"""
+        if not self.active_positions:
+            return
+        
+        logger.info("📊 Checking active positions...")
+        
+        # Get current prices
+        try:
+            response = requests.get(f"{self.base_url}/api/v3/ticker/price")
+            if response.status_code == 200:
+                prices = {item['symbol']: float(item['price']) for item in response.json()}
+            else:
+                return
+        except Exception as e:
+            logger.error(f"Failed to get current prices: {e}")
+            return
+        
+        positions_to_close = []
+        
+        for symbol, position in self.active_positions.items():
+            current_price = prices.get(symbol, 0)
+            if current_price == 0:
+                continue
+            
+            entry_price = position['entry_price']
+            pnl_percent = (current_price - entry_price) / entry_price * 100
+            
+            # Check stop loss
+            if current_price <= position['stop_loss']:
+                logger.warning(f"🛑 Stop loss triggered for {symbol}: ${current_price:.6f} <= ${position['stop_loss']:.6f}")
+                positions_to_close.append(symbol)
+            
+            # Check take profit
+            elif current_price >= position['take_profit']:
+                logger.info(f"🎯 Take profit triggered for {symbol}: ${current_price:.6f} >= ${position['take_profit']:.6f}")
+                positions_to_close.append(symbol)
+            
+            # Check time-based exit (24 hours)
+            elif time.time() - position['entry_time'] > 86400:
+                logger.info(f"⏰ Time-based exit for {symbol} after 24 hours")
+                positions_to_close.append(symbol)
+            
+            logger.info(f"📈 {symbol}: ${current_price:.6f} | PnL: {pnl_percent:+.2f}%")
+        
+        # Close positions
+        for symbol in positions_to_close:
+            if symbol in self.active_positions:
+                quantity = self.active_positions[symbol]['quantity']
+                self.place_sell_order(symbol, quantity)
+
+    def should_trade(self) -> bool:
+        """Check if we should execute new trades"""
+        current_time = time.time()
+        
+        # Check trade cooldown
+        if current_time - self.last_trade_time < self.trade_cooldown:
+            return False
+        
+        # Check max positions
+        if len(self.active_positions) >= self.max_positions:
+            return False
+        
+        # Check daily loss limit
+        if self.daily_loss >= self.max_daily_loss:
+            logger.warning(f"🚨 Daily loss limit reached: ${self.daily_loss:.2f}")
+            return False
+        
+        # Check balance
+        balance = self.get_account_balance()
+        if balance < self.position_size_usdt:
+            logger.warning(f"💸 Insufficient balance: ${balance:.2f}")
+            return False
+        
+        return True
+
+    def execute_trade(self, analysis: Dict) -> bool:
+        """Execute a trade based on analysis"""
+        if not self.should_trade():
+            return False
+        
+        symbol = analysis['symbol']
+        score = analysis['composite_score']
+        claude_rec = analysis.get('claude_recommendation', 'unknown')
+        claude_insight = analysis.get('std_insight', '')
+        
+        logger.info(f"🚀 Executing trade for {symbol} (Score: {score:.1f})")
+        logger.info(f"🤖 Claude Analysis: {claude_rec} - {claude_insight}")
+        
+        if self.place_buy_order(symbol, 0):  # Quantity calculated in place_buy_order
+            self.last_trade_time = time.time()
+            return True
+        
+        return False
+
+    def reset_daily_stats(self):
+        """Reset daily statistics at midnight"""
+        now = datetime.now()
+        if now >= self.daily_reset_time + timedelta(days=1):
+            logger.info("🔄 Resetting daily statistics")
+            self.daily_loss = 0.0
+            self.daily_reset_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    def print_status(self):
+        """Print current bot status"""
+        balance = self.get_account_balance()
+        win_rate = (self.winning_trades / self.total_trades * 100) if self.total_trades > 0 else 0
+        
+        logger.info("=" * 60)
+        logger.info("📊 BOT STATUS")
+        logger.info(f"💰 Balance: ${balance:.2f}")
+        logger.info(f"📈 Active Positions: {len(self.active_positions)}")
+        logger.info(f"📊 Total Trades: {self.total_trades}")
+        logger.info(f"🏆 Win Rate: {win_rate:.1f}%")
+        logger.info(f"💵 Total PnL: ${self.total_pnl:.2f}")
+        logger.info(f"💸 Daily Loss: ${self.daily_loss:.2f}")
+        logger.info("=" * 60)
+
+    def run_24_7(self):
+        """Main 24/7 trading loop"""
+        logger.info("🚀 Starting 24/7 live trading bot...")
+        
+        loop_count = 0
+        
+        while True:
+            try:
+                loop_count += 1
+                current_time = time.time()
+                
+                # Reset daily stats if needed
+                self.reset_daily_stats()
+                
+                # Check existing positions every loop
+                self.check_positions()
+                
+                # Analyze market periodically
+                if current_time - self.last_analysis_time >= self.analysis_interval:
+                    logger.info(f"🔍 Running market analysis (Loop #{loop_count})")
+                    
+                    analysis_results = self.analyze_market()
+                    
+                    if analysis_results:
+                        # Print top opportunities with Claude analysis
+                        logger.info("🏆 TOP 5 OPPORTUNITIES (Enhanced by Claude AI):")
+                        for i, result in enumerate(analysis_results[:5], 1):
+                            claude_score = result.get('claude_momentum_score', 0)
+                            claude_prob = result.get('claude_hold_probability', 0)
+                            claude_rec = result.get('claude_recommendation', 'unknown')
+                            std_insight = result.get('std_insight', '')
+                            
+                            logger.info(f"#{i} {result['symbol']}: Score {result['composite_score']:.1f}")
+                            logger.info(f"    🤖 Claude: {claude_score}/100 momentum, {claude_prob:.1f}% hold prob, {claude_rec}")
+                            logger.info(f"    📊 StdDev: {std_insight}")
+                            logger.info(f"    📈 Tech Prob 20%: {result['prob_20_48h']:.1f}%")
+                        
+                        # Execute trade on best opportunity
+                        best_opportunity = analysis_results[0]
+                        if (best_opportunity['composite_score'] >= self.min_composite_score and
+                            best_opportunity['std_24h'] <= self.max_volatility and
+                            best_opportunity['symbol'] not in self.active_positions):
+                            
+                            self.execute_trade(best_opportunity)
+                    
+                    self.last_analysis_time = current_time
+                
+                # Print status every 10 loops
+                if loop_count % 10 == 0:
+                    self.print_status()
+                
+                # Sleep for 1 minute between loops
+                time.sleep(60)
+                
+            except KeyboardInterrupt:
+                logger.info("🛑 Bot stopped by user")
+                break
+            except Exception as e:
+                logger.error(f"❌ Unexpected error: {e}")
+                time.sleep(300)  # Wait 5 minutes before retrying
+
+def main():
+    """Main function"""
+    print("🚀 VictoryChain 24/7 Live Trading Bot")
+    print("=====================================")
+    print("📊 Statistical momentum analysis")
+    print("🤖 Automated trading execution")
+    print("🛡️ Risk management built-in")
+    print("")
+    
+    # Check for demo mode
+    if 'DEMO' in os.environ or not os.getenv('BINANCEUS_KEY'):
+        print("📝 DEMO MODE - No real trading will occur")
+        print("Set BINANCEUS_KEY and BINANCEUS_SECRET for live trading")
+        return
+    
+    print("⚠️ WARNING: This bot will execute REAL trades with REAL money!")
+    print("")
+    
+    response = input("Type 'CONFIRM' to start live trading: ")
+    if response != 'CONFIRM':
+        print("❌ Live trading cancelled")
+        return
+    
+    bot = LiveTradingBot()
+    bot.run_24_7()
+
+if __name__ == "__main__":
+    main()

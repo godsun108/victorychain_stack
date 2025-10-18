@@ -1,0 +1,29 @@
+groups:
+  - name: agent-health
+    rules:
+      - alert: AgentDown
+        expr: up{job="fastapi-agent"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "FastAPI agent down"
+          description: "No scrape data from agent for 2m"
+      - alert: AgentHighErrorRate
+        expr: (sum(rate(agent_requests_total{code!~"2.."}[5m])) by () / sum(rate(agent_requests_total[5m])) by ()) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate (>5%)"
+          description: "Agent non-2xx requests exceed 5% over 5m"
+  - name: momentum-health
+    rules:
+      - alert: NoTradesIn24h
+        expr: increase(momentum_trades_total[24h]) < 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No momentum trades in 24h"
+          description: "Momentum exporter reported zero trades in the last 24h"

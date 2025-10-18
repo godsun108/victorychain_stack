@@ -1,0 +1,662 @@
+#!/usr/bin/env python3
+
+"""
+💎 CLAUDE-POWERED BUY AND HOLD SYSTEM
+Intelligent long-term accumulation with Claude AI analysis
+Author: Senior Developer
+Version: 2.0.0
+"""
+
+import os
+import sys
+import time
+import json
+import math
+from decimal import Decimal, ROUND_DOWN
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Union, Any
+
+# Import VictoryChain shared interfaces
+try:
+    from victorychain_shared import (
+        OrderType, StrategyType, RiskLevel, AnalysisResult,
+        TradingSignal, TradeResult, TradingConfig, BaseStrategy,
+        ClaudeProvider, get_logger, format_currency, format_percentage
+    )
+    HAS_SHARED_INTERFACES = True
+except ImportError as e:
+    print(f"Warning: Could not import shared interfaces: {e}")
+    HAS_SHARED_INTERFACES = False
+
+# Import Claude Token Optimizer
+try:
+    from claude_token_optimizer import ClaudeTokenOptimizer
+    HAS_CLAUDE_OPTIMIZER = True
+except ImportError as e:
+    print(f"Warning: Could not import Claude optimizer: {e}")
+    HAS_CLAUDE_OPTIMIZER = False
+
+# External imports with error handling
+try:
+    import requests
+    from binance.client import Client
+    from binance.exceptions import BinanceAPIException, BinanceOrderException
+    from dotenv import load_dotenv
+    HAS_EXTERNAL_LIBS = True
+except ImportError as e:
+    print(f"Warning: Some external libraries not available: {e}")
+    HAS_EXTERNAL_LIBS = False
+
+# Load environment variables
+if HAS_EXTERNAL_LIBS:
+    load_dotenv()
+
+# Configure logging
+logger = get_logger(__name__) if HAS_SHARED_INTERFACES else __import__('logging').getLogger(__name__)
+
+class ClaudeBuyAndHoldSystem:
+    def __init__(self):
+        self.api_key = os.getenv('BINANCEUS_KEY')
+        self.api_secret = os.getenv('BINANCEUS_SECRET')
+        self.claude_api_key = os.getenv('CLAUDE_API_KEY')
+        
+        if not self.api_key or not self.api_secret:
+            print("❌ Error: Binance API credentials not found!")
+            sys.exit(1)
+        
+        if not self.claude_api_key:
+            print("⚠️  Claude API key not found - using enhanced fallback analysis")
+        
+        # Initialize Binance client for US
+        self.client = Client(
+            self.api_key, 
+            self.api_secret,
+            tld='us'
+        )
+        
+        # Buy and Hold Configuration
+        self.config = {
+            'max_positions': 5,                    # Maximum number of positions to hold
+            'allocation_per_position': 0.20,       # 20% per position
+            'min_buy_amount': 25.0,                # Minimum $25 per buy
+            'accumulation_frequency': 'daily',      # daily, weekly, bi-weekly
+            'rebalance_threshold': 0.30,           # 30% deviation triggers rebalance
+            'hold_duration_target': 180,           # 180 days target hold
+            'profit_taking_threshold': 2.0,        # Take profits at 100% gain
+            'stop_loss_threshold': 0.40,           # Stop loss at 60% loss
+            'quality_score_minimum': 0.75,         # Minimum quality score to buy
+            'diversification_mode': 'focused',     # focused, balanced, aggressive
+        }
+        
+        # Load historical performance data
+        self.performance_history = self.load_performance_history()
+        
+        print("💎 Claude-Powered Buy and Hold System Initialized")
+        print(f"📊 Max Positions: {self.config['max_positions']}")
+        print(f"💰 Allocation per Position: {self.config['allocation_per_position']:.1%}")
+    
+    def load_performance_history(self):
+        """Load historical performance tracking"""
+        try:
+            if os.path.exists('buy_hold_history.json'):
+                with open('buy_hold_history.json', 'r') as f:
+                    return json.load(f)
+        except:
+            pass
+        
+        return {
+            'positions': {},
+            'performance_log': [],
+            'total_invested': 0.0,
+            'total_current_value': 0.0,
+            'start_date': datetime.now().isoformat()
+        }
+    
+    def save_performance_history(self):
+        """Save performance history"""
+        try:
+            with open('buy_hold_history.json', 'w') as f:
+                json.dump(self.performance_history, f, indent=2)
+        except Exception as e:
+            print(f"⚠️  Error saving history: {e}")
+    
+    def get_current_portfolio(self):
+        """Get current portfolio with detailed analysis"""
+        try:
+            account = self.client.get_account()
+            portfolio = {
+                'positions': [],
+                'total_usdt_value': 0.0,
+                'free_usdt': 0.0,
+                'position_count': 0
+            }
+            
+            print("\n💼 CURRENT BUY & HOLD PORTFOLIO:")
+            print("=" * 70)
+            
+            for balance in account['balances']:
+                asset = balance['asset']
+                free_balance = float(balance['free'])
+                locked_balance = float(balance['locked'])
+                total_balance = free_balance + locked_balance
+                
+                if total_balance > 0:
+                    if asset == 'USDT':
+                        portfolio['free_usdt'] = free_balance
+                        portfolio['total_usdt_value'] += total_balance
+                        print(f"💰 {asset:<12} {total_balance:>15.8f} (${total_balance:.2f}) [AVAILABLE]")
+                    else:
+                        try:
+                            symbol = f"{asset}USDT"
+                            ticker = self.client.get_symbol_ticker(symbol=symbol)
+                            price = float(ticker['price'])
+                            usdt_value = total_balance * price
+                            
+                            # Calculate position performance if we have history
+                            entry_data = self.performance_history['positions'].get(asset, {})
+                            entry_price = entry_data.get('avg_entry_price', price)
+                            performance = ((price - entry_price) / entry_price) * 100 if entry_price > 0 else 0
+                            days_held = 0
+                            
+                            if 'first_buy_date' in entry_data:
+                                first_buy = datetime.fromisoformat(entry_data['first_buy_date'])
+                                days_held = (datetime.now() - first_buy).days
+                            
+                            position = {
+                                'asset': asset,
+                                'symbol': symbol,
+                                'quantity': total_balance,
+                                'current_price': price,
+                                'usdt_value': usdt_value,
+                                'entry_price': entry_price,
+                                'performance': performance,
+                                'days_held': days_held,
+                                'allocation': 0  # Will calculate after total
+                            }
+                            
+                            portfolio['positions'].append(position)
+                            portfolio['total_usdt_value'] += usdt_value
+                            portfolio['position_count'] += 1
+                            
+                            status_icon = "📈" if performance > 0 else "📉" if performance < -5 else "📊"
+                            print(f"{status_icon} {asset:<12} {total_balance:>15.8f} @ ${price:.6f} = ${usdt_value:.2f} ({performance:+.1f}%, {days_held}d)")
+                            
+                        except BinanceAPIException:
+                            continue
+            
+            # Calculate allocations
+            for position in portfolio['positions']:
+                position['allocation'] = (position['usdt_value'] / portfolio['total_usdt_value']) * 100
+            
+            print("=" * 70)
+            print(f"💼 TOTAL PORTFOLIO VALUE: ${portfolio['total_usdt_value']:.2f}")
+            print(f"💰 FREE USDT: ${portfolio['free_usdt']:.2f}")
+            print(f"📊 ACTIVE POSITIONS: {portfolio['position_count']}")
+            
+            return portfolio
+            
+        except Exception as e:
+            print(f"❌ Error getting portfolio: {e}")
+            return {'positions': [], 'total_usdt_value': 0.0, 'free_usdt': 0.0, 'position_count': 0}
+    
+    def get_market_opportunities(self):
+        """Get market data and identify buy and hold opportunities"""
+        try:
+            # Get exchange info for tradable symbols
+            exchange_info = self.client.get_exchange_info()
+            tradable_symbols = set()
+            
+            for symbol_info in exchange_info['symbols']:
+                symbol = symbol_info['symbol']
+                if (symbol.endswith('USDT') and 
+                    symbol_info['status'] == 'TRADING' and
+                    symbol != 'USDCUSDT'):
+                    tradable_symbols.add(symbol)
+            
+            # Get 24h ticker data
+            tickers = self.client.get_ticker()
+            opportunities = []
+            
+            for ticker in tickers:
+                if ticker['symbol'] in tradable_symbols:
+                    try:
+                        symbol = ticker['symbol']
+                        price_change = float(ticker['priceChangePercent'])
+                        volume = float(ticker['quoteVolume'])
+                        current_price = float(ticker['lastPrice'])
+                        high_24h = float(ticker['highPrice'])
+                        low_24h = float(ticker['lowPrice'])
+                        
+                        # Calculate quality metrics for long-term holding
+                        price_range = high_24h - low_24h if high_24h != low_24h else 0.01
+                        range_position = (current_price - low_24h) / price_range if price_range > 0 else 0.5
+                        volatility = price_range / current_price if current_price > 0 else 0
+                        
+                        # Volume stability (prefer consistent volume)
+                        volume_score = min(math.log10(volume) / 7.0, 1.0) if volume > 0 else 0
+                        
+                        # Quality score for long-term holding
+                        quality_score = (
+                            volume_score * 0.3 +                    # Volume consistency
+                            (1 - volatility) * 0.2 +                # Lower volatility preferred
+                            min(abs(price_change) / 15.0, 1.0) * 0.2 +  # Moderate momentum
+                            range_position * 0.3                     # Position in range
+                        )
+                        
+                        # Long-term potential score
+                        momentum_stability = 1 - min(abs(price_change) / 50.0, 1.0)  # Prefer stable momentum
+                        
+                        opportunity = {
+                            'symbol': symbol,
+                            'asset': symbol.replace('USDT', ''),
+                            'current_price': current_price,
+                            'price_change_24h': price_change,
+                            'volume_24h': volume,
+                            'range_position': range_position,
+                            'volatility': volatility,
+                            'quality_score': quality_score,
+                            'momentum_stability': momentum_stability,
+                            'long_term_score': quality_score * 0.7 + momentum_stability * 0.3
+                        }
+                        
+                        opportunities.append(opportunity)
+                        
+                    except (ValueError, ZeroDivisionError):
+                        continue
+            
+            # Sort by long-term potential
+            opportunities.sort(key=lambda x: x['long_term_score'], reverse=True)
+            
+            print(f"📊 Analyzed {len(opportunities)} potential buy and hold opportunities")
+            return opportunities
+            
+        except Exception as e:
+            print(f"❌ Error getting market opportunities: {e}")
+            return []
+    
+    def claude_buy_hold_analysis(self, portfolio, opportunities):
+        """Use Claude AI for buy and hold investment analysis"""
+        if not self.claude_api_key:
+            return self.fallback_buy_hold_analysis(portfolio, opportunities)
+        
+        try:
+            # Prepare top opportunities for analysis
+            top_opportunities = opportunities[:20]
+            
+            current_positions = [
+                {
+                    'asset': p['asset'],
+                    'allocation': p['allocation'],
+                    'performance': p['performance'],
+                    'days_held': p['days_held'],
+                    'quality_metrics': {
+                        'price': p['current_price'],
+                        'value': p['usdt_value']
+                    }
+                }
+                for p in portfolio['positions']
+            ]
+            
+            prompt = f"""
+As an expert long-term cryptocurrency investment advisor, analyze this portfolio and market opportunities for a buy-and-hold strategy.
+
+INVESTMENT OBJECTIVE: Build a high-quality, long-term cryptocurrency portfolio with 3-5 positions, targeting 6+ month holds with strong fundamentals.
+
+CURRENT PORTFOLIO (${portfolio['total_usdt_value']:.2f} total):
+Positions: {len(portfolio['positions'])}
+Available USDT: ${portfolio['free_usdt']:.2f}
+{json.dumps(current_positions, indent=2)}
+
+CONFIGURATION:
+- Max Positions: {self.config['max_positions']}
+- Target Allocation: {self.config['allocation_per_position']:.1%} per position
+- Minimum Investment: ${self.config['min_buy_amount']}
+- Hold Duration Target: {self.config['hold_duration_target']} days
+- Quality Score Minimum: {self.config['quality_score_minimum']:.1%}
+
+TOP MARKET OPPORTUNITIES:
+{json.dumps([{
+    'symbol': o['symbol'],
+    'price': f"${o['current_price']:.6f}",
+    'change_24h': f"{o['price_change_24h']:.2f}%",
+    'quality_score': f"{o['quality_score']:.3f}",
+    'long_term_score': f"{o['long_term_score']:.3f}",
+    'momentum_stability': f"{o['momentum_stability']:.3f}",
+    'range_position': f"{o['range_position']:.1%}"
+} for o in top_opportunities], indent=2)}
+
+ANALYSIS REQUIREMENTS:
+1. Recommend BUY actions for portfolio building/rebalancing
+2. Identify HOLD vs SELL decisions for existing positions
+3. Focus on fundamental strength and long-term potential
+4. Consider portfolio diversification and risk management
+5. Prioritize quality over short-term momentum
+6. Suggest optimal allocation strategy
+
+Respond with JSON format:
+{{
+    "recommended_actions": [
+        {{
+            "action": "BUY",
+            "symbol": "BTCUSDT",
+            "amount_usd": 50.0,
+            "reasoning": "Strong fundamentals for long-term hold",
+            "confidence": 0.85,
+            "target_allocation": 0.20,
+            "hold_duration_estimate": "6-12 months"
+        }}
+    ],
+    "portfolio_assessment": {{
+        "current_quality": 0.78,
+        "diversification_score": 0.65,
+        "risk_level": "medium",
+        "improvement_suggestions": ["Add BTC for stability", "Reduce altcoin exposure"]
+    }},
+    "market_outlook": "bullish/neutral/bearish",
+    "overall_strategy": "accumulate/hold/reduce"
+}}
+"""
+            
+            headers = {
+                'Content-Type': 'application/json',
+                'x-api-key': self.claude_api_key,
+                'anthropic-version': '2023-06-01'
+            }
+            
+            data = {
+                'model': 'claude-3-5-sonnet-20241022',
+                'max_tokens': 1500,
+                'messages': [
+                    {
+                        'role': 'user',
+                        'content': prompt
+                    }
+                ]
+            }
+            
+            response = requests.post(
+                'https://api.anthropic.com/v1/messages',
+                headers=headers,
+                json=data,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result['content'][0]['text']
+                
+                # Extract JSON from Claude's response
+                try:
+                    json_start = content.find('{')
+                    json_end = content.rfind('}') + 1
+                    analysis_json = json.loads(content[json_start:json_end])
+                    
+                    print("🤖 CLAUDE BUY & HOLD ANALYSIS COMPLETE")
+                    return analysis_json
+                    
+                except json.JSONDecodeError:
+                    print("⚠️  Claude response parsing failed, using fallback")
+                    return self.fallback_buy_hold_analysis(portfolio, opportunities)
+            else:
+                print(f"⚠️  Claude API error: {response.status_code}")
+                return self.fallback_buy_hold_analysis(portfolio, opportunities)
+                
+        except Exception as e:
+            print(f"⚠️  Claude analysis error: {e}")
+            return self.fallback_buy_hold_analysis(portfolio, opportunities)
+    
+    def fallback_buy_hold_analysis(self, portfolio, opportunities):
+        """Enhanced fallback analysis for buy and hold strategy"""
+        print("🧠 ENHANCED BUY & HOLD ANALYSIS")
+        
+        recommended_actions = []
+        
+        # Filter high-quality opportunities
+        quality_opportunities = [
+            opp for opp in opportunities 
+            if opp['quality_score'] >= self.config['quality_score_minimum']
+        ][:10]
+        
+        # Determine if we need to add positions
+        available_slots = self.config['max_positions'] - len(portfolio['positions'])
+        target_investment_per_slot = portfolio['free_usdt'] / max(available_slots, 1) if available_slots > 0 else 0
+        
+        # Generate buy recommendations
+        if available_slots > 0 and target_investment_per_slot >= self.config['min_buy_amount']:
+            for i, opp in enumerate(quality_opportunities[:available_slots]):
+                recommended_actions.append({
+                    "action": "BUY",
+                    "symbol": opp['symbol'],
+                    "amount_usd": min(target_investment_per_slot, portfolio['free_usdt'] * 0.9),
+                    "reasoning": f"High quality score ({opp['quality_score']:.3f}) for long-term holding",
+                    "confidence": min(0.6 + opp['quality_score'] * 0.3, 0.9),
+                    "target_allocation": self.config['allocation_per_position'],
+                    "hold_duration_estimate": "3-6 months"
+                })
+        
+        # Assess current positions for hold/sell decisions
+        for position in portfolio['positions']:
+            if position['performance'] >= (self.config['profit_taking_threshold'] * 100):
+                recommended_actions.append({
+                    "action": "SELL_PARTIAL",
+                    "symbol": position['symbol'],
+                    "amount_percentage": 0.5,
+                    "reasoning": f"Take profits at {position['performance']:+.1f}% gain",
+                    "confidence": 0.8,
+                    "target_allocation": self.config['allocation_per_position'] * 0.5,
+                    "hold_duration_estimate": "profit taking"
+                })
+            elif position['performance'] <= -(self.config['stop_loss_threshold'] * 100):
+                recommended_actions.append({
+                    "action": "SELL",
+                    "symbol": position['symbol'],
+                    "amount_percentage": 1.0,
+                    "reasoning": f"Stop loss at {position['performance']:+.1f}% loss",
+                    "confidence": 0.7,
+                    "target_allocation": 0.0,
+                    "hold_duration_estimate": "exit position"
+                })
+        
+        return {
+            "recommended_actions": recommended_actions,
+            "portfolio_assessment": {
+                "current_quality": sum(p.get('quality_score', 0.7) for p in portfolio['positions']) / max(len(portfolio['positions']), 1),
+                "diversification_score": min(len(portfolio['positions']) / self.config['max_positions'], 1.0),
+                "risk_level": "medium",
+                "improvement_suggestions": ["Focus on quality tokens", "Maintain long-term perspective"]
+            },
+            "market_outlook": "neutral",
+            "overall_strategy": "accumulate" if available_slots > 0 else "hold"
+        }
+    
+    def execute_buy_action(self, action):
+        """Execute a buy action with proper precision"""
+        try:
+            symbol = action['symbol']
+            amount_usd = action['amount_usd']
+            
+            if amount_usd < self.config['min_buy_amount']:
+                print(f"⚠️  Buy amount ${amount_usd:.2f} below minimum ${self.config['min_buy_amount']}")
+                return False
+            
+            print(f"💎 BUYING {symbol} with ${amount_usd:.2f}")
+            
+            # Round down to acceptable precision
+            buy_amount = math.floor(amount_usd * 100) / 100
+            
+            order = self.client.order_market_buy(
+                symbol=symbol,
+                quoteOrderQty=buy_amount
+            )
+            
+            executed_qty = float(order['executedQty'])
+            total_cost = float(order['cummulativeQuoteQty'])
+            avg_price = total_cost / executed_qty if executed_qty > 0 else 0
+            
+            print(f"✅ BUY EXECUTED:")
+            print(f"   Symbol: {symbol}")
+            print(f"   Quantity: {executed_qty:.8f}")
+            print(f"   Average Price: ${avg_price:.6f}")
+            print(f"   Total Cost: ${total_cost:.2f}")
+            
+            # Update performance history
+            asset = symbol.replace('USDT', '')
+            if asset not in self.performance_history['positions']:
+                self.performance_history['positions'][asset] = {
+                    'first_buy_date': datetime.now().isoformat(),
+                    'total_invested': 0.0,
+                    'total_quantity': 0.0,
+                    'avg_entry_price': 0.0,
+                    'buy_history': []
+                }
+            
+            position_data = self.performance_history['positions'][asset]
+            
+            # Update position data
+            old_total_cost = position_data['total_invested']
+            old_quantity = position_data['total_quantity']
+            
+            new_total_cost = old_total_cost + total_cost
+            new_quantity = old_quantity + executed_qty
+            new_avg_price = new_total_cost / new_quantity if new_quantity > 0 else avg_price
+            
+            position_data['total_invested'] = new_total_cost
+            position_data['total_quantity'] = new_quantity
+            position_data['avg_entry_price'] = new_avg_price
+            position_data['buy_history'].append({
+                'date': datetime.now().isoformat(),
+                'quantity': executed_qty,
+                'price': avg_price,
+                'cost': total_cost
+            })
+            
+            self.performance_history['total_invested'] += total_cost
+            
+            # Log the action
+            self.performance_history['performance_log'].append({
+                'timestamp': datetime.now().isoformat(),
+                'action': 'BUY',
+                'symbol': symbol,
+                'quantity': executed_qty,
+                'price': avg_price,
+                'cost': total_cost,
+                'reasoning': action.get('reasoning', 'Buy and hold accumulation')
+            })
+            
+            self.save_performance_history()
+            return True
+            
+        except Exception as e:
+            print(f"❌ Buy execution failed: {e}")
+            return False
+    
+    def run_buy_and_hold_cycle(self):
+        """Main buy and hold cycle"""
+        print("💎 CLAUDE-POWERED BUY AND HOLD SYSTEM")
+        print("=" * 60)
+        print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Step 1: Analyze current portfolio
+        portfolio = self.get_current_portfolio()
+        
+        # Step 2: Get market opportunities
+        print("\n📡 Scanning market for buy and hold opportunities...")
+        opportunities = self.get_market_opportunities()
+        
+        if not opportunities:
+            print("❌ No market opportunities found")
+            return
+        
+        # Step 3: Claude AI analysis
+        print("\n🤖 Running Claude buy and hold analysis...")
+        analysis = self.claude_buy_hold_analysis(portfolio, opportunities)
+        
+        # Step 4: Display analysis results
+        print(f"\n📊 BUY & HOLD ANALYSIS RESULTS:")
+        print("=" * 50)
+        
+        assessment = analysis.get('portfolio_assessment', {})
+        print(f"💼 Portfolio Quality: {assessment.get('current_quality', 0):.1%}")
+        print(f"🎯 Diversification: {assessment.get('diversification_score', 0):.1%}")
+        print(f"⚡ Risk Level: {assessment.get('risk_level', 'unknown').upper()}")
+        print(f"📈 Market Outlook: {analysis.get('market_outlook', 'neutral').upper()}")
+        print(f"🎯 Strategy: {analysis.get('overall_strategy', 'hold').upper()}")
+        
+        # Step 5: Execute recommended actions
+        actions = analysis.get('recommended_actions', [])
+        
+        if actions:
+            print(f"\n🎯 RECOMMENDED ACTIONS ({len(actions)}):")
+            print("=" * 50)
+            
+            for i, action in enumerate(actions, 1):
+                print(f"\n{i}. {action['action']} - {action['symbol']}")
+                print(f"   💰 Amount: ${action.get('amount_usd', 0):.2f}")
+                print(f"   🎯 Confidence: {action.get('confidence', 0):.1%}")
+                print(f"   ⏱️  Duration: {action.get('hold_duration_estimate', 'unknown')}")
+                print(f"   💡 Reasoning: {action.get('reasoning', 'No reason provided')}")
+                
+                # Auto-execute high confidence buy actions
+                if (action['action'] == 'BUY' and 
+                    action.get('confidence', 0) >= 0.75 and
+                    portfolio['free_usdt'] >= action.get('amount_usd', 0)):
+                    
+                    print(f"   🚀 AUTO-EXECUTING (High Confidence)")
+                    success = self.execute_buy_action(action)
+                    
+                    if success:
+                        # Update available USDT
+                        portfolio['free_usdt'] -= action.get('amount_usd', 0)
+                    
+                    time.sleep(2)  # Rate limiting
+                else:
+                    print(f"   ⏸️  Manual execution required")
+        else:
+            print(f"\n✅ NO ACTIONS NEEDED - Portfolio in good state")
+        
+        # Step 6: Portfolio summary
+        print(f"\n💼 FINAL PORTFOLIO SUMMARY:")
+        final_portfolio = self.get_current_portfolio()
+        
+        # Calculate total performance
+        total_invested = self.performance_history.get('total_invested', 0)
+        current_value = final_portfolio['total_usdt_value']
+        total_performance = ((current_value - total_invested) / total_invested * 100) if total_invested > 0 else 0
+        
+        print(f"📊 Total Invested: ${total_invested:.2f}")
+        print(f"💼 Current Value: ${current_value:.2f}")
+        print(f"📈 Total Performance: {total_performance:+.1f}%")
+        
+        print(f"\n💎 Buy and Hold cycle complete!")
+
+def main():
+    """Main function"""
+    system = ClaudeBuyAndHoldSystem()
+    
+    if len(sys.argv) > 1:
+        command = sys.argv[1].lower()
+        
+        if command == 'run':
+            system.run_buy_and_hold_cycle()
+        elif command == 'status':
+            portfolio = system.get_current_portfolio()
+            print(f"\n📊 Portfolio Summary:")
+            print(f"   Positions: {len(portfolio['positions'])}")
+            print(f"   Total Value: ${portfolio['total_usdt_value']:.2f}")
+            print(f"   Available USDT: ${portfolio['free_usdt']:.2f}")
+        elif command == 'history':
+            print("📊 PERFORMANCE HISTORY:")
+            if os.path.exists('buy_hold_history.json'):
+                with open('buy_hold_history.json', 'r') as f:
+                    history = json.load(f)
+                    print(json.dumps(history, indent=2))
+            else:
+                print("No history found")
+        else:
+            print("Usage: python3 claude_buy_hold.py [run|status|history]")
+    else:
+        # Default: run the system
+        system.run_buy_and_hold_cycle()
+
+if __name__ == "__main__":
+    main()

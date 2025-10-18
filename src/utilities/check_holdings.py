@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+
+import os
+from binance.client import Client
+from dotenv import load_dotenv
+
+load_dotenv()
+
+client = Client(
+    api_key=os.getenv("BINANCEUS_KEY"),
+    api_secret=os.getenv("BINANCEUS_SECRET"),
+    tld="us",  # Use Binance US
+)
+
+print("=== CURRENT ACCOUNT BALANCE ===")
+account_info = client.get_account()
+balances = [
+    b
+    for b in account_info["balances"]
+    if float(b["free"]) > 0 or float(b["locked"]) > 0
+]
+
+total_usdt_value = 0
+your_assets = []
+
+for balance in balances:
+    asset = balance["asset"]
+    free = float(balance["free"])
+    locked = float(balance["locked"])
+    total = free + locked
+
+    if total > 0:
+        your_assets.append(asset)
+        try:
+            if asset == "USDT":
+                usdt_value = total
+            else:
+                # Get current price
+                ticker = client.get_symbol_ticker(symbol=f"{asset}USDT")
+                price = float(ticker["price"])
+                usdt_value = total * price
+
+            total_usdt_value += usdt_value
+            print(
+                f"{asset}: {total:.8f} (Free: {free:.8f}, Locked: {locked:.8f}) = ${usdt_value:.2f} USDT"
+            )
+        except Exception as e:
+            print(
+                f"{asset}: {total:.8f} (Free: {free:.8f}, Locked: {locked:.8f}) - Price check failed: {str(e)}"
+            )
+
+print(f"\nTOTAL PORTFOLIO VALUE: ${total_usdt_value:.2f}")
+print(f"YOUR ASSETS: {your_assets}")
+
+print("\n=== TRADABLE PAIRS FOR YOUR ASSETS ===")
+exchange_info = client.get_exchange_info()
+all_symbols = [
+    s["symbol"] for s in exchange_info["symbols"] if s["status"] == "TRADING"
+]
+
+tradable_pairs = []
+
+for asset in your_assets:
+    if asset == "USDT":
+        continue
+
+    # Check what pairs this asset can trade with
+    pairs_for_asset = []
+    for symbol in all_symbols:
+        if symbol.startswith(asset) and len(symbol) > len(asset):
+            quote = symbol[len(asset) :]
+            if quote in your_assets:  # Can trade with assets you own
+                pairs_for_asset.append(f"{asset}/{quote}")
+        elif symbol.endswith(asset) and len(symbol) > len(asset):
+            base = symbol[: -len(asset)]
+            if base in your_assets:  # Can trade with assets you own
+                pairs_for_asset.append(f"{base}/{asset}")
+
+    if pairs_for_asset:
+        print(f"{asset}: {pairs_for_asset}")
+        tradable_pairs.extend(pairs_for_asset)
+
+print(f"\nTotal tradable pairs with your current holdings: {len(tradable_pairs)}")
+
+print("\n=== ALL POSSIBLE TRADING OPPORTUNITIES ===")
+# Show all possible trades between any of your assets
+print("Direct trading pairs available:")
+for i, asset1 in enumerate(your_assets):
+    for asset2 in your_assets[i + 1 :]:
+        # Check if asset1/asset2 or asset2/asset1 exists
+        pair1 = f"{asset1}{asset2}"
+        pair2 = f"{asset2}{asset1}"
+
+        if pair1 in all_symbols:
+            print(f"  {asset1} ↔ {asset2} (via {pair1})")
+        elif pair2 in all_symbols:
+            print(f"  {asset1} ↔ {asset2} (via {pair2})")
+
+print("\n=== RECOMMENDATION ===")
+print(f"You have {len(your_assets)} different assets.")
+print("For maximum trading opportunities, consider:")
+print("1. Converting some assets to USDT for more flexibility")
+print("2. Focus on highest momentum pairs")
+print("3. Use cross-asset arbitrage when opportunities arise")

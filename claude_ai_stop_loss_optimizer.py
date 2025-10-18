@@ -1,0 +1,748 @@
+#!/usr/bin/env python3
+
+"""
+🧠 CLAUDE-STYLE AI STOP LOSS OPTIMIZER
+Advanced AI parameter recommendations for very tight stop loss scaling in microcaps
+Implements intelligent risk assessment and dynamic position management
+"""
+
+import json
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional, Any
+from dataclasses import dataclass, asdict
+import math
+
+
+@dataclass
+class AIStopLossParams:
+    """AI-recommended stop loss parameters"""
+
+    initial_stop_loss: float  # Initial stop loss percentage (negative)
+    tight_stop_threshold: float  # When to activate tight stops
+    volatility_multiplier: float  # Volatility-based adjustment
+    momentum_factor: float  # Momentum preservation factor
+    scaling_intervals: List[float]  # Price levels for stop loss scaling
+    min_stop_distance: float  # Minimum stop distance from current price
+    max_stop_distance: float  # Maximum stop distance from current price
+    confidence_score: float  # AI confidence in recommendations
+    risk_category: str  # ULTRA_TIGHT, TIGHT, MODERATE, LOOSE
+
+
+@dataclass
+class MicrocapRiskProfile:
+    """Comprehensive microcap risk analysis"""
+
+    symbol: str
+    market_cap_category: str  # NANO, MICRO, SMALL
+    volatility_index: float  # 0-100 scale
+    liquidity_score: float  # 0-100 scale
+    momentum_strength: float  # 0-100 scale
+    catalyst_proximity: float  # 0-100 scale
+    whale_concentration: float  # 0-100 scale
+    social_sentiment: float  # 0-100 scale
+    technical_strength: float  # 0-100 scale
+    overall_risk_score: float  # 0-100 scale
+    recommended_allocation: float  # Percentage allocation
+    stop_loss_aggressiveness: str  # ULTRA_TIGHT, TIGHT, MODERATE
+
+
+class ClaudeAIStopLossOptimizer:
+    """Claude-style AI optimizer for microcap stop losses"""
+
+    def __init__(self):
+        self.optimization_history = []
+        self.performance_metrics = {}
+
+        # AI knowledge base for microcap patterns
+        self.ai_knowledge_base = {
+            "volatility_patterns": {
+                "nano_cap": {"avg_daily": 0.25, "spike_threshold": 0.50},
+                "micro_cap": {"avg_daily": 0.18, "spike_threshold": 0.35},
+                "small_cap": {"avg_daily": 0.12, "spike_threshold": 0.25},
+            },
+            "momentum_preservation": {
+                "strong_momentum": {"stop_distance": 0.08, "scaling_rate": 0.02},
+                "moderate_momentum": {"stop_distance": 0.12, "scaling_rate": 0.03},
+                "weak_momentum": {"stop_distance": 0.18, "scaling_rate": 0.05},
+            },
+            "liquidity_adjustments": {
+                "high_liquidity": {
+                    "stop_multiplier": 0.8,
+                    "execution_confidence": 0.95,
+                },
+                "medium_liquidity": {
+                    "stop_multiplier": 1.0,
+                    "execution_confidence": 0.85,
+                },
+                "low_liquidity": {"stop_multiplier": 1.3, "execution_confidence": 0.70},
+            },
+        }
+
+    def analyze_microcap_risk_profile(self, opportunity: Dict) -> MicrocapRiskProfile:
+        """Comprehensive AI analysis of microcap risk profile"""
+        symbol = opportunity["symbol"]
+        price = opportunity.get("price", 0.0)
+
+        # Estimate market cap category
+        market_cap_category = self._estimate_market_cap_category(opportunity)
+
+        # Analyze volatility (based on price movements and patterns)
+        volatility_index = self._calculate_volatility_index(opportunity)
+
+        # Assess liquidity
+        liquidity_score = self._assess_liquidity_score(opportunity)
+
+        # Measure momentum strength
+        momentum_strength = self._measure_momentum_strength(opportunity)
+
+        # Evaluate catalyst proximity
+        catalyst_proximity = self._evaluate_catalyst_proximity(opportunity)
+
+        # Analyze whale concentration risk
+        whale_concentration = self._analyze_whale_concentration(opportunity)
+
+        # Social sentiment analysis
+        social_sentiment = self._analyze_social_sentiment(opportunity)
+
+        # Technical strength assessment
+        technical_strength = self._assess_technical_strength(opportunity)
+
+        # Calculate overall risk score
+        overall_risk_score = self._calculate_overall_risk_score(
+            volatility_index,
+            liquidity_score,
+            momentum_strength,
+            catalyst_proximity,
+            whale_concentration,
+            social_sentiment,
+            technical_strength,
+        )
+
+        # Determine recommended allocation
+        recommended_allocation = self._calculate_recommended_allocation(
+            overall_risk_score, momentum_strength
+        )
+
+        # Determine stop loss aggressiveness
+        stop_loss_aggressiveness = self._determine_stop_loss_aggressiveness(
+            volatility_index, momentum_strength, liquidity_score
+        )
+
+        return MicrocapRiskProfile(
+            symbol=symbol,
+            market_cap_category=market_cap_category,
+            volatility_index=volatility_index,
+            liquidity_score=liquidity_score,
+            momentum_strength=momentum_strength,
+            catalyst_proximity=catalyst_proximity,
+            whale_concentration=whale_concentration,
+            social_sentiment=social_sentiment,
+            technical_strength=technical_strength,
+            overall_risk_score=overall_risk_score,
+            recommended_allocation=recommended_allocation,
+            stop_loss_aggressiveness=stop_loss_aggressiveness,
+        )
+
+    def generate_ai_stop_loss_params(
+        self,
+        risk_profile: MicrocapRiskProfile,
+        current_price: float,
+        entry_price: float,
+    ) -> AIStopLossParams:
+        """Generate AI-optimized stop loss parameters"""
+
+        # Base stop loss calculation
+        base_stop = self._calculate_base_stop_loss(risk_profile)
+
+        # Volatility adjustment
+        volatility_adj = self._calculate_volatility_adjustment(
+            risk_profile.volatility_index
+        )
+
+        # Momentum preservation adjustment
+        momentum_adj = self._calculate_momentum_adjustment(
+            risk_profile.momentum_strength
+        )
+
+        # Liquidity adjustment
+        liquidity_adj = self._calculate_liquidity_adjustment(
+            risk_profile.liquidity_score
+        )
+
+        # Calculate final initial stop loss
+        initial_stop_loss = base_stop * volatility_adj * momentum_adj * liquidity_adj
+
+        # Ensure within reasonable bounds for microcaps
+        initial_stop_loss = max(-0.25, min(-0.05, initial_stop_loss))  # -25% to -5%
+
+        # Calculate tight stop threshold (when to activate ultra-tight stops)
+        tight_stop_threshold = self._calculate_tight_stop_threshold(risk_profile)
+
+        # Calculate volatility multiplier for dynamic adjustments
+        volatility_multiplier = 1.0 + (risk_profile.volatility_index / 100) * 0.5
+
+        # Calculate momentum factor
+        momentum_factor = 0.5 + (risk_profile.momentum_strength / 100) * 0.5
+
+        # Generate scaling intervals
+        scaling_intervals = self._generate_scaling_intervals(risk_profile)
+
+        # Calculate minimum and maximum stop distances
+        min_stop_distance = max(
+            0.02, risk_profile.volatility_index / 100 * 0.1
+        )  # 2% minimum
+        max_stop_distance = min(
+            0.20, risk_profile.volatility_index / 100 * 0.3
+        )  # 20% maximum
+
+        # Calculate AI confidence score
+        confidence_score = self._calculate_confidence_score(risk_profile)
+
+        # Determine risk category
+        risk_category = self._determine_risk_category(initial_stop_loss, risk_profile)
+
+        return AIStopLossParams(
+            initial_stop_loss=initial_stop_loss,
+            tight_stop_threshold=tight_stop_threshold,
+            volatility_multiplier=volatility_multiplier,
+            momentum_factor=momentum_factor,
+            scaling_intervals=scaling_intervals,
+            min_stop_distance=min_stop_distance,
+            max_stop_distance=max_stop_distance,
+            confidence_score=confidence_score,
+            risk_category=risk_category,
+        )
+
+    def calculate_dynamic_stop_loss(
+        self,
+        ai_params: AIStopLossParams,
+        current_price: float,
+        entry_price: float,
+        position_age_hours: float,
+        unrealized_pnl_pct: float,
+    ) -> Tuple[float, str]:
+        """Calculate dynamic stop loss based on AI parameters and current conditions"""
+
+        # Calculate current profit/loss percentage
+        pnl_pct = (current_price - entry_price) / entry_price
+
+        # Determine current scaling interval
+        current_interval = self._find_current_scaling_interval(
+            pnl_pct, ai_params.scaling_intervals
+        )
+
+        # Base stop loss calculation
+        if pnl_pct > ai_params.tight_stop_threshold:
+            # In profit - use tight trailing stops
+            stop_distance = ai_params.min_stop_distance * ai_params.momentum_factor
+            if pnl_pct > 0.20:  # >20% profit - ultra tight
+                stop_distance *= 0.5
+            elif pnl_pct > 0.10:  # >10% profit - tight
+                stop_distance *= 0.7
+        else:
+            # Still at loss or small profit - use initial parameters
+            stop_distance = abs(ai_params.initial_stop_loss)
+
+        # Volatility adjustment
+        volatility_adj = 1.0 + (
+            np.sin(position_age_hours / 24 * np.pi) * 0.2
+        )  # Time-based volatility
+        stop_distance *= ai_params.volatility_multiplier * volatility_adj
+
+        # Ensure within bounds
+        stop_distance = max(
+            ai_params.min_stop_distance, min(ai_params.max_stop_distance, stop_distance)
+        )
+
+        # Calculate actual stop price
+        stop_price = current_price * (1 - stop_distance)
+
+        # Determine stop type
+        if stop_distance <= 0.03:
+            stop_type = "ULTRA_TIGHT"
+        elif stop_distance <= 0.06:
+            stop_type = "TIGHT"
+        elif stop_distance <= 0.12:
+            stop_type = "MODERATE"
+        else:
+            stop_type = "LOOSE"
+
+        return stop_price, stop_type
+
+    def get_ai_recommendations(self, opportunity: Dict) -> Dict[str, Any]:
+        """Get comprehensive AI recommendations for microcap position"""
+
+        # Analyze risk profile
+        risk_profile = self.analyze_microcap_risk_profile(opportunity)
+
+        # Generate stop loss parameters
+        ai_params = self.generate_ai_stop_loss_params(
+            risk_profile, opportunity["price"], opportunity["price"]
+        )
+
+        # Calculate initial stop loss
+        initial_stop_price, stop_type = self.calculate_dynamic_stop_loss(
+            ai_params, opportunity["price"], opportunity["price"], 0.0, 0.0
+        )
+
+        # Generate scaling strategy
+        scaling_strategy = self._generate_scaling_strategy(ai_params, risk_profile)
+
+        # Calculate position sizing recommendation
+        position_sizing = self._calculate_ai_position_sizing(risk_profile, ai_params)
+
+        # Generate exit strategy
+        exit_strategy = self._generate_exit_strategy(risk_profile, ai_params)
+
+        # Calculate risk metrics
+        risk_metrics = self._calculate_risk_metrics(risk_profile, ai_params)
+
+        return {
+            "symbol": opportunity["symbol"],
+            "ai_analysis_timestamp": datetime.now().isoformat(),
+            "risk_profile": asdict(risk_profile),
+            "ai_stop_loss_params": asdict(ai_params),
+            "initial_stop_price": initial_stop_price,
+            "stop_type": stop_type,
+            "scaling_strategy": scaling_strategy,
+            "position_sizing": position_sizing,
+            "exit_strategy": exit_strategy,
+            "risk_metrics": risk_metrics,
+            "ai_confidence": ai_params.confidence_score,
+            "recommendation_summary": self._generate_recommendation_summary(
+                risk_profile, ai_params
+            ),
+        }
+
+    # Helper methods for calculations
+    def _estimate_market_cap_category(self, opportunity: Dict) -> str:
+        """Estimate market cap category based on price and other factors"""
+        price = opportunity.get("price", 0.0)
+
+        if price < 0.00001:
+            return "NANO"
+        elif price < 0.001:
+            return "MICRO"
+        else:
+            return "SMALL"
+
+    def _calculate_volatility_index(self, opportunity: Dict) -> float:
+        """Calculate volatility index (0-100)"""
+        # Use available metrics to estimate volatility
+        volume_24h = opportunity.get("volume_24h", 0)
+        price_change_24h = opportunity.get("price_change_24h", 0)
+
+        # Higher volume and price changes indicate higher volatility
+        volatility = abs(price_change_24h) * 100
+        if volume_24h > 1000000:  # High volume
+            volatility *= 0.8  # Reduce volatility score for high volume
+
+        return min(100, max(0, volatility))
+
+    def _assess_liquidity_score(self, opportunity: Dict) -> float:
+        """Assess liquidity score (0-100)"""
+        volume_24h = opportunity.get("volume_24h", 0)
+
+        if volume_24h > 10000000:  # >$10M volume
+            return 85
+        elif volume_24h > 1000000:  # >$1M volume
+            return 70
+        elif volume_24h > 100000:  # >$100K volume
+            return 50
+        elif volume_24h > 10000:  # >$10K volume
+            return 30
+        else:
+            return 15
+
+    def _measure_momentum_strength(self, opportunity: Dict) -> float:
+        """Measure momentum strength (0-100)"""
+        momentum_score = opportunity.get("momentum_score", 50)
+        ultra_rating = opportunity.get("ultra_rating", 50)
+
+        # Combine available momentum indicators
+        return min(100, max(0, (momentum_score + ultra_rating) / 2))
+
+    def _evaluate_catalyst_proximity(self, opportunity: Dict) -> float:
+        """Evaluate catalyst proximity (0-100)"""
+        # Check for catalyst-related indicators
+        immediate_action = opportunity.get("immediate_action", "")
+        catalyst_status = opportunity.get("catalyst_status", "")
+
+        if "IMMEDIATE" in immediate_action or "URGENT" in catalyst_status:
+            return 90
+        elif "BUY" in immediate_action or "CATALYST" in catalyst_status:
+            return 70
+        else:
+            return 40
+
+    def _analyze_whale_concentration(self, opportunity: Dict) -> float:
+        """Analyze whale concentration risk (0-100, higher = more risk)"""
+        # Estimate based on available data
+        market_cap = opportunity.get("market_cap", 0)
+        volume_24h = opportunity.get("volume_24h", 0)
+
+        if market_cap > 0 and volume_24h > 0:
+            concentration_ratio = volume_24h / market_cap
+            if concentration_ratio > 0.5:  # High turnover
+                return 80  # High whale risk
+            elif concentration_ratio > 0.1:
+                return 50  # Moderate whale risk
+            else:
+                return 20  # Low whale risk
+
+        return 60  # Default moderate risk
+
+    def _analyze_social_sentiment(self, opportunity: Dict) -> float:
+        """Analyze social sentiment (0-100)"""
+        # Use available sentiment indicators
+        social_volume = opportunity.get("social_volume", 0)
+        sentiment_score = opportunity.get("sentiment_score", 50)
+
+        return min(100, max(0, sentiment_score))
+
+    def _assess_technical_strength(self, opportunity: Dict) -> float:
+        """Assess technical strength (0-100)"""
+        # Use technical indicators if available
+        technical_score = opportunity.get("technical_score", 50)
+        momentum_score = opportunity.get("momentum_score", 50)
+
+        return min(100, max(0, (technical_score + momentum_score) / 2))
+
+    def _calculate_overall_risk_score(
+        self,
+        volatility: float,
+        liquidity: float,
+        momentum: float,
+        catalyst: float,
+        whale: float,
+        sentiment: float,
+        technical: float,
+    ) -> float:
+        """Calculate overall risk score"""
+        # Weighted combination of risk factors
+        weights = {
+            "volatility": 0.20,
+            "liquidity": 0.15,
+            "momentum": 0.20,
+            "catalyst": 0.15,
+            "whale": 0.10,
+            "sentiment": 0.10,
+            "technical": 0.10,
+        }
+
+        # Higher volatility and whale concentration increase risk
+        # Higher liquidity, momentum, catalyst, sentiment, and technical reduce risk
+        risk_score = (
+            volatility * weights["volatility"]
+            + (100 - liquidity) * weights["liquidity"]
+            + (100 - momentum) * weights["momentum"]
+            + (100 - catalyst) * weights["catalyst"]
+            + whale * weights["whale"]
+            + (100 - sentiment) * weights["sentiment"]
+            + (100 - technical) * weights["technical"]
+        )
+
+        return min(100, max(0, risk_score))
+
+    def _calculate_recommended_allocation(
+        self, risk_score: float, momentum: float
+    ) -> float:
+        """Calculate recommended position allocation"""
+        # Base allocation inversely related to risk
+        base_allocation = max(1, 25 - (risk_score / 4))
+
+        # Momentum bonus
+        momentum_bonus = momentum / 100 * 10
+
+        final_allocation = base_allocation + momentum_bonus
+
+        return min(25, max(1, final_allocation))  # 1-25% range
+
+    def _determine_stop_loss_aggressiveness(
+        self, volatility: float, momentum: float, liquidity: float
+    ) -> str:
+        """Determine stop loss aggressiveness level"""
+        # Higher momentum and liquidity = tighter stops possible
+        # Higher volatility = looser stops needed
+
+        aggressiveness_score = (momentum + liquidity - volatility) / 2
+
+        if aggressiveness_score > 70:
+            return "ULTRA_TIGHT"
+        elif aggressiveness_score > 50:
+            return "TIGHT"
+        else:
+            return "MODERATE"
+
+    def _calculate_base_stop_loss(self, risk_profile: MicrocapRiskProfile) -> float:
+        """Calculate base stop loss percentage"""
+        if risk_profile.stop_loss_aggressiveness == "ULTRA_TIGHT":
+            return -0.08  # 8% stop loss
+        elif risk_profile.stop_loss_aggressiveness == "TIGHT":
+            return -0.12  # 12% stop loss
+        else:
+            return -0.18  # 18% stop loss
+
+    def _calculate_volatility_adjustment(self, volatility_index: float) -> float:
+        """Calculate volatility adjustment multiplier"""
+        # Higher volatility requires wider stops
+        return 1.0 + (volatility_index / 100) * 0.5
+
+    def _calculate_momentum_adjustment(self, momentum_strength: float) -> float:
+        """Calculate momentum adjustment multiplier"""
+        # Higher momentum allows tighter stops
+        return 1.0 - (momentum_strength / 100) * 0.3
+
+    def _calculate_liquidity_adjustment(self, liquidity_score: float) -> float:
+        """Calculate liquidity adjustment multiplier"""
+        # Higher liquidity allows tighter stops
+        return 1.0 - (liquidity_score / 100) * 0.2
+
+    def _calculate_tight_stop_threshold(
+        self, risk_profile: MicrocapRiskProfile
+    ) -> float:
+        """Calculate when to activate tight stops (profit threshold)"""
+        if risk_profile.momentum_strength > 80:
+            return 0.05  # 5% profit
+        elif risk_profile.momentum_strength > 60:
+            return 0.08  # 8% profit
+        else:
+            return 0.12  # 12% profit
+
+    def _generate_scaling_intervals(
+        self, risk_profile: MicrocapRiskProfile
+    ) -> List[float]:
+        """Generate price scaling intervals for stop loss adjustments"""
+        if risk_profile.momentum_strength > 80:
+            return [0.05, 0.10, 0.20, 0.30, 0.50, 1.00, 2.00]
+        elif risk_profile.momentum_strength > 60:
+            return [0.08, 0.15, 0.25, 0.40, 0.70, 1.20, 2.50]
+        else:
+            return [0.12, 0.20, 0.35, 0.50, 0.80, 1.50, 3.00]
+
+    def _calculate_confidence_score(self, risk_profile: MicrocapRiskProfile) -> float:
+        """Calculate AI confidence in recommendations"""
+        # Higher confidence with better data quality and clearer patterns
+        confidence_factors = [
+            risk_profile.liquidity_score / 100,
+            risk_profile.momentum_strength / 100,
+            (100 - risk_profile.volatility_index) / 100,
+            risk_profile.technical_strength / 100,
+        ]
+
+        return sum(confidence_factors) / len(confidence_factors)
+
+    def _determine_risk_category(
+        self, initial_stop_loss: float, risk_profile: MicrocapRiskProfile
+    ) -> str:
+        """Determine overall risk category"""
+        if abs(initial_stop_loss) <= 0.08:
+            return "ULTRA_TIGHT"
+        elif abs(initial_stop_loss) <= 0.12:
+            return "TIGHT"
+        elif abs(initial_stop_loss) <= 0.18:
+            return "MODERATE"
+        else:
+            return "LOOSE"
+
+    def _find_current_scaling_interval(
+        self, pnl_pct: float, intervals: List[float]
+    ) -> int:
+        """Find current scaling interval"""
+        for i, threshold in enumerate(intervals):
+            if pnl_pct <= threshold:
+                return i
+        return len(intervals) - 1
+
+    def _generate_scaling_strategy(
+        self, ai_params: AIStopLossParams, risk_profile: MicrocapRiskProfile
+    ) -> Dict:
+        """Generate detailed scaling strategy"""
+        return {
+            "strategy_type": "DYNAMIC_TRAILING",
+            "initial_stop_distance": abs(ai_params.initial_stop_loss),
+            "tight_activation_profit": ai_params.tight_stop_threshold,
+            "scaling_intervals": ai_params.scaling_intervals,
+            "momentum_preservation": ai_params.momentum_factor > 0.7,
+            "volatility_adaptive": True,
+            "recommended_scaling": [
+                {
+                    "profit_level": interval,
+                    "stop_distance": ai_params.min_stop_distance * (1 + i * 0.1),
+                }
+                for i, interval in enumerate(ai_params.scaling_intervals[:5])
+            ],
+        }
+
+    def _calculate_ai_position_sizing(
+        self, risk_profile: MicrocapRiskProfile, ai_params: AIStopLossParams
+    ) -> Dict:
+        """Calculate AI-recommended position sizing"""
+        base_size = risk_profile.recommended_allocation
+
+        # Adjust for confidence
+        confidence_adj = base_size * ai_params.confidence_score
+
+        # Adjust for risk category
+        risk_adj = {
+            "ULTRA_TIGHT": 1.2,
+            "TIGHT": 1.0,
+            "MODERATE": 0.8,
+            "LOOSE": 0.6,
+        }.get(ai_params.risk_category, 1.0)
+
+        final_size = confidence_adj * risk_adj
+
+        return {
+            "base_allocation_pct": base_size,
+            "confidence_adjusted_pct": confidence_adj,
+            "risk_adjusted_pct": final_size,
+            "max_position_usd": final_size * 1000,  # Assuming $100k portfolio
+            "position_category": (
+                "AGGRESSIVE"
+                if final_size > 15
+                else "MODERATE" if final_size > 8 else "CONSERVATIVE"
+            ),
+        }
+
+    def _generate_exit_strategy(
+        self, risk_profile: MicrocapRiskProfile, ai_params: AIStopLossParams
+    ) -> Dict:
+        """Generate AI exit strategy"""
+        return {
+            "strategy_type": "SCALED_EXIT",
+            "stop_loss_type": ai_params.risk_category,
+            "profit_targets": [
+                {"level": 1, "profit_pct": 25, "exit_pct": 20},
+                {"level": 2, "profit_pct": 50, "exit_pct": 30},
+                {"level": 3, "profit_pct": 100, "exit_pct": 30},
+                {"level": 4, "profit_pct": 200, "exit_pct": 20},
+            ],
+            "trailing_stop_activation": ai_params.tight_stop_threshold,
+            "emergency_exit_triggers": [
+                "Volume drops below 50% of entry volume",
+                "Momentum score drops below 30",
+                "Major resistance level hit",
+            ],
+        }
+
+    def _calculate_risk_metrics(
+        self, risk_profile: MicrocapRiskProfile, ai_params: AIStopLossParams
+    ) -> Dict:
+        """Calculate comprehensive risk metrics"""
+        return {
+            "max_loss_per_position": abs(ai_params.initial_stop_loss) * 100,
+            "expected_volatility": risk_profile.volatility_index,
+            "liquidity_risk": 100 - risk_profile.liquidity_score,
+            "whale_manipulation_risk": risk_profile.whale_concentration,
+            "overall_risk_rating": risk_profile.overall_risk_score,
+            "risk_adjusted_return_potential": risk_profile.momentum_strength
+            * (1 - risk_profile.overall_risk_score / 100),
+            "stop_loss_confidence": ai_params.confidence_score * 100,
+            "execution_difficulty": 100 - risk_profile.liquidity_score,
+        }
+
+    def _generate_recommendation_summary(
+        self, risk_profile: MicrocapRiskProfile, ai_params: AIStopLossParams
+    ) -> str:
+        """Generate human-readable recommendation summary"""
+        return f"""
+AI ANALYSIS SUMMARY for {risk_profile.symbol}:
+
+🎯 RECOMMENDATION: {ai_params.risk_category} position with {ai_params.confidence_score:.0%} confidence
+💰 ALLOCATION: {risk_profile.recommended_allocation:.1f}% of portfolio
+🛑 STOP LOSS: {abs(ai_params.initial_stop_loss):.1%} initial, scaling to {ai_params.min_stop_distance:.1%}
+⚡ MOMENTUM: {risk_profile.momentum_strength:.0f}/100 - {'STRONG' if risk_profile.momentum_strength > 70 else 'MODERATE' if risk_profile.momentum_strength > 50 else 'WEAK'}
+💧 LIQUIDITY: {risk_profile.liquidity_score:.0f}/100 - {'HIGH' if risk_profile.liquidity_score > 70 else 'MEDIUM' if risk_profile.liquidity_score > 40 else 'LOW'}
+📊 VOLATILITY: {risk_profile.volatility_index:.0f}/100 - {'EXTREME' if risk_profile.volatility_index > 80 else 'HIGH' if risk_profile.volatility_index > 60 else 'MODERATE'}
+
+🚨 RISK LEVEL: {risk_profile.overall_risk_score:.0f}/100
+⚠️ KEY RISKS: {'High whale concentration, ' if risk_profile.whale_concentration > 70 else ''}{'Low liquidity, ' if risk_profile.liquidity_score < 40 else ''}{'Extreme volatility' if risk_profile.volatility_index > 80 else 'High volatility' if risk_profile.volatility_index > 60 else 'Moderate volatility'}
+
+🎲 STRATEGY: {ai_params.risk_category} stop loss with dynamic trailing after {ai_params.tight_stop_threshold:.0%} profit
+        """.strip()
+
+
+def main():
+    """Demonstration of Claude AI Stop Loss Optimizer"""
+    print("🧠 CLAUDE-STYLE AI STOP LOSS OPTIMIZER")
+    print("=" * 60)
+
+    # Create optimizer
+    optimizer = ClaudeAIStopLossOptimizer()
+
+    # Example microcap opportunity
+    test_opportunity = {
+        "symbol": "SHIBUSDT",
+        "price": 0.000008,
+        "volume_24h": 25000000,
+        "price_change_24h": 15.5,
+        "momentum_score": 85,
+        "ultra_rating": 92,
+        "immediate_action": "IMMEDIATE_BUY",
+        "catalyst_status": "CATALYST_IMMINENT",
+        "technical_score": 78,
+        "sentiment_score": 82,
+    }
+
+    # Get AI recommendations
+    recommendations = optimizer.get_ai_recommendations(test_opportunity)
+
+    # Print results
+    print("\n🎯 AI STOP LOSS RECOMMENDATIONS")
+    print("-" * 40)
+    print(recommendations["recommendation_summary"])
+
+    print(f"\n📊 DETAILED PARAMETERS")
+    print("-" * 40)
+    ai_params = recommendations["ai_stop_loss_params"]
+    print(f"Initial Stop Loss: {ai_params['initial_stop_loss']:.1%}")
+    print(f"Tight Stop Threshold: {ai_params['tight_stop_threshold']:.1%}")
+    print(f"Min Stop Distance: {ai_params['min_stop_distance']:.1%}")
+    print(f"Max Stop Distance: {ai_params['max_stop_distance']:.1%}")
+    print(f"Risk Category: {ai_params['risk_category']}")
+    print(f"AI Confidence: {ai_params['confidence_score']:.1%}")
+
+    print(f"\n🔄 SCALING STRATEGY")
+    print("-" * 40)
+    scaling = recommendations["scaling_strategy"]
+    for level in scaling["recommended_scaling"]:
+        print(
+            f"  Profit {level['profit_level']:.0%}: Stop at {level['stop_distance']:.1%} distance"
+        )
+
+    # Demonstrate dynamic stop loss calculation
+    print(f"\n🧮 DYNAMIC STOP LOSS SIMULATION")
+    print("-" * 40)
+
+    entry_price = test_opportunity["price"]
+    ai_stop_params = AIStopLossParams(**ai_params)
+
+    # Simulate different profit scenarios
+    scenarios = [
+        (entry_price, 0, 0),  # Entry
+        (entry_price * 1.05, 1, 0.05),  # +5%
+        (entry_price * 1.15, 6, 0.15),  # +15%
+        (entry_price * 1.30, 24, 0.30),  # +30%
+        (entry_price * 1.50, 48, 0.50),  # +50%
+    ]
+
+    for current_price, hours, pnl_pct in scenarios:
+        stop_price, stop_type = optimizer.calculate_dynamic_stop_loss(
+            ai_stop_params, current_price, entry_price, hours, pnl_pct
+        )
+        stop_distance = (current_price - stop_price) / current_price
+
+        print(
+            f"  Price: ${current_price:.8f} (+{pnl_pct:.0%}) - Stop: ${stop_price:.8f} ({stop_distance:.1%} {stop_type})"
+        )
+
+    print(f"\n✅ AI OPTIMIZATION COMPLETE")
+    print("=" * 60)
+    print("🚀 Ultra-tight stop loss scaling optimized for microcap volatility")
+    print("⚠️ Remember: AI recommendations require human judgment and risk management")
+
+
+if __name__ == "__main__":
+    main()

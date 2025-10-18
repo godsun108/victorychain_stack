@@ -1,0 +1,43 @@
+[Unit]
+Description=VictoryChain 24/7 Live Trading Bot
+After=network.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=nicholaskramer
+Group=staff
+WorkingDirectory=/Users/nicholaskramer/Downloads/victorychain_stack
+Environment=PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/Users/nicholaskramer/Downloads/victorychain_stack
+Environment=PYTHONUNBUFFERED=1
+
+# Load environment variables from .env file
+EnvironmentFile=/Users/nicholaskramer/Downloads/victorychain_stack/.env
+
+# Main command
+ExecStart=/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/bin/python3 live_24_7_trading_bot.py
+
+# Restart configuration
+Restart=always
+RestartSec=60
+TimeoutStartSec=120
+TimeoutStopSec=30
+
+# Logging
+StandardOutput=append:/Users/nicholaskramer/Downloads/victorychain_stack/logs/systemd_24_7_trading.log
+StandardError=append:/Users/nicholaskramer/Downloads/victorychain_stack/logs/systemd_24_7_trading.log
+
+# Security and resource limits
+NoNewPrivileges=yes
+MemoryMax=1G
+CPUQuota=80%
+
+# Health monitoring
+WatchdogSec=1800
+NotifyAccess=none
+
+[Install]
+WantedBy=multi-user.target

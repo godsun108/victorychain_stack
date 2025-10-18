@@ -1,0 +1,341 @@
+#!/usr/bin/env python3
+"""
+Expanded Token Analysis - All 205+ Tradable Tokens
+Comprehensive analysis of ALL available USDT pairs for maximum opportunity detection
+"""
+
+import os
+import json
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from dotenv import load_dotenv
+
+class ExpandedTokenAnalyzer:
+    def __init__(self):
+        load_dotenv()
+        
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv('BINANCEUS_KEY'),
+            api_secret=os.getenv('BINANCEUS_SECRET'),
+            tld='us'
+        )
+        
+        print("🚀 Expanded Token Analyzer initialized - analyzing ALL 205+ tokens!")
+    
+    def analyze_all_tradable_tokens(self) -> Dict:
+        """Analyze ALL 205+ tradable USDT tokens"""
+        print("🔍 ANALYZING ALL TRADABLE TOKENS...")
+        print("=" * 60)
+        
+        # Get all tickers
+        tickers = self.client.get_ticker()
+        usdt_pairs = [t for t in tickers if t['symbol'].endswith('USDT') and t['symbol'] != 'USDCUSDT']
+        
+        print(f"📊 Total tokens to analyze: {len(usdt_pairs)}")
+        
+        all_tokens = []
+        volume_categories = {
+            'ultra_high': [],  # >1M volume
+            'high': [],        # 100K-1M volume
+            'medium': [],      # 10K-100K volume
+            'low': [],         # 1K-10K volume
+            'micro': []        # <1K volume
+        }
+        
+        for i, ticker in enumerate(usdt_pairs):
+            symbol = ticker['symbol']
+            token = symbol.replace('USDT', '')
+            
+            try:
+                # Basic data
+                daily_change = float(ticker['priceChangePercent'])
+                volume_24h = float(ticker['quoteVolume'])
+                price = float(ticker['lastPrice'])
+                
+                # Calculate momentum score (simplified for speed)
+                momentum_score = self.get_quick_momentum_score(symbol, daily_change, volume_24h)
+                
+                token_data = {
+                    'symbol': symbol,
+                    'token': token,
+                    'momentum_score': momentum_score,
+                    'daily_change': daily_change,
+                    'volume_24h': volume_24h,
+                    'price': price,
+                    'volume_rank': i + 1,
+                    'analysis_timestamp': datetime.now().isoformat()
+                }
+                
+                all_tokens.append(token_data)
+                
+                # Categorize by volume
+                if volume_24h > 1000000:
+                    volume_categories['ultra_high'].append(token_data)
+                elif volume_24h > 100000:
+                    volume_categories['high'].append(token_data)
+                elif volume_24h > 10000:
+                    volume_categories['medium'].append(token_data)
+                elif volume_24h > 1000:
+                    volume_categories['low'].append(token_data)
+                else:
+                    volume_categories['micro'].append(token_data)
+                
+                # Progress indicator
+                if (i + 1) % 25 == 0:
+                    print(f"🔄 Processed {i + 1}/{len(usdt_pairs)} tokens...")
+                
+                time.sleep(0.05)  # Rate limiting
+                
+            except Exception as e:
+                print(f"⚠️ Error analyzing {symbol}: {e}")
+                continue
+        
+        # Sort all tokens by momentum score
+        all_tokens.sort(key=lambda x: x['momentum_score'], reverse=True)
+        
+        # Generate comprehensive analysis
+        analysis_results = {
+            'timestamp': datetime.now().isoformat(),
+            'total_tokens_analyzed': len(all_tokens),
+            'volume_breakdown': {
+                'ultra_high_volume': len(volume_categories['ultra_high']),
+                'high_volume': len(volume_categories['high']),
+                'medium_volume': len(volume_categories['medium']),
+                'low_volume': len(volume_categories['low']),
+                'micro_volume': len(volume_categories['micro'])
+            },
+            'all_tokens': all_tokens,
+            'volume_categories': volume_categories,
+            'top_opportunities': self.find_top_opportunities_all_tokens(all_tokens),
+            'hidden_gems': self.find_hidden_gems(volume_categories),
+            'market_summary': self.generate_market_summary(all_tokens)
+        }
+        
+        return analysis_results
+    
+    def get_quick_momentum_score(self, symbol: str, daily_change: float, volume: float) -> float:
+        """Quick momentum calculation for all tokens (optimized for speed)"""
+        try:
+            # Base score from daily performance
+            momentum_score = 50 + (daily_change * 2)
+            
+            # Volume boost
+            if volume > 1000000:
+                momentum_score += 20
+            elif volume > 500000:
+                momentum_score += 15
+            elif volume > 100000:
+                momentum_score += 10
+            elif volume > 50000:
+                momentum_score += 5
+            elif volume < 1000:
+                momentum_score -= 10
+            
+            # Quick trend check (1h data only for speed)
+            klines_1h = self.client.get_klines(symbol=symbol, interval='1h', limit=6)
+            if klines_1h and len(klines_1h) >= 4:
+                prices = [float(k[4]) for k in klines_1h[-4:]]
+                if len(prices) >= 2:
+                    recent_change = ((prices[-1] - prices[-2]) / prices[-2]) * 100
+                    momentum_score += recent_change * 3  # Recent movement weight
+                    
+                    # Consistency bonus
+                    if all(prices[i] >= prices[i-1] for i in range(1, len(prices))):
+                        momentum_score += 10  # Rising trend
+            
+            return max(momentum_score, 0)
+            
+        except Exception as e:
+            # Fallback calculation
+            return max(50 + (daily_change * 2), 0)
+    
+    def find_top_opportunities_all_tokens(self, all_tokens: List[Dict]) -> Dict:
+        """Find top opportunities across ALL tokens"""
+        
+        # Different opportunity categories
+        opportunities = {
+            'momentum_leaders': sorted(all_tokens, key=lambda x: x['momentum_score'], reverse=True)[:10],
+            'daily_gainers': sorted([t for t in all_tokens if t['daily_change'] > 0], 
+                                  key=lambda x: x['daily_change'], reverse=True)[:10],
+            'volume_leaders': sorted(all_tokens, key=lambda x: x['volume_24h'], reverse=True)[:10],
+            'balanced_opportunities': [t for t in all_tokens if 
+                                     t['momentum_score'] > 80 and 
+                                     t['daily_change'] > 2 and 
+                                     t['volume_24h'] > 50000],
+            'high_potential': [t for t in all_tokens if 
+                             t['momentum_score'] > 100 and 
+                             t['volume_24h'] > 10000]
+        }
+        
+        return opportunities
+    
+    def find_hidden_gems(self, volume_categories: Dict) -> List[Dict]:
+        """Find hidden gems in lower volume categories"""
+        
+        hidden_gems = []
+        
+        # Look for high momentum in medium/low volume tokens
+        for category in ['medium', 'low']:
+            category_tokens = volume_categories[category]
+            
+            # Find tokens with high momentum despite lower volume
+            gems = [t for t in category_tokens if 
+                   t['momentum_score'] > 120 and 
+                   t['daily_change'] > 5]
+            
+            hidden_gems.extend(gems)
+        
+        # Sort by momentum score
+        hidden_gems.sort(key=lambda x: x['momentum_score'], reverse=True)
+        
+        return hidden_gems[:10]  # Top 10 hidden gems
+    
+    def generate_market_summary(self, all_tokens: List[Dict]) -> Dict:
+        """Generate comprehensive market summary"""
+        
+        if not all_tokens:
+            return {'status': 'no_data'}
+        
+        changes = [t['daily_change'] for t in all_tokens]
+        momentum_scores = [t['momentum_score'] for t in all_tokens]
+        volumes = [t['volume_24h'] for t in all_tokens]
+        
+        summary = {
+            'total_tokens': len(all_tokens),
+            'market_performance': {
+                'avg_change': np.mean(changes),
+                'median_change': np.median(changes),
+                'positive_tokens': len([c for c in changes if c > 0]),
+                'negative_tokens': len([c for c in changes if c < 0]),
+                'positive_ratio': len([c for c in changes if c > 0]) / len(changes),
+                'best_performer': max(changes),
+                'worst_performer': min(changes)
+            },
+            'momentum_analysis': {
+                'avg_momentum': np.mean(momentum_scores),
+                'high_momentum_count': len([m for m in momentum_scores if m > 100]),
+                'exceptional_momentum_count': len([m for m in momentum_scores if m > 150]),
+                'low_momentum_count': len([m for m in momentum_scores if m < 50])
+            },
+            'volume_analysis': {
+                'total_volume': sum(volumes),
+                'avg_volume': np.mean(volumes),
+                'high_volume_count': len([v for v in volumes if v > 100000]),
+                'active_trading_count': len([v for v in volumes if v > 10000])
+            }
+        }
+        
+        # Market sentiment
+        if summary['market_performance']['positive_ratio'] > 0.7 and summary['market_performance']['avg_change'] > 2:
+            summary['sentiment'] = 'very_bullish'
+        elif summary['market_performance']['positive_ratio'] > 0.6 and summary['market_performance']['avg_change'] > 0:
+            summary['sentiment'] = 'bullish'
+        elif summary['market_performance']['positive_ratio'] > 0.4:
+            summary['sentiment'] = 'neutral'
+        elif summary['market_performance']['avg_change'] > -3:
+            summary['sentiment'] = 'bearish'
+        else:
+            summary['sentiment'] = 'very_bearish'
+        
+        return summary
+    
+    def display_comprehensive_results(self, results: Dict):
+        """Display comprehensive analysis results"""
+        
+        print(f"\n🚀 COMPREHENSIVE ANALYSIS RESULTS ({results['total_tokens_analyzed']} TOKENS)")
+        print("=" * 80)
+        
+        # Market summary
+        market = results['market_summary']
+        perf = market['market_performance']
+        momentum = market['momentum_analysis']
+        
+        print(f"📊 MARKET OVERVIEW:")
+        print(f"   Sentiment: {market['sentiment'].upper()}")
+        print(f"   Average Change: {perf['avg_change']:+.2f}%")
+        print(f"   Positive/Negative: {perf['positive_tokens']}/{perf['negative_tokens']} ({perf['positive_ratio']:.1%} positive)")
+        print(f"   Best/Worst: {perf['best_performer']:+.2f}% / {perf['worst_performer']:+.2f}%")
+        
+        print(f"\n⚡ MOMENTUM ANALYSIS:")
+        print(f"   High Momentum (100+): {momentum['high_momentum_count']} tokens")
+        print(f"   Exceptional (150+): {momentum['exceptional_momentum_count']} tokens")
+        print(f"   Low Momentum (<50): {momentum['low_momentum_count']} tokens")
+        
+        # Volume breakdown
+        volume_breakdown = results['volume_breakdown']
+        print(f"\n💰 VOLUME CATEGORIES:")
+        print(f"   Ultra High (>1M): {volume_breakdown['ultra_high_volume']} tokens")
+        print(f"   High (100K-1M): {volume_breakdown['high_volume']} tokens")  
+        print(f"   Medium (10K-100K): {volume_breakdown['medium_volume']} tokens")
+        print(f"   Low (1K-10K): {volume_breakdown['low_volume']} tokens")
+        print(f"   Micro (<1K): {volume_breakdown['micro_volume']} tokens")
+        
+        # Top opportunities
+        opportunities = results['top_opportunities']
+        
+        print(f"\n🏆 TOP 5 MOMENTUM LEADERS:")
+        for i, token in enumerate(opportunities['momentum_leaders'][:5], 1):
+            print(f"   {i}. {token['token']}: Score {token['momentum_score']:.0f}, "
+                  f"Change {token['daily_change']:+.2f}%, Vol ${token['volume_24h']:,.0f}")
+        
+        print(f"\n📈 TOP 5 DAILY GAINERS:")
+        for i, token in enumerate(opportunities['daily_gainers'][:5], 1):
+            print(f"   {i}. {token['token']}: {token['daily_change']:+.2f}%, "
+                  f"Momentum {token['momentum_score']:.0f}, Vol ${token['volume_24h']:,.0f}")
+        
+        # Hidden gems
+        hidden_gems = results['hidden_gems']
+        if hidden_gems:
+            print(f"\n💎 HIDDEN GEMS (High Momentum, Lower Volume):")
+            for i, gem in enumerate(hidden_gems[:5], 1):
+                print(f"   {i}. {gem['token']}: Momentum {gem['momentum_score']:.0f}, "
+                      f"Change {gem['daily_change']:+.2f}%, Vol ${gem['volume_24h']:,.0f}")
+        
+        # Trading recommendations
+        balanced = opportunities['balanced_opportunities']
+        high_potential = opportunities['high_potential']
+        
+        print(f"\n🎯 TRADING RECOMMENDATIONS:")
+        print(f"   Balanced Opportunities: {len(balanced)} tokens")
+        print(f"   High Potential: {len(high_potential)} tokens")
+        
+        if balanced:
+            print(f"   Top Balanced: {[t['token'] for t in balanced[:5]]}")
+        if high_potential:
+            print(f"   Top High Potential: {[t['token'] for t in high_potential[:5]]}")
+    
+    def generate_expanded_report(self) -> Dict:
+        """Generate comprehensive report of ALL tradable tokens"""
+        
+        print("🚀 STARTING EXPANDED ANALYSIS OF ALL TRADABLE TOKENS")
+        print("=" * 70)
+        
+        # Analyze all tokens
+        results = self.analyze_all_tradable_tokens()
+        
+        # Display results
+        self.display_comprehensive_results(results)
+        
+        # Save comprehensive report
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"expanded_all_tokens_analysis_{timestamp}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(results, f, indent=2)
+        
+        print(f"\n💾 Complete analysis saved: {filename}")
+        print(f"📊 Total tokens analyzed: {results['total_tokens_analyzed']}")
+        
+        return results
+
+def main():
+    analyzer = ExpandedTokenAnalyzer()
+    results = analyzer.generate_expanded_report()
+
+if __name__ == "__main__":
+    main()

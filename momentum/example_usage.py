@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+import time, random
+from momentum.metrics_hook import (
+    start_metrics,
+    inc_trade,
+    set_open_positions,
+    set_weekly_pnl,
+)
+
+start_metrics(9108)
+print("Metrics server at :9108/metrics")
+
+symbols = ["BTCUSDT", "ETHUSDT"]
+open_pos = {s: 0 for s in symbols}
+weekly_pnl = 0.0
+
+for i in range(20):
+    sym = random.choice(symbols)
+    side = random.choice(["BUY", "SELL"])
+    inc_trade(sym, side)
+    # simulate position delta
+    delta = 1 if side == "BUY" else -1
+    open_pos[sym] = max(0, open_pos[sym] + delta)
+    set_open_positions(sym, open_pos[sym])
+    weekly_pnl += random.uniform(-0.5, 1.2)
+    set_weekly_pnl(weekly_pnl)
+    time.sleep(1.0)
+
+print("Done.")

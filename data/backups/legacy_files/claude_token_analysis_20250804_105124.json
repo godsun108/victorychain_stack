@@ -1,0 +1,94 @@
+{
+  "timestamp": "2025-08-04T10:51:24.141590",
+  "strategy": "claude_analysis",
+  "magicusdt_reference": {
+    "performance": 18.81,
+    "momentum_score": 0.998,
+    "range_position": 0.97,
+    "pattern_type": "MOMENTUM_SURGE",
+    "volume_strategy": "quality_over_quantity",
+    "technical_alignment": true,
+    "controlled_volatility": true
+  },
+  "total_tokens_analyzed": 181,
+  "claude_analysis": {
+    "opportunities": [
+      {
+        "symbol": "MAGICUSDT",
+        "magicusdt_similarity": 90.38231862999999,
+        "price_change": 38.963,
+        "range_position": 1.0,
+        "current_price": 0.2386,
+        "volume": 3823.1863,
+        "scores": {
+          "performance_score": 1.0,
+          "momentum_score": 1.0,
+          "position_score": 1.0,
+          "volume_score": 0.038231863
+        }
+      },
+      {
+        "symbol": "LTCUSDT",
+        "magicusdt_similarity": 67.32102291475711,
+        "price_change": 9.399,
+        "range_position": 0.986251145737856,
+        "current_price": 119.42,
+        "volume": 151343.2908,
+        "scores": {
+          "performance_score": 0.46995,
+          "momentum_score": 0.6265999999999999,
+          "position_score": 0.986251145737856,
+          "volume_score": 1.0
+        }
+      },
+      {
+        "symbol": "UNIUSDT",
+        "magicusdt_similarity": 53.998890959,
+        "price_change": 8.295,
+        "range_position": 1.0,
+        "current_price": 9.883,
+        "volume": 8188.90959,
+        "scores": {
+          "performance_score": 0.41475,
+          "momentum_score": 0.553,
+          "position_score": 1.0,
+          "volume_score": 0.0818890959
+        }
+      },
+      {
+        "symbol": "ENAUSDT",
+        "magicusdt_similarity": 50.40092198099774,
+        "price_change": 8.053,
+        "range_position": 0.6944024205748868,
+        "current_price": 0.6159,
+        "volume": 43008.735695,
+        "scores": {
+          "performance_score": 0.40265000000000006,
+          "momentum_score": 0.5368666666666667,
+          "position_score": 0.6944024205748868,
+          "volume_score": 0.43008735695000005
+        }
+      }
+    ],
+    "total_analyzed": 181,
+    "similar_patterns_found": 4,
+    "analysis_method": "fallback",
+    "magicusdt_criteria_used": true
+  },
+  "config": {
+    "live_trading": true,
+    "demo_mode": false,
+    "strategy": "claude_analysis",
+    "duration_hours": 8,
+    "portfolio_value": 42.67,
+    "max_positions": 2,
+    "position_size_pct": 0.2,
+    "stop_loss_pct": 0.08,
+    "take_profit_pct": 0.15,
+    "max_hold_hours": 24,
+    "emergency_stop_loss": 0.25,
+    "scan_interval": 600,
+    "risk_level": "claude_analysis",
+    "timestamp": "2025-08-04T10:51:18.594614"
+  }
+}

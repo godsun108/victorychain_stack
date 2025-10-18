@@ -1,0 +1,2 @@
+fn(axum::extract::State<DashboardState>) -> impl futures_util::Future<Output = Json<DashboardMetrics>> {get_metrics}
+fn(axum::extract::State<DashboardState>) -> impl futures_util::Future<Output = Json<DashboardMetrics>> {get_metrics}: Handler<_, _>

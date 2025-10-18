@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""
+Check all available USDT trading pairs on Binance US
+"""
+
+import requests
+import json
+from datetime import datetime
+
+
+def get_all_binance_us_tokens():
+    """Get all possible USDT trading pairs from Binance US"""
+    try:
+        base_url = "https://api.binance.us"
+
+        # Get all symbols
+        print("🔍 Fetching all trading pairs from Binance US...")
+        response = requests.get(f"{base_url}/api/v3/exchangeInfo")
+
+        if response.status_code != 200:
+            print(f"❌ Failed to get exchange info: {response.status_code}")
+            return
+
+        exchange_info = response.json()
+        symbols = exchange_info.get("symbols", [])
+
+        # Filter USDT pairs
+        usdt_pairs = []
+        for symbol_info in symbols:
+            symbol = symbol_info["symbol"]
+            if (
+                symbol.endswith("USDT")
+                and symbol_info["status"] == "TRADING"
+                and symbol not in ["USDCUSDT", "TUSDUSDT", "BUSDUSDT", "FDUSDUSDT"]
+            ):
+
+                usdt_pairs.append(
+                    {
+                        "symbol": symbol,
+                        "base_asset": symbol_info["baseAsset"],
+                        "status": symbol_info["status"],
+                    }
+                )
+
+        print(f"📊 Found {len(usdt_pairs)} active USDT trading pairs")
+
+        # Get 24hr ticker data for volume info
+        print("📈 Getting 24hr ticker data...")
+        response = requests.get(f"{base_url}/api/v3/ticker/24hr")
+
+        if response.status_code != 200:
+            print(f"❌ Failed to get ticker data: {response.status_code}")
+            return
+
+        tickers = response.json()
+        ticker_dict = {ticker["symbol"]: ticker for ticker in tickers}
+
+        # Combine data
+        final_pairs = []
+        for pair in usdt_pairs:
+            symbol = pair["symbol"]
+            if symbol in ticker_dict:
+                ticker = ticker_dict[symbol]
+                final_pairs.append(
+                    {
+                        "symbol": symbol,
+                        "base_asset": pair["base_asset"],
+                        "price": float(ticker["lastPrice"]),
+                        "volume_24h_usdt": float(ticker["quoteVolume"]),
+                        "price_change_24h": float(ticker["priceChangePercent"]),
+                        "count": int(ticker["count"]),
+                    }
+                )
+
+        # Sort by volume
+        final_pairs.sort(key=lambda x: x["volume_24h_usdt"], reverse=True)
+
+        print(f"\n🚀 ALL {len(final_pairs)} TRADABLE USDT PAIRS ON BINANCE US:")
+        print("=" * 80)
+
+        total_volume = 0
+        for i, pair in enumerate(final_pairs, 1):
+            volume_k = pair["volume_24h_usdt"] / 1000
+            total_volume += pair["volume_24h_usdt"]
+
+            print(
+                f"{i:3d}. {pair['symbol']:15s} | "
+                f"${pair['price']:>12.8f} | "
+                f"{pair['price_change_24h']:>6.2f}% | "
+                f"${volume_k:>8.0f}K vol | "
+                f"{pair['count']:>5d} trades"
+            )
+
+        print("=" * 80)
+        print(f"📊 Total 24h Volume: ${total_volume/1000000:.1f}M")
+        print(f"📈 Average Volume per Pair: ${total_volume/len(final_pairs)/1000:.1f}K")
+
+        # Save to file
+        with open("all_binance_us_tokens.json", "w") as f:
+            json.dump(final_pairs, f, indent=2)
+
+        print(f"💾 Data saved to: all_binance_us_tokens.json")
+
+        # Show volume categories
+        high_vol = [p for p in final_pairs if p["volume_24h_usdt"] >= 1000000]
+        med_vol = [p for p in final_pairs if 100000 <= p["volume_24h_usdt"] < 1000000]
+        low_vol = [p for p in final_pairs if 10000 <= p["volume_24h_usdt"] < 100000]
+        micro_vol = [p for p in final_pairs if p["volume_24h_usdt"] < 10000]
+
+        print(f"\n📊 VOLUME CATEGORIES:")
+        print(f"🔥 High Volume (>$1M): {len(high_vol)} tokens")
+        print(f"📈 Medium Volume ($100K-$1M): {len(med_vol)} tokens")
+        print(f"📊 Low Volume ($10K-$100K): {len(low_vol)} tokens")
+        print(f"🔍 Micro Volume (<$10K): {len(micro_vol)} tokens")
+
+        return final_pairs
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return []
+
+
+if __name__ == "__main__":
+    print(
+        f"🚀 Binance US Token Scanner - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+    print("=" * 80)
+
+    tokens = get_all_binance_us_tokens()
+
+    if tokens:
+        print(f"\n✅ Found {len(tokens)} total tradable USDT pairs!")
+        print("🤖 Ready for comprehensive momentum analysis!")
+    else:
+        print("❌ Failed to retrieve token data")

@@ -1,0 +1,925 @@
+#!/usr/bin/env python3
+import os
+
+def _snap_for_market(ex, symbol, price, amount, log=None, tag="precheck"):
+    try:
+        px = float(ex.price_to_precision(symbol, price))
+        amt = float(ex.amount_to_precision(symbol, amount))
+        info = getattr(ex, "markets", {}).get(symbol, {}) if hasattr(ex, "markets") else {}
+        lims = (info.get("limits", {}) or {})
+        min_cost = (lims.get("cost", {}) or {}).get("min")
+        min_cost = float(min_cost) if min_cost is not None else None
+        if min_cost is not None and px * amt < min_cost:
+            need = (min_cost / px) * 1.001
+            amt = float(ex.amount_to_precision(symbol, need))
+        if log: log.info(f"[order-size] {tag} {symbol} amt={amt} px={px} min_cost={min_cost}")
+        return px, amt, min_cost
+    except Exception as e:
+        if log: 
+            try: name = type(e).__name__
+            except: name = "Exception"
+            log.warning(f"[order-size] snap failed ({tag}): {name}: {e}")
+        return price, amount, None
+
+import sys
+import time
+import json
+import math
+import statistics
+import threading
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Any, List, Optional, Tuple
+
+# --- metrics v2 bot-aware patch (replaces previous) ---
+from collections import defaultdict
+from momentum.metrics_hook_v2 import (
+    start_metrics as _metrics_start,
+    inc_trade as _metrics_inc_trade,
+    set_position_size as _metrics_set_position_size,
+    set_weekly_pnl as _metrics_set_weekly_pnl,
+)
+from momentum.weekly_pnl import compute_weekly_pnl as _compute_weekly_pnl
+_BOT_ID = os.getenv("BOT_ID", "default")
+_METRICS_PORT = int(os.getenv("METRICS_PORT", "9108"))
+_LEDGER_FILE = os.getenv("LEDGER_FILE", "runtime/ledger/live_ledger.jsonl")
+_EMIT_WEEKLY_PNL = os.getenv("EMIT_WEEKLY_PNL", "1") in ("1", "true", "TRUE")
+_metrics_start(_METRICS_PORT, bot_id=_BOT_ID)  # idempotent
+_POSITION_SIZE = defaultdict(float)  # signed base units
+_last_pnl_emit = 0.0
+
+def _maybe_emit_weekly_pnl():
+    if not _EMIT_WEEKLY_PNL:
+        return
+    global _last_pnl_emit
+    now = time.time()
+    if now - _last_pnl_emit >= 60:
+        try:
+            weekly = _compute_weekly_pnl(_LEDGER_FILE)
+            _metrics_set_weekly_pnl(weekly, bot_id=_BOT_ID)
+        except Exception:
+            pass
+        _last_pnl_emit = now
+
+def _on_fill_metrics(symbol: str, side: str, qty: float):
+    # Normalize symbol to remove '/'
+    sym_flat = symbol.replace('/', '')
+    # increment trade counter
+    _metrics_inc_trade(sym_flat, side, bot_id=_BOT_ID)
+    # adjust signed position size
+    if side.upper() == 'BUY':
+        _POSITION_SIZE[sym_flat] += qty
+    else:
+        _POSITION_SIZE[sym_flat] -= qty
+    _metrics_set_position_size(sym_flat, _POSITION_SIZE[sym_flat], bot_id=_BOT_ID)
+    _maybe_emit_weekly_pnl()
+# --- end metrics patch v2 ---
+
+from dotenv import load_dotenv
+from loguru import logger
+
+# Governance ledger integration
+import governance.prompt_version as pv
+
+# Guarded adapter for order/cancel
+from libs.exchange_adapters.binance_us import (
+    get_client,
+    guarded_create_order,
+    guarded_cancel_order,
+)
+
+# VictoryChain anchor handoff
+try:
+    import anchor_victorychain as anchor_vc  # optional gateway handoff
+except Exception:
+    anchor_vc = None
+
+# Net-edge gate
+from momentum.integration_snippets import check_before_order
+
+# Optional dynamic universe
+try:
+    from momentum.universe_discovery import discover_universe as _discover_universe
+except Exception:
+    _discover_universe = None
+
+# Treasury conversions plan
+try:
+    from momentum.treasury_settle import plan_bank_conversions as _plan_bank_conversions
+except Exception:
+    _plan_bank_conversions = None
+
+# ===== env and config =====
+
+def load_env() -> None:
+    env_file = os.getenv("ENV", ".env.live")
+    if os.path.exists(env_file):
+        load_dotenv(env_file)
+    # Point ledger to configured path if provided
+    ledger_path = os.getenv("LEDGER_PATH")
+    if ledger_path:
+        pv.LEDGER_PATH = ledger_path
+
+
+def get_cfg() -> Dict[str, Any]:
+    return {
+        'MODE': os.getenv('MODE', 'live').lower(),
+        'EXCHANGE': os.getenv('EXCHANGE', 'binanceus'),
+        'QUOTE_PREFS': [s.strip() for s in os.getenv('QUOTE_PREFS', 'USDT,USD,USDC').split(',') if s.strip()],
+        'ALLOWED_SYMBOLS': [s.strip().upper() for s in os.getenv('ALLOWED_SYMBOLS', '').split(',') if s.strip()],
+        'EXCLUDE_BASES': set([s.strip().upper() for s in os.getenv('EXCLUDE_BASES', 'BTC,ETH').split(',') if s.strip()]),
+        'ISO_COINS': [s.strip().upper() for s in os.getenv('ISO_COINS', 'XRP,XLM,XDC,ALGO,IOTA,HBAR,QNT').split(',') if s.strip()],
+        'ISO_BANK_PCT': float(os.getenv('ISO_BANK_PCT', '0.25') or 0.25),
+        'ISO_MIN_PROFIT_USD': float(os.getenv('ISO_MIN_PROFIT_USD', '1.0') or 1.0),
+        'LOOKBACK_BREAKOUT': int(os.getenv('LOOKBACK_BREAKOUT', '40') or 40),
+        'TIMEFRAME': os.getenv('TIMEFRAME', '5m'),
+        'VOLUME_SURGE_MULT': float(os.getenv('VOLUME_SURGE_MULT', '1.3') or 1.3),
+        'RSI_MIN': int(os.getenv('RSI_MIN', '0') or 0),
+        'RSI_MAX': int(os.getenv('RSI_MAX', '80') or 80),
+        'MAX_NOTIONAL_PER_ORDER': float(os.getenv('MAX_NOTIONAL_PER_ORDER', '20') or 20),
+        'MAX_OPEN_TRADES': int(os.getenv('MAX_OPEN_TRADES', '1') or 1),
+        # Use up to this fraction of free quote balance per entry (0-1]
+        'QUOTE_ALLOC_PCT': float(os.getenv('QUOTE_ALLOC_PCT', '0.90') or 0.90),
+        'TAKER_FEE_PCT': float(os.getenv('TAKER_FEE_PCT', '0.10') or 0.10),
+        'TAKER_FEE_BPS': float(os.getenv('TAKER_FEE_BPS', str(int(float(os.getenv('TAKER_FEE_PCT', '0.10'))*100))) or 10),
+        'MAKER_FEE_BPS': float(os.getenv('MAKER_FEE_BPS', '0') or 0),
+        'SLIPPAGE_BPS': int(os.getenv('SLIPPAGE_BPS', '10') or 10),
+        'TRAILING_STOP_BPS': int(os.getenv('TRAILING_STOP_BPS', '300') or 300),
+        'MIN_PROFIT_EXIT_BPS': int(os.getenv('MIN_PROFIT_EXIT_BPS', '50') or 50),
+        'STATE_PATH': os.getenv('STATE_PATH', 'runtime/state/state.json'),
+        'LEDGER_PATH': os.getenv('LEDGER_PATH', 'runtime/ledger/live_ledger.jsonl'),
+        'PAUSE_FILE': os.getenv('PAUSE_FILE', 'runtime/PAUSE'),
+        # Auto top-up from XRP when no quote available
+        'AUTO_TOPUP_FROM_XRP': (os.getenv('AUTO_TOPUP_FROM_XRP', 'true').lower() == 'true'),
+        'TOPUP_XRP_PERCENT': float(os.getenv('TOPUP_XRP_PERCENT', '0.90') or 0.90),
+        # Exports
+        'EXPORTS_DIR': os.getenv('EXPORTS_DIR', 'runtime/exports'),
+        'EXPORT_SESSION_CRON_MINUTES': int(os.getenv('EXPORT_SESSION_CRON_MINUTES', '60') or 60),
+        # Approvals auto-mint knobs (new names with back-compat)
+        'APPROVAL_AUTO_MINT': (os.getenv('APPROVAL_AUTO_MINT', '').lower() or ('true' if os.getenv('MODE', 'live').lower() == 'live' else 'false')) == 'true',
+        'APPROVAL_TTL_SECONDS': int(os.getenv('APPROVAL_TTL_SECONDS', os.getenv('APPROVAL_MIN_TTL_SEC', '300')) or 300),
+        'APPROVAL_RENEW_MARGIN': int(os.getenv('APPROVAL_RENEW_MARGIN', os.getenv('APPROVAL_REFRESH_MARGIN_SEC', '60')) or 60),
+        'APPROVAL_TOKEN_PATH': os.getenv('APPROVAL_TOKEN_PATH', 'runtime/APPROVAL_TOKEN.txt'),
+        'APPROVAL_ACTION': os.getenv('APPROVAL_ACTION', 'order.create'),
+        'DRY_RUN': os.getenv('DRY_RUN', 'true').lower() == 'true',
+        'DYNAMIC_UNIVERSE': os.getenv('DYNAMIC_UNIVERSE', '0') == '1',
+        'UNIVERSE_QUOTES': [s.strip().upper() for s in os.getenv('UNIVERSE_QUOTES', 'USDT,USD').split(',') if s.strip()],
+        'UNIVERSE_MIN_24H_USD': float(os.getenv('UNIVERSE_MIN_24H_USD', '2000000') or 2000000),
+        'UNIVERSE_MAX_PAIRS': int(os.getenv('UNIVERSE_MAX_PAIRS', '25') or 25),
+        'UNIVERSE_EXCLUDE': set([s.strip().upper() for s in os.getenv('UNIVERSE_EXCLUDE', '').split(',') if s.strip()]),
+        'TREASURY_PCT': float(os.getenv('TREASURY_PCT', '0.0') or 0.0),
+        'BANK_ASSETS': [s.strip().upper() for s in os.getenv('BANK_ASSETS', 'XRP,HBAR').split(',') if s.strip()],
+        'BANK_SPLITS': [float(x) for x in os.getenv('BANK_SPLITS', '0.5,0.5').split(',') if x.strip()],
+        'BANK_MIN_CONVERT_USD': float(os.getenv('BANK_MIN_CONVERT_USD', '50') or 50),
+    }
+
+
+# ===== simple state + ledger with hash chain =====
+
+def ensure_dirs(cfg: Dict[str, Any]):
+    for p in [cfg['STATE_PATH'], cfg['LEDGER_PATH']]:
+        d = os.path.dirname(p)
+        if d:
+            os.makedirs(d, exist_ok=True)
+    # exports dir
+    os.makedirs(cfg['EXPORTS_DIR'], exist_ok=True)
+
+
+def read_last_hash(path: str) -> Optional[str]:
+    try:
+        with open(path, 'rb') as f:
+            last = None
+            for line in f:
+                last = line
+            if not last:
+                return None
+            import json as _json
+            rec = _json.loads(last.decode('utf-8', 'ignore'))
+            return rec.get('hash')
+    except Exception:
+        return None
+
+
+def read_first_hash(path: str) -> Optional[str]:
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                import json as _json
+                rec = _json.loads(line)
+                return rec.get('hash')
+    except Exception:
+        return None
+
+
+def iter_ledger(path: str) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except Exception:
+                    continue
+    except FileNotFoundError:
+        return []
+    return rows
+
+
+def write_ledger(event: str, data: Dict[str, Any]) -> None:
+    prev = read_last_hash(pv.LEDGER_PATH)
+    record = {
+        'ts': datetime.utcnow().isoformat() + 'Z',
+        'event': event,
+        'component': 'momentum.bot',
+        'prompt_hash': pv.compute_prompt_hash(),
+        'git_commit': pv.get_git_commit(),
+        **data,
+    }
+    import json as _json, hashlib as _hash
+    payload = _json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+    h = _hash.sha256((payload + (prev or '').encode())).hexdigest()
+    record['prev_hash'] = prev
+    record['hash'] = h
+    with open(pv.LEDGER_PATH, 'a', encoding='utf-8') as f:
+        f.write(_json.dumps(record) + "\n")
+
+
+def load_state(path: str) -> Dict[str, Any]:
+    try:
+        with open(path, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return {'positions': []}
+
+
+def save_state(path: str, state: Dict[str, Any]) -> None:
+    with open(path, 'w') as f:
+        json.dump(state, f, indent=2, sort_keys=True)
+
+
+# ===== data utils =====
+
+def rsi(values: List[float], period: int = 14) -> float:
+    if len(values) < period + 1:
+        return 50.0
+    gains, losses = [], []
+    for i in range(1, period + 1):
+        delta = values[-i] - values[-i - 1]
+        if delta >= 0:
+            gains.append(delta)
+        else:
+            losses.append(-delta)
+    avg_gain = (sum(gains) / period) if gains else 0.0
+    avg_loss = (sum(losses) / period) if losses else 1e-9
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
+
+
+# ===== exchange + universe =====
+
+def get_exchange_client():
+    return get_client(os.getenv('MODE', 'live'))
+
+
+def load_markets(client) -> Dict[str, Any]:
+    try:
+        return client.load_markets() or {}
+    except Exception as e:
+        logger.error(f"load_markets failed: {e}")
+        return {}
+
+
+def make_universe(markets: Dict[str, Any], cfg: Dict[str, Any]) -> List[str]:  # fixed signature
+    # Dynamic path
+    if cfg.get('DYNAMIC_UNIVERSE') and _discover_universe:
+        try:
+            dyn = _discover_universe()
+            if dyn:
+                logger.info("dynamic universe: {}", dyn[: min(10, len(dyn))])
+                # still apply explicit excludes
+                excl = set(cfg.get('UNIVERSE_EXCLUDE') or [])
+                return [s for s in dyn if s.upper() not in excl]
+        except Exception as e:
+            logger.warning(f"dynamic universe discovery failed: {e}")
+    # Static path (existing)
+    syms: List[str] = []
+    for sym in markets.keys():
+        if '/' not in sym:
+            continue
+        base, quote = sym.split('/')
+        if base.upper() in cfg['EXCLUDE_BASES']:
+            continue
+        if quote.upper() not in {q.upper() for q in cfg['QUOTE_PREFS']}:
+            continue
+        if cfg.get('ALLOWED_SYMBOLS') and sym.upper() not in set(cfg['ALLOWED_SYMBOLS']):
+            continue
+        syms.append(sym)
+    return sorted(syms)
+
+
+def iso_map(markets: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, Optional[str]]:
+    res: Dict[str, Optional[str]] = {}
+    quotes = [q.upper() for q in cfg['QUOTE_PREFS']]
+    for c in cfg['ISO_COINS']:
+        res[c] = None
+        for q in quotes:
+            sym = f"{c}/{q}"
+            if sym in markets:
+                res[c] = sym
+                break
+    return res
+
+
+# ===== strategy =====
+
+def fetch_ohlcv_safe(client, symbol: str, timeframe: str, limit: int = 100) -> Optional[List[List[float]]]:
+    try:
+        return client.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+    except Exception as e:
+        logger.warning(f"fetch_ohlcv failed {symbol}: {e}")
+        return None
+
+
+def pick_entry(client, universe: List[str], cfg: Dict[str, Any]) -> Optional[Tuple[str, float]]:
+    # Pick the best breakout candidate by a simple momentum score
+    best: Optional[Tuple[str, float, float]] = None  # (symbol, last_close, score)
+    for sym in universe:
+        ohlcv = fetch_ohlcv_safe(client, sym, cfg['TIMEFRAME'], limit=max(100, cfg['LOOKBACK_BREAKOUT'] + 10))
+        if not ohlcv or len(ohlcv) < cfg['LOOKBACK_BREAKOUT'] + 2:
+            continue
+        closes = [c[4] for c in ohlcv]
+        vols = [c[5] for c in ohlcv]
+        last_close = closes[-1]
+        prev_high = max([c[2] for c in ohlcv][-cfg['LOOKBACK_BREAKOUT'] - 1:-1])
+        if prev_high <= 0:
+            continue
+        vol_med = statistics.median(vols[-cfg['LOOKBACK_BREAKOUT'] - 1:-1]) or 1e-9
+        vr = (vols[-1] / vol_med) if vol_med > 0 else 0.0
+        br = last_close / prev_high
+        r = rsi(closes, 14)
+        if last_close > prev_high and vr >= cfg['VOLUME_SURGE_MULT'] and cfg['RSI_MIN'] <= r <= cfg['RSI_MAX']:
+            # momentum score: breakout magnitude + volume surge contribution + mild RSI support
+            score = (br - 1.0) + 0.5 * max(0.0, vr - 1.0) + 0.1 * (r / 100.0)
+            if not best or score > best[2]:
+                best = (sym, last_close, score)
+    if best:
+        return best[0], best[1]
+    return None
+
+
+# ===== autopause sentinels =====
+class Sentinel:
+    def __init__(self, cfg: Dict[str, Any]):
+        self.err_times: List[float] = []
+        self.lat_samples: List[Tuple[float, float]] = []  # (ts, latency_sec)
+        self.cfg = cfg
+        self.paused_reason: Optional[str] = None
+
+    def record_error(self):
+        now = time.time()
+        self.err_times.append(now)
+        self.err_times = [t for t in self.err_times if now - t <= 60]
+        if len(self.err_times) >= 3 and not self.paused_reason:
+            self.paused_reason = 'error_burst_3_in_60s'
+            write_ledger('AUTO_PAUSE', {'reason': self.paused_reason})
+
+    def record_latency(self, latency: float):
+        now = time.time()
+        self.lat_samples.append((now, latency))
+        self.lat_samples = [x for x in self.lat_samples if now - x[0] <= 60]
+        if len(self.lat_samples) >= 10 and not self.paused_reason:
+            vals = [x[1] for x in self.lat_samples]
+            p95 = sorted(vals)[max(0, int(0.95 * len(vals)) - 1)]
+            if p95 >= 5.0:
+                self.paused_reason = 'latency_p95_ge_5s_1m'
+                write_ledger('AUTO_PAUSE', {'reason': self.paused_reason, 'p95': p95})
+
+    def check_pause_file(self):
+        if os.path.exists(self.cfg['PAUSE_FILE']) and not self.paused_reason:
+            self.paused_reason = 'pause_file_present'
+            write_ledger('AUTO_PAUSE', {'reason': self.paused_reason})
+
+    def paused(self) -> bool:
+        self.check_pause_file()
+        return self.paused_reason is not None
+
+
+# ===== approvals: background auto-mint/refresher =====
+class ApprovalRefresher:
+    def __init__(self, cfg: Dict[str, Any]):
+        self.cfg = cfg
+        self.running = False
+        self._thread: Optional['threading.Thread'] = None
+        # allow env override
+        self.token_path = cfg.get('APPROVAL_TOKEN_PATH') or 'runtime/APPROVAL_TOKEN.txt'
+
+    def _get_now(self) -> int:
+        return int(time.time())
+
+    def _parse_expiry(self, token: str) -> Optional[int]:
+        try:
+            # token is base64url of "action|expiry|params_json|sig"
+            import base64
+            raw = token.replace('-', '+').replace('_', '/')
+            pad = '=' * (-len(raw) % 4)
+            s = base64.b64decode(raw + pad).decode()
+            parts = s.split('|', 3)
+            if len(parts) != 4:
+                return None
+            return int(parts[1])
+        except Exception:
+            return None
+
+    def _mint_and_store(self) -> Optional[str]:
+        try:
+            from governance.approvals import mint_test_token
+            ttl = max(60, int(self.cfg['APPROVAL_TTL_SECONDS']))
+            tok = mint_test_token(action=self.cfg['APPROVAL_ACTION'], ttl_seconds=ttl)
+            os.environ['APPROVAL_TOKEN'] = tok
+            try:
+                os.makedirs(os.path.dirname(self.token_path) or '.', exist_ok=True)
+                with open(self.token_path, 'w', encoding='utf-8') as f:
+                    f.write(tok)
+            except Exception:
+                pass
+            write_ledger('APPROVAL_AUTO_MINT', {'ok': True, 'ttl': ttl})
+            logger.info("Auto-minted approval token (ttl={}s)", ttl)
+            return tok
+        except Exception as e:
+            write_ledger('APPROVAL_AUTO_MINT', {'ok': False, 'error': str(e)[:200]})
+            logger.warning(f"auto-mint failed: {e}")
+            return None
+
+    def _tick(self):
+        # load from file if present
+        if not os.getenv('APPROVAL_TOKEN') and os.path.exists(self.token_path):
+            try:
+                with open(self.token_path, 'r', encoding='utf-8') as f:
+                    tok = f.read().strip()
+                    if tok:
+                        os.environ['APPROVAL_TOKEN'] = tok
+                        logger.info("Loaded approval token from {}", self.token_path)
+            except Exception:
+                pass
+        tok = os.getenv('APPROVAL_TOKEN') or ''
+        exp = self._parse_expiry(tok) if tok else None
+        now = self._get_now()
+        needs_refresh = False
+        if not tok:
+            needs_refresh = True
+        elif exp is None:
+            needs_refresh = True
+        else:
+            margin = int(self.cfg['APPROVAL_RENEW_MARGIN'])
+            if now >= (exp - margin):
+                needs_refresh = True
+        if needs_refresh and self.cfg['APPROVAL_AUTO_MINT']:
+            self._mint_and_store()
+
+    def start(self):
+        import threading
+        if self.running:
+            return
+        self.running = True
+        def loop():
+            while self.running:
+                try:
+                    self._tick()
+                except Exception:
+                    pass
+                time.sleep(15)
+        self._thread = threading.Thread(target=loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self.running = False
+
+
+# ===== exports: session summary and ISO reserves =====
+
+def _utc_day_id(ts: Optional[datetime] = None) -> Tuple[str, int]:
+    now = ts or datetime.utcnow().replace(tzinfo=timezone.utc)
+    day_start = datetime(now.year, now.month, now.day, 0, 0, 0, tzinfo=timezone.utc)
+    return day_start.strftime('%Y-%m-%dT00:00Z'), int(day_start.timestamp())
+
+
+def compute_session_summary(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    rows = iter_ledger(pv.LEDGER_PATH)
+    head = read_first_hash(pv.LEDGER_PATH)
+    tail = read_last_hash(pv.LEDGER_PATH)
+    trades_close = [r for r in rows if r.get('event') == 'trade_close']
+    iso_banks = [r for r in rows if r.get('event') == 'iso_bank']
+    pnl = 0.0
+    for r in trades_close:
+        try:
+            if 'profit_usd_net' in r:
+                pnl += float(r.get('profit_usd_net') or 0.0)
+            else:
+                entry = float(r.get('entry_price', 0) or 0)
+                exitp = float(r.get('exit_price', 0) or 0)
+                amt = float(r.get('amount', 0) or 0)
+                pnl += (exitp - entry) * amt
+        except Exception:
+            pass
+    iso_total = sum(float(x.get('bank_usd', 0) or 0) for x in iso_banks)
+    # Simple USD breakdown across available ISO coins (equal share)
+    markets = load_markets(get_exchange_client())
+    imap = iso_map(markets, cfg)
+    avail = [c for c, s in imap.items() if s]
+    breakdown: Dict[str, float] = {}
+    if avail:
+        share = iso_total / max(1, len(avail))
+        for c in avail:
+            breakdown[c] = round(share, 8)
+    sid, sid_ts = _utc_day_id()
+    return {
+        'ts': int(datetime.utcnow().replace(tzinfo=timezone.utc).timestamp()),
+        'session_id': sid,
+        'session_start_ts': sid_ts,
+        'ledger_head': head,
+        'ledger_tail': tail,
+        'trades_closed': len(trades_close),
+        'realized_pnl_usd': round(pnl, 8),
+        'iso_banked_usd': round(iso_total, 8),
+        'iso_breakdown': breakdown,
+    }
+
+
+def emit_session_summary(cfg: Dict[str, Any]) -> str:
+    summary = compute_session_summary(cfg)
+    out_dir = cfg['EXPORTS_DIR']
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, 'session_summary.json')
+    with open(out_path, 'w', encoding='utf-8') as f:
+        json.dump(summary, f, indent=2, sort_keys=True)
+    write_ledger('ANCHOR_READY', {
+        'session_id': summary['session_id'],
+        'ledger_head': summary['ledger_head'],
+        'ledger_tail': summary['ledger_tail'],
+        'trades_closed': summary['trades_closed'],
+        'realized_pnl_usd': summary['realized_pnl_usd'],
+        'iso_banked_usd': summary['iso_banked_usd'],
+    })
+    logger.info("Session summary exported: {}", out_path)
+    # Optional: post to VictoryChain gateway if configured
+    try:
+        if anchor_vc and getattr(anchor_vc, 'post_anchor', None):
+            anchor_vc.post_anchor(summary)
+    except Exception as e:
+        logger.warning(f"anchor post failed: {e}")
+    return out_path
+
+
+def write_iso_reserves_snapshot(cfg: Dict[str, Any]) -> str:
+    # Build reserves snapshot based on total iso_banked_usd and current prices
+    rows = iter_ledger(pv.LEDGER_PATH)
+    iso_banks = [r for r in rows if r.get('event') == 'iso_bank']
+    total_usd = sum(float(x.get('bank_usd', 0) or 0) for x in iso_banks)
+    client = get_exchange_client()
+    mkts = load_markets(client)
+    imap = iso_map(mkts, cfg)
+    entries: List[Dict[str, Any]] = []
+    for coin, sym in imap.items():
+        est_usd = 0.0
+        amount = None
+        if total_usd > 0 and sym:
+            try:
+                tk = client.fetch_ticker(sym)
+                px = float(tk.get('last') or tk.get('close') or 0)
+                if px > 0:
+                    # Equal share allocation for accounting purposes
+                    share = total_usd / max(1, len([s for s in imap.values() if s]))
+                    amount = round(share / px, 8)
+                    est_usd = round(share, 8)
+            except Exception:
+                pass
+        entries.append({'asset': coin, 'amount': amount, 'est_usd': est_usd})
+    snapshot = {
+        'as_of': datetime.utcnow().isoformat() + 'Z',
+        'iso_reserves': entries,
+        'total_est_usd': round(total_usd, 8),
+    }
+    out_dir = cfg['EXPORTS_DIR']
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, 'iso_reserves.json')
+    with open(out_path, 'w', encoding='utf-8') as f:
+        json.dump(snapshot, f, indent=2, sort_keys=True)
+    logger.info("ISO reserves snapshot exported: {}", out_path)
+    return out_path
+
+
+# ===== main trading loop =====
+
+# Helper to get free quote balance
+
+def _get_free_quote(client, quote: str) -> float:
+    try:
+        bal = client.fetch_balance()
+        # ccxt normalized structure preferred
+        if isinstance(bal, dict):
+            free_map = bal.get('free') or {}
+            if isinstance(free_map, dict) and quote in free_map:
+                return float(free_map.get(quote) or 0.0)
+            # Some exchanges nest by symbol key
+            if quote in bal and isinstance(bal.get(quote), dict):
+                return float(bal.get(quote, {}).get('free') or 0.0)
+    except Exception:
+        pass
+    return 0.0
+
+
+# Helper to get free balances
+
+def _get_free_asset(client, asset: str) -> float:
+    try:
+        bal = client.fetch_balance()
+        free_map = bal.get('free') or {}
+        if isinstance(free_map, dict):
+            return float(free_map.get(asset, 0.0) or 0.0)
+        if asset in bal and isinstance(bal.get(asset), dict):
+            return float(bal.get(asset, {}).get('free') or 0.0)
+    except Exception:
+        pass
+    return 0.0
+
+
+def _pick_xrp_symbol(markets: Dict[str, Any], quotes: List[str]) -> Optional[str]:
+    for q in [x.upper() for x in quotes]:
+        s = f"XRP/{q}"
+        if s in markets:
+            return s
+    return None
+
+
+def _ensure_quote_liquidity(client, cfg: Dict[str, Any], quote: str) -> None:
+    """If free quote is zero and AUTO_TOPUP_FROM_XRP is enabled, sell a portion of XRP to the first available XRP/QUOTE pair."""
+    try:
+        free_quote = _get_free_quote(client, quote)
+        if free_quote > 0:
+            return
+        if not cfg.get('AUTO_TOPUP_FROM_XRP', True):
+            return
+        mkts = load_markets(client)
+        xrp_sym = _pick_xrp_symbol(mkts, cfg['QUOTE_PREFS'])
+        if not xrp_sym:
+            return
+        free_xrp = _get_free_asset(client, 'XRP')
+        if free_xrp <= 0:
+            return
+        sell_amt = max(0.0, float(cfg.get('TOPUP_XRP_PERCENT', 0.90)) * free_xrp)
+        if sell_amt <= 0:
+            return
+        # Fetch price for logging only; adapter will validate filters
+        px = 0.0
+        try:
+            tk = client.fetch_ticker(xrp_sym) or {}
+            px = float(tk.get('last') or tk.get('close') or 0.0)
+        except Exception:
+            px = 0.0
+        try:
+            guarded_create_order(xrp_sym, 'sell', 'market', sell_amt)
+            write_ledger('xrp_topup', {'symbol': xrp_sym, 'amount_xrp': round(sell_amt, 8), 'est_quote_received': round(sell_amt * max(px, 0.0), 8), 'quote': quote})
+        except Exception as e:
+            logger.warning(f"XRP top-up failed: {e}")
+    except Exception:
+        pass
+
+
+def _estimate_net(entry_price: float, exit_price: float, amount: float, cfg: Dict[str, Any]) -> Dict[str, float]:
+    """Estimate gross / net profit components given fees & slippage settings.
+    Returns dict with keys: profit_gross_usd, fees_est_usd, slippage_est_usd, profit_net_usd.
+    """
+    gross = (exit_price - entry_price) * amount
+    fee_rate = float(cfg['TAKER_FEE_PCT']) / 100.0
+    slip_rate = float(cfg['SLIPPAGE_BPS']) / 10000.0
+    notional_entry = entry_price * amount
+    notional_exit = exit_price * max(amount, 0.0)
+    fees = (notional_entry + notional_exit) * fee_rate
+    # approximate slippage on both entry & exit
+    slippage = (notional_entry + notional_exit) * slip_rate
+    net = gross - fees - slippage
+    return {
+        'profit_gross_usd': round(gross, 8),
+        'fees_est_usd': round(fees, 8),
+        'slippage_est_usd': round(slippage, 8),
+        'profit_net_usd': round(net, 8),
+    }
+
+
+def run_once(cfg: Dict[str, Any], state: Dict[str, Any], client, sentinel: Sentinel) -> Dict[str, Any]:
+    # Respect MAX_OPEN_TRADES
+    open_count = len(state.get('positions', []))
+    universe = make_universe(load_markets(client), cfg)
+    if sentinel.paused():
+        logger.warning(f"PAUSED: {sentinel.paused_reason}")
+        return state
+
+    # Manage existing position(s): trailing stop/exit
+    new_positions: List[Dict[str, Any]] = []
+    for pos in state.get('positions', []):
+        sym = pos['symbol']
+        t0 = time.time()
+        try:
+            ticker = client.fetch_ticker(sym)
+        except Exception as e:
+            logger.warning(f"fetch_ticker failed {sym}: {e}")
+            sentinel.record_error()
+            continue
+        latency = time.time() - t0
+        sentinel.record_latency(latency)
+        last = float(ticker.get('last') or ticker.get('close') or 0)
+        if last <= 0:
+            new_positions.append(pos)
+            continue
+        # Update trailing stop (profit-only): do not allow stop below breakeven+margin
+        trail = cfg['TRAILING_STOP_BPS'] / 10000.0
+        fee_rate = float(cfg['TAKER_FEE_PCT']) / 100.0
+        slip_rate = float(cfg['SLIPPAGE_BPS']) / 10000.0
+        breakeven_gain = (2 * fee_rate) + (2 * slip_rate)  # entry+exit costs
+        margin_gain = cfg['MIN_PROFIT_EXIT_BPS'] / 10000.0
+        min_profit_gain = breakeven_gain + margin_gain
+        pos['peak'] = max(pos.get('peak', pos['entry_price']), last)
+        # candidate trailing stop price
+        trail_stop = pos['peak'] * (1 - trail)
+        # minimum stop to ensure net-profit-only exit
+        min_stop = pos['entry_price'] * (1 + min_profit_gain)
+        pos['stop'] = max(
+            pos.get('stop', min_stop),
+            trail_stop,
+            min_stop,
+        )
+        # Exit only if net profit would be positive
+        amt = pos['amount']
+        est = _estimate_net(pos['entry_price'], last, amt, cfg)
+        net_ok = est['profit_net_usd'] > 0
+        should_exit = last <= pos['stop'] and net_ok
+        if should_exit:
+            try:
+                # Net-edge gate for SELL close
+                try:
+                    expected_alpha_bps = ((last / max(1e-9, pos['entry_price'])) - 1.0) * 10000.0
+                    logger.info("[edge] check_before_order SELL symbol={} price={} amt={} exp_alpha_bps={}", sym, last, amt, round(expected_alpha_bps, 3))
+                    if not check_before_order(sym, 'SELL', last, amt, expected_alpha_bps, expected_alpha_bps=5):
+                        logger.info("[edge] skip: net edge < costs (fees+slippage+gas+buffer)")
+                        new_positions.append(pos)
+                        continue
+                except Exception:
+                    pass
+                res = guarded_create_order(sym, 'sell', 'market', amt)
+                write_ledger('trade_close', {
+                    'symbol': sym,
+                    'amount': amt,
+                    'exit_price': last,
+                    'entry_price': pos['entry_price'],
+                    'profit_usd_gross': est['profit_gross_usd'],
+                    'fees_est_usd': est['fees_est_usd'],
+                    'slippage_est_usd': est['slippage_est_usd'],
+                    'profit_usd_net': est['profit_net_usd'],
+                })
+                # metrics hook
+                try:
+                    _on_fill_metrics(sym.replace('/', ''), 'SELL', amt)
+                except Exception:
+                    pass
+                # ISO bank if net profit >= threshold
+                profit_net = max(0.0, est['profit_net_usd'])
+                if profit_net >= cfg['ISO_MIN_PROFIT_USD'] and cfg['ISO_BANK_PCT'] > 0:
+                    bank = profit_net * cfg['ISO_BANK_PCT']
+                    write_ledger('iso_bank', {'profit_usd_net': profit_net, 'bank_usd': round(bank, 8)})
+                    # Update reserves snapshot after profitable close
+                    try:
+                        write_iso_reserves_snapshot(cfg)
+                    except Exception as e:
+                        logger.warning(f"reserves snapshot failed: {e}")
+                # Treasury plan: siphon a percentage of realized PnL into XRP/HBAR plan
+                try:
+                    t_pct = float(cfg.get('TREASURY_PCT', 0.0) or 0.0)
+                    if t_pct > 0 and profit_net > 0:
+                        to_treasury = profit_net * t_pct
+                        if to_treasury >= float(cfg.get('BANK_MIN_CONVERT_USD', 50)) and _plan_bank_conversions:
+                            legs = _plan_bank_conversions(to_treasury)
+                            logger.info("[treasury] banking plan legs: {}", legs)
+                except Exception as e:
+                    logger.warning(f"treasury plan failed: {e}")
+            except Exception as e:
+                logger.error(f"close failed {sym}: {e}")
+                sentinel.record_error()
+                new_positions.append(pos)
+            continue
+        new_positions.append(pos)
+    state['positions'] = new_positions
+
+    # Entry logic
+    if open_count < cfg['MAX_OPEN_TRADES'] and os.getenv('APPROVAL_TOKEN'):
+        pick = pick_entry(client, universe, cfg)
+        if pick:
+            sym, px = pick
+            try:
+                quote = sym.split('/')[1].upper()
+            except Exception:
+                quote = 'USDT'
+            # Ensure we have quote by topping up from XRP if needed
+            _ensure_quote_liquidity(client, cfg, quote)
+            free_quote = _get_free_quote(client, quote)
+            desired = max(0.0, float(free_quote) * float(cfg.get('QUOTE_ALLOC_PCT', 0.90)))
+            cap = float(cfg.get('MAX_NOTIONAL_PER_ORDER', 0) or 0)
+            notional = desired if cap <= 0 else min(desired, cap)
+            if notional <= 0:
+                logger.warning(f"No free {quote} to allocate (free={free_quote}); skipping entry")
+                return state
+            amt = max(1e-9, notional / max(px, 1e-9))
+            try:
+                # Net-edge gate (BUY entries only)
+                try:
+                    taker_fee_pct = float(cfg.get('TAKER_FEE_PCT', 0.10) or 0.10)
+                    taker_fee_bps = taker_fee_pct * 100.0
+                    slippage_bps = float(cfg.get('SLIPPAGE_BPS', 10) or 10)
+                    buffer_bps = float(os.getenv('EDGE_BUFFER_BPS', '3') or 3)
+                    expected_alpha_bps = float(cfg.get('MIN_PROFIT_EXIT_BPS', 50) or 50) + (2 * taker_fee_bps) + (2 * slippage_bps) + buffer_bps
+                    logger.info("[edge] check_before_order BUY symbol={} price={} amt={} exp_alpha_bps={}", sym, px, amt, round(expected_alpha_bps, 3))
+                    if not check_before_order(sym, 'BUY', px, amt, expected_alpha_bps, expected_alpha_bps=5):
+                        logger.info("[edge] skip: net edge < costs (fees+slippage+gas+buffer)")
+                        return state
+                except Exception:
+                    pass
+                res = guarded_create_order(sym, 'buy', 'market', amt)
+                # initialize stop at breakeven+margin to enforce profit-only exits
+                fee_rate = float(cfg['TAKER_FEE_PCT']) / 100.0
+                slip_rate = float(cfg['SLIPPAGE_BPS']) / 10000.0
+                min_profit_gain = (2 * fee_rate) + (2 * slip_rate) + (cfg['MIN_PROFIT_EXIT_BPS'] / 10000.0)
+                pos = {
+                    'symbol': sym,
+                    'amount': amt,
+                    'entry_price': px,
+                    'peak': px,
+                    'stop': px * (1 + min_profit_gain),
+                }
+                state['positions'].append(pos)
+                write_ledger('trade_open', {'symbol': sym, 'amount': amt, 'entry_price': px, 'quote_used': quote, 'notional_est': round(notional, 8)})
+                # metrics hook (BUY fill)
+                try:
+                    _on_fill_metrics(sym.replace('/', ''), 'BUY', amt)
+                except Exception:
+                    pass
+            except Exception as e:
+                logger.error(f"open failed {sym}: {e}")
+                sentinel.record_error()
+    return state
+
+
+def main():
+    load_env()
+    cfg = get_cfg()
+    ensure_dirs(cfg)
+    state = load_state(cfg['STATE_PATH'])
+    client = get_exchange_client()
+    sentinel = Sentinel(cfg)
+
+    # Start approval token refresher (enabled by default in live)
+    refresher = ApprovalRefresher(cfg)
+    refresher.start()
+
+    # CLI: emit session summary and exit
+    if '--export-session' in sys.argv:
+        emit_session_summary(cfg)
+        return
+
+    once = '--once' in sys.argv or os.getenv('SINGLE_TICK') == '1'
+    logger.info("Momentum bot started; mode={}, quotes={}, caps notional=${} open_trades={} trail={}bps", cfg['MODE'], cfg['QUOTE_PREFS'], cfg['MAX_NOTIONAL_PER_ORDER'], cfg['MAX_OPEN_TRADES'], cfg['TRAILING_STOP_BPS'])
+    last_export = 0.0
+    try:
+        while True:
+            t0 = time.time()
+            state = run_once(cfg, state, client, sentinel)
+            save_state(cfg['STATE_PATH'], state)
+            # periodic exports (session summary + reserves)
+            if time.time() - last_export >= max(60, cfg['EXPORT_SESSION_CRON_MINUTES'] * 60):
+                try:
+                    emit_session_summary(cfg)
+                    write_iso_reserves_snapshot(cfg)
+                except Exception as e:
+                    logger.warning(f"export failed: {e}")
+                last_export = time.time()
+            if once:
+                break
+            time.sleep(30)
+    except KeyboardInterrupt:
+        logger.info("Exiting...")
+    finally:
+        # best-effort final export on shutdown
+        try:
+            emit_session_summary(cfg)
+        except Exception as e:
+            logger.warning(f"final export failed: {e}")
+        try:
+            refresher.stop()
+        except Exception:
+            pass
+
+
+if __name__ == '__main__':
+    main()

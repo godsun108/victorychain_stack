@@ -1,0 +1,18 @@
+import os
+import requests
+
+
+def analyze_sentiment(text):
+    api_key = os.getenv("HUGGINGFACE_API_KEY")
+    if not api_key:
+        raise RuntimeError("HUGGINGFACE_API_KEY is not set in environment variables.")
+    headers = {"Authorization": f"Bearer {api_key}"}
+    payload = {"inputs": text}
+    response = requests.post(
+        "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english",
+        headers=headers,
+        json=payload,
+        timeout=10,
+    )
+    response.raise_for_status()
+    return response.json()

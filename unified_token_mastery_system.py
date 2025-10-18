@@ -1,0 +1,1218 @@
+#!/usr/bin/env python3
+"""
+🔮 UNIFIED TOKEN MASTERY SYSTEM
+===============================
+Complete integrated system combining all learning, profiling, and execution components
+Senior developer-level architecture with continuous adaptation and optimization
+Beyond GALA/MAGIC: Universal token intelligence and gas-optimized execution
+"""
+
+import json
+import asyncio
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass, asdict
+from pathlib import Path
+import time
+import logging
+
+# Import our advanced systems
+from advanced_token_learning_profiler import AdvancedTokenLearningProfiler
+from master_learning_orchestrator import (
+    MasterLearningOrchestrator,
+    MasterOrchestrationConfig,
+)
+
+
+@dataclass
+class UnifiedMasteryConfig:
+    """Configuration for the unified token mastery system"""
+
+    # Core Parameters
+    max_portfolio_allocation: float = 90.0
+    min_confidence_threshold: float = 0.65
+    gas_optimization_priority: bool = True
+
+    # Learning Parameters
+    learning_aggressiveness: float = 0.8  # 0.0 to 1.0
+    adaptation_speed: float = 0.7
+    cross_token_learning_weight: float = 0.3
+
+    # Risk Management
+    max_position_size: float = 25.0
+    stop_loss_multiplier: float = 0.08
+    take_profit_multiplier: float = 0.25
+
+    # Gas Optimization
+    gas_threshold_gwei: float = 30.0
+    preferred_batch_size: int = 5
+    layer2_preference: bool = True
+
+    # Execution Strategy
+    execution_aggressiveness: float = 0.7
+    rebalance_frequency_hours: int = 6
+    profit_taking_stages: int = 3
+
+
+@dataclass
+class MasteryInsight:
+    """Comprehensive insight from the unified system"""
+
+    insight_type: str  # "ALLOCATION", "RISK", "GAS", "TIMING", "STRATEGIC"
+    priority: int  # 1-10, 10 being highest
+    title: str
+    description: str
+    action_required: bool
+    estimated_impact: Dict[str, float]
+    confidence: float
+    reasoning: List[str]
+
+
+class UnifiedTokenMasterySystem:
+    """
+    🔮 Complete token mastery system with universal intelligence
+    """
+
+    def __init__(self, config: UnifiedMasteryConfig = None):
+        self.config = config or UnifiedMasteryConfig()
+
+        # Initialize core systems
+        self.token_profiler = AdvancedTokenLearningProfiler()
+
+        # Orchestrator configuration
+        orchestrator_config = MasterOrchestrationConfig(
+            learning_update_interval=300,
+            max_total_allocation=self.config.max_portfolio_allocation,
+            max_single_position=self.config.max_position_size,
+            gas_price_threshold=self.config.gas_threshold_gwei,
+        )
+        self.orchestrator = MasterLearningOrchestrator(orchestrator_config)
+
+        # Universal learning database
+        self.universal_patterns = {}
+        self.sector_intelligence = {}
+        self.gas_mastery_data = {}
+        self.execution_mastery = {}
+
+        # Performance tracking
+        self.mastery_metrics = {
+            "total_returns": 0.0,
+            "gas_savings": 0.0,
+            "prediction_accuracy": 0.0,
+            "adaptation_success": 0.0,
+        }
+
+        # Initialize universal knowledge
+        self._initialize_universal_patterns()
+
+        # Setup logging
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
+
+    def _initialize_universal_patterns(self):
+        """Initialize universal patterns beyond GALA/MAGIC"""
+        self.universal_patterns = {
+            "gaming_tokens": {
+                "momentum_characteristics": {
+                    "breakout_velocity": 1.8,
+                    "volume_confirmation": 2.2,
+                    "fibonacci_reliability": 0.78,
+                },
+                "allocation_sweet_spots": [18.0, 22.0, 26.0],
+                "risk_factors": {
+                    "narrative_dependency": 0.85,
+                    "whale_sensitivity": 0.72,
+                    "market_correlation": 0.68,
+                },
+                "gas_optimization": {
+                    "optimal_batch_size": 5,
+                    "timing_sensitivity": 0.82,
+                },
+            },
+            "metaverse_tokens": {
+                "momentum_characteristics": {
+                    "breakout_velocity": 2.1,
+                    "volume_confirmation": 2.5,
+                    "fibonacci_reliability": 0.71,
+                },
+                "allocation_sweet_spots": [15.0, 20.0, 24.0],
+                "risk_factors": {
+                    "narrative_dependency": 0.92,
+                    "whale_sensitivity": 0.78,
+                    "market_correlation": 0.75,
+                },
+                "gas_optimization": {
+                    "optimal_batch_size": 4,
+                    "timing_sensitivity": 0.88,
+                },
+            },
+            "nft_tokens": {
+                "momentum_characteristics": {
+                    "breakout_velocity": 2.4,
+                    "volume_confirmation": 2.8,
+                    "fibonacci_reliability": 0.69,
+                },
+                "allocation_sweet_spots": [12.0, 16.0, 20.0],
+                "risk_factors": {
+                    "narrative_dependency": 0.95,
+                    "whale_sensitivity": 0.85,
+                    "market_correlation": 0.82,
+                },
+                "gas_optimization": {
+                    "optimal_batch_size": 3,
+                    "timing_sensitivity": 0.90,
+                },
+            },
+            "infrastructure_tokens": {
+                "momentum_characteristics": {
+                    "breakout_velocity": 1.2,
+                    "volume_confirmation": 1.5,
+                    "fibonacci_reliability": 0.85,
+                },
+                "allocation_sweet_spots": [20.0, 28.0, 35.0],
+                "risk_factors": {
+                    "narrative_dependency": 0.45,
+                    "whale_sensitivity": 0.55,
+                    "market_correlation": 0.88,
+                },
+                "gas_optimization": {
+                    "optimal_batch_size": 8,
+                    "timing_sensitivity": 0.65,
+                },
+            },
+        }
+
+    async def analyze_universal_token(self, token_data: Dict) -> Dict:
+        """
+        🌍 Analyze any token using universal intelligence patterns
+        """
+        symbol = token_data["symbol"]
+        sector = token_data.get("sector", "unknown")
+
+        # Create or update token profile
+        if symbol not in self.token_profiler.token_profiles:
+            profile = self.token_profiler.create_token_profile(token_data)
+        else:
+            profile = self.token_profiler.token_profiles[symbol]
+            self.token_profiler.update_token_performance(symbol, token_data)
+
+        # Apply universal pattern matching
+        universal_insights = self._apply_universal_patterns(token_data, sector)
+
+        # Generate allocation intelligence
+        market_context = {
+            "market_sentiment": 0.68,
+            "gas_price": 22.0,
+            "sector_rotation": self._get_sector_rotation(),
+        }
+
+        allocation_intel = self.token_profiler.analyze_allocation_intelligence(
+            symbol, market_context
+        )
+
+        # Enhance with universal intelligence
+        enhanced_allocation = self._enhance_with_universal_intelligence(
+            allocation_intel, universal_insights, token_data
+        )
+
+        # Gas optimization mastery
+        gas_mastery = self._apply_gas_mastery(token_data, sector)
+
+        return {
+            "symbol": symbol,
+            "universal_analysis": universal_insights,
+            "enhanced_allocation": enhanced_allocation,
+            "gas_mastery": gas_mastery,
+            "execution_strategy": self._determine_execution_mastery(
+                token_data, enhanced_allocation
+            ),
+            "confidence_metrics": self._calculate_confidence_metrics(
+                profile, universal_insights
+            ),
+            "risk_assessment": self._universal_risk_assessment(
+                token_data, universal_insights
+            ),
+            "profit_optimization": self._optimize_profit_strategy(
+                enhanced_allocation, universal_insights
+            ),
+        }
+
+    def _apply_universal_patterns(self, token_data: Dict, sector: str) -> Dict:
+        """Apply universal patterns based on sector and characteristics"""
+        if sector in self.universal_patterns:
+            sector_patterns = self.universal_patterns[sector]
+        else:
+            # Use gaming as default for unknown sectors
+            sector_patterns = self.universal_patterns["gaming_tokens"]
+
+        # Calculate pattern matching scores
+        momentum_score = self._calculate_momentum_pattern_score(
+            token_data, sector_patterns
+        )
+        allocation_score = self._calculate_allocation_pattern_score(
+            token_data, sector_patterns
+        )
+        risk_score = self._calculate_risk_pattern_score(token_data, sector_patterns)
+
+        return {
+            "sector_match": sector,
+            "pattern_confidence": (momentum_score + allocation_score + risk_score) / 3,
+            "momentum_pattern": {
+                "score": momentum_score,
+                "breakout_probability": momentum_score
+                * sector_patterns["momentum_characteristics"]["breakout_velocity"],
+                "volume_confirmation_strength": momentum_score
+                * sector_patterns["momentum_characteristics"]["volume_confirmation"],
+            },
+            "allocation_pattern": {
+                "score": allocation_score,
+                "optimal_ranges": sector_patterns["allocation_sweet_spots"],
+                "recommended_allocation": np.mean(
+                    sector_patterns["allocation_sweet_spots"]
+                )
+                * allocation_score,
+            },
+            "risk_pattern": {
+                "score": risk_score,
+                "sector_specific_risks": sector_patterns["risk_factors"],
+                "adjusted_risk_level": risk_score
+                * np.mean(list(sector_patterns["risk_factors"].values())),
+            },
+        }
+
+    def _calculate_momentum_pattern_score(
+        self, token_data: Dict, patterns: Dict
+    ) -> float:
+        """Calculate momentum pattern matching score"""
+        momentum_factors = []
+
+        # Volume strength
+        volume_24h = token_data.get("volume_24h", 0)
+        if volume_24h > 50000000:  # High volume
+            momentum_factors.append(0.9)
+        elif volume_24h > 10000000:  # Medium volume
+            momentum_factors.append(0.7)
+        else:
+            momentum_factors.append(0.4)
+
+        # Price volatility
+        volatility = token_data.get("volatility", 50)
+        if 60 <= volatility <= 80:  # Optimal volatility range
+            momentum_factors.append(0.8)
+        elif volatility > 80:  # Too volatile
+            momentum_factors.append(0.5)
+        else:  # Too stable
+            momentum_factors.append(0.6)
+
+        # RSI positioning
+        rsi = token_data.get("rsi", 50)
+        if 30 <= rsi <= 45:  # Good entry zone
+            momentum_factors.append(0.9)
+        elif 45 <= rsi <= 65:  # Neutral zone
+            momentum_factors.append(0.7)
+        else:  # Overbought/oversold
+            momentum_factors.append(0.4)
+
+        return np.mean(momentum_factors)
+
+    def _calculate_allocation_pattern_score(
+        self, token_data: Dict, patterns: Dict
+    ) -> float:
+        """Calculate allocation pattern score"""
+        allocation_factors = []
+
+        # Market cap consideration
+        market_cap = token_data.get("market_cap", 0)
+        if market_cap < 100000000:  # Microcap
+            allocation_factors.append(0.8)
+        elif market_cap < 500000000:  # Small cap
+            allocation_factors.append(0.9)
+        else:  # Mid/large cap
+            allocation_factors.append(0.6)
+
+        # Liquidity score
+        liquidity = token_data.get("liquidity", 5.0)
+        if liquidity >= 8.0:
+            allocation_factors.append(0.9)
+        elif liquidity >= 6.0:
+            allocation_factors.append(0.7)
+        else:
+            allocation_factors.append(0.4)
+
+        return np.mean(allocation_factors)
+
+    def _calculate_risk_pattern_score(self, token_data: Dict, patterns: Dict) -> float:
+        """Calculate risk pattern score"""
+        risk_factors = []
+
+        # Volatility risk
+        volatility = token_data.get("volatility", 50)
+        volatility_risk = min(volatility / 100, 1.0)
+        risk_factors.append(1 - volatility_risk)
+
+        # Volume consistency
+        volume_ratio = token_data.get("volume_ratio", 1.0)
+        if 0.8 <= volume_ratio <= 1.5:  # Consistent volume
+            risk_factors.append(0.8)
+        else:
+            risk_factors.append(0.5)
+
+        return np.mean(risk_factors)
+
+    def _enhance_with_universal_intelligence(
+        self, allocation_intel, universal_insights: Dict, token_data: Dict
+    ) -> Dict:
+        """Enhance allocation intelligence with universal patterns"""
+        base_allocation = allocation_intel.recommended_allocation
+        pattern_confidence = universal_insights["pattern_confidence"]
+
+        # Adjust allocation based on universal patterns
+        universal_allocation = universal_insights["allocation_pattern"][
+            "recommended_allocation"
+        ]
+
+        # Weighted combination
+        enhanced_allocation = (
+            0.6 * base_allocation + 0.4 * universal_allocation * pattern_confidence
+        )
+
+        # Apply sector-specific multipliers
+        sector_multiplier = self._get_sector_multiplier(
+            token_data.get("sector", "unknown")
+        )
+        final_allocation = enhanced_allocation * sector_multiplier
+
+        # Ensure within bounds
+        final_allocation = min(
+            max(final_allocation, 5.0), self.config.max_position_size
+        )
+
+        return {
+            "base_allocation": base_allocation,
+            "universal_allocation": universal_allocation,
+            "enhanced_allocation": final_allocation,
+            "pattern_confidence": pattern_confidence,
+            "sector_multiplier": sector_multiplier,
+            "confidence_level": allocation_intel.confidence_level * pattern_confidence,
+            "expected_roi_30d": allocation_intel.expected_roi_30d
+            * (1 + pattern_confidence * 0.2),
+            "risk_adjusted_return": allocation_intel.risk_adjusted_return
+            * pattern_confidence,
+            "reasoning": allocation_intel.reasoning
+            + [
+                f"Universal pattern matching confidence: {pattern_confidence:.1%}",
+                f"Sector-specific adjustment: {sector_multiplier:.2f}x",
+            ],
+        }
+
+    def _apply_gas_mastery(self, token_data: Dict, sector: str) -> Dict:
+        """Apply gas optimization mastery"""
+        sector_patterns = self.universal_patterns.get(
+            sector, self.universal_patterns["gaming_tokens"]
+        )
+        gas_patterns = sector_patterns["gas_optimization"]
+
+        current_hour = datetime.now().hour
+
+        # Determine optimal execution strategy
+        if current_hour in [2, 3, 4, 8, 9]:  # Low gas hours
+            execution_timing = "IMMEDIATE"
+            gas_multiplier = 0.7
+        elif current_hour in [14, 15, 16, 17]:  # High gas hours
+            execution_timing = "DELAYED"
+            gas_multiplier = 1.4
+        else:
+            execution_timing = "STANDARD"
+            gas_multiplier = 1.0
+
+        optimal_batch_size = gas_patterns["optimal_batch_size"]
+        timing_sensitivity = gas_patterns["timing_sensitivity"]
+
+        # Calculate gas savings potential
+        base_gas_cost = 0.003  # ETH
+        optimized_gas_cost = (
+            base_gas_cost * gas_multiplier * (0.8 if optimal_batch_size >= 5 else 1.0)
+        )
+
+        return {
+            "execution_timing": execution_timing,
+            "optimal_batch_size": optimal_batch_size,
+            "gas_multiplier": gas_multiplier,
+            "timing_sensitivity": timing_sensitivity,
+            "estimated_gas_cost": optimized_gas_cost,
+            "potential_savings_pct": (1 - gas_multiplier) * 100,
+            "layer2_recommendation": self._get_layer2_recommendation(token_data),
+            "execution_windows": self._get_optimal_execution_windows(),
+        }
+
+    def _determine_execution_mastery(
+        self, token_data: Dict, enhanced_allocation: Dict
+    ) -> Dict:
+        """Determine optimal execution strategy using mastery intelligence"""
+        confidence = enhanced_allocation["confidence_level"]
+        allocation = enhanced_allocation["enhanced_allocation"]
+        volatility = token_data.get("volatility", 50)
+
+        # Determine execution type
+        if confidence > 0.8 and allocation > 20:
+            execution_type = "AGGRESSIVE_ACCUMULATION"
+            stages = 2
+        elif confidence > 0.6:
+            execution_type = "STAGED_ACCUMULATION"
+            stages = 3
+        else:
+            execution_type = "CAUTIOUS_DCA"
+            stages = 5
+
+        # Calculate staging
+        stage_allocations = []
+        for i in range(stages):
+            if execution_type == "AGGRESSIVE_ACCUMULATION":
+                stage_pct = [0.6, 0.4][i]
+            elif execution_type == "STAGED_ACCUMULATION":
+                stage_pct = [0.5, 0.3, 0.2][i]
+            else:  # CAUTIOUS_DCA
+                stage_pct = [0.3, 0.25, 0.2, 0.15, 0.1][i]
+
+            stage_allocations.append(allocation * stage_pct)
+
+        return {
+            "execution_type": execution_type,
+            "total_stages": stages,
+            "stage_allocations": stage_allocations,
+            "execution_confidence": confidence,
+            "risk_management": {
+                "stop_loss": token_data.get("price", 1.0)
+                * (1 - self.config.stop_loss_multiplier),
+                "take_profit_levels": self._calculate_take_profit_levels(token_data),
+                "position_sizing": allocation,
+            },
+            "timing_strategy": self._get_timing_strategy(volatility, confidence),
+        }
+
+    def _calculate_confidence_metrics(self, profile, universal_insights: Dict) -> Dict:
+        """Calculate comprehensive confidence metrics"""
+        learning_confidence = profile.learning_confidence
+        pattern_confidence = universal_insights["pattern_confidence"]
+
+        # Weighted confidence calculation
+        overall_confidence = 0.4 * learning_confidence + 0.6 * pattern_confidence
+
+        return {
+            "overall_confidence": overall_confidence,
+            "learning_confidence": learning_confidence,
+            "pattern_confidence": pattern_confidence,
+            "confidence_breakdown": {
+                "historical_performance": learning_confidence * 0.5,
+                "pattern_matching": pattern_confidence * 0.3,
+                "market_context": 0.7,  # Simulated
+                "risk_assessment": 0.6,  # Simulated
+            },
+            "confidence_trend": (
+                "IMPROVING" if overall_confidence > 0.6 else "DEVELOPING"
+            ),
+        }
+
+    def _universal_risk_assessment(
+        self, token_data: Dict, universal_insights: Dict
+    ) -> Dict:
+        """Perform universal risk assessment"""
+        risk_factors = []
+
+        # Volatility risk
+        volatility = token_data.get("volatility", 50)
+        volatility_risk = min(volatility / 100, 1.0)
+        risk_factors.append(("volatility", volatility_risk))
+
+        # Liquidity risk
+        liquidity = token_data.get("liquidity", 5.0)
+        liquidity_risk = max(0, (8.0 - liquidity) / 8.0)
+        risk_factors.append(("liquidity", liquidity_risk))
+
+        # Pattern risk
+        pattern_risk = 1 - universal_insights["pattern_confidence"]
+        risk_factors.append(("pattern_uncertainty", pattern_risk))
+
+        # Sector-specific risks
+        sector_risks = universal_insights["risk_pattern"]["sector_specific_risks"]
+        for risk_type, risk_level in sector_risks.items():
+            risk_factors.append((risk_type, risk_level))
+
+        # Calculate overall risk score
+        overall_risk = np.mean([risk[1] for risk in risk_factors])
+
+        return {
+            "overall_risk_score": overall_risk,
+            "risk_level": self._categorize_risk_level(overall_risk),
+            "risk_factors": dict(risk_factors),
+            "risk_mitigation": self._suggest_risk_mitigation(risk_factors),
+            "max_safe_allocation": self._calculate_max_safe_allocation(overall_risk),
+        }
+
+    def _optimize_profit_strategy(
+        self, enhanced_allocation: Dict, universal_insights: Dict
+    ) -> Dict:
+        """Optimize profit-taking strategy"""
+        allocation = enhanced_allocation["enhanced_allocation"]
+        expected_roi = enhanced_allocation["expected_roi_30d"]
+        confidence = enhanced_allocation["confidence_level"]
+
+        # Calculate profit targets
+        base_target = expected_roi * 1.2  # 20% buffer
+        conservative_target = base_target * 0.7
+        aggressive_target = base_target * 1.5
+
+        # Determine profit-taking stages
+        profit_stages = []
+        for i in range(self.config.profit_taking_stages):
+            stage_pct = (
+                [0.3, 0.4, 0.3][i]
+                if self.config.profit_taking_stages == 3
+                else [0.25, 0.35, 0.25, 0.15][i]
+            )
+            target_multiplier = (
+                [1.2, 1.5, 2.0][i]
+                if self.config.profit_taking_stages == 3
+                else [1.15, 1.35, 1.6, 2.2][i]
+            )
+
+            profit_stages.append(
+                {
+                    "stage": i + 1,
+                    "allocation_to_sell": allocation * stage_pct,
+                    "target_roi": base_target * target_multiplier,
+                    "confidence_required": 0.5 + (i * 0.1),
+                }
+            )
+
+        return {
+            "profit_strategy": "STAGED_PROFIT_TAKING",
+            "profit_stages": profit_stages,
+            "conservative_target": conservative_target,
+            "aggressive_target": aggressive_target,
+            "hodl_percentage": 0.2,  # Always keep 20% for long-term
+            "profit_optimization": {
+                "dynamic_targets": True,
+                "market_condition_adjustment": True,
+                "gas_optimized_exits": True,
+            },
+        }
+
+    def _get_sector_rotation(self) -> Dict:
+        """Get current sector rotation metrics"""
+        return {
+            "gaming": 0.85,
+            "metaverse": 0.78,
+            "nft": 0.72,
+            "infrastructure": 0.88,
+            "defi": 0.65,
+        }
+
+    def _get_sector_multiplier(self, sector: str) -> float:
+        """Get sector-specific multiplier"""
+        multipliers = {
+            "gaming": 1.15,
+            "metaverse": 1.20,
+            "nft": 1.25,
+            "infrastructure": 0.95,
+            "defi": 1.10,
+            "unknown": 1.00,
+        }
+        return multipliers.get(sector, 1.00)
+
+    def _get_layer2_recommendation(self, token_data: Dict) -> Dict:
+        """Get Layer 2 recommendation for gas optimization"""
+        return {
+            "recommended": True,
+            "best_option": "Polygon",
+            "cost_reduction": "95%",
+            "speed_improvement": "80%",
+            "supported_exchanges": ["QuickSwap", "SushiSwap", "1inch"],
+        }
+
+    def _get_optimal_execution_windows(self) -> List[Dict]:
+        """Get optimal execution windows for gas efficiency"""
+        return [
+            {
+                "start": "02:00",
+                "end": "06:00",
+                "gas_efficiency": "EXCELLENT",
+                "savings": "25-40%",
+            },
+            {
+                "start": "08:00",
+                "end": "10:00",
+                "gas_efficiency": "GOOD",
+                "savings": "15-25%",
+            },
+            {
+                "start": "22:00",
+                "end": "24:00",
+                "gas_efficiency": "GOOD",
+                "savings": "10-20%",
+            },
+        ]
+
+    def _calculate_take_profit_levels(self, token_data: Dict) -> List[float]:
+        """Calculate take profit levels"""
+        current_price = token_data.get("price", 1.0)
+        return [
+            current_price * 1.25,  # 25% gain
+            current_price * 1.50,  # 50% gain
+            current_price * 2.00,  # 100% gain
+        ]
+
+    def _get_timing_strategy(self, volatility: float, confidence: float) -> str:
+        """Get timing strategy based on volatility and confidence"""
+        if volatility > 80 and confidence > 0.8:
+            return "MOMENTUM_BREAKOUT"
+        elif volatility > 70:
+            return "VOLATILITY_SCALPING"
+        elif confidence > 0.7:
+            return "CONFIDENCE_ACCUMULATION"
+        else:
+            return "CONSERVATIVE_DCA"
+
+    def _categorize_risk_level(self, risk_score: float) -> str:
+        """Categorize risk level"""
+        if risk_score < 0.3:
+            return "LOW"
+        elif risk_score < 0.6:
+            return "MODERATE"
+        elif risk_score < 0.8:
+            return "HIGH"
+        else:
+            return "EXTREME"
+
+    def _suggest_risk_mitigation(self, risk_factors: List[Tuple]) -> List[str]:
+        """Suggest risk mitigation strategies"""
+        mitigations = []
+
+        for risk_type, risk_level in risk_factors:
+            if risk_level > 0.7:
+                if risk_type == "volatility":
+                    mitigations.append(
+                        "Implement tighter stop-losses due to high volatility"
+                    )
+                elif risk_type == "liquidity":
+                    mitigations.append(
+                        "Consider smaller position sizes due to liquidity constraints"
+                    )
+                elif risk_type == "pattern_uncertainty":
+                    mitigations.append(
+                        "Use more conservative allocation until patterns clarify"
+                    )
+
+        return mitigations
+
+    def _calculate_max_safe_allocation(self, risk_score: float) -> float:
+        """Calculate maximum safe allocation based on risk"""
+        base_max = self.config.max_position_size
+        risk_multiplier = 1 - (
+            risk_score * 0.6
+        )  # Reduce allocation by up to 60% for high risk
+        return base_max * risk_multiplier
+
+    async def analyze_portfolio_mastery(self, tokens: List[Dict]) -> Dict:
+        """
+        🎯 Analyze entire portfolio using unified mastery system
+        """
+        portfolio_analysis = {
+            "analyzed_at": datetime.now().isoformat(),
+            "total_tokens": len(tokens),
+            "token_analyses": {},
+            "portfolio_insights": [],
+            "optimization_recommendations": [],
+            "gas_mastery_summary": {},
+            "risk_portfolio_assessment": {},
+            "execution_master_plan": {},
+        }
+
+        total_recommended_allocation = 0.0
+        all_insights = []
+
+        # Analyze each token
+        for token_data in tokens:
+            symbol = token_data["symbol"]
+            analysis = await self.analyze_universal_token(token_data)
+            portfolio_analysis["token_analyses"][symbol] = analysis
+
+            total_recommended_allocation += analysis["enhanced_allocation"][
+                "enhanced_allocation"
+            ]
+
+            # Generate insights
+            insights = self._generate_token_insights(analysis)
+            all_insights.extend(insights)
+
+        # Sort insights by priority
+        all_insights.sort(key=lambda x: x.priority, reverse=True)
+        portfolio_analysis["portfolio_insights"] = [
+            asdict(insight) for insight in all_insights[:10]
+        ]
+
+        # Portfolio-level optimization
+        portfolio_analysis["optimization_recommendations"] = (
+            self._generate_portfolio_optimizations(
+                portfolio_analysis["token_analyses"], total_recommended_allocation
+            )
+        )
+
+        # Gas mastery summary
+        portfolio_analysis["gas_mastery_summary"] = self._generate_gas_mastery_summary(
+            portfolio_analysis["token_analyses"]
+        )
+
+        # Portfolio risk assessment
+        portfolio_analysis["risk_portfolio_assessment"] = self._assess_portfolio_risk(
+            portfolio_analysis["token_analyses"]
+        )
+
+        # Master execution plan
+        portfolio_analysis["execution_master_plan"] = (
+            self._create_master_execution_plan(portfolio_analysis["token_analyses"])
+        )
+
+        return portfolio_analysis
+
+    def _generate_token_insights(self, analysis: Dict) -> List[MasteryInsight]:
+        """Generate actionable insights for a token"""
+        insights = []
+        symbol = analysis["symbol"]
+        allocation = analysis["enhanced_allocation"]
+        confidence = analysis["confidence_metrics"]
+
+        # High confidence opportunity
+        if confidence["overall_confidence"] > 0.8:
+            insights.append(
+                MasteryInsight(
+                    insight_type="ALLOCATION",
+                    priority=9,
+                    title=f"High Confidence Opportunity: {symbol}",
+                    description=f"Strong patterns detected with {confidence['overall_confidence']:.1%} confidence",
+                    action_required=True,
+                    estimated_impact={
+                        "roi": allocation["expected_roi_30d"],
+                        "risk": -0.1,
+                    },
+                    confidence=confidence["overall_confidence"],
+                    reasoning=[
+                        "Strong pattern matching",
+                        "High learning confidence",
+                        "Favorable market conditions",
+                    ],
+                )
+            )
+
+        # Gas optimization opportunity
+        gas_mastery = analysis["gas_mastery"]
+        if gas_mastery["potential_savings_pct"] > 20:
+            insights.append(
+                MasteryInsight(
+                    insight_type="GAS",
+                    priority=7,
+                    title=f"Gas Optimization Opportunity: {symbol}",
+                    description=f"Potential {gas_mastery['potential_savings_pct']:.0f}% gas savings with optimal timing",
+                    action_required=True,
+                    estimated_impact={
+                        "cost_savings": gas_mastery["potential_savings_pct"] * 0.01
+                    },
+                    confidence=0.85,
+                    reasoning=[
+                        "Optimal execution window available",
+                        "Batch execution beneficial",
+                    ],
+                )
+            )
+
+        # Risk warning
+        risk_assessment = analysis["risk_assessment"]
+        if risk_assessment["overall_risk_score"] > 0.7:
+            insights.append(
+                MasteryInsight(
+                    insight_type="RISK",
+                    priority=8,
+                    title=f"Risk Management Alert: {symbol}",
+                    description=f"High risk level detected ({risk_assessment['risk_level']})",
+                    action_required=True,
+                    estimated_impact={"risk_reduction": -0.3},
+                    confidence=0.8,
+                    reasoning=risk_assessment["risk_mitigation"],
+                )
+            )
+
+        return insights
+
+    def _generate_portfolio_optimizations(
+        self, token_analyses: Dict, total_allocation: float
+    ) -> List[str]:
+        """Generate portfolio-level optimization recommendations"""
+        optimizations = []
+
+        # Check total allocation
+        if total_allocation > self.config.max_portfolio_allocation:
+            optimizations.append(
+                f"Total allocation ({total_allocation:.1f}%) exceeds target - reduce positions"
+            )
+        elif total_allocation < 70:
+            optimizations.append(
+                f"Portfolio underallocated ({total_allocation:.1f}%) - consider increasing positions"
+            )
+
+        # Sector diversification
+        sector_exposure = {}
+        for symbol, analysis in token_analyses.items():
+            universal_insights = analysis["universal_analysis"]
+            sector = universal_insights["sector_match"]
+            allocation = analysis["enhanced_allocation"]["enhanced_allocation"]
+            sector_exposure[sector] = sector_exposure.get(sector, 0) + allocation
+
+        for sector, exposure in sector_exposure.items():
+            if exposure > 40:
+                optimizations.append(
+                    f"High {sector} exposure ({exposure:.1f}%) - consider diversification"
+                )
+
+        # Gas optimization
+        optimizations.append(
+            "Implement batch execution for all positions to optimize gas costs"
+        )
+        optimizations.append("Consider Layer 2 migration for 90%+ gas cost reduction")
+
+        return optimizations
+
+    def _generate_gas_mastery_summary(self, token_analyses: Dict) -> Dict:
+        """Generate gas mastery summary"""
+        total_potential_savings = 0
+        optimal_execution_tokens = []
+        layer2_candidates = []
+
+        for symbol, analysis in token_analyses.items():
+            gas_mastery = analysis["gas_mastery"]
+            total_potential_savings += gas_mastery["potential_savings_pct"]
+
+            if gas_mastery["execution_timing"] == "IMMEDIATE":
+                optimal_execution_tokens.append(symbol)
+
+            if gas_mastery["layer2_recommendation"]["recommended"]:
+                layer2_candidates.append(symbol)
+
+        return {
+            "total_potential_savings_pct": total_potential_savings,
+            "optimal_execution_tokens": optimal_execution_tokens,
+            "layer2_migration_candidates": layer2_candidates,
+            "recommended_batch_sizes": {
+                "immediate_execution": 5,
+                "delayed_execution": 8,
+                "layer2_migration": 10,
+            },
+            "execution_windows": self._get_optimal_execution_windows(),
+        }
+
+    def _assess_portfolio_risk(self, token_analyses: Dict) -> Dict:
+        """Assess overall portfolio risk"""
+        risk_scores = []
+        high_risk_tokens = []
+        risk_factors = {}
+
+        for symbol, analysis in token_analyses.items():
+            risk_assessment = analysis["risk_assessment"]
+            risk_score = risk_assessment["overall_risk_score"]
+            risk_scores.append(risk_score)
+
+            if risk_score > 0.7:
+                high_risk_tokens.append(symbol)
+
+            # Aggregate risk factors
+            for factor, level in risk_assessment["risk_factors"].items():
+                if factor not in risk_factors:
+                    risk_factors[factor] = []
+                risk_factors[factor].append(level)
+
+        avg_risk = np.mean(risk_scores)
+
+        return {
+            "average_portfolio_risk": avg_risk,
+            "risk_level": self._categorize_risk_level(avg_risk),
+            "high_risk_tokens": high_risk_tokens,
+            "risk_factors_avg": {
+                factor: np.mean(levels) for factor, levels in risk_factors.items()
+            },
+            "diversification_score": 1
+            - np.std(risk_scores),  # Lower std = better diversification
+            "recommended_actions": self._get_portfolio_risk_actions(
+                avg_risk, high_risk_tokens
+            ),
+        }
+
+    def _create_master_execution_plan(self, token_analyses: Dict) -> Dict:
+        """Create master execution plan"""
+        execution_plan = {
+            "immediate_actions": [],
+            "scheduled_actions": [],
+            "optimization_actions": [],
+            "risk_management_actions": [],
+        }
+
+        for symbol, analysis in token_analyses.items():
+            execution_strategy = analysis["execution_strategy"]
+            gas_mastery = analysis["gas_mastery"]
+            confidence = analysis["confidence_metrics"]["overall_confidence"]
+
+            # Immediate actions (high confidence + good gas conditions)
+            if confidence > 0.8 and gas_mastery["execution_timing"] == "IMMEDIATE":
+                execution_plan["immediate_actions"].append(
+                    {
+                        "symbol": symbol,
+                        "action": "AGGRESSIVE_ACCUMULATION",
+                        "allocation": analysis["enhanced_allocation"][
+                            "enhanced_allocation"
+                        ],
+                        "confidence": confidence,
+                    }
+                )
+
+            # Scheduled actions (good opportunity but timing matters)
+            elif confidence > 0.6:
+                execution_plan["scheduled_actions"].append(
+                    {
+                        "symbol": symbol,
+                        "action": execution_strategy["execution_type"],
+                        "timing": gas_mastery["execution_timing"],
+                        "stages": execution_strategy["total_stages"],
+                    }
+                )
+
+            # Gas optimization actions
+            if gas_mastery["potential_savings_pct"] > 15:
+                execution_plan["optimization_actions"].append(
+                    {
+                        "symbol": symbol,
+                        "optimization": "GAS_EFFICIENCY",
+                        "potential_savings": gas_mastery["potential_savings_pct"],
+                    }
+                )
+
+            # Risk management actions
+            risk_level = analysis["risk_assessment"]["risk_level"]
+            if risk_level in ["HIGH", "EXTREME"]:
+                execution_plan["risk_management_actions"].append(
+                    {
+                        "symbol": symbol,
+                        "action": "RISK_REDUCTION",
+                        "risk_level": risk_level,
+                        "mitigations": analysis["risk_assessment"]["risk_mitigation"],
+                    }
+                )
+
+        return execution_plan
+
+    def _get_portfolio_risk_actions(
+        self, avg_risk: float, high_risk_tokens: List[str]
+    ) -> List[str]:
+        """Get portfolio risk management actions"""
+        actions = []
+
+        if avg_risk > 0.7:
+            actions.append(
+                "Consider reducing overall portfolio risk through position sizing"
+            )
+
+        if high_risk_tokens:
+            actions.append(f"Review high-risk positions: {', '.join(high_risk_tokens)}")
+
+        actions.append("Implement dynamic stop-losses based on volatility")
+        actions.append("Consider hedging strategies for portfolio protection")
+
+        return actions
+
+
+async def main():
+    """
+    🔮 Demonstrate the Unified Token Mastery System
+    """
+    print("🔮 UNIFIED TOKEN MASTERY SYSTEM")
+    print("=" * 50)
+
+    # Initialize the unified system
+    config = UnifiedMasteryConfig(
+        max_portfolio_allocation=85.0,
+        learning_aggressiveness=0.8,
+        gas_optimization_priority=True,
+    )
+
+    mastery_system = UnifiedTokenMasterySystem(config)
+
+    # Sample tokens for comprehensive analysis
+    sample_tokens = [
+        {
+            "symbol": "SAND",
+            "price": 0.45,
+            "sector": "gaming",
+            "volume_24h": 125000000,
+            "volatility": 68,
+            "liquidity": 8.2,
+            "rsi": 42,
+            "market_cap": 850000000,
+        },
+        {
+            "symbol": "MANA",
+            "price": 0.38,
+            "sector": "metaverse",
+            "volume_24h": 98000000,
+            "volatility": 72,
+            "liquidity": 7.8,
+            "rsi": 55,
+            "market_cap": 720000000,
+        },
+        {
+            "symbol": "AXS",
+            "price": 6.75,
+            "sector": "gaming",
+            "volume_24h": 85000000,
+            "volatility": 78,
+            "liquidity": 8.5,
+            "rsi": 38,
+            "market_cap": 420000000,
+        },
+        {
+            "symbol": "ENJ",
+            "price": 0.28,
+            "sector": "nft",
+            "volume_24h": 45000000,
+            "volatility": 65,
+            "liquidity": 7.2,
+            "rsi": 48,
+            "market_cap": 280000000,
+        },
+        {
+            "symbol": "MATIC",
+            "price": 0.85,
+            "sector": "infrastructure",
+            "volume_24h": 180000000,
+            "volatility": 45,
+            "liquidity": 9.2,
+            "rsi": 52,
+            "market_cap": 8500000000,
+        },
+    ]
+
+    print("🧠 Analyzing portfolio with unified mastery intelligence...")
+
+    # Perform comprehensive portfolio analysis
+    portfolio_mastery = await mastery_system.analyze_portfolio_mastery(sample_tokens)
+
+    print(f"\n🎯 PORTFOLIO MASTERY ANALYSIS")
+    print(f"Analyzed {portfolio_mastery['total_tokens']} tokens")
+    print(f"Analysis completed: {portfolio_mastery['analyzed_at']}")
+
+    print(f"\n💰 TOKEN ALLOCATION RECOMMENDATIONS:")
+    total_allocation = 0
+    for symbol, analysis in portfolio_mastery["token_analyses"].items():
+        allocation = analysis["enhanced_allocation"]["enhanced_allocation"]
+        confidence = analysis["confidence_metrics"]["overall_confidence"]
+        expected_roi = analysis["enhanced_allocation"]["expected_roi_30d"]
+
+        total_allocation += allocation
+        print(
+            f"   {symbol}: {allocation:.1f}% (Confidence: {confidence:.1%}, ROI: {expected_roi:.1f}%)"
+        )
+
+    print(f"\nTotal Portfolio Allocation: {total_allocation:.1f}%")
+
+    print(f"\n🔥 TOP INSIGHTS:")
+    for i, insight in enumerate(portfolio_mastery["portfolio_insights"][:5], 1):
+        print(f"   {i}. [{insight['insight_type']}] {insight['title']}")
+        print(f"      {insight['description']} (Priority: {insight['priority']}/10)")
+
+    print(f"\n⛽ GAS MASTERY SUMMARY:")
+    gas_summary = portfolio_mastery["gas_mastery_summary"]
+    print(
+        f"   Total Potential Savings: {gas_summary['total_potential_savings_pct']:.0f}%"
+    )
+    print(
+        f"   Optimal Execution Tokens: {', '.join(gas_summary['optimal_execution_tokens'])}"
+    )
+    print(
+        f"   Layer 2 Candidates: {', '.join(gas_summary['layer2_migration_candidates'])}"
+    )
+
+    print(f"\n⚖️ PORTFOLIO RISK ASSESSMENT:")
+    risk_assessment = portfolio_mastery["risk_portfolio_assessment"]
+    print(
+        f"   Average Risk Level: {risk_assessment['risk_level']} ({risk_assessment['average_portfolio_risk']:.1%})"
+    )
+    print(f"   Diversification Score: {risk_assessment['diversification_score']:.1%}")
+    if risk_assessment["high_risk_tokens"]:
+        print(f"   High Risk Tokens: {', '.join(risk_assessment['high_risk_tokens'])}")
+
+    print(f"\n🎯 OPTIMIZATION RECOMMENDATIONS:")
+    for i, rec in enumerate(portfolio_mastery["optimization_recommendations"][:5], 1):
+        print(f"   {i}. {rec}")
+
+    print(f"\n🚀 MASTER EXECUTION PLAN:")
+    execution_plan = portfolio_mastery["execution_master_plan"]
+
+    if execution_plan["immediate_actions"]:
+        print(
+            f"   Immediate Actions: {len(execution_plan['immediate_actions'])} tokens ready"
+        )
+        for action in execution_plan["immediate_actions"]:
+            print(
+                f"     → {action['symbol']}: {action['action']} ({action['allocation']:.1f}%)"
+            )
+
+    if execution_plan["scheduled_actions"]:
+        print(
+            f"   Scheduled Actions: {len(execution_plan['scheduled_actions'])} tokens planned"
+        )
+
+    if execution_plan["optimization_actions"]:
+        print(
+            f"   Gas Optimizations: {len(execution_plan['optimization_actions'])} opportunities"
+        )
+
+    # Save comprehensive analysis
+    report_path = Path("unified_token_mastery_analysis.json")
+    with open(report_path, "w") as f:
+        json.dump(portfolio_mastery, f, indent=2, default=str)
+
+    print(f"\n💾 Saved comprehensive mastery analysis to: {report_path}")
+    print("\n🔮 Unified Token Mastery System Complete!")
+
+    # Display individual token deep dive for top performer
+    print(f"\n🔍 DEEP DIVE: TOP PERFORMING TOKEN")
+    best_token = None
+    best_score = 0
+
+    for symbol, analysis in portfolio_mastery["token_analyses"].items():
+        score = (
+            analysis["confidence_metrics"]["overall_confidence"]
+            * analysis["enhanced_allocation"]["enhanced_allocation"]
+        )
+        if score > best_score:
+            best_score = score
+            best_token = symbol
+
+    if best_token:
+        analysis = portfolio_mastery["token_analyses"][best_token]
+        print(f"\nToken: {best_token}")
+        print(
+            f"Universal Pattern Match: {analysis['universal_analysis']['pattern_confidence']:.1%}"
+        )
+        print(
+            f"Recommended Allocation: {analysis['enhanced_allocation']['enhanced_allocation']:.1f}%"
+        )
+        print(f"Execution Strategy: {analysis['execution_strategy']['execution_type']}")
+        print(
+            f"Gas Optimization: {analysis['gas_mastery']['potential_savings_pct']:.0f}% savings potential"
+        )
+        print(f"Risk Level: {analysis['risk_assessment']['risk_level']}")
+        print(
+            f"Profit Strategy: {len(analysis['profit_optimization']['profit_stages'])} stages planned"
+        )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

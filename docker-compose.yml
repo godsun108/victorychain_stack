@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  victorychain:
+    build: .
+    container_name: victorychain-main
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+    env_file:
+      - config/.env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - victorychain-network
+
+  victorychain-dashboard:
+    build: .
+    container_name: victorychain-dashboard
+    command: python src/web/web_dashboard.py
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONPATH=/app
+      - FLASK_ENV=production
+    env_file:
+      - config/.env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - victorychain-network
+
+  victorychain-mcp:
+    build: .
+    container_name: victorychain-mcp
+    command: python src/mcp/mcp_server.py --port 8080 --host 0.0.0.0
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=INFO
+    env_file:
+      - config/.env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - victorychain-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: victorychain-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - victorychain-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: victorychain-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    restart: unless-stopped
+    depends_on:
+      - victorychain-dashboard
+      - victorychain-mcp
+    networks:
+      - victorychain-network
+
+volumes:
+  redis-data:
+
+networks:
+  victorychain-network:
+    driver: bridge

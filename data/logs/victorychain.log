@@ -1,0 +1,41 @@
+2025-08-04 14:06:47,487 - victorychain_integration - ERROR - Error loading module victorychain_core_v2: name 'dataclass' is not defined
+2025-08-04 14:06:47,488 - victorychain_integration - ERROR - Error loading module victorychain_core_v2: name 'dataclass' is not defined
+2025-08-04 14:06:47,488 - victorychain_integration - ERROR - Failed to load dependency victorychain_core_v2 for momentum_trader_v2
+2025-08-04 14:06:47,492 - victorychain_integration - INFO - Successfully loaded module: claude_token_optimizer
+2025-08-04 14:08:36,423 - victorychain_core_v2 - INFO - VictoryChain Core initialized with buy_hold strategy
+2025-08-04 14:08:36,424 - victorychain_integration - INFO - Successfully loaded module: victorychain_core_v2
+2025-08-04 14:08:36,424 - victorychain_integration - INFO - Module victorychain_core_v2 already loaded
+2025-08-04 14:08:36,430 - victorychain_integration - ERROR - Error loading module momentum_trader_v2: name 'dataclass' is not defined
+2025-08-04 14:08:36,435 - victorychain_integration - INFO - Successfully loaded module: claude_token_optimizer
+2025-08-04 14:09:46,703 - victorychain_core_v2 - INFO - VictoryChain Core initialized with buy_hold strategy
+2025-08-04 14:09:46,715 - momentum_trader_v2 - INFO - MomentumTrader initialized in demo mode
+2025-08-04 14:09:46,723 - victorychain_integration - INFO - Registered 10 core modules
+2025-08-04 14:09:46,859 - victorychain_core_v2 - INFO - VictoryChain Core initialized with buy_hold strategy
+2025-08-04 14:09:46,859 - victorychain_integration - INFO - Successfully loaded module: victorychain_core_v2
+2025-08-04 14:09:46,859 - victorychain_integration - INFO - Successfully loaded module: claude_token_optimizer
+2025-08-04 14:10:27,833 - victorychain_core_v2 - INFO - VictoryChain Core initialized with buy_hold strategy
+2025-08-04 14:10:27,837 - momentum_trader_v2 - INFO - MomentumTrader initialized in demo mode
+2025-08-04 14:10:27,840 - victorychain_integration - INFO - Registered 10 core modules
+2025-08-04 14:10:27,964 - victorychain_core_v2 - INFO - VictoryChain Core initialized with buy_hold strategy
+2025-08-04 14:10:27,964 - victorychain_integration - INFO - Successfully loaded module: victorychain_core_v2
+2025-08-04 14:10:27,964 - victorychain_integration - INFO - Successfully loaded module: claude_token_optimizer
+2025-08-04 14:21:54,218 - victorychain_core_v2 - INFO - VictoryChain Core initialized with buy_hold strategy
+2025-08-04 14:21:54,219 - victorychain_integration - INFO - Successfully loaded module: victorychain_core_v2
+2025-08-04 14:21:54,219 - victorychain_integration - INFO - Module victorychain_core_v2 already loaded
+2025-08-04 14:21:54,224 - momentum_trader_v2 - INFO - MomentumTrader initialized in demo mode
+2025-08-04 14:21:54,224 - victorychain_integration - INFO - Successfully loaded module: momentum_trader_v2
+2025-08-04 14:21:54,224 - victorychain_integration - INFO - Module victorychain_core_v2 already loaded
+2025-08-04 14:21:54,224 - victorychain_integration - INFO - Module momentum_trader_v2 already loaded
+2025-08-04 14:22:01,737 - victorychain_integration - ERROR - Error loading module launch_live_trading_v2: name 'Enum' is not defined
+2025-08-04 14:22:01,738 - victorychain_integration - INFO - Successfully loaded module: claude_token_optimizer
+2025-08-04 14:22:01,740 - victorychain_integration - ERROR - Error loading module claude_auto_consolidator: unterminated triple-quoted string literal (detected at line 601) (claude_auto_consolidator.py, line 596)
+2025-08-04 14:22:01,740 - victorychain_integration - INFO - Module claude_token_optimizer already loaded
+2025-08-04 14:22:01,741 - victorychain_integration - INFO - Successfully loaded module: claude_buy_hold
+2025-08-04 14:22:01,741 - victorychain_integration - INFO - Module claude_token_optimizer already loaded
+2025-08-04 14:22:01,741 - victorychain_integration - INFO - Module claude_token_optimizer already loaded
+2025-08-04 14:22:01,754 - victorychain_integration - INFO - Successfully loaded module: claude_token_predictor
+2025-08-04 14:22:01,768 - victorychain_integration - ERROR - Could not find main class in module: portfolio_consolidator
+2025-08-04 14:22:01,771 - victorychain_integration - ERROR - Could not find main class in module: quick_consolidator
+2025-08-04 14:22:01,774 - victorychain_integration - ERROR - Could not find main class in module: robust_consolidator
+2025-08-04 14:22:01,774 - victorychain_integration - INFO - Loaded 5/10 modules successfully
+2025-08-04 14:22:01,774 - __main__ - INFO - Dashboard connected to VictoryChain

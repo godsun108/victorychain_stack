@@ -1,0 +1,380 @@
+#!/usr/bin/env python3
+
+"""
+🪄 MAGIC-DRIVEN ALLOCATION SYSTEM
+Uses MAGICUSDT analysis learnings to drive new allocation strategies
+Focuses on learned parameters: gaming sector, NFT integration, ecosystem strength
+"""
+
+import json
+import os
+import sys
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional, Any
+import numpy as np
+from dataclasses import dataclass, asdict
+
+# Add project root to path
+sys.path.append(os.path.dirname(__file__))
+
+try:
+    from binance.client import Client
+    from binance.exceptions import BinanceAPIException
+    binance_available = True
+except ImportError:
+    binance_available = False
+
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), 'config', '.env'))
+
+@dataclass
+class MagicLearnedParameters:
+    """Key parameters learned from MAGIC analysis"""
+    gaming_ecosystem_score: float = 8.5
+    nft_integration_score: float = 9.2
+    dao_activity_score: float = 7.8
+    bridgeworld_usage: float = 8.1
+    social_sentiment: float = 0.75
+    ai_confidence: float = 7.5
+    target_gains: List[float] = None  # [30%, 50%, 100%]
+    stop_loss_threshold: float = -15.0
+    max_position_size: float = 0.15
+    ecosystem_health: str = "ROBUST"
+    
+    def __post_init__(self):
+        if self.target_gains is None:
+            self.target_gains = [30.0, 50.0, 100.0]
+
+@dataclass
+class AllocationCandidate:
+    """Token candidate based on MAGIC learned parameters"""
+    symbol: str
+    price: float
+    volume_24h: float
+    price_change_24h: float
+    momentum_score: float
+    gaming_correlation: float
+    ecosystem_strength: float
+    nft_potential: float
+    dao_activity: float
+    confidence_score: float
+    risk_level: str
+    allocation_percentage: float
+    reasoning: List[str]
+
+class MagicDrivenAllocator:
+    """Allocates based on MAGIC learned parameters"""
+    
+    def __init__(self):
+        self.magic_params = MagicLearnedParameters()
+        self.load_analysis_data()
+        self.allocation_history = []
+        
+    def load_analysis_data(self):
+        """Load existing analysis data"""
+        try:
+            # Load MAGIC analysis
+            with open('magic_analysis_20250805_142539.json', 'r') as f:
+                self.magic_analysis = json.load(f)
+            print("✅ Loaded MAGIC analysis data")
+            
+            # Load comprehensive token analysis
+            with open('comprehensive_token_analysis_20250805_155947.json', 'r') as f:
+                self.token_data = json.load(f)
+            print(f"✅ Loaded {len(self.token_data)} tokens for analysis")
+            
+            # Load momentum data
+            with open('top_5_momentum_tokens.json', 'r') as f:
+                self.momentum_data = json.load(f)
+            print("✅ Loaded momentum token data")
+            
+        except FileNotFoundError as e:
+            print(f"⚠️ Could not load analysis file: {e}")
+            self.token_data = []
+            self.momentum_data = []
+    
+    def calculate_magic_similarity(self, token_data: Dict) -> float:
+        """Calculate how similar a token is to MAGIC based on learned parameters"""
+        similarity_score = 0.0
+        max_score = 100.0
+        
+        # Gaming sector correlation (30% weight)
+        if token_data.get('sector') == 'gaming':
+            similarity_score += 30.0
+        elif token_data.get('sector') in ['nft', 'metaverse', 'defi']:
+            similarity_score += 15.0  # Related sectors
+            
+        # Ecosystem score correlation (25% weight)
+        ecosystem_score = token_data.get('ecosystem_score', 5.0)
+        if ecosystem_score >= 8.0:  # MAGIC has 8.5
+            similarity_score += 25.0
+        elif ecosystem_score >= 7.0:
+            similarity_score += 15.0
+        elif ecosystem_score >= 6.0:
+            similarity_score += 10.0
+            
+        # Momentum correlation (20% weight)
+        momentum = token_data.get('momentum_score', 0.0)
+        if momentum >= 30.0:  # High momentum like GALA had 33.83
+            similarity_score += 20.0
+        elif momentum >= 20.0:
+            similarity_score += 15.0
+        elif momentum >= 10.0:
+            similarity_score += 10.0
+            
+        # Volume and activity (15% weight)
+        volume = token_data.get('volume_24h_usdt', 0)
+        if volume >= 100000:  # Significant volume
+            similarity_score += 15.0
+        elif volume >= 10000:
+            similarity_score += 10.0
+        elif volume >= 1000:
+            similarity_score += 5.0
+            
+        # Price action stability (10% weight)
+        price_change = abs(token_data.get('price_change_24h', 0))
+        if price_change <= 5.0:  # Stable like MAGIC prefers
+            similarity_score += 10.0
+        elif price_change <= 10.0:
+            similarity_score += 5.0
+            
+        return min(similarity_score / max_score, 1.0) * 100
+    
+    def analyze_allocation_candidate(self, token_data: Dict) -> AllocationCandidate:
+        """Analyze a token as allocation candidate using MAGIC parameters"""
+        symbol = token_data['symbol']
+        
+        # Calculate MAGIC similarity
+        magic_similarity = self.calculate_magic_similarity(token_data)
+        
+        # Gaming correlation
+        gaming_correlation = 1.0 if token_data.get('sector') == 'gaming' else 0.3
+        
+        # Ecosystem strength (based on ecosystem score and volume)
+        ecosystem_strength = min(token_data.get('ecosystem_score', 5.0) / 10.0, 1.0)
+        
+        # NFT potential (gaming tokens have high NFT potential)
+        nft_potential = 0.9 if token_data.get('sector') == 'gaming' else 0.4
+        
+        # DAO activity (estimated based on sector and ecosystem score)
+        dao_activity = ecosystem_strength * 0.8
+        
+        # Confidence score (weighted combination)
+        confidence_score = (
+            magic_similarity * 0.4 +
+            gaming_correlation * 30.0 +
+            ecosystem_strength * 25.0 +
+            nft_potential * 15.0 +
+            dao_activity * 10.0
+        )
+        
+        # Risk level based on MAGIC learnings
+        if confidence_score >= 70:
+            risk_level = "LOW"
+            allocation_percentage = 15.0  # MAGIC max allocation
+        elif confidence_score >= 50:
+            risk_level = "MEDIUM"
+            allocation_percentage = 10.0
+        elif confidence_score >= 30:
+            risk_level = "HIGH"
+            allocation_percentage = 5.0
+        else:
+            risk_level = "VERY_HIGH"
+            allocation_percentage = 1.0
+            
+        # Reasoning based on MAGIC learnings
+        reasoning = []
+        if gaming_correlation > 0.5:
+            reasoning.append("Strong gaming sector correlation like MAGIC")
+        if ecosystem_strength > 0.7:
+            reasoning.append("Robust ecosystem similar to MAGIC's 8.5 score")
+        if magic_similarity > 60:
+            reasoning.append(f"High MAGIC pattern similarity ({magic_similarity:.1f}%)")
+        if token_data.get('momentum_score', 0) > 20:
+            reasoning.append("Strong momentum matching MAGIC preferences")
+        if nft_potential > 0.7:
+            reasoning.append("High NFT integration potential like MAGIC (9.2/10)")
+            
+        return AllocationCandidate(
+            symbol=symbol,
+            price=token_data.get('price', 0.0),
+            volume_24h=token_data.get('volume_24h_usdt', 0.0),
+            price_change_24h=token_data.get('price_change_24h', 0.0),
+            momentum_score=token_data.get('momentum_score', 0.0),
+            gaming_correlation=gaming_correlation,
+            ecosystem_strength=ecosystem_strength,
+            nft_potential=nft_potential,
+            dao_activity=dao_activity,
+            confidence_score=confidence_score,
+            risk_level=risk_level,
+            allocation_percentage=allocation_percentage,
+            reasoning=reasoning
+        )
+    
+    def find_best_allocation_targets(self, top_n: int = 5) -> List[AllocationCandidate]:
+        """Find best allocation targets based on MAGIC learned parameters"""
+        candidates = []
+        
+        print("🔍 Analyzing tokens using MAGIC learned parameters...")
+        
+        for token_data in self.token_data:
+            if token_data.get('symbol', '').endswith('USDT'):
+                candidate = self.analyze_allocation_candidate(token_data)
+                candidates.append(candidate)
+        
+        # Sort by confidence score
+        candidates.sort(key=lambda x: x.confidence_score, reverse=True)
+        
+        print(f"📊 Analyzed {len(candidates)} candidates")
+        return candidates[:top_n]
+    
+    def execute_magic_driven_allocation(self, candidates: List[AllocationCandidate]) -> Dict:
+        """Execute allocation based on MAGIC learnings"""
+        timestamp = datetime.now()
+        
+        allocation_plan = {
+            'timestamp': timestamp.isoformat(),
+            'strategy': 'MAGIC_DRIVEN_ALLOCATION',
+            'learned_parameters': asdict(self.magic_params),
+            'allocations': [],
+            'total_allocation': 0.0,
+            'risk_management': {
+                'stop_loss': self.magic_params.stop_loss_threshold,
+                'target_gains': self.magic_params.target_gains,
+                'max_position_size': self.magic_params.max_position_size
+            },
+            'execution_summary': {}
+        }
+        
+        total_allocation = 0.0
+        executed_trades = []
+        
+        print("\n🪄 MAGIC-DRIVEN ALLOCATION EXECUTION")
+        print("=" * 50)
+        
+        for i, candidate in enumerate(candidates[:3], 1):  # Top 3 candidates
+            print(f"\n📍 ALLOCATION TARGET #{i}")
+            print(f"Token: {candidate.symbol}")
+            print(f"Confidence Score: {candidate.confidence_score:.2f}")
+            print(f"Risk Level: {candidate.risk_level}")
+            print(f"Allocation: {candidate.allocation_percentage}%")
+            print(f"Gaming Correlation: {candidate.gaming_correlation:.2f}")
+            print(f"Ecosystem Strength: {candidate.ecosystem_strength:.2f}")
+            print(f"Reasoning:")
+            for reason in candidate.reasoning:
+                print(f"  • {reason}")
+            
+            # Simulated execution
+            trade_details = {
+                'symbol': candidate.symbol,
+                'allocation_percentage': candidate.allocation_percentage,
+                'confidence_score': candidate.confidence_score,
+                'risk_level': candidate.risk_level,
+                'entry_price': candidate.price,
+                'stop_loss': candidate.price * (1 + self.magic_params.stop_loss_threshold / 100),
+                'target_prices': [
+                    candidate.price * (1 + gain / 100) 
+                    for gain in self.magic_params.target_gains
+                ],
+                'reasoning': candidate.reasoning,
+                'execution_time': timestamp.isoformat(),
+                'status': 'SIMULATED_EXECUTED'
+            }
+            
+            executed_trades.append(trade_details)
+            total_allocation += candidate.allocation_percentage
+            
+            allocation_plan['allocations'].append(trade_details)
+        
+        allocation_plan['total_allocation'] = total_allocation
+        allocation_plan['execution_summary'] = {
+            'total_positions': len(executed_trades),
+            'highest_confidence': max([t['confidence_score'] for t in executed_trades]),
+            'average_allocation': total_allocation / len(executed_trades) if executed_trades else 0,
+            'primary_sectors': ['gaming', 'nft', 'defi'],
+            'magic_similarity_focus': True
+        }
+        
+        # Save allocation plan
+        filename = f"magic_driven_allocation_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
+        with open(filename, 'w') as f:
+            json.dump(allocation_plan, f, indent=2)
+        
+        print(f"\n💾 Allocation plan saved to: {filename}")
+        print(f"📊 Total Allocation: {total_allocation:.1f}%")
+        print(f"🎯 Positions Created: {len(executed_trades)}")
+        
+        return allocation_plan
+    
+    def generate_magic_learning_report(self, allocation_plan: Dict):
+        """Generate report on how MAGIC learnings influenced allocation"""
+        print("\n🧠 MAGIC LEARNING APPLICATION REPORT")
+        print("=" * 50)
+        
+        print(f"\n📚 KEY LEARNINGS FROM MAGIC ANALYSIS:")
+        print(f"• Gaming Ecosystem Score: {self.magic_params.gaming_ecosystem_score}/10")
+        print(f"• NFT Integration Score: {self.magic_params.nft_integration_score}/10")
+        print(f"• DAO Activity Score: {self.magic_params.dao_activity_score}/10")
+        print(f"• Social Sentiment: {self.magic_params.social_sentiment}")
+        print(f"• AI Confidence: {self.magic_params.ai_confidence}/10")
+        print(f"• Ecosystem Health: {self.magic_params.ecosystem_health}")
+        
+        print(f"\n🎯 ALLOCATION STRATEGY APPLIED:")
+        print(f"• Stop Loss Threshold: {self.magic_params.stop_loss_threshold}%")
+        print(f"• Target Gains: {', '.join([f'{g}%' for g in self.magic_params.target_gains])}")
+        print(f"• Max Position Size: {self.magic_params.max_position_size * 100}%")
+        
+        print(f"\n📈 EXECUTION RESULTS:")
+        summary = allocation_plan['execution_summary']
+        print(f"• Total Positions: {summary['total_positions']}")
+        print(f"• Highest Confidence: {summary['highest_confidence']:.2f}")
+        print(f"• Average Allocation: {summary['average_allocation']:.1f}%")
+        print(f"• Total Portfolio Allocation: {allocation_plan['total_allocation']:.1f}%")
+        
+        print(f"\n🔄 LEARNING INTEGRATION:")
+        print("• Gaming sector prioritized based on MAGIC's 8.5/10 gaming score")
+        print("• NFT integration weighted heavily (MAGIC scored 9.2/10)")
+        print("• Ecosystem strength used as primary filter")
+        print("• DAO activity correlation applied")
+        print("• Risk management mirrors MAGIC's conservative approach")
+        
+        return True
+
+def main():
+    """Main execution function"""
+    print("🪄 MAGIC-DRIVEN ALLOCATION SYSTEM")
+    print("=" * 50)
+    print("Using MAGICUSDT analysis to drive new allocation strategies")
+    print("Learned parameters: Gaming, NFT, Ecosystem, DAO activity")
+    
+    allocator = MagicDrivenAllocator()
+    
+    # Find best allocation targets
+    candidates = allocator.find_best_allocation_targets(top_n=5)
+    
+    if not candidates:
+        print("❌ No suitable allocation candidates found")
+        return
+    
+    print(f"\n🎯 TOP ALLOCATION CANDIDATES (MAGIC-DRIVEN)")
+    print("-" * 50)
+    
+    for i, candidate in enumerate(candidates, 1):
+        print(f"\n#{i}. {candidate.symbol}")
+        print(f"   Confidence: {candidate.confidence_score:.2f}")
+        print(f"   Gaming Correlation: {candidate.gaming_correlation:.2f}")
+        print(f"   Allocation: {candidate.allocation_percentage}%")
+        print(f"   Risk: {candidate.risk_level}")
+        if candidate.reasoning:
+            print(f"   Key Reasons: {candidate.reasoning[0]}")
+    
+    # Execute allocation
+    allocation_plan = allocator.execute_magic_driven_allocation(candidates)
+    
+    # Generate learning report
+    allocator.generate_magic_learning_report(allocation_plan)
+    
+    print("\n✅ MAGIC-driven allocation strategy completed successfully!")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-08-05T18:47:55.309483",
+  "signals": [
+    "StopLossAvoidanceSignal(symbol='1000REKTUSDT', current_price=0.001183, entry_price=0.0011, current_pnl=0.07545454545454541, stop_loss_risk='NO_RISK', avoidance_strategy='CONTINUE_HOLDING', confidence=0.31398499978902, optimal_action='HOLD', timing='No immediate action needed', reasoning='Standard market conditions')",
+    "StopLossAvoidanceSignal(symbol='MAGICUSDT', current_price=0.238, entry_price=0.27, current_pnl=-0.11851851851851862, stop_loss_risk='HIGH_RISK', avoidance_strategy='CONSIDER_EXIT', confidence=0.3096198652, optimal_action='PREPARE_TO_EXIT', timing='Exit if support breaks', reasoning='Standard market conditions')",
+    "StopLossAvoidanceSignal(symbol='GALAUSDT', current_price=0.015, entry_price=0.018, current_pnl=-0.16666666666666663, stop_loss_risk='HIGH_RISK', avoidance_strategy='CONSIDER_EXIT', confidence=0.33423305627, optimal_action='PREPARE_TO_EXIT', timing='Exit if support breaks', reasoning='Standard market conditions')",
+    "StopLossAvoidanceSignal(symbol='ILVUSDT', current_price=18.93, entry_price=17.5, current_pnl=0.0817142857142857, stop_loss_risk='NO_RISK', avoidance_strategy='CONTINUE_HOLDING', confidence=0.405, optimal_action='HOLD', timing='No immediate action needed', reasoning='Positive momentum building | Strong market structure')",
+    "StopLossAvoidanceSignal(symbol='DGBUSDT', current_price=0.00814, entry_price=0.0085, current_pnl=-0.0423529411764707, stop_loss_risk='LOW_RISK', avoidance_strategy='CONSIDER_EXIT', confidence=0.43470816449, optimal_action='PREPARE_TO_EXIT', timing='Exit if support breaks', reasoning='Bullish volume divergence detected')"
+  ],
+  "portfolio_summary": {
+    "total_positions": 5,
+    "high_risk_positions": 2,
+    "avoidance_recommended": 0,
+    "total_unrealized_pnl": -0.17036929519282484
+  }
+}

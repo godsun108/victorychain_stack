@@ -1,0 +1,51 @@
+{
+  "timestamp": "2025-08-08T00:25:52.560542",
+  "single_asset_analysis": {
+    "symbol": "ADAUSDT",
+    "signal": "HOLD",
+    "confidence": 0.5,
+    "expected_return": 0.1261204256644198,
+    "regime": "bear_trending"
+  },
+  "portfolio_optimization": {
+    "assets_count": 5,
+    "quantum_coherence": 0.33137585016293003,
+    "portfolio_diversity": 3
+  },
+  "adaptive_learning": {
+    "training_samples": 100,
+    "models_trained": 3
+  },
+  "system_status": {
+    "system_active": true,
+    "total_signals_generated": 6,
+    "performance_metrics": {
+      "total_signals": 6,
+      "profitable_signals": 0,
+      "average_return": 0.0,
+      "win_rate": 0.0,
+      "sharpe_ratio": 0.0,
+      "max_drawdown": 0.0
+    },
+    "adaptive_learning_status": {
+      "models_trained": 3,
+      "last_update": "2025-08-08T00:25:52.560527"
+    },
+    "regime_detection_status": {
+      "current_regime": "bear_trending",
+      "regime_confidence": 2.291666865027628
+    },
+    "quantum_optimization_status": {
+      "coherence_history_length": 1,
+      "last_optimization": "2025-08-08T00:25:52.560533"
+    },
+    "emergency_systems": {
+      "circuit_breaker_active": false,
+      "emergency_conditions": {
+        "max_daily_loss": 0.1,
+        "max_consecutive_losses": 5,
+        "min_confidence_threshold": 0.3
+      }
+    }
+  }
+}

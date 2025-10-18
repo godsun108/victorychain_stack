@@ -1,0 +1,4 @@
+# Prometheus alert rules for Victory Trading Bot
+# Place this file at src/victory_bot/infra/alerts/live.rules.yml
+#
+# Example: copy from alerts/live.rules.yml and expand as needed

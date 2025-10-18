@@ -1,0 +1,917 @@
+#!/usr/bin/env python3
+
+"""
+AI PREDICTION ENGINE FOR BTC-FREE MICRO-CAP FRAMEWORK
+=====================================================
+Advanced prediction system using multiple AI models:
+- Token price movement prediction
+- Volume surge forecasting
+- Breakout pattern recognition
+- Risk-adjusted return predictions
+- Multi-timeframe signal fusion
+"""
+
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+import json
+import asyncio
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass, field
+import warnings
+
+warnings.filterwarnings("ignore")
+
+# Machine Learning imports
+try:
+    from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+    from sklearn.neural_network import MLPRegressor
+    from sklearn.preprocessing import StandardScaler, MinMaxScaler
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import mean_squared_error, r2_score
+    import joblib
+
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
+    print("⚠️ Scikit-learn not available. Installing...")
+
+# Time series analysis
+try:
+    import talib
+
+    TALIB_AVAILABLE = True
+except ImportError:
+    TALIB_AVAILABLE = False
+
+
+@dataclass
+class PredictionSignal:
+    """Individual prediction signal"""
+
+    symbol: str
+    prediction_type: str  # 'price', 'volume', 'breakout', 'risk'
+    timeframe: str  # '1h', '4h', '1d'
+    confidence: float  # 0-1
+    predicted_value: float
+    current_value: float
+    percentage_change: float
+    signal_strength: str  # 'weak', 'moderate', 'strong'
+    risk_level: str  # 'low', 'medium', 'high'
+    timestamp: datetime
+    model_used: str
+    feature_importance: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class TokenPrediction:
+    """Complete prediction for a token"""
+
+    symbol: str
+    current_price: float
+    predicted_prices: Dict[str, float]  # timeframe -> price
+    volume_predictions: Dict[str, float]
+    breakout_probability: float
+    risk_score: float
+    recommendation: str  # 'strong_buy', 'buy', 'hold', 'sell', 'strong_sell'
+    confidence_score: float
+    signals: List[PredictionSignal] = field(default_factory=list)
+    features_analyzed: Dict[str, float] = field(default_factory=dict)
+
+
+class AITokenPredictor:
+    """Advanced AI prediction engine for micro-cap tokens"""
+
+    def __init__(self):
+        self.models = {
+            "price_rf": None,  # Random Forest for price prediction
+            "price_gb": None,  # Gradient Boosting for price
+            "price_nn": None,  # Neural Network for price
+            "volume_rf": None,  # Random Forest for volume
+            "breakout_gb": None,  # Gradient Boosting for breakout detection
+        }
+        self.scalers = {
+            "price": StandardScaler(),
+            "volume": MinMaxScaler(),
+            "features": StandardScaler(),
+        }
+        self.feature_names = []
+        self.trained = False
+
+    def extract_technical_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Extract comprehensive technical analysis features"""
+        features = df.copy()
+
+        # Price-based features
+        features["price_sma_5"] = features["close"].rolling(5).mean()
+        features["price_sma_20"] = features["close"].rolling(20).mean()
+        features["price_sma_50"] = features["close"].rolling(50).mean()
+
+        # Price position relative to moving averages
+        features["price_vs_sma5"] = (
+            features["close"] - features["price_sma_5"]
+        ) / features["price_sma_5"]
+        features["price_vs_sma20"] = (
+            features["close"] - features["price_sma_20"]
+        ) / features["price_sma_20"]
+        features["price_vs_sma50"] = (
+            features["close"] - features["price_sma_50"]
+        ) / features["price_sma_50"]
+
+        # Volatility features
+        features["volatility_5"] = features["close"].rolling(5).std()
+        features["volatility_20"] = features["close"].rolling(20).std()
+        features["high_low_range"] = (features["high"] - features["low"]) / features[
+            "close"
+        ]
+
+        # Volume features
+        features["volume_sma_5"] = features["volume"].rolling(5).mean()
+        features["volume_sma_20"] = features["volume"].rolling(20).mean()
+        features["volume_ratio"] = features["volume"] / features["volume_sma_20"]
+        features["price_volume"] = features["close"] * features["volume"]
+
+        # Momentum features
+        features["roc_5"] = features["close"].pct_change(5)
+        features["roc_10"] = features["close"].pct_change(10)
+        features["roc_20"] = features["close"].pct_change(20)
+
+        # Technical indicators if talib available
+        if TALIB_AVAILABLE:
+            try:
+                # RSI
+                features["rsi_14"] = talib.RSI(features["close"].values, timeperiod=14)
+
+                # MACD
+                macd, macd_signal, macd_hist = talib.MACD(features["close"].values)
+                features["macd"] = macd
+                features["macd_signal"] = macd_signal
+                features["macd_histogram"] = macd_hist
+
+                # Bollinger Bands
+                bb_upper, bb_middle, bb_lower = talib.BBANDS(features["close"].values)
+                features["bb_upper"] = bb_upper
+                features["bb_lower"] = bb_lower
+                features["bb_position"] = (features["close"] - bb_lower) / (
+                    bb_upper - bb_lower
+                )
+
+                # Stochastic
+                slowk, slowd = talib.STOCH(
+                    features["high"].values,
+                    features["low"].values,
+                    features["close"].values,
+                )
+                features["stoch_k"] = slowk
+                features["stoch_d"] = slowd
+
+            except Exception as e:
+                print(f"⚠️ Technical indicators calculation failed: {e}")
+
+        # Lag features (previous values)
+        for lag in [1, 2, 3, 5]:
+            features[f"close_lag_{lag}"] = features["close"].shift(lag)
+            features[f"volume_lag_{lag}"] = features["volume"].shift(lag)
+            features[f"roc_lag_{lag}"] = features["roc_5"].shift(lag)
+
+        # Time-based features
+        if "timestamp" in features.columns:
+            features["hour"] = pd.to_datetime(features["timestamp"]).dt.hour
+            features["day_of_week"] = pd.to_datetime(features["timestamp"]).dt.dayofweek
+            features["month"] = pd.to_datetime(features["timestamp"]).dt.month
+
+        # Forward-looking targets (for training)
+        features["target_price_1h"] = features["close"].shift(-1)  # Next period price
+        features["target_price_4h"] = features["close"].shift(-4)  # 4 periods ahead
+        features["target_volume_1h"] = features["volume"].shift(-1)
+
+        # Breakout detection target
+        features["future_high"] = features["high"].rolling(5).max().shift(-5)
+        features["breakout_target"] = (
+            features["future_high"] / features["close"] - 1
+        ) > 0.1  # 10% breakout
+
+        return features
+
+    def prepare_training_data(
+        self, historical_data: Dict[str, pd.DataFrame]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Prepare training data from historical token data"""
+        all_features = []
+        all_targets = []
+
+        for symbol, df in historical_data.items():
+            if len(df) < 100:  # Need minimum data
+                continue
+
+            # Extract features
+            features_df = self.extract_technical_features(df)
+
+            # Remove rows with NaN values
+            features_df = features_df.dropna()
+
+            if len(features_df) < 50:
+                continue
+
+            # Select feature columns
+            feature_cols = [
+                col
+                for col in features_df.columns
+                if col
+                not in [
+                    "target_price_1h",
+                    "target_price_4h",
+                    "target_volume_1h",
+                    "breakout_target",
+                    "timestamp",
+                ]
+            ]
+
+            X = features_df[feature_cols].values
+            y_price = features_df["target_price_1h"].values
+
+            # Remove rows where target is NaN
+            valid_indices = ~np.isnan(y_price)
+            X = X[valid_indices]
+            y_price = y_price[valid_indices]
+
+            if len(X) > 0:
+                all_features.append(X)
+                all_targets.append(y_price)
+
+        if not all_features:
+            return np.array([]), np.array([])
+
+        # Combine all data
+        X_combined = np.vstack(all_features)
+        y_combined = np.hstack(all_targets)
+
+        # Store feature names
+        self.feature_names = feature_cols
+
+        return X_combined, y_combined
+
+    def train_models(self, historical_data: Dict[str, pd.DataFrame]):
+        """Train all prediction models"""
+        print("🤖 Training AI prediction models...")
+
+        if not ML_AVAILABLE:
+            print("❌ Machine learning libraries not available")
+            return
+
+        # Prepare training data
+        X, y = self.prepare_training_data(historical_data)
+
+        if len(X) == 0:
+            print("❌ No valid training data")
+            return
+
+        print(f"📊 Training data: {len(X)} samples, {X.shape[1]} features")
+
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+        # Scale features
+        X_train_scaled = self.scalers["features"].fit_transform(X_train)
+        X_test_scaled = self.scalers["features"].transform(X_test)
+
+        # Scale targets
+        y_train_scaled = (
+            self.scalers["price"].fit_transform(y_train.reshape(-1, 1)).ravel()
+        )
+
+        # Train models
+        models_config = {
+            "price_rf": RandomForestRegressor(
+                n_estimators=100, max_depth=10, random_state=42
+            ),
+            "price_gb": GradientBoostingRegressor(
+                n_estimators=100, max_depth=6, random_state=42
+            ),
+            "price_nn": MLPRegressor(
+                hidden_layer_sizes=(100, 50), max_iter=1000, random_state=42
+            ),
+        }
+
+        model_scores = {}
+
+        for name, model in models_config.items():
+            try:
+                print(f"  Training {name}...")
+                model.fit(X_train_scaled, y_train_scaled)
+
+                # Evaluate
+                y_pred_scaled = model.predict(X_test_scaled)
+                y_pred = (
+                    self.scalers["price"]
+                    .inverse_transform(y_pred_scaled.reshape(-1, 1))
+                    .ravel()
+                )
+
+                score = r2_score(y_test, y_pred)
+                mse = mean_squared_error(y_test, y_pred)
+
+                model_scores[name] = {"r2": score, "mse": mse}
+                self.models[name] = model
+
+                print(f"    {name}: R² = {score:.3f}, MSE = {mse:.6f}")
+
+            except Exception as e:
+                print(f"    ❌ {name} training failed: {e}")
+
+        # Save best model info
+        best_model = max(model_scores.items(), key=lambda x: x[1]["r2"])
+        print(f"✅ Best model: {best_model[0]} (R² = {best_model[1]['r2']:.3f})")
+
+        self.trained = True
+
+        # Save models
+        try:
+            joblib.dump(self.models, "ai_prediction_models.pkl")
+            joblib.dump(self.scalers, "ai_prediction_scalers.pkl")
+            print("💾 Models saved to disk")
+        except Exception as e:
+            print(f"⚠️ Model saving failed: {e}")
+
+    def predict_token(self, symbol: str, current_data: pd.DataFrame) -> TokenPrediction:
+        """Generate comprehensive prediction for a token"""
+        if not self.trained or not ML_AVAILABLE:
+            return self._generate_simple_prediction(symbol, current_data)
+
+        # Extract features
+        features_df = self.extract_technical_features(current_data)
+
+        if len(features_df) == 0:
+            return self._generate_simple_prediction(symbol, current_data)
+
+        # Get latest features
+        latest_features = features_df[self.feature_names].iloc[-1].values.reshape(1, -1)
+
+        # Handle NaN values
+        if np.any(np.isnan(latest_features)):
+            latest_features = np.nan_to_num(latest_features)
+
+        # Scale features
+        latest_features_scaled = self.scalers["features"].transform(latest_features)
+
+        # Make predictions
+        predictions = {}
+        confidences = {}
+
+        for model_name, model in self.models.items():
+            if model is None:
+                continue
+
+            try:
+                pred_scaled = model.predict(latest_features_scaled)[0]
+                pred = self.scalers["price"].inverse_transform([[pred_scaled]])[0][0]
+
+                # Calculate confidence based on model performance
+                if hasattr(model, "score"):
+                    confidence = max(
+                        0.1,
+                        min(1.0, model.score(latest_features_scaled, [pred_scaled])),
+                    )
+                else:
+                    confidence = 0.7  # Default confidence
+
+                predictions[model_name] = pred
+                confidences[model_name] = confidence
+
+            except Exception as e:
+                continue
+
+        # Ensemble prediction
+        if predictions:
+            weights = np.array(list(confidences.values()))
+            weights = weights / weights.sum()
+
+            ensemble_pred = np.average(list(predictions.values()), weights=weights)
+            ensemble_confidence = np.mean(list(confidences.values()))
+        else:
+            ensemble_pred = current_data["close"].iloc[-1]
+            ensemble_confidence = 0.1
+
+        # Calculate percentage change
+        current_price = current_data["close"].iloc[-1]
+        pct_change = (ensemble_pred - current_price) / current_price * 100
+
+        # Determine recommendation
+        if pct_change > 10 and ensemble_confidence > 0.7:
+            recommendation = "strong_buy"
+        elif pct_change > 5 and ensemble_confidence > 0.5:
+            recommendation = "buy"
+        elif pct_change < -10 and ensemble_confidence > 0.7:
+            recommendation = "strong_sell"
+        elif pct_change < -5 and ensemble_confidence > 0.5:
+            recommendation = "sell"
+        else:
+            recommendation = "hold"
+
+        # Create prediction signals
+        signals = []
+        for model_name, pred_price in predictions.items():
+            signal = PredictionSignal(
+                symbol=symbol,
+                prediction_type="price",
+                timeframe="1h",
+                confidence=confidences[model_name],
+                predicted_value=pred_price,
+                current_value=current_price,
+                percentage_change=(pred_price - current_price) / current_price * 100,
+                signal_strength=(
+                    "strong"
+                    if confidences[model_name] > 0.7
+                    else "moderate" if confidences[model_name] > 0.5 else "weak"
+                ),
+                risk_level=(
+                    "low"
+                    if abs((pred_price - current_price) / current_price) < 0.05
+                    else (
+                        "medium"
+                        if abs((pred_price - current_price) / current_price) < 0.15
+                        else "high"
+                    )
+                ),
+                timestamp=datetime.now(),
+                model_used=model_name,
+            )
+            signals.append(signal)
+
+        # Calculate features for analysis
+        features_analyzed = {}
+        if len(features_df) > 0:
+            latest_row = features_df.iloc[-1]
+            features_analyzed = {
+                "rsi": latest_row.get("rsi_14", 50),
+                "price_vs_sma20": latest_row.get("price_vs_sma20", 0),
+                "volume_ratio": latest_row.get("volume_ratio", 1),
+                "volatility": latest_row.get("volatility_20", 0),
+                "momentum_5d": latest_row.get("roc_5", 0),
+            }
+
+        return TokenPrediction(
+            symbol=symbol,
+            current_price=current_price,
+            predicted_prices={"1h": ensemble_pred},
+            volume_predictions={
+                "1h": current_data["volume"].iloc[-1] * 1.1
+            },  # Simple volume prediction
+            breakout_probability=min(
+                1.0, max(0.0, pct_change / 20)
+            ),  # Rough breakout probability
+            risk_score=abs(pct_change) / 20,  # Risk based on predicted volatility
+            recommendation=recommendation,
+            confidence_score=ensemble_confidence,
+            signals=signals,
+            features_analyzed=features_analyzed,
+        )
+
+    def _generate_simple_prediction(
+        self, symbol: str, current_data: pd.DataFrame
+    ) -> TokenPrediction:
+        """Generate simple prediction when ML models not available"""
+        current_price = current_data["close"].iloc[-1]
+
+        # Simple technical analysis
+        sma_5 = current_data["close"].rolling(5).mean().iloc[-1]
+        sma_20 = current_data["close"].rolling(20).mean().iloc[-1]
+        volume_avg = current_data["volume"].rolling(10).mean().iloc[-1]
+
+        # Simple prediction logic
+        if current_price > sma_5 > sma_20:
+            pred_change = 3.0  # 3% up
+            recommendation = "buy"
+        elif current_price < sma_5 < sma_20:
+            pred_change = -3.0  # 3% down
+            recommendation = "sell"
+        else:
+            pred_change = 0.5  # 0.5% up
+            recommendation = "hold"
+
+        predicted_price = current_price * (1 + pred_change / 100)
+
+        signal = PredictionSignal(
+            symbol=symbol,
+            prediction_type="price",
+            timeframe="1h",
+            confidence=0.4,  # Low confidence for simple prediction
+            predicted_value=predicted_price,
+            current_value=current_price,
+            percentage_change=pred_change,
+            signal_strength="weak",
+            risk_level="medium",
+            timestamp=datetime.now(),
+            model_used="simple_technical",
+        )
+
+        return TokenPrediction(
+            symbol=symbol,
+            current_price=current_price,
+            predicted_prices={"1h": predicted_price},
+            volume_predictions={"1h": volume_avg},
+            breakout_probability=0.3,
+            risk_score=0.5,
+            recommendation=recommendation,
+            confidence_score=0.4,
+            signals=[signal],
+            features_analyzed={"simple_trend": pred_change},
+        )
+
+
+class MicroCapPredictionEngine:
+    """Complete prediction engine for micro-cap framework"""
+
+    def __init__(self):
+        self.predictor = AITokenPredictor()
+        self.token_predictions: Dict[str, TokenPrediction] = {}
+        self.prediction_history: List[Dict] = []
+
+    def load_historical_data(self, tokens: List[str]) -> Dict[str, pd.DataFrame]:
+        """Load historical data for training (simulated for demo)"""
+        historical_data = {}
+
+        for symbol in tokens[:10]:  # Limit for demo
+            # Generate synthetic historical data
+            dates = pd.date_range(start="2024-01-01", end="2025-08-06", freq="1H")
+            n_points = len(dates)
+
+            # Generate realistic price movement
+            returns = np.random.normal(0, 0.02, n_points)  # 2% hourly volatility
+            prices = 100 * np.exp(np.cumsum(returns))  # Geometric Brownian motion
+
+            # Generate volume correlated with price movement
+            volume_base = np.random.lognormal(10, 1, n_points)
+            volume = volume_base * (
+                1 + np.abs(returns) * 5
+            )  # Higher volume on big moves
+
+            df = pd.DataFrame(
+                {
+                    "timestamp": dates,
+                    "open": prices * np.random.uniform(0.99, 1.01, n_points),
+                    "high": prices * np.random.uniform(1.0, 1.05, n_points),
+                    "low": prices * np.random.uniform(0.95, 1.0, n_points),
+                    "close": prices,
+                    "volume": volume,
+                }
+            )
+
+            historical_data[symbol] = df
+
+        return historical_data
+
+    async def train_prediction_models(self, available_tokens: List[str]):
+        """Train prediction models with historical data"""
+        print("🎓 Training micro-cap prediction models...")
+
+        # Load historical data
+        historical_data = self.load_historical_data(available_tokens)
+
+        # Train models
+        self.predictor.train_models(historical_data)
+
+        print("✅ Prediction models trained")
+
+    async def generate_predictions(
+        self, tokens_data: Dict[str, Dict]
+    ) -> Dict[str, TokenPrediction]:
+        """Generate predictions for all tokens"""
+        print("🔮 Generating AI predictions...")
+
+        predictions = {}
+
+        for symbol, token_data in tokens_data.items():
+            try:
+                # Create DataFrame from current data
+                current_df = pd.DataFrame(
+                    [
+                        {
+                            "timestamp": datetime.now(),
+                            "open": token_data.get("price", 1) * 0.99,
+                            "high": token_data.get(
+                                "high_24h", token_data.get("price", 1) * 1.05
+                            ),
+                            "low": token_data.get(
+                                "low_24h", token_data.get("price", 1) * 0.95
+                            ),
+                            "close": token_data.get("price", 1),
+                            "volume": token_data.get("volume_24h_usdt", 1000000),
+                        }
+                    ]
+                )
+
+                # Add some historical context (simplified)
+                for i in range(1, 25):  # 24 hours of hourly data
+                    price_change = np.random.normal(0, 0.01)  # 1% hourly volatility
+                    prev_price = current_df.iloc[0]["close"] * (
+                        1 - price_change * i * 0.1
+                    )
+
+                    row = {
+                        "timestamp": datetime.now() - timedelta(hours=i),
+                        "open": prev_price * 0.99,
+                        "high": prev_price * 1.05,
+                        "low": prev_price * 0.95,
+                        "close": prev_price,
+                        "volume": current_df.iloc[0]["volume"]
+                        * np.random.uniform(0.5, 1.5),
+                    }
+                    current_df = pd.concat(
+                        [pd.DataFrame([row]), current_df], ignore_index=True
+                    )
+
+                # Generate prediction
+                prediction = self.predictor.predict_token(symbol, current_df)
+                predictions[symbol] = prediction
+
+            except Exception as e:
+                print(f"❌ Prediction failed for {symbol}: {e}")
+                continue
+
+        self.token_predictions = predictions
+        print(f"✅ Generated predictions for {len(predictions)} tokens")
+
+        return predictions
+
+    def get_top_predictions(
+        self, prediction_type: str = "buy", top_n: int = 10
+    ) -> List[TokenPrediction]:
+        """Get top predictions by type"""
+        filtered_predictions = []
+
+        for prediction in self.token_predictions.values():
+            if prediction_type == "buy" and prediction.recommendation in [
+                "buy",
+                "strong_buy",
+            ]:
+                filtered_predictions.append(prediction)
+            elif prediction_type == "sell" and prediction.recommendation in [
+                "sell",
+                "strong_sell",
+            ]:
+                filtered_predictions.append(prediction)
+            elif (
+                prediction_type == "breakout" and prediction.breakout_probability > 0.7
+            ):
+                filtered_predictions.append(prediction)
+            elif (
+                prediction_type == "high_confidence"
+                and prediction.confidence_score > 0.7
+            ):
+                filtered_predictions.append(prediction)
+
+        # Sort by confidence and expected return
+        if prediction_type in ["buy", "strong_buy"]:
+            filtered_predictions.sort(
+                key=lambda x: x.confidence_score
+                * (x.predicted_prices.get("1h", x.current_price) / x.current_price - 1),
+                reverse=True,
+            )
+        else:
+            filtered_predictions.sort(key=lambda x: x.confidence_score, reverse=True)
+
+        return filtered_predictions[:top_n]
+
+    def generate_prediction_report(self) -> Dict:
+        """Generate comprehensive prediction report"""
+        if not self.token_predictions:
+            return {}
+
+        # Calculate summary statistics
+        total_predictions = len(self.token_predictions)
+        buy_signals = len(
+            [
+                p
+                for p in self.token_predictions.values()
+                if p.recommendation in ["buy", "strong_buy"]
+            ]
+        )
+        sell_signals = len(
+            [
+                p
+                for p in self.token_predictions.values()
+                if p.recommendation in ["sell", "strong_sell"]
+            ]
+        )
+        high_confidence = len(
+            [p for p in self.token_predictions.values() if p.confidence_score > 0.7]
+        )
+
+        avg_confidence = np.mean(
+            [p.confidence_score for p in self.token_predictions.values()]
+        )
+        avg_predicted_return = np.mean(
+            [
+                (p.predicted_prices.get("1h", p.current_price) / p.current_price - 1)
+                * 100
+                for p in self.token_predictions.values()
+            ]
+        )
+
+        # Get top predictions
+        top_buys = self.get_top_predictions("buy", 5)
+        top_sells = self.get_top_predictions("sell", 5)
+        top_breakouts = self.get_top_predictions("breakout", 5)
+
+        report = {
+            "timestamp": datetime.now().isoformat(),
+            "summary": {
+                "total_predictions": total_predictions,
+                "buy_signals": buy_signals,
+                "sell_signals": sell_signals,
+                "hold_signals": total_predictions - buy_signals - sell_signals,
+                "high_confidence_predictions": high_confidence,
+                "average_confidence": avg_confidence,
+                "average_predicted_return": avg_predicted_return,
+            },
+            "top_buy_signals": [
+                {
+                    "symbol": p.symbol,
+                    "current_price": p.current_price,
+                    "predicted_price": p.predicted_prices.get("1h", p.current_price),
+                    "expected_return": (
+                        (
+                            p.predicted_prices.get("1h", p.current_price)
+                            / p.current_price
+                        )
+                        - 1
+                    )
+                    * 100,
+                    "confidence": p.confidence_score,
+                    "recommendation": p.recommendation,
+                    "risk_score": p.risk_score,
+                }
+                for p in top_buys
+            ],
+            "top_sell_signals": [
+                {
+                    "symbol": p.symbol,
+                    "current_price": p.current_price,
+                    "predicted_price": p.predicted_prices.get("1h", p.current_price),
+                    "expected_return": (
+                        (
+                            p.predicted_prices.get("1h", p.current_price)
+                            / p.current_price
+                        )
+                        - 1
+                    )
+                    * 100,
+                    "confidence": p.confidence_score,
+                    "recommendation": p.recommendation,
+                    "risk_score": p.risk_score,
+                }
+                for p in top_sells
+            ],
+            "breakout_candidates": [
+                {
+                    "symbol": p.symbol,
+                    "current_price": p.current_price,
+                    "breakout_probability": p.breakout_probability,
+                    "confidence": p.confidence_score,
+                    "expected_return": (
+                        (
+                            p.predicted_prices.get("1h", p.current_price)
+                            / p.current_price
+                        )
+                        - 1
+                    )
+                    * 100,
+                }
+                for p in top_breakouts
+            ],
+            "detailed_predictions": {
+                symbol: {
+                    "current_price": p.current_price,
+                    "predicted_prices": p.predicted_prices,
+                    "recommendation": p.recommendation,
+                    "confidence_score": p.confidence_score,
+                    "risk_score": p.risk_score,
+                    "breakout_probability": p.breakout_probability,
+                    "features_analyzed": p.features_analyzed,
+                    "signals_count": len(p.signals),
+                }
+                for symbol, p in self.token_predictions.items()
+            },
+        }
+
+        return report
+
+    def print_prediction_summary(self):
+        """Print detailed prediction summary"""
+        if not self.token_predictions:
+            print("❌ No predictions available")
+            return
+
+        print("\n🔮 AI PREDICTION SUMMARY")
+        print("=" * 30)
+
+        # Summary stats
+        total = len(self.token_predictions)
+        buys = len(
+            [
+                p
+                for p in self.token_predictions.values()
+                if p.recommendation in ["buy", "strong_buy"]
+            ]
+        )
+        sells = len(
+            [
+                p
+                for p in self.token_predictions.values()
+                if p.recommendation in ["sell", "strong_sell"]
+            ]
+        )
+        holds = total - buys - sells
+
+        print(f"Total predictions: {total}")
+        print(f"Buy signals: {buys} ({buys/total*100:.1f}%)")
+        print(f"Sell signals: {sells} ({sells/total*100:.1f}%)")
+        print(f"Hold signals: {holds} ({holds/total*100:.1f}%)")
+
+        # Top buy recommendations
+        top_buys = self.get_top_predictions("buy", 5)
+        if top_buys:
+            print(f"\n🚀 TOP BUY SIGNALS:")
+            for i, p in enumerate(top_buys):
+                expected_return = (
+                    (p.predicted_prices.get("1h", p.current_price) / p.current_price)
+                    - 1
+                ) * 100
+                print(
+                    f"  {i+1}. {p.symbol:12s} | Price: ${p.current_price:.6f} | "
+                    f"Expected: +{expected_return:5.1f}% | Confidence: {p.confidence_score:.2f}"
+                )
+
+        # Top sell recommendations
+        top_sells = self.get_top_predictions("sell", 5)
+        if top_sells:
+            print(f"\n📉 TOP SELL SIGNALS:")
+            for i, p in enumerate(top_sells):
+                expected_return = (
+                    (p.predicted_prices.get("1h", p.current_price) / p.current_price)
+                    - 1
+                ) * 100
+                print(
+                    f"  {i+1}. {p.symbol:12s} | Price: ${p.current_price:.6f} | "
+                    f"Expected: {expected_return:5.1f}% | Confidence: {p.confidence_score:.2f}"
+                )
+
+        # Breakout candidates
+        breakouts = self.get_top_predictions("breakout", 3)
+        if breakouts:
+            print(f"\n💥 BREAKOUT CANDIDATES:")
+            for i, p in enumerate(breakouts):
+                print(
+                    f"  {i+1}. {p.symbol:12s} | Breakout prob: {p.breakout_probability:.2f} | "
+                    f"Confidence: {p.confidence_score:.2f}"
+                )
+
+
+async def demo_prediction_engine():
+    """Demo the AI prediction engine"""
+    print("🎭 DEMO: AI Prediction Engine for Micro-Cap Framework")
+    print("=" * 55)
+
+    # Load token data
+    try:
+        with open("binance_us_all_tokens_summary.json", "r") as f:
+            token_summary = json.load(f)
+        available_tokens = token_summary["all_available_tokens"][:20]  # Limit for demo
+
+        with open("all_binance_us_tokens.json", "r") as f:
+            tokens_data = json.load(f)
+
+        # Convert to dict
+        tokens_dict = {token["symbol"]: token for token in tokens_data}
+
+    except FileNotFoundError:
+        print("❌ Token data files not found")
+        return
+
+    # Initialize prediction engine
+    engine = MicroCapPredictionEngine()
+
+    # Train models
+    await engine.train_prediction_models(available_tokens)
+
+    # Generate predictions
+    predictions = await engine.generate_predictions(tokens_dict)
+
+    # Print summary
+    engine.print_prediction_summary()
+
+    # Generate and save report
+    report = engine.generate_prediction_report()
+
+    with open("ai_prediction_report.json", "w") as f:
+        json.dump(report, f, indent=2, default=str)
+
+    print(f"\n💾 Prediction report saved: ai_prediction_report.json")
+    print("🏁 AI Prediction Engine Demo Complete")
+
+
+if __name__ == "__main__":
+    asyncio.run(demo_prediction_engine())

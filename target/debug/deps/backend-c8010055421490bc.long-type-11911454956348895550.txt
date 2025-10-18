@@ -1,0 +1,2 @@
+fn(axum::extract::State<DashboardState>, Json<TradingCommand>) -> impl futures_util::Future<Output = Result<Json<HashMap<std::string::String, std::string::String>>, axum::http::StatusCode>> {execute_command}
+fn(axum::extract::State<DashboardState>, Json<TradingCommand>) -> impl futures_util::Future<Output = Result<Json<HashMap<std::string::String, std::string::String>>, axum::http::StatusCode>> {execute_command}: Handler<_, _>

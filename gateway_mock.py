@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+import os, json, time, hmac, hashlib, uuid
+from typing import Any, Dict
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+
+APPROVAL_SECRET = os.getenv("APPROVAL_SECRET", "")
+EXPORTS_DIR = os.getenv("EXPORTS_DIR", "runtime/exports")
+DB_PATH = os.path.join(EXPORTS_DIR, "gateway_db.jsonl")
+
+app = FastAPI(title="VictoryChain Gateway Mock", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+)
+
+os.makedirs(EXPORTS_DIR, exist_ok=True)
+
+
+# ---- Models ----
+class SessionSummary(BaseModel):
+    ts: int
+    session_id: str
+    ledger_head: str | None = None
+    ledger_tail: str | None = None
+    trades_closed: int
+    realized_pnl_usd: float
+    iso_banked_usd: float
+    iso_breakdown: Dict[str, float] = Field(default_factory=dict)
+    signature: str | None = None
+
+
+class DischargeRequest(BaseModel):
+    session_id: str
+    vault_split: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "Sanctuary": 0.60,
+            "Stewardship": 0.20,
+            "Flamekeeper": 0.10,
+            "Restoration": 0.10,
+        }
+    )
+    token_price_usd: float = 1.0  # 1 token = $1 for mock purposes
+
+
+# ---- Helpers ----
+
+
+def hmac_sig(secret: str, payload: Dict[str, Any]) -> str:
+    # compute HMAC over payload WITHOUT signature field
+    clean = {k: v for k, v in payload.items() if k != "signature"}
+    msg = json.dumps(clean, separators=(",", ":"), sort_keys=True).encode()
+    return hmac.new(secret.encode(), msg, hashlib.sha256).hexdigest()
+
+
+def db_write(kind: str, obj: Dict[str, Any]):
+    rec = {"ts": int(time.time()), "kind": kind, "data": obj}
+    with open(DB_PATH, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec) + "\n")
+
+
+def latest(kind: str) -> Dict[str, Any] | None:
+    out = None
+    if not os.path.exists(DB_PATH):
+        return None
+    with open(DB_PATH, "r", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            try:
+                rec = json.loads(line)
+                if rec.get("kind") == kind:
+                    out = rec
+            except Exception:
+                continue
+    return out
+
+
+# ---- Endpoints ----
+@app.post("/anchor/session")
+async def anchor_session(payload: SessionSummary):
+    data = json.loads(payload.model_dump_json())
+    if APPROVAL_SECRET:
+        expected = hmac_sig(APPROVAL_SECRET, data)
+        if not data.get("signature"):
+            # attach if missing
+            data["signature"] = expected
+        elif data["signature"] != expected:
+            raise HTTPException(status_code=401, detail="invalid signature")
+    import uuid as _uuid
+
+    tx = f"mock-{_uuid.uuid4().hex[:16]}"
+    data["tx"] = tx
+    db_write("session_anchor", data)
+    return {"ok": True, "tx": tx, "session_id": data["session_id"]}
+
+
+@app.post("/discharge")
+async def discharge(req: DischargeRequest):
+    # find latest session anchor with this session_id
+    sess = None
+    if os.path.exists(DB_PATH):
+        with open(DB_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    rec = json.loads(line)
+                    if (
+                        rec.get("kind") == "session_anchor"
+                        and rec.get("data", {}).get("session_id") == req.session_id
+                    ):
+                        sess = rec["data"]
+                except Exception:
+                    continue
+    if not sess:
+        raise HTTPException(status_code=404, detail="session not anchored")
+    pnl = float(sess.get("realized_pnl_usd", 0.0))
+    if pnl <= 0:
+        raise HTTPException(status_code=400, detail="no positive PnL to discharge")
+    # compute mint per vault (mock mint: tokens = pnl_usd / price * split)
+    total_tokens = pnl / max(req.token_price_usd, 1e-9)
+    mints = {
+        vault: round(total_tokens * frac, 6) for vault, frac in req.vault_split.items()
+    }
+    tx = f"mock-mint-{uuid.uuid4().hex[:12]}"
+    receipt = {
+        "tx": tx,
+        "session_id": req.session_id,
+        "pnl_usd": pnl,
+        "token_price_usd": req.token_price_usd,
+        "minted": mints,
+        "vault_split": req.vault_split,
+    }
+    db_write("discharge", receipt)
+    return {"ok": True, "tx": tx, "minted": mints}
+
+
+@app.get("/sessions/latest")
+async def sessions_latest():
+    rec = latest("session_anchor")
+    return {"ok": True, "latest": rec}
+
+
+@app.get("/discharges/latest")
+async def discharges_latest():
+    rec = latest("discharge")
+    return {"ok": True, "latest": rec}

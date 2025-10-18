@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-08-09T12:43:20.817619",
+  "portfolio_value": 100000.0,
+  "total_pnl": 0.0,
+  "daily_pnl": 0.0,
+  "roi_percentage": 0.0,
+  "total_trades": 0,
+  "active_positions": 0,
+  "iso_holdings": {},
+  "iso_total_value": 0,
+  "cash_reserve": 15000.0,
+  "emergency_reserve": 10000.0,
+  "avg_profit_per_trade": 0.0
+}

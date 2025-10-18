@@ -1,0 +1,766 @@
+#!/usr/bin/env python3
+
+"""
+📊 ENHANCED BACKTRADER MCP STRATEGY
+Advanced Backtrader integration with VictoryChain MCP
+Features: AI-powered signals, dynamic risk management, real-time portfolio optimization
+"""
+
+import sys
+import os
+from typing import Dict, Optional, Tuple, Union, List
+import numpy as np
+import asyncio
+from datetime import datetime, timedelta
+import logging
+
+# Add the project root to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+try:
+    import backtrader as bt
+
+    backtrader_available = True
+except ImportError:
+    # Create mock Backtrader classes for development
+    class MockStrategy:
+        def __init__(self):
+            self.params = {}
+            self.datas = []
+
+        def log(self, txt, dt=None):
+            print(f"{datetime.now()}: {txt}")
+
+        def next(self):
+            pass
+
+    class MockBT:
+        Strategy = MockStrategy
+
+        class indicators:
+            @staticmethod
+            def RSI(data, period=14):
+                return np.random.random(100) * 100
+
+            @staticmethod
+            def MACD(data, period_me1=12, period_me2=26, period_signal=9):
+                class MockMACD:
+                    def __init__(self):
+                        self.macd = np.random.random(100)
+                        self.signal = np.random.random(100)
+
+                return MockMACD()
+
+    bt = MockBT()
+    backtrader_available = False
+
+try:
+    from src.open_source.enhanced_mcp_client import (
+        EnhancedMCPClient,
+        get_global_mcp_client,
+    )
+except ImportError:
+    EnhancedMCPClient = None
+    get_global_mcp_client = None
+
+logger = logging.getLogger(__name__)
+
+
+class EnhancedVictoryChainMCPStrategy(bt.Strategy):
+    """
+    Enhanced Backtrader strategy with VictoryChain MCP integration
+
+    Features:
+    - AI-powered entry/exit signals
+    - Dynamic position sizing based on risk assessment
+    - Real-time portfolio optimization
+    - Multi-timeframe analysis
+    - Advanced risk management
+    - Performance analytics
+    """
+
+    params = (
+        # Technical Analysis Parameters
+        ("rsi_period", 14),
+        ("rsi_upper", 75),
+        ("rsi_lower", 30),
+        ("macd_fast", 12),
+        ("macd_slow", 26),
+        ("macd_signal", 9),
+        # AI Integration Parameters
+        ("ai_signal_weight", 0.7),
+        ("ai_confidence_threshold", 0.65),
+        ("use_ai_signals", True),
+        ("use_ai_risk_management", True),
+        ("use_dynamic_sizing", True),
+        # Risk Management Parameters
+        ("risk_threshold", 8.0),
+        ("max_portfolio_heat", 0.8),
+        ("max_position_size_pct", 0.3),
+        ("base_position_size_pct", 0.1),
+        # Strategy Mode
+        ("strategy_mode", "balanced"),  # conservative, balanced, aggressive
+        # MCP Configuration
+        ("mcp_server_url", "http://localhost:8080"),
+        ("mcp_update_frequency", 60),  # seconds
+        # Performance Tracking
+        ("enable_detailed_logging", True),
+        ("track_ai_performance", True),
+    )
+
+    def __init__(self):
+        # Technical indicators
+        self.rsi = bt.indicators.RSI(period=self.params.rsi_period)
+        self.macd = bt.indicators.MACD(
+            period_me1=self.params.macd_fast,
+            period_me2=self.params.macd_slow,
+            period_signal=self.params.macd_signal,
+        )
+
+        # Order management
+        self.order = None
+        self.buy_price = None
+        self.buy_comm = None
+
+        # MCP integration
+        self.mcp_client = None
+        self.mcp_cache = {}
+        self.last_mcp_update = {}
+        self.ai_signals = {}
+        self.market_conditions = {}
+
+        # Performance tracking
+        self.trades_count = 0
+        self.winning_trades = 0
+        self.ai_trade_performance = []
+        self.strategy_metrics = {}
+
+        # Position management
+        self.current_position_size = 0
+        self.position_history = []
+
+        # Initialize MCP connection
+        self._init_mcp_connection()
+
+        if self.params.enable_detailed_logging:
+            self.log(f"🚀 Enhanced VictoryChain MCP Strategy initialized")
+            self.log(f"Strategy mode: {self.params.strategy_mode}")
+            self.log(f"AI signals enabled: {self.params.use_ai_signals}")
+            self.log(
+                f"AI risk management enabled: {self.params.use_ai_risk_management}"
+            )
+
+    def _init_mcp_connection(self):
+        """Initialize MCP connection"""
+        try:
+            if EnhancedMCPClient and get_global_mcp_client:
+                self.mcp_client = get_global_mcp_client()
+                self.log("✅ MCP client initialized for Backtrader strategy")
+            else:
+                self.log("⚠️  Enhanced MCP client not available - using fallback mode")
+        except Exception as e:
+            self.log(f"❌ Failed to initialize MCP connection: {e}")
+
+    def log(self, txt, dt=None):
+        """Enhanced logging function"""
+        dt = dt or self.datas[0].datetime.date(0)
+        timestamp = dt.isoformat() if hasattr(dt, "isoformat") else str(dt)
+        print(f"{timestamp}: {txt}")
+
+        # Optional: Write to file for detailed analysis
+        if self.params.enable_detailed_logging:
+            try:
+                with open("backtrader_mcp_strategy.log", "a") as f:
+                    f.write(f"{timestamp}: {txt}\n")
+            except Exception:
+                pass  # Continue if logging fails
+
+    def get_mcp_data_sync(self, method: str, **kwargs) -> Optional[Dict]:
+        """Synchronous wrapper for MCP data retrieval"""
+        try:
+            if self.mcp_client:
+                return self.mcp_client.sync_call(
+                    self._get_mcp_data_async(method, **kwargs)
+                )
+            return self._fallback_data(method, **kwargs)
+        except Exception as e:
+            self.log(f"MCP sync call failed: {e}")
+            return self._fallback_data(method, **kwargs)
+
+    async def _get_mcp_data_async(self, method: str, **kwargs) -> Optional[Dict]:
+        """Async MCP data retrieval"""
+        try:
+            if method == "market_analysis":
+                symbol = kwargs.get("symbol", "MAGIC")
+                return await self.mcp_client.get_market_data(symbol)
+
+            elif method == "trading_signal":
+                return await self.mcp_client.generate_trading_signal(
+                    symbol=kwargs.get("symbol", "MAGIC"),
+                    strategy=kwargs.get("strategy", "momentum"),
+                    risk_tolerance=str(self.params.strategy_mode),
+                )
+
+            elif method == "risk_metrics":
+                return await self.mcp_client.get_risk_metrics()
+
+            elif method == "portfolio_optimization":
+                return await self.mcp_client.optimize_portfolio(
+                    target_risk=kwargs.get("target_risk", 0.15),
+                    max_position_size=float(self.params.max_position_size_pct),
+                )
+
+            return None
+        except Exception as e:
+            self.log(f"MCP async call failed: {e}")
+            return None
+
+    def _fallback_data(self, method: str, **kwargs) -> Dict:
+        """Fallback data when MCP is unavailable"""
+        fallback_data = {
+            "market_analysis": {
+                "trend": {"direction": "neutral", "strength": 0.5},
+                "technical_indicators": {
+                    "rsi": 50.0,
+                    "macd_signal": "NEUTRAL",
+                    "sentiment_score": 0.5,
+                },
+                "volatility": 0.05,
+                "volume_profile": "normal",
+            },
+            "trading_signal": {
+                "signal_strength": 0.0,
+                "confidence": 0.5,
+                "direction": "HOLD",
+                "entry_price": 0.0,
+                "stop_loss": 0.0,
+                "take_profit": 0.0,
+                "reasoning": "Fallback mode - no MCP connection",
+            },
+            "risk_metrics": {
+                "overall_risk_score": 5.0,
+                "portfolio_heat": 0.5,
+                "var_95": 0.1,
+                "sharpe_ratio": 1.0,
+                "max_drawdown": 0.15,
+                "position_concentration": 0.5,
+            },
+            "portfolio_optimization": {
+                "recommendations": {},
+                "optimal_allocation": {},
+                "rebalance_needed": False,
+                "suggested_position_size": self.params.base_position_size_pct,
+            },
+        }
+
+        return fallback_data.get(method, {})
+
+    def update_mcp_cache(self):
+        """Update MCP data cache periodically"""
+        try:
+            current_time = datetime.now().timestamp()
+
+            # Update market analysis every 60 seconds
+            if (
+                current_time - self.last_mcp_update.get("market_analysis", 0)
+                > self.params.mcp_update_frequency
+            ):
+                market_data = self.get_mcp_data_sync("market_analysis")
+                if market_data:
+                    self.market_conditions = market_data
+                    self.last_mcp_update["market_analysis"] = current_time
+
+            # Update AI signals every 30 seconds
+            if current_time - self.last_mcp_update.get("trading_signal", 0) > 30:
+                signal_data = self.get_mcp_data_sync("trading_signal")
+                if signal_data:
+                    self.ai_signals = signal_data
+                    self.last_mcp_update["trading_signal"] = current_time
+
+                    if self.params.enable_detailed_logging:
+                        self.log(
+                            f"🤖 AI Signal Update: {signal_data.get('direction', 'HOLD')} "
+                            f"(Strength: {signal_data.get('signal_strength', 0):.2f}, "
+                            f"Confidence: {signal_data.get('confidence', 0):.2f})"
+                        )
+
+        except Exception as e:
+            self.log(f"MCP cache update failed: {e}")
+
+    def calculate_position_size(self) -> float:
+        """Calculate dynamic position size based on AI and risk metrics"""
+        try:
+            if not self.params.use_dynamic_sizing:
+                return self.params.base_position_size_pct
+
+            # Get AI signal strength and confidence
+            signal_strength = self.ai_signals.get("signal_strength", 0.0)
+            confidence = self.ai_signals.get("confidence", 0.5)
+
+            # Base size from AI confidence
+            ai_multiplier = abs(signal_strength) * confidence
+
+            # Risk adjustment
+            risk_data = self.get_mcp_data_sync("risk_metrics")
+            risk_multiplier = 1.0
+
+            if risk_data:
+                risk_score = risk_data.get("overall_risk_score", 5.0)
+                portfolio_heat = risk_data.get("portfolio_heat", 0.5)
+
+                # Reduce size in high risk conditions
+                if risk_score > 7.0:
+                    risk_multiplier *= 0.7
+                elif risk_score > 8.5:
+                    risk_multiplier *= 0.5
+
+                if portfolio_heat > 0.8:
+                    risk_multiplier *= 0.6
+
+            # Market condition adjustment
+            market_trend = self.market_conditions.get("trend", {}).get(
+                "direction", "neutral"
+            )
+            volatility = self.market_conditions.get("volatility", 0.05)
+
+            market_multiplier = 1.0
+            if market_trend == "bullish" and signal_strength > 0:
+                market_multiplier = 1.2
+            elif market_trend == "bearish" and signal_strength < 0:
+                market_multiplier = 1.2
+
+            # Volatility adjustment
+            if volatility > 0.08:
+                market_multiplier *= 0.8
+            elif volatility < 0.03:
+                market_multiplier *= 1.1
+
+            # Strategy mode adjustment
+            mode_multiplier = {
+                "conservative": 0.7,
+                "balanced": 1.0,
+                "aggressive": 1.3,
+            }.get(str(self.params.strategy_mode), 1.0)
+
+            # Calculate final size
+            final_multiplier = (
+                ai_multiplier * risk_multiplier * market_multiplier * mode_multiplier
+            )
+
+            # Apply bounds
+            base_size = self.params.base_position_size_pct
+            max_size = self.params.max_position_size_pct
+
+            final_size = base_size * (1 + final_multiplier)
+            final_size = max(base_size * 0.5, min(max_size, final_size))
+
+            if self.params.enable_detailed_logging:
+                self.log(
+                    f"📊 Position Size Calc: Base={base_size:.2%}, "
+                    f"AI={ai_multiplier:.2f}, Risk={risk_multiplier:.2f}, "
+                    f"Market={market_multiplier:.2f}, Final={final_size:.2%}"
+                )
+
+            return final_size
+
+        except Exception as e:
+            self.log(f"Position sizing calculation failed: {e}")
+            return self.params.base_position_size_pct
+
+    def analyze_entry_conditions(self) -> Tuple[bool, float, str]:
+        """Comprehensive entry condition analysis"""
+        try:
+            # === Technical Analysis ===
+
+            current_rsi = self.rsi[0]
+            current_macd = self.macd.macd[0]
+            current_signal = self.macd.signal[0]
+
+            # Basic TA conditions
+            ta_conditions = {
+                "rsi_oversold": current_rsi < self.params.rsi_lower,
+                "macd_bullish": current_macd > current_signal,
+                "macd_momentum": current_macd > self.macd.macd[-1],
+            }
+
+            ta_score = sum(ta_conditions.values()) / len(ta_conditions)
+
+            # === AI Signal Analysis ===
+
+            ai_score = 0.5  # Neutral default
+            ai_reasoning = "No AI signal available"
+
+            if self.params.use_ai_signals and self.ai_signals:
+                signal_strength = self.ai_signals.get("signal_strength", 0.0)
+                confidence = self.ai_signals.get("confidence", 0.0)
+                direction = self.ai_signals.get("direction", "HOLD")
+                ai_reasoning = self.ai_signals.get("reasoning", "AI analysis")
+
+                if direction == "BUY" and signal_strength > 0:
+                    ai_score = signal_strength * confidence
+                elif direction == "SELL" or signal_strength < 0:
+                    ai_score = 0.0  # Bearish signal
+
+            # === Risk Management Check ===
+
+            risk_approved = True
+            risk_reason = "Risk approved"
+
+            if self.params.use_ai_risk_management:
+                risk_data = self.get_mcp_data_sync("risk_metrics")
+                if risk_data:
+                    risk_score = risk_data.get("overall_risk_score", 5.0)
+                    portfolio_heat = risk_data.get("portfolio_heat", 0.5)
+
+                    if risk_score > self.params.risk_threshold:
+                        risk_approved = False
+                        risk_reason = f"Risk score too high: {risk_score}"
+
+                    if portfolio_heat > self.params.max_portfolio_heat:
+                        risk_approved = False
+                        risk_reason = f"Portfolio heat too high: {portfolio_heat:.2%}"
+
+            # === Combined Decision ===
+
+            # Weight TA and AI signals
+            combined_score = (
+                ta_score * (1 - self.params.ai_signal_weight)
+                + ai_score * self.params.ai_signal_weight
+            )
+
+            # Market condition boost
+            market_trend = self.market_conditions.get("trend", {}).get(
+                "direction", "neutral"
+            )
+            if market_trend == "bullish":
+                combined_score *= 1.1
+
+            # Final decision thresholds based on strategy mode
+            entry_threshold = {
+                "conservative": 0.8,
+                "balanced": 0.7,
+                "aggressive": 0.6,
+            }.get(str(self.params.strategy_mode), 0.7)
+
+            should_enter = (
+                combined_score >= entry_threshold
+                and risk_approved
+                and ai_score >= 0.3  # Minimum AI confidence
+            )
+
+            # Detailed reasoning
+            reasoning = (
+                f"TA={ta_score:.2f}, AI={ai_score:.2f}, Combined={combined_score:.2f}, "
+                f"Threshold={entry_threshold:.2f}, Risk={risk_reason}, AI_Reason={ai_reasoning}"
+            )
+
+            return should_enter, combined_score, reasoning
+
+        except Exception as e:
+            self.log(f"Entry analysis failed: {e}")
+            return False, 0.0, f"Analysis error: {e}"
+
+    def next(self):
+        """Main strategy logic called for each bar"""
+
+        # Skip if we have a pending order
+        if self.order:
+            return
+
+        # Update MCP data periodically
+        self.update_mcp_cache()
+
+        # Analyze entry conditions
+        should_enter, entry_score, reasoning = self.analyze_entry_conditions()
+
+        # Entry logic
+        if not self.position:
+            if should_enter:
+                # Calculate position size
+                position_size_pct = self.calculate_position_size()
+
+                # Calculate actual size
+                cash_available = self.broker.getcash()
+                position_value = cash_available * position_size_pct
+                size = position_value / self.data.close[0]
+
+                # Execute buy order
+                self.order = self.buy(size=size)
+                self.current_position_size = size
+
+                # Log the entry
+                self.log(
+                    f"🟢 BUY SIGNAL: Size={size:.2f}, Value=${position_value:.2f} "
+                    f"({position_size_pct:.2%}), Score={entry_score:.2f}"
+                )
+                self.log(f"📝 Reasoning: {reasoning}")
+
+                # Track for AI performance analysis
+                if self.params.track_ai_performance:
+                    self.ai_trade_performance.append(
+                        {
+                            "entry_time": self.datas[0].datetime.datetime(0),
+                            "entry_price": self.data.close[0],
+                            "entry_score": entry_score,
+                            "ai_signal": self.ai_signals.copy(),
+                            "market_conditions": self.market_conditions.copy(),
+                            "position_size": size,
+                            "reasoning": reasoning,
+                        }
+                    )
+
+        else:
+            # Exit logic
+            should_exit, exit_reason = self.analyze_exit_conditions()
+
+            if should_exit:
+                self.order = self.sell(size=self.current_position_size)
+                self.log(f"🔴 SELL SIGNAL: {exit_reason}")
+
+    def analyze_exit_conditions(self) -> Tuple[bool, str]:
+        """Analyze exit conditions"""
+        try:
+            # Technical exit conditions
+            current_rsi = self.rsi[0]
+            current_macd = self.macd.macd[0]
+            current_signal = self.macd.signal[0]
+
+            # RSI overbought
+            if current_rsi > self.params.rsi_upper:
+                return True, f"RSI overbought: {current_rsi:.1f}"
+
+            # MACD bearish crossover
+            if (
+                current_macd < current_signal
+                and self.macd.macd[-1] > self.macd.signal[-1]
+            ):
+                return True, "MACD bearish crossover"
+
+            # AI exit signal
+            if self.params.use_ai_signals and self.ai_signals:
+                direction = self.ai_signals.get("direction", "HOLD")
+                signal_strength = self.ai_signals.get("signal_strength", 0.0)
+                confidence = self.ai_signals.get("confidence", 0.0)
+
+                if direction == "SELL" and confidence > 0.6:
+                    return (
+                        True,
+                        f"AI sell signal: {signal_strength:.2f} (confidence: {confidence:.2f})",
+                    )
+
+            # Risk-based exit
+            if self.params.use_ai_risk_management:
+                risk_data = self.get_mcp_data_sync("risk_metrics")
+                if risk_data:
+                    risk_score = risk_data.get("overall_risk_score", 5.0)
+                    if risk_score > 9.0:
+                        return True, f"High risk score: {risk_score}"
+
+            # Portfolio optimization exit
+            portfolio_data = self.get_mcp_data_sync("portfolio_optimization")
+            if portfolio_data:
+                recommendations = portfolio_data.get("recommendations", {})
+                if "MAGIC" in recommendations:
+                    action = recommendations["MAGIC"].get("action")
+                    if action == "reduce" or action == "close":
+                        return True, f"Portfolio optimization: {action}"
+
+            return False, "No exit conditions met"
+
+        except Exception as e:
+            self.log(f"Exit analysis failed: {e}")
+            return False, f"Exit analysis error: {e}"
+
+    def notify_order(self, order):
+        """Order notification handler"""
+        if order.status in [order.Submitted, order.Accepted]:
+            return
+
+        if order.status in [order.Completed]:
+            if order.isbuy():
+                self.log(
+                    f"✅ BUY EXECUTED: Price={order.executed.price:.2f}, "
+                    f"Size={order.executed.size:.2f}, Cost=${order.executed.value:.2f}, "
+                    f"Commission=${order.executed.comm:.2f}"
+                )
+
+                self.buy_price = order.executed.price
+                self.buy_comm = order.executed.comm
+
+            elif order.issell():
+                profit = (
+                    (order.executed.price - self.buy_price) * order.executed.size
+                    - self.buy_comm
+                    - order.executed.comm
+                )
+
+                self.log(
+                    f"✅ SELL EXECUTED: Price={order.executed.price:.2f}, "
+                    f"Size={order.executed.size:.2f}, "
+                    f"Profit=${profit:.2f}"
+                )
+
+                # Track trade performance
+                self.trades_count += 1
+                if profit > 0:
+                    self.winning_trades += 1
+
+                # Update AI trade performance tracking
+                if self.params.track_ai_performance and self.ai_trade_performance:
+                    last_trade = self.ai_trade_performance[-1]
+                    last_trade.update(
+                        {
+                            "exit_time": self.datas[0].datetime.datetime(0),
+                            "exit_price": order.executed.price,
+                            "profit": profit,
+                            "duration": self.datas[0].datetime.datetime(0)
+                            - last_trade["entry_time"],
+                        }
+                    )
+
+                # Log performance metrics
+                if self.trades_count > 0:
+                    win_rate = self.winning_trades / self.trades_count
+                    self.log(
+                        f"📊 Performance: {self.trades_count} trades, "
+                        f"{win_rate:.2%} win rate"
+                    )
+
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log(f"❌ Order {order.status}")
+
+        self.order = None
+
+    def notify_trade(self, trade):
+        """Trade notification handler"""
+        if not trade.isclosed:
+            return
+
+        self.log(f"📈 TRADE CLOSED: Profit=${trade.pnl:.2f}, Net=${trade.pnlcomm:.2f}")
+
+    def stop(self):
+        """Called when strategy stops"""
+        self.log(
+            f"🔚 Strategy stopped with final portfolio value: ${self.broker.getvalue():.2f}"
+        )
+
+        # Log final performance metrics
+        if self.trades_count > 0:
+            win_rate = self.winning_trades / self.trades_count
+            self.log(
+                f"📊 Final Performance: {self.trades_count} trades, "
+                f"{win_rate:.2%} win rate"
+            )
+
+        # Analyze AI performance if tracking enabled
+        if self.params.track_ai_performance and self.ai_trade_performance:
+            self._analyze_ai_performance()
+
+    def _analyze_ai_performance(self):
+        """Analyze AI signal performance"""
+        try:
+            completed_trades = [t for t in self.ai_trade_performance if "profit" in t]
+
+            if not completed_trades:
+                return
+
+            # Calculate AI performance metrics
+            ai_profits = [t["profit"] for t in completed_trades]
+            ai_scores = [t["entry_score"] for t in completed_trades]
+
+            total_profit = sum(ai_profits)
+            avg_profit = total_profit / len(ai_profits)
+            profitable_trades = len([p for p in ai_profits if p > 0])
+            ai_win_rate = profitable_trades / len(ai_profits)
+
+            # Correlation between AI score and profit
+            if len(ai_scores) > 1:
+                correlation = np.corrcoef(ai_scores, ai_profits)[0, 1]
+            else:
+                correlation = 0.0
+
+            self.log(f"🤖 AI Performance Analysis:")
+            self.log(f"   Total Profit: ${total_profit:.2f}")
+            self.log(f"   Average Profit: ${avg_profit:.2f}")
+            self.log(f"   AI Win Rate: {ai_win_rate:.2%}")
+            self.log(f"   Score-Profit Correlation: {correlation:.3f}")
+
+            # Save detailed analysis to file
+            if self.params.enable_detailed_logging:
+                import json
+
+                with open("ai_performance_analysis.json", "w") as f:
+                    json.dump(
+                        {
+                            "trades": completed_trades,
+                            "summary": {
+                                "total_profit": total_profit,
+                                "average_profit": avg_profit,
+                                "win_rate": ai_win_rate,
+                                "correlation": correlation,
+                                "trade_count": len(completed_trades),
+                            },
+                        },
+                        f,
+                        indent=2,
+                        default=str,
+                    )
+
+        except Exception as e:
+            self.log(f"AI performance analysis failed: {e}")
+
+
+# Configuration templates for different strategy modes
+STRATEGY_CONFIGS = {
+    "conservative": {
+        "ai_signal_weight": 0.5,
+        "ai_confidence_threshold": 0.8,
+        "risk_threshold": 6.0,
+        "max_portfolio_heat": 0.6,
+        "base_position_size_pct": 0.05,
+        "max_position_size_pct": 0.2,
+    },
+    "balanced": {
+        "ai_signal_weight": 0.7,
+        "ai_confidence_threshold": 0.65,
+        "risk_threshold": 8.0,
+        "max_portfolio_heat": 0.8,
+        "base_position_size_pct": 0.1,
+        "max_position_size_pct": 0.3,
+    },
+    "aggressive": {
+        "ai_signal_weight": 0.9,
+        "ai_confidence_threshold": 0.5,
+        "risk_threshold": 9.0,
+        "max_portfolio_heat": 0.9,
+        "base_position_size_pct": 0.15,
+        "max_position_size_pct": 0.5,
+    },
+}
+
+if __name__ == "__main__":
+    # Demo the enhanced Backtrader strategy
+    print("📊 Enhanced Backtrader MCP Strategy Demo")
+
+    if backtrader_available:
+        # Create a cerebro instance
+        cerebro = bt.Cerebro()
+
+        # Add strategy with balanced configuration
+        config = STRATEGY_CONFIGS["balanced"]
+        cerebro.addstrategy(EnhancedVictoryChainMCPStrategy, **config)
+
+        # Add some dummy data (in real usage, add your data feed)
+        # cerebro.adddata(your_data_feed)
+
+        print("Strategy configured with balanced mode")
+        print(f"AI signal weight: {config['ai_signal_weight']}")
+        print(f"Risk threshold: {config['risk_threshold']}")
+        print(f"Max portfolio heat: {config['max_portfolio_heat']:.1%}")
+
+        # In real usage: cerebro.run()
+        print("✅ Enhanced Backtrader MCP Strategy demo completed!")
+    else:
+        print("⚠️  Backtrader not available - running in demo mode")
+        strategy = EnhancedVictoryChainMCPStrategy()
+        print("✅ Enhanced Backtrader MCP Strategy demo completed!")

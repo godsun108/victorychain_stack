@@ -1,0 +1,704 @@
+#!/usr/bin/env python3
+"""
+Advanced Data-Driven Market Analysis System
+Statistical models, technical indicators, and quantitative analysis
+"""
+
+import os
+import json
+import time
+import warnings
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+import pandas as pd
+import numpy as np
+from scipy import stats
+from scipy.stats import pearsonr, spearmanr
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from binance.client import Client
+from dotenv import load_dotenv
+import talib
+
+warnings.filterwarnings('ignore')
+
+class AdvancedDataAnalyst:
+    def __init__(self):
+        load_dotenv()
+        
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv('BINANCEUS_KEY'),
+            api_secret=os.getenv('BINANCEUS_SECRET'),
+            tld='us'
+        )
+        
+        print("📊 Advanced Data-Driven Analyst initialized")
+        print("🔬 Loading statistical models and technical indicators...")
+    
+    def get_comprehensive_ohlcv_data(self, symbols: List[str], limit: int = 100) -> Dict:
+        """Get comprehensive OHLCV data for statistical analysis"""
+        
+        print(f"📈 Gathering OHLCV data for {len(symbols)} symbols...")
+        
+        ohlcv_data = {}
+        failed_symbols = []
+        
+        for i, symbol in enumerate(symbols):
+            try:
+                # Get multiple timeframes
+                klines_1h = self.client.get_klines(symbol=symbol, interval='1h', limit=limit)
+                klines_4h = self.client.get_klines(symbol=symbol, interval='4h', limit=limit//4)
+                klines_1d = self.client.get_klines(symbol=symbol, interval='1d', limit=limit//24)
+                
+                if klines_1h and klines_4h and klines_1d:
+                    ohlcv_data[symbol] = {
+                        '1h': self.parse_klines(klines_1h),
+                        '4h': self.parse_klines(klines_4h),
+                        '1d': self.parse_klines(klines_1d)
+                    }
+                
+                # Progress indicator
+                if (i + 1) % 10 == 0:
+                    print(f"📊 Processed {i + 1}/{len(symbols)} symbols...")
+                
+                time.sleep(0.1)  # Rate limiting
+                
+            except Exception as e:
+                failed_symbols.append(symbol)
+                continue
+        
+        print(f"✅ Successfully gathered data for {len(ohlcv_data)} symbols")
+        if failed_symbols:
+            print(f"⚠️  Failed to get data for {len(failed_symbols)} symbols")
+        
+        return ohlcv_data
+    
+    def parse_klines(self, klines: List) -> pd.DataFrame:
+        """Parse klines data into DataFrame"""
+        
+        df = pd.DataFrame(klines, columns=[
+            'timestamp', 'open', 'high', 'low', 'close', 'volume',
+            'close_time', 'quote_volume', 'count', 'taker_buy_volume',
+            'taker_buy_quote_volume', 'ignore'
+        ])
+        
+        # Convert to proper types
+        numeric_cols = ['open', 'high', 'low', 'close', 'volume', 'quote_volume']
+        for col in numeric_cols:
+            df[col] = pd.to_numeric(df[col])
+        
+        df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+        df.set_index('timestamp', inplace=True)
+        
+        return df
+    
+    def calculate_technical_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calculate comprehensive technical indicators"""
+        
+        close = df['close'].values
+        high = df['high'].values
+        low = df['low'].values
+        volume = df['volume'].values
+        
+        # Price-based indicators
+        df['sma_10'] = talib.SMA(close, timeperiod=10)
+        df['sma_20'] = talib.SMA(close, timeperiod=20)
+        df['ema_12'] = talib.EMA(close, timeperiod=12)
+        df['ema_26'] = talib.EMA(close, timeperiod=26)
+        
+        # MACD
+        df['macd'], df['macd_signal'], df['macd_hist'] = talib.MACD(close)
+        
+        # RSI
+        df['rsi'] = talib.RSI(close, timeperiod=14)
+        
+        # Bollinger Bands
+        df['bb_upper'], df['bb_middle'], df['bb_lower'] = talib.BBANDS(close, timeperiod=20)
+        df['bb_width'] = (df['bb_upper'] - df['bb_lower']) / df['bb_middle']
+        df['bb_position'] = (close - df['bb_lower']) / (df['bb_upper'] - df['bb_lower'])
+        
+        # Stochastic
+        df['stoch_k'], df['stoch_d'] = talib.STOCH(high, low, close)
+        
+        # Volume indicators
+        df['volume_sma'] = talib.SMA(volume, timeperiod=20)
+        df['volume_ratio'] = volume / df['volume_sma']
+        
+        # Price patterns
+        df['doji'] = talib.CDLDOJI(df['open'], high, low, close)
+        df['hammer'] = talib.CDLHAMMER(df['open'], high, low, close)
+        df['engulfing'] = talib.CDLENGULFING(df['open'], high, low, close)
+        
+        # Volatility
+        df['atr'] = talib.ATR(high, low, close, timeperiod=14)
+        df['volatility'] = df['close'].rolling(20).std()
+        
+        # Returns
+        df['returns_1h'] = df['close'].pct_change()
+        df['returns_24h'] = df['close'].pct_change(24)
+        df['log_returns'] = np.log(df['close'] / df['close'].shift(1))
+        
+        return df
+    
+    def calculate_advanced_metrics(self, symbol: str, df_1h: pd.DataFrame, 
+                                 df_4h: pd.DataFrame, df_1d: pd.DataFrame) -> Dict:
+        """Calculate advanced statistical metrics"""
+        
+        metrics = {'symbol': symbol}
+        
+        # Price momentum analysis
+        current_price = df_1h['close'].iloc[-1]
+        metrics['price_momentum'] = {
+            '1h_change': (current_price / df_1h['close'].iloc[-2] - 1) * 100,
+            '4h_change': (current_price / df_1h['close'].iloc[-5] - 1) * 100,
+            '24h_change': (current_price / df_1h['close'].iloc[-25] - 1) * 100,
+            '7d_change': (current_price / df_1d['close'].iloc[-8] - 1) * 100 if len(df_1d) > 7 else 0
+        }
+        
+        # Volatility analysis
+        returns_1h = df_1h['returns_1h'].dropna()
+        returns_1d = df_1d['returns_1h'].dropna() if len(df_1d) > 1 else returns_1h
+        
+        metrics['volatility'] = {
+            'hourly_vol': returns_1h.std() * np.sqrt(24) * 100,  # Annualized hourly vol
+            'daily_vol': returns_1d.std() * np.sqrt(365) * 100,  # Annualized daily vol
+            'vol_of_vol': returns_1h.rolling(24).std().std() * 100,  # Volatility of volatility
+            'skewness': returns_1h.skew(),
+            'kurtosis': returns_1h.kurtosis()
+        }
+        
+        # Technical strength
+        latest_1h = df_1h.iloc[-1]
+        metrics['technical_strength'] = {
+            'rsi': latest_1h['rsi'],
+            'macd_signal': 1 if latest_1h['macd'] > latest_1h['macd_signal'] else -1,
+            'bb_position': latest_1h['bb_position'],
+            'sma_position': 1 if current_price > latest_1h['sma_20'] else -1,
+            'volume_strength': latest_1h['volume_ratio']
+        }
+        
+        # Trend analysis
+        close_prices = df_1h['close'].values[-50:]  # Last 50 hours
+        x = np.arange(len(close_prices))
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x, close_prices)
+        
+        metrics['trend_analysis'] = {
+            'trend_slope': slope,
+            'trend_strength': r_value ** 2,  # R-squared
+            'trend_significance': p_value,
+            'trend_direction': 1 if slope > 0 else -1
+        }
+        
+        # Volume analysis
+        volume_24h = df_1h['volume'].tail(24).sum()
+        volume_7d_avg = df_1h['volume'].tail(168).mean() * 24  # 7 days in hours
+        
+        metrics['volume_analysis'] = {
+            'volume_24h': volume_24h,
+            'volume_trend': volume_24h / volume_7d_avg if volume_7d_avg > 0 else 1,
+            'volume_consistency': 1 - df_1h['volume'].tail(24).std() / df_1h['volume'].tail(24).mean(),
+            'price_volume_correlation': pearsonr(df_1h['close'].tail(24).values, 
+                                               df_1h['volume'].tail(24).values)[0]
+        }
+        
+        # Support/Resistance levels
+        highs = df_1h['high'].tail(100)
+        lows = df_1h['low'].tail(100)
+        
+        metrics['support_resistance'] = {
+            'resistance_level': np.percentile(highs, 95),
+            'support_level': np.percentile(lows, 5),
+            'distance_to_resistance': (np.percentile(highs, 95) - current_price) / current_price * 100,
+            'distance_to_support': (current_price - np.percentile(lows, 5)) / current_price * 100
+        }
+        
+        return metrics
+    
+    def perform_statistical_analysis(self, all_metrics: List[Dict]) -> Dict:
+        """Perform comprehensive statistical analysis across all tokens"""
+        
+        print("🔬 Performing advanced statistical analysis...")
+        
+        # Create feature matrix
+        features = []
+        symbols = []
+        
+        for metrics in all_metrics:
+            try:
+                feature_vector = [
+                    metrics['price_momentum']['1h_change'],
+                    metrics['price_momentum']['4h_change'],
+                    metrics['price_momentum']['24h_change'],
+                    metrics['volatility']['hourly_vol'],
+                    metrics['volatility']['daily_vol'],
+                    metrics['technical_strength']['rsi'],
+                    metrics['technical_strength']['bb_position'],
+                    metrics['technical_strength']['volume_strength'],
+                    metrics['trend_analysis']['trend_slope'],
+                    metrics['trend_analysis']['trend_strength'],
+                    metrics['volume_analysis']['volume_trend'],
+                    metrics['volume_analysis']['price_volume_correlation'],
+                    metrics['support_resistance']['distance_to_resistance'],
+                    metrics['support_resistance']['distance_to_support']
+                ]
+                
+                # Check for NaN values
+                if not any(np.isnan(feature_vector)):
+                    features.append(feature_vector)
+                    symbols.append(metrics['symbol'])
+                    
+            except (KeyError, TypeError):
+                continue
+        
+        if len(features) < 10:
+            return {'error': 'Insufficient data for statistical analysis'}
+        
+        features_array = np.array(features)
+        
+        # Standardize features
+        scaler = StandardScaler()
+        features_scaled = scaler.fit_transform(features_array)
+        
+        # Cluster analysis
+        n_clusters = min(5, len(features) // 10)
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        clusters = kmeans.fit_predict(features_scaled)
+        
+        # PCA analysis
+        pca = PCA(n_components=min(3, features_array.shape[1]))
+        pca_features = pca.fit_transform(features_scaled)
+        
+        # Correlation analysis
+        feature_names = [
+            '1h_change', '4h_change', '24h_change', 'hourly_vol', 'daily_vol',
+            'rsi', 'bb_position', 'volume_strength', 'trend_slope', 'trend_strength',
+            'volume_trend', 'price_volume_corr', 'dist_resistance', 'dist_support'
+        ]
+        
+        correlation_matrix = np.corrcoef(features_array.T)
+        
+        # Identify statistical outliers
+        outliers = []
+        for i, symbol in enumerate(symbols):
+            z_scores = np.abs(stats.zscore(features_scaled[i]))
+            if np.max(z_scores) > 3:  # 3 standard deviations
+                outliers.append({
+                    'symbol': symbol,
+                    'max_z_score': np.max(z_scores),
+                    'outlier_features': [feature_names[j] for j, z in enumerate(z_scores) if z > 2]
+                })
+        
+        # Market regime analysis
+        market_momentum = np.mean([f[0] for f in features])  # Average 1h change
+        market_volatility = np.mean([f[3] for f in features])  # Average hourly vol
+        market_trend_strength = np.mean([f[9] for f in features])  # Average trend strength
+        
+        regime = 'unknown'
+        if market_momentum > 2 and market_volatility < 50:
+            regime = 'bull_trending'
+        elif market_momentum < -2 and market_volatility < 50:
+            regime = 'bear_trending'
+        elif market_volatility > 100:
+            regime = 'high_volatility'
+        elif abs(market_momentum) < 1 and market_volatility < 30:
+            regime = 'low_volatility_range'
+        else:
+            regime = 'mixed_conditions'
+        
+        return {
+            'statistical_summary': {
+                'total_tokens_analyzed': len(symbols),
+                'feature_dimensions': features_array.shape[1],
+                'market_regime': regime,
+                'market_momentum': market_momentum,
+                'market_volatility': market_volatility,
+                'market_trend_strength': market_trend_strength
+            },
+            'cluster_analysis': {
+                'n_clusters': n_clusters,
+                'cluster_centers': kmeans.cluster_centers_.tolist(),
+                'tokens_by_cluster': {i: [symbols[j] for j, c in enumerate(clusters) if c == i] 
+                                    for i in range(n_clusters)}
+            },
+            'pca_analysis': {
+                'explained_variance_ratio': pca.explained_variance_ratio_.tolist(),
+                'principal_components': pca.components_.tolist()
+            },
+            'correlation_insights': {
+                'feature_correlations': {
+                    f"{feature_names[i]}_{feature_names[j]}": correlation_matrix[i][j]
+                    for i in range(len(feature_names)) 
+                    for j in range(i+1, len(feature_names))
+                    if abs(correlation_matrix[i][j]) > 0.5
+                }
+            },
+            'statistical_outliers': sorted(outliers, key=lambda x: x['max_z_score'], reverse=True)[:10],
+            'feature_statistics': {
+                feature_names[i]: {
+                    'mean': np.mean(features_array[:, i]),
+                    'std': np.std(features_array[:, i]),
+                    'min': np.min(features_array[:, i]),
+                    'max': np.max(features_array[:, i]),
+                    'percentile_90': np.percentile(features_array[:, i], 90),
+                    'percentile_10': np.percentile(features_array[:, i], 10)
+                }
+                for i in range(len(feature_names))
+            }
+        }
+    
+    def build_predictive_models(self, all_metrics: List[Dict]) -> Dict:
+        """Build predictive models for price movement"""
+        
+        print("🤖 Building predictive models...")
+        
+        # Prepare data for modeling
+        X = []
+        y = []
+        symbols = []
+        
+        for metrics in all_metrics:
+            try:
+                # Features (current state)
+                features = [
+                    metrics['technical_strength']['rsi'],
+                    metrics['technical_strength']['bb_position'],
+                    metrics['technical_strength']['volume_strength'],
+                    metrics['trend_analysis']['trend_slope'],
+                    metrics['trend_analysis']['trend_strength'],
+                    metrics['volatility']['hourly_vol'],
+                    metrics['volume_analysis']['volume_trend'],
+                    metrics['volume_analysis']['price_volume_correlation']
+                ]
+                
+                # Target (future price movement)
+                target = metrics['price_momentum']['1h_change']  # Predict 1h change
+                
+                if not any(np.isnan(features)) and not np.isnan(target):
+                    X.append(features)
+                    y.append(target)
+                    symbols.append(metrics['symbol'])
+                    
+            except (KeyError, TypeError):
+                continue
+        
+        if len(X) < 20:
+            return {'error': 'Insufficient data for predictive modeling'}
+        
+        X = np.array(X)
+        y = np.array(y)
+        
+        # Split data (simple random split for demonstration)
+        n_train = int(0.8 * len(X))
+        indices = np.random.permutation(len(X))
+        train_idx, test_idx = indices[:n_train], indices[n_train:]
+        
+        X_train, X_test = X[train_idx], X[test_idx]
+        y_train, y_test = y[train_idx], y[test_idx]
+        
+        # Linear regression model
+        lr_model = LinearRegression()
+        lr_model.fit(X_train, y_train)
+        lr_score = lr_model.score(X_test, y_test)
+        
+        # Random Forest model
+        rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+        rf_model.fit(X_train, y_train)
+        rf_score = rf_model.score(X_test, y_test)
+        
+        # Feature importance
+        feature_names = ['rsi', 'bb_position', 'volume_strength', 'trend_slope', 
+                        'trend_strength', 'volatility', 'volume_trend', 'price_volume_corr']
+        
+        feature_importance = dict(zip(feature_names, rf_model.feature_importances_))
+        
+        # Make predictions for all tokens
+        predictions = {}
+        for i, symbol in enumerate(symbols):
+            lr_pred = lr_model.predict([X[i]])[0]
+            rf_pred = rf_model.predict([X[i]])[0]
+            
+            predictions[symbol] = {
+                'linear_regression_pred': lr_pred,
+                'random_forest_pred': rf_pred,
+                'ensemble_pred': (lr_pred + rf_pred) / 2,
+                'confidence': rf_model.score(X_test, y_test)
+            }
+        
+        return {
+            'model_performance': {
+                'linear_regression_r2': lr_score,
+                'random_forest_r2': rf_score,
+                'ensemble_performance': (lr_score + rf_score) / 2
+            },
+            'feature_importance': dict(sorted(feature_importance.items(), 
+                                            key=lambda x: x[1], reverse=True)),
+            'predictions': predictions,
+            'model_summary': {
+                'training_samples': len(X_train),
+                'test_samples': len(X_test),
+                'features_used': len(feature_names),
+                'prediction_horizon': '1_hour'
+            }
+        }
+    
+    def generate_quantitative_insights(self, statistical_analysis: Dict, 
+                                     predictive_models: Dict, all_metrics: List[Dict]) -> Dict:
+        """Generate quantitative trading insights"""
+        
+        insights = {
+            'market_regime_analysis': {},
+            'statistical_opportunities': [],
+            'predictive_signals': [],
+            'risk_metrics': {},
+            'quantitative_recommendations': []
+        }
+        
+        # Market regime insights
+        regime = statistical_analysis['statistical_summary']['market_regime']
+        momentum = statistical_analysis['statistical_summary']['market_momentum']
+        volatility = statistical_analysis['statistical_summary']['market_volatility']
+        
+        insights['market_regime_analysis'] = {
+            'current_regime': regime,
+            'regime_characteristics': self.get_regime_characteristics(regime),
+            'momentum_z_score': (momentum - 0) / 2,  # Assuming mean=0, std=2 for momentum
+            'volatility_percentile': min(volatility / 100, 1.0),
+            'regime_stability': statistical_analysis['statistical_summary']['market_trend_strength']
+        }
+        
+        # Statistical opportunities (outliers and clusters)
+        outliers = statistical_analysis.get('statistical_outliers', [])
+        for outlier in outliers[:5]:
+            insights['statistical_opportunities'].append({
+                'symbol': outlier['symbol'],
+                'opportunity_type': 'statistical_outlier',
+                'z_score': outlier['max_z_score'],
+                'reasoning': f"Statistical outlier in {', '.join(outlier['outlier_features'])}",
+                'confidence': min(outlier['max_z_score'] / 5, 1.0)
+            })
+        
+        # Predictive signals
+        if 'predictions' in predictive_models:
+            predictions = predictive_models['predictions']
+            sorted_predictions = sorted(predictions.items(), 
+                                      key=lambda x: abs(x[1]['ensemble_pred']), reverse=True)
+            
+            for symbol, pred in sorted_predictions[:10]:
+                if abs(pred['ensemble_pred']) > 1:  # Significant prediction
+                    insights['predictive_signals'].append({
+                        'symbol': symbol,
+                        'predicted_change': pred['ensemble_pred'],
+                        'signal_strength': abs(pred['ensemble_pred']),
+                        'model_confidence': pred['confidence'],
+                        'direction': 'bullish' if pred['ensemble_pred'] > 0 else 'bearish'
+                    })
+        
+        # Risk metrics
+        insights['risk_metrics'] = {
+            'market_volatility_regime': 'high' if volatility > 80 else 'medium' if volatility > 40 else 'low',
+            'correlation_risk': len([c for c in statistical_analysis.get('correlation_insights', {}).get('feature_correlations', {}).values() if abs(c) > 0.8]),
+            'outlier_concentration': len(outliers) / len(all_metrics) if all_metrics else 0,
+            'regime_uncertainty': 1 - statistical_analysis['statistical_summary']['market_trend_strength']
+        }
+        
+        # Quantitative recommendations
+        if regime == 'bull_trending':
+            insights['quantitative_recommendations'].extend([
+                "High conviction long positions on momentum leaders",
+                "Reduce hedging, increase position sizes",
+                "Focus on breakout patterns and trend continuation"
+            ])
+        elif regime == 'bear_trending':
+            insights['quantitative_recommendations'].extend([
+                "Implement strong risk management and stop losses",
+                "Consider short positions on weak technical patterns",
+                "Increase cash positions and defensive assets"
+            ])
+        elif regime == 'high_volatility':
+            insights['quantitative_recommendations'].extend([
+                "Reduce position sizes due to high volatility",
+                "Focus on mean reversion strategies",
+                "Increase frequency of position reviews"
+            ])
+        elif regime == 'low_volatility_range':
+            insights['quantitative_recommendations'].extend([
+                "Range trading strategies may be effective",
+                "Look for breakout opportunities at range boundaries",
+                "Consider volatility expansion plays"
+            ])
+        
+        return insights
+    
+    def get_regime_characteristics(self, regime: str) -> str:
+        """Get characteristics of market regime"""
+        
+        regime_map = {
+            'bull_trending': "Strong upward momentum with controlled volatility",
+            'bear_trending': "Consistent downward pressure with controlled volatility",
+            'high_volatility': "Large price swings, increased uncertainty",
+            'low_volatility_range': "Stable, range-bound market conditions",
+            'mixed_conditions': "No clear directional bias, mixed signals"
+        }
+        
+        return regime_map.get(regime, "Unknown market conditions")
+    
+    def run_comprehensive_data_analysis(self) -> Dict:
+        """Run comprehensive data-driven analysis"""
+        
+        print("🚀 STARTING COMPREHENSIVE DATA-DRIVEN ANALYSIS")
+        print("=" * 60)
+        
+        # Get top tokens by volume for analysis
+        tickers = self.client.get_ticker()
+        usdt_pairs = [t for t in tickers if t['symbol'].endswith('USDT') and t['symbol'] != 'USDCUSDT']
+        
+        # Sort by volume and take top 30 for detailed analysis
+        volume_sorted = sorted(usdt_pairs, key=lambda x: float(x['quoteVolume']), reverse=True)
+        top_symbols = [t['symbol'] for t in volume_sorted[:30]]
+        
+        print(f"📊 Analyzing top 30 tokens by volume for comprehensive data analysis...")
+        
+        # Get OHLCV data
+        ohlcv_data = self.get_comprehensive_ohlcv_data(top_symbols)
+        
+        if len(ohlcv_data) < 10:
+            print("❌ Insufficient data for comprehensive analysis")
+            return {}
+        
+        # Calculate metrics for each token
+        all_metrics = []
+        
+        print("🔬 Calculating advanced metrics...")
+        for symbol, data in ohlcv_data.items():
+            try:
+                # Calculate technical indicators
+                df_1h = self.calculate_technical_indicators(data['1h'].copy())
+                df_4h = self.calculate_technical_indicators(data['4h'].copy())
+                df_1d = self.calculate_technical_indicators(data['1d'].copy())
+                
+                # Calculate advanced metrics
+                metrics = self.calculate_advanced_metrics(symbol, df_1h, df_4h, df_1d)
+                all_metrics.append(metrics)
+                
+            except Exception as e:
+                print(f"⚠️ Error calculating metrics for {symbol}: {e}")
+                continue
+        
+        print(f"✅ Calculated metrics for {len(all_metrics)} tokens")
+        
+        # Perform statistical analysis
+        statistical_analysis = self.perform_statistical_analysis(all_metrics)
+        
+        # Build predictive models
+        predictive_models = self.build_predictive_models(all_metrics)
+        
+        # Generate insights
+        quantitative_insights = self.generate_quantitative_insights(
+            statistical_analysis, predictive_models, all_metrics
+        )
+        
+        # Compile comprehensive report
+        comprehensive_report = {
+            'timestamp': datetime.now().isoformat(),
+            'analysis_type': 'comprehensive_data_driven',
+            'tokens_analyzed': len(all_metrics),
+            'statistical_analysis': statistical_analysis,
+            'predictive_models': predictive_models,
+            'quantitative_insights': quantitative_insights,
+            'raw_metrics': all_metrics[:10]  # Include sample of raw metrics
+        }
+        
+        # Display results
+        self.display_data_driven_results(comprehensive_report)
+        
+        # Save report
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"comprehensive_data_analysis_{timestamp}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(comprehensive_report, f, indent=2, default=str)
+        
+        print(f"\n💾 Comprehensive data analysis saved: {filename}")
+        
+        return comprehensive_report
+    
+    def display_data_driven_results(self, report: Dict):
+        """Display comprehensive data-driven results"""
+        
+        print("\n📊 COMPREHENSIVE DATA-DRIVEN ANALYSIS RESULTS")
+        print("=" * 60)
+        
+        # Statistical summary
+        stats = report['statistical_analysis']['statistical_summary']
+        print(f"🔬 STATISTICAL SUMMARY:")
+        print(f"   Tokens Analyzed: {stats['total_tokens_analyzed']}")
+        print(f"   Market Regime: {stats['market_regime'].upper()}")
+        print(f"   Market Momentum: {stats['market_momentum']:+.2f}%")
+        print(f"   Market Volatility: {stats['market_volatility']:.1f}%")
+        print(f"   Trend Strength: {stats['market_trend_strength']:.3f}")
+        
+        # Predictive model performance
+        if 'model_performance' in report['predictive_models']:
+            perf = report['predictive_models']['model_performance']
+            print(f"\n🤖 PREDICTIVE MODEL PERFORMANCE:")
+            print(f"   Linear Regression R²: {perf['linear_regression_r2']:.3f}")
+            print(f"   Random Forest R²: {perf['random_forest_r2']:.3f}")
+            print(f"   Ensemble Performance: {perf['ensemble_performance']:.3f}")
+        
+        # Feature importance
+        if 'feature_importance' in report['predictive_models']:
+            importance = report['predictive_models']['feature_importance']
+            print(f"\n📈 TOP PREDICTIVE FEATURES:")
+            for i, (feature, score) in enumerate(list(importance.items())[:5], 1):
+                print(f"   {i}. {feature}: {score:.3f}")
+        
+        # Quantitative insights
+        insights = report['quantitative_insights']
+        regime = insights['market_regime_analysis']
+        
+        print(f"\n🎯 MARKET REGIME ANALYSIS:")
+        print(f"   Current Regime: {regime['current_regime'].upper()}")
+        print(f"   Characteristics: {regime['regime_characteristics']}")
+        print(f"   Momentum Z-Score: {regime['momentum_z_score']:+.2f}")
+        print(f"   Volatility Percentile: {regime['volatility_percentile']:.1%}")
+        
+        # Statistical opportunities
+        stat_opps = insights['statistical_opportunities']
+        if stat_opps:
+            print(f"\n🔍 STATISTICAL OPPORTUNITIES:")
+            for i, opp in enumerate(stat_opps[:5], 1):
+                print(f"   {i}. {opp['symbol']}: {opp['reasoning']} (Z-Score: {opp['z_score']:.2f})")
+        
+        # Predictive signals
+        pred_signals = insights['predictive_signals']
+        if pred_signals:
+            print(f"\n🎲 PREDICTIVE SIGNALS:")
+            for i, signal in enumerate(pred_signals[:5], 1):
+                print(f"   {i}. {signal['symbol']}: {signal['direction'].upper()} "
+                      f"({signal['predicted_change']:+.2f}%, Confidence: {signal['model_confidence']:.2f})")
+        
+        # Risk metrics
+        risk = insights['risk_metrics']
+        print(f"\n⚠️  RISK ASSESSMENT:")
+        print(f"   Volatility Regime: {risk['market_volatility_regime'].upper()}")
+        print(f"   Correlation Risk: {risk['correlation_risk']} high correlations")
+        print(f"   Outlier Concentration: {risk['outlier_concentration']:.1%}")
+        print(f"   Regime Uncertainty: {risk['regime_uncertainty']:.1%}")
+        
+        # Recommendations
+        recommendations = insights['quantitative_recommendations']
+        if recommendations:
+            print(f"\n💡 QUANTITATIVE RECOMMENDATIONS:")
+            for i, rec in enumerate(recommendations, 1):
+                print(f"   {i}. {rec}")
+
+def main():
+    analyst = AdvancedDataAnalyst()
+    report = analyst.run_comprehensive_data_analysis()
+
+if __name__ == "__main__":
+    main()

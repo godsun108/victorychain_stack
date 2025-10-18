@@ -1,0 +1,2 @@
+fn(axum::extract::State<DashboardState>) -> impl futures_util::Future<Output = Json<HashMap<std::string::String, f64>>> {get_performance_stats}
+fn(axum::extract::State<DashboardState>) -> impl futures_util::Future<Output = Json<HashMap<std::string::String, f64>>> {get_performance_stats}: Handler<_, _>

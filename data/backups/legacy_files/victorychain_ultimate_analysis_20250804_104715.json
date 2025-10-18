@@ -1,0 +1,67 @@
+{
+  "timestamp": "2025-08-04T10:47:15.885331",
+  "system_version": "VictoryChain Ultimate v2.0 - MAXIMUM CAPITAL DEPLOYMENT",
+  "magicusdt_reference": {
+    "performance": 32.32,
+    "momentum_score": 0.998,
+    "range_position": 0.882,
+    "pattern_type": "MOMENTUM_SURGE",
+    "controlled_volatility": true,
+    "technical_alignment": true,
+    "similarity_threshold": 70.0
+  },
+  "smart_gains_config": {
+    "confidence_threshold": 0.7,
+    "min_gain_target": 3.0,
+    "max_loss_tolerance": 2.0,
+    "win_rate_target": 0.65,
+    "position_size_pct": 0.9
+  },
+  "analysis": {
+    "opportunities": [
+      {
+        "symbol": "MAGICUSDT",
+        "magicusdt_similarity": 84.91384094818106,
+        "price_change": 38.963,
+        "range_position": 1.0,
+        "current_price": 0.2386,
+        "volume": 3823.1863,
+        "volume_category": "low",
+        "momentum_score": 1.0,
+        "strength_score": 1.0,
+        "volatility": 0.29253981559094716,
+        "confidence": 1.0,
+        "risk_score": 2.9253981559094715,
+        "smart_gains_approved": true,
+        "scores": {
+          "performance": 35.0,
+          "momentum": 25.0,
+          "position": 20.0,
+          "volume": 0.76463726,
+          "volatility": 4.149203688181057
+        }
+      }
+    ],
+    "total_analyzed": 180,
+    "smart_gains_filtered": 1,
+    "analysis_method": "enhanced_pattern_matching_with_smart_gains",
+    "magicusdt_reference": {
+      "performance": 32.32,
+      "momentum_score": 0.998,
+      "range_position": 0.882,
+      "pattern_type": "MOMENTUM_SURGE",
+      "controlled_volatility": true,
+      "technical_alignment": true,
+      "similarity_threshold": 70.0
+    }
+  },
+  "total_tokens_analyzed": 180,
+  "enhancement_features": [
+    "Enhanced MAGICUSDT Pattern Recognition",
+    "Smart Gains-Only Logic",
+    "Advanced Risk Management",
+    "Multi-Strategy Analysis",
+    "Claude AI Integration",
+    "Real-time Position Sizing"
+  ]
+}

@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+"""Simple Prometheus exporter for treasury/reinvest metrics.
+
+- Reads checkpoint from momentum.treasury_settle (runtime/reinvest/checkpoint.json)
+- Reads preset from runtime/reinvest/preset.json (created by make reinvest-apply-preset-*)
+- Exposes:
+    vc_treasury_plan_usd
+    vc_reinvest_plan_usd
+    vc_realized_pnl_usd
+    vc_last_plan_ts_seconds
+    vc_reinvest_preset_weight{symbol}
+
+Usage:
+    TREASURY_METRICS_PORT=9112 python scripts/treasury_exporter.py
+
+"""
+from __future__ import annotations
+import json
+import os
+import time
+from pathlib import Path
+from typing import Dict
+from prometheus_client import Gauge, start_http_server
+from loguru import logger
+
+CHECKPOINT = Path('runtime/reinvest/checkpoint.json')
+PRESET = Path('runtime/reinvest/preset.json')
+
+_g_treasury = Gauge('vc_treasury_plan_usd', 'Planned treasury transfer (USD)')
+_g_reinvest = Gauge('vc_reinvest_plan_usd', 'Planned reinvest amount (USD)')
+_g_realized = Gauge('vc_realized_pnl_usd', 'Realized PnL used for last plan (USD)')
+_g_last_ts = Gauge('vc_last_plan_ts_seconds', 'Timestamp of last plan (seconds)')
+_g_weight = Gauge('vc_reinvest_preset_weight', 'Weight for reinvest per symbol', ['symbol'])
+
+
+def _load_json(path: Path) -> Dict:
+    try:
+        if not path.exists():
+            return {}
+        return json.loads(path.read_text())
+    except Exception:
+        return {}
+
+
+def _apply_preset_metrics():
+    data = _load_json(PRESET)
+    weights: Dict[str, float] = data.get('weights', {}) if isinstance(data, dict) else {}
+    for sym, w in weights.items():
+        try:
+            _g_weight.labels(symbol=sym).set(float(w))
+        except Exception:
+            pass
+
+
+def main():
+    port = int(os.environ.get('TREASURY_METRICS_PORT', '9112'))
+    start_http_server(port)
+    logger.info(f'Treasury exporter listening on :{port}')
+
+    last_preset_mtime = 0.0
+    last_checkpoint_mtime = 0.0
+
+    while True:
+        try:
+            if PRESET.exists():
+                mt = PRESET.stat().st_mtime
+                if mt != last_preset_mtime:
+                    last_preset_mtime = mt
+                    _apply_preset_metrics()
+            if CHECKPOINT.exists():
+                mt = CHECKPOINT.stat().st_mtime
+                if mt != last_checkpoint_mtime:
+                    last_checkpoint_mtime = mt
+                    plan = _load_json(CHECKPOINT)
+                    _g_treasury.set(float(plan.get('plan_treasury_usd', 0.0) or 0.0))
+                    _g_reinvest.set(float(plan.get('plan_reinvest_usd', 0.0) or 0.0))
+                    _g_realized.set(float(plan.get('realized_pnl_usd', 0.0) or 0.0))
+                    _g_last_ts.set(float(plan.get('timestamp', 0.0) or 0.0))
+        except Exception as e:
+            logger.warning(f'treasury exporter loop error: {e}')
+        time.sleep(2.5)
+
+
+if __name__ == '__main__':
+    main()

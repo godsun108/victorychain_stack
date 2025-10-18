@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""
+Quick Holding Status - Check automated holding system status
+"""
+
+import os
+import json
+from datetime import datetime
+from binance.client import Client
+from dotenv import load_dotenv
+
+
+def check_holding_status():
+    """Quick check of holding system status"""
+    load_dotenv()
+
+    client = Client(
+        api_key=os.getenv("BINANCEUS_KEY"),
+        api_secret=os.getenv("BINANCEUS_SECRET"),
+        tld="us",
+    )
+
+    print("💎 AUTOMATED HOLDING STATUS")
+    print("=" * 40)
+    print(f"🕐 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print()
+
+    try:
+        # Current portfolio
+        account = client.get_account()
+        positions = []
+        total_value = 0
+
+        for balance in account["balances"]:
+            free = float(balance["free"])
+            locked = float(balance["locked"])
+            total_amount = free + locked
+
+            if total_amount > 0.01:
+                if balance["asset"] == "USDT":
+                    positions.append(
+                        {
+                            "asset": "USDT",
+                            "amount": total_amount,
+                            "usd_value": total_amount,
+                            "change_24h": 0,
+                            "hold_status": "💰",
+                        }
+                    )
+                    total_value += total_amount
+                else:
+                    try:
+                        ticker = client.get_ticker(symbol=balance["asset"] + "USDT")
+                        price = float(ticker["lastPrice"])
+                        change_24h = float(ticker["priceChangePercent"])
+                        usd_value = total_amount * price
+
+                        if usd_value > 0.5:
+                            # Determine hold status
+                            if change_24h > 50:
+                                hold_status = "🔥"  # Extreme profit
+                            elif change_24h > 10:
+                                hold_status = "🚀"  # Strong profit
+                            elif change_24h > 0:
+                                hold_status = "💎"  # Profitable hold
+                            elif change_24h > -10:
+                                hold_status = "🟡"  # Neutral hold
+                            elif change_24h > -25:
+                                hold_status = "🟠"  # Monitor
+                            else:
+                                hold_status = "🛑"  # Stop loss zone
+
+                            positions.append(
+                                {
+                                    "asset": balance["asset"],
+                                    "amount": total_amount,
+                                    "usd_value": usd_value,
+                                    "change_24h": change_24h,
+                                    "hold_status": hold_status,
+                                }
+                            )
+                            total_value += usd_value
+                    except:
+                        continue
+
+        # Sort by value
+        positions.sort(key=lambda x: x["usd_value"], reverse=True)
+
+        print("💼 CURRENT POSITIONS & HOLD STATUS:")
+        print("-" * 40)
+        print(f"{'Asset':<8} {'Value':<10} {'24h%':<8} {'Status'}")
+        print("-" * 40)
+
+        for pos in positions:
+            print(
+                f"{pos['asset']:<8} ${pos['usd_value']:<9.2f} {pos['change_24h']:+6.2f}% {pos['hold_status']}"
+            )
+
+        print("-" * 40)
+        print(f"TOTAL: ${total_value:.2f}")
+        print()
+
+        # Hold status summary
+        hold_counts = {}
+        for pos in positions:
+            status = pos["hold_status"]
+            hold_counts[status] = hold_counts.get(status, 0) + 1
+
+        print("📊 HOLD STATUS SUMMARY:")
+        status_meanings = {
+            "🔥": "Extreme Profit (+50%)",
+            "🚀": "Strong Profit (+10%)",
+            "💎": "Profitable Hold (0-10%)",
+            "🟡": "Neutral Hold (0 to -10%)",
+            "🟠": "Monitor (-10 to -25%)",
+            "🛑": "Stop Loss Zone (-25%+)",
+            "💰": "USDT Available",
+        }
+
+        for status, count in hold_counts.items():
+            meaning = status_meanings.get(status, "Unknown")
+            print(f"  {status} {meaning}: {count} position(s)")
+
+        print()
+
+        # Check system state file
+        today = datetime.now().strftime("%Y%m%d")
+        state_file = f"automated_holding_state_{today}.json"
+
+        if os.path.exists(state_file):
+            with open(state_file, "r") as f:
+                state = json.load(f)
+
+            print("🤖 AUTOMATED HOLDING SYSTEM STATUS:")
+            print("-" * 40)
+
+            stats = state.get("holding_stats", {})
+            print(f"Monitoring cycles: {stats.get('total_monitoring_cycles', 0)}")
+            print(f"Positions held: {stats.get('positions_held', 0)}")
+            print(f"Profits taken: {stats.get('profits_taken', 0)}")
+            print(f"Stops triggered: {stats.get('stops_triggered', 0)}")
+            print(f"Opportunities found: {stats.get('opportunities_found', 0)}")
+
+            # Last update
+            timestamp = state.get("timestamp", "")
+            if timestamp:
+                last_update = datetime.fromisoformat(timestamp).strftime("%H:%M:%S")
+                print(f"Last update: {last_update}")
+
+        else:
+            print("🤖 AUTOMATED HOLDING SYSTEM:")
+            print("Status file not found - system may not be running")
+
+        print()
+        print("💡 LEGEND:")
+        print("🔥 = Take profits soon  🚀 = Strong hold  💎 = Good hold")
+        print("🟡 = Monitor closely    🟠 = Watch for exit  🛑 = Consider stop")
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+
+if __name__ == "__main__":
+    check_holding_status()

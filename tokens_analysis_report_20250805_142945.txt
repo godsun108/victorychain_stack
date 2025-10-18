@@ -1,0 +1,136 @@
+
+🔥 COMPREHENSIVE BINANCE US TOKENS ANALYSIS
+Generated: 2025-08-05 14:29:45
+
+================================================================================
+📊 OVERVIEW STATISTICS
+================================================================================
+📈 Total Tokens Analyzed: 180
+🔥 Mega Volume Tokens (>$50M): 0
+🟢 Large Volume Tokens ($10M-$50M): 0
+🔵 Mid Volume Tokens ($1M-$10M): 2
+🟡 Small Volume Tokens ($100K-$1M): 9
+
+🎮 Gaming Tokens: 9
+🏦 DeFi Tokens: 9
+🤖 AI Tokens: 5
+🏗️  Layer 1 Tokens: 9
+
+================================================================================
+🏆 TOP 25 BY VOLUME
+================================================================================
+ 1. 🔵 BTCUSDT         $ 115150.0100 Vol: $   2,189,918 24h:   0.67% (layer1)
+ 2. 🔵 XRPUSDT         $      3.0555 Vol: $   1,812,478 24h:   5.23% (general)
+ 3. 🟡 ETHUSDT         $   3689.5900 Vol: $     680,135 24h:   5.64% (layer1)
+ 4. 🟡 DOGEUSDT        $      0.2065 Vol: $     496,925 24h:   4.00% (meme)
+ 5. 🟡 PENGUUSDT       $      0.0358 Vol: $     420,292 24h:   2.67% (general)
+ 6. 🟡 SOLUSDT         $    167.1300 Vol: $     253,269 24h:   3.35% (layer1)
+ 7. 🟡 BNBUSDT         $    764.6600 Vol: $     186,533 24h:   1.96% (stablecoin)
+ 8. 🟡 ADAUSDT         $      0.7496 Vol: $     176,787 24h:   3.58% (layer1)
+ 9. 🟡 LTCUSDT         $    119.2900 Vol: $     172,253 24h:   9.77% (general)
+10. 🟡 BONKUSDT        $      0.0000 Vol: $     122,254 24h:   3.09% (meme)
+11. 🟡 HBARUSDT        $      0.2525 Vol: $     121,488 24h:   1.64% (general)
+12. 🟠 XLMUSDT         $      0.4152 Vol: $      86,967 24h:   4.77% (general)
+13. 🟠 SUIUSDT         $      3.5638 Vol: $      79,503 24h:   3.68% (general)
+14. 🟠 FLOKIUSDT       $      0.0001 Vol: $      61,358 24h:   3.09% (meme)
+15. 🟠 ENAUSDT         $      0.6020 Vol: $      42,551 24h:   1.69% (general)
+16. 🟠 PEPEUSDT        $      0.0000 Vol: $      39,342 24h:   1.34% (meme)
+17. 🟠 SHIBUSDT        $      0.0000 Vol: $      38,606 24h:   1.81% (meme)
+18. 🟠 LINKUSDT        $     16.9800 Vol: $      31,512 24h:   4.43% (general)
+19. 🟠 AVAXUSDT        $     22.5800 Vol: $      30,649 24h:   3.29% (layer1)
+20. 🟠 CRVUSDT         $      0.9518 Vol: $      28,860 24h:   3.12% (defi)
+21. 🟠 HYPEUSDT        $     38.7500 Vol: $      28,481 24h:  -0.28% (general)
+22. 🟠 XDCUSDT         $      0.0961 Vol: $      26,509 24h:   3.14% (general)
+23. 🟠 BRETTUSDT       $      0.0561 Vol: $      21,903 24h:   7.27% (general)
+24. 🟠 TRUMPUSDT       $      8.9400 Vol: $      18,079 24h:   1.02% (general)
+25. 🟠 WIFUSDT         $      0.9230 Vol: $      17,865 24h:   2.78% (general)
+
+================================================================================
+🚀 TOP 25 BY MOMENTUM SCORE
+================================================================================
+ 1. 🟠 MAGICUSDT       Momentum:  8.99 24h:  49.42% Vol: $    11,239 (gaming)
+ 2. 🔵 XRPUSDT         Momentum:  6.78 24h:   5.23% Vol: $ 1,812,478 (general)
+ 3. 🔴 PORTOUSDT       Momentum:  6.42 24h:  40.71% Vol: $       225 (general)
+ 4. 🔵 BTCUSDT         Momentum:  6.41 24h:   0.67% Vol: $ 2,189,918 (layer1)
+ 5. 🟡 ETHUSDT         Momentum:  6.40 24h:   5.64% Vol: $   680,135 (layer1)
+ 6. 🟡 LTCUSDT         Momentum:  6.21 24h:   9.77% Vol: $   172,253 (general)
+ 7. 🟡 DOGEUSDT        Momentum:  6.10 24h:   4.00% Vol: $   496,925 (meme)
+ 8. 🟡 PENGUUSDT       Momentum:  5.89 24h:   2.67% Vol: $   420,292 (general)
+ 9. 🟡 SOLUSDT         Momentum:  5.74 24h:   3.35% Vol: $   253,269 (layer1)
+10. 🟡 ADAUSDT         Momentum:  5.61 24h:   3.58% Vol: $   176,787 (layer1)
+11. 🟡 BNBUSDT         Momentum:  5.47 24h:   1.96% Vol: $   186,533 (stablecoin)
+12. 🟠 XLMUSDT         Momentum:  5.42 24h:   4.77% Vol: $    86,967 (general)
+13. 🟡 BONKUSDT        Momentum:  5.40 24h:   3.09% Vol: $   122,254 (meme)
+14. 🔴 LAZIOUSDT       Momentum:  5.28 24h:  35.70% Vol: $        51 (general)
+15. 🟠 SUIUSDT         Momentum:  5.27 24h:   3.68% Vol: $    79,503 (general)
+16. 🟡 HBARUSDT        Momentum:  5.25 24h:   1.64% Vol: $   121,488 (general)
+17. 🟠 FLOKIUSDT       Momentum:  5.10 24h:   3.09% Vol: $    61,358 (meme)
+18. 🟠 BRETTUSDT       Momentum:  5.07 24h:   7.27% Vol: $    21,903 (general)
+19. 🟠 LINKUSDT        Momentum:  4.94 24h:   4.43% Vol: $    31,512 (general)
+20. 🔴 ILVUSDT         Momentum:  4.89 24h:  23.07% Vol: $       385 (gaming)
+21. 🟠 UNIUSDT         Momentum:  4.86 24h:   8.18% Vol: $    11,027 (defi)
+22. 🟠 ARBUSDT         Momentum:  4.85 24h:   7.36% Vol: $    12,988 (general)
+23. 🟠 AVAXUSDT        Momentum:  4.82 24h:   3.29% Vol: $    30,649 (layer1)
+24. 🟠 ENAUSDT         Momentum:  4.80 24h:   1.69% Vol: $    42,551 (general)
+25. 🟠 CRVUSDT         Momentum:  4.77 24h:   3.12% Vol: $    28,860 (defi)
+
+================================================================================
+📈 TOP 25 BY 24H PERFORMANCE
+================================================================================
+ 1. 🟠 MAGICUSDT       Change:  49.42% Price: $    0.2700 Vol: $    11,239 (gaming)
+ 2. 🔴 PORTOUSDT       Change:  40.71% Price: $    1.0300 Vol: $       225 (general)
+ 3. 🔴 LAZIOUSDT       Change:  35.70% Price: $    1.0300 Vol: $        51 (general)
+ 4. 🔴 ILVUSDT         Change:  23.07% Price: $   14.9900 Vol: $       385 (gaming)
+ 5. 🔴 EOSUSDT         Change:  20.60% Price: $    0.5608 Vol: $       203 (general)
+ 6. 🔴 ENJUSDT         Change:  17.75% Price: $    0.0975 Vol: $       513 (gaming)
+ 7. 🔴 SYSUSDT         Change:  16.72% Price: $    0.0475 Vol: $       239 (general)
+ 8. 🔴 LOKAUSDT        Change:  16.23% Price: $    0.2220 Vol: $       517 (general)
+ 9. 🔴 RAREUSDT        Change:  12.60% Price: $    0.0581 Vol: $       633 (general)
+10. 🔴 ALICEUSDT       Change:  12.57% Price: $    0.3941 Vol: $        40 (gaming)
+11. 🔴 1INCHUSDT       Change:  11.36% Price: $    0.2726 Vol: $       104 (general)
+12. 🔴 GUSDT           Change:  11.14% Price: $    0.0119 Vol: $        16 (general)
+13. 🔴 FORTHUSDT       Change:  10.61% Price: $    2.6590 Vol: $        39 (general)
+14. 🔴 REEFUSDT        Change:  10.54% Price: $    0.0004 Vol: $       186 (general)
+15. 🟡 LTCUSDT         Change:   9.77% Price: $  119.2900 Vol: $   172,253 (general)
+16. 🔴 ZECUSDT         Change:   9.10% Price: $   38.0200 Vol: $     4,342 (general)
+17. 🔴 KSMUSDT         Change:   8.81% Price: $   14.6900 Vol: $     1,341 (general)
+18. 🔴 BATUSDT         Change:   8.66% Price: $    0.1556 Vol: $     1,787 (general)
+19. 🔴 ONDOUSDT        Change:   8.41% Price: $    0.9993 Vol: $     5,392 (general)
+20. 🔴 API3USDT        Change:   8.32% Price: $    0.7290 Vol: $        88 (ai)
+21. 🟠 UNIUSDT         Change:   8.18% Price: $    9.9150 Vol: $    11,027 (defi)
+22. 🔴 WAXPUSDT        Change:   8.15% Price: $    0.0214 Vol: $       173 (general)
+23. 🔴 FLOWUSDT        Change:   7.82% Price: $    0.3860 Vol: $       349 (general)
+24. 🔴 OPUSDT          Change:   7.81% Price: $    0.7040 Vol: $     1,303 (general)
+25. 🔴 1000MOGUSDT     Change:   7.80% Price: $    0.0013 Vol: $     1,588 (general)
+
+================================================================================
+🎮 GAMING TOKENS ANALYSIS
+================================================================================
+ 1. 🟠 MAGICUSDT       Price: $  0.2700 24h:  49.42% Vol: $    11,239 Score: 8.5
+ 2. 🔴 ILVUSDT         Price: $ 14.9900 24h:  23.07% Vol: $       385 Score: 7.0
+ 3. 🔴 ENJUSDT         Price: $  0.0975 24h:  17.75% Vol: $       513 Score: 7.0
+ 4. 🔴 MANAUSDT        Price: $  0.2844 24h:   5.61% Vol: $     1,504 Score: 7.0
+ 5. 🔴 SANDUSDT        Price: $  0.2771 24h:   6.70% Vol: $       925 Score: 7.0
+ 6. 🔴 GALAUSDT        Price: $  0.0159 24h:   5.93% Vol: $     1,003 Score: 7.0
+ 7. 🔴 AXSUSDT         Price: $  2.3630 24h:   4.46% Vol: $       708 Score: 7.0
+ 8. 🔴 ALICEUSDT       Price: $  0.3941 24h:  12.57% Vol: $        40 Score: 7.0
+ 9. 🔴 VOXELUSDT       Price: $  0.0561 24h:   5.65% Vol: $       168 Score: 7.0
+
+================================================================================
+📊 VOLUME DISTRIBUTION
+================================================================================
+🔵 Mid Volume ($1M-$10M)       2 tokens (  1.1%)
+🟡 Small Volume ($100K-$1M)    9 tokens (  5.0%)
+🟠 Micro Volume ($10K-$100K)  21 tokens ( 11.7%)
+🔴 Nano Volume (<$10K)       148 tokens ( 82.2%)
+
+================================================================================
+🏢 SECTOR DISTRIBUTION
+================================================================================
+📈 General         141 tokens ( 78.3%)
+📈 Layer1            9 tokens (  5.0%)
+📈 Defi              9 tokens (  5.0%)
+📈 Gaming            9 tokens (  5.0%)
+📈 Meme              5 tokens (  2.8%)
+📈 Ai                5 tokens (  2.8%)
+📈 Stablecoin        2 tokens (  1.1%)

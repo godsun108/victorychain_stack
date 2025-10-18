@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""Ingest documents (txt/md/pdf) into Qdrant collection using MiniLM embeddings.
+
+Usage:
+  export QDRANT_URL=http://localhost:6333
+  export QDRANT_COLLECTION=vtb_scrolls
+  python scripts/rag/rag_ingest.py --docs ./data/scrolls --chunk 800 --overlap 120
+"""
+import os, sys, argparse, json, re
+from pathlib import Path
+from typing import List
+
+from qdrant_client import QdrantClient
+from qdrant_client.http import models as qm
+from sentence_transformers import SentenceTransformer
+
+try:
+    import markdown as md
+except Exception:
+    md = None
+try:
+    from pypdf import PdfReader
+except Exception:
+    PdfReader = None
+
+RE_WS = re.compile(r"\s+")
+
+
+def load_text(path: Path) -> str:
+    if path.suffix.lower() == ".pdf" and PdfReader:
+        try:
+            pdf = PdfReader(str(path))
+            return "\n".join(page.extract_text() or "" for page in pdf.pages)
+        except Exception as e:
+            print("pdf_read_fail", path, e)
+            return ""
+    data = path.read_text(encoding="utf-8", errors="ignore")
+    if path.suffix.lower() in (".md", ".markdown") and md:
+        try:
+            # Strip markdown to text: naive removal of tags
+            html = md.markdown(data)
+            data = re.sub("<[^<]+?>", " ", html)
+        except Exception:
+            pass
+    return data
+
+
+def normalize(text: str) -> str:
+    text = RE_WS.sub(" ", text)
+    return text.strip()
+
+
+def chunk(text: str, size: int, overlap: int) -> List[str]:
+    out = []
+    i = 0
+    while i < len(text):
+        out.append(text[i : i + size])
+        i += max(1, size - overlap)
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--docs", default="./data/scrolls")
+    ap.add_argument("--chunk", type=int, default=800)
+    ap.add_argument("--overlap", type=int, default=120)
+    ap.add_argument("--batch", type=int, default=64)
+    args = ap.parse_args()
+
+    coll = os.getenv("QDRANT_COLLECTION", "vtb_scrolls")
+    url = os.getenv("QDRANT_URL", "http://localhost:6333")
+
+    paths = [
+        p
+        for p in Path(args.docs).rglob("*")
+        if p.suffix.lower() in (".txt", ".md", ".markdown", ".pdf")
+    ]
+    print(f"Found {len(paths)} documents")
+    texts = []
+    metas = []
+    for p in paths:
+        raw = load_text(p)
+        norm = normalize(raw)
+        if not norm:
+            continue
+        for i, ch in enumerate(chunk(norm, args.chunk, args.overlap)):
+            texts.append(ch)
+            metas.append({"source": str(p), "idx": i})
+    print(f"Prepared {len(texts)} chunks")
+
+    if not texts:
+        print("No chunks; abort")
+        return
+
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    dim = model.get_sentence_embedding_dimension()
+    client = QdrantClient(url=url)
+
+    # Validate collection dim
+    info = client.get_collection(coll)
+    # (No direct size check in API, assume compatible or manage manually.)
+
+    vectors = []
+    for i in range(0, len(texts), args.batch):
+        batch_texts = texts[i : i + args.batch]
+        emb = model.encode(
+            batch_texts,
+            batch_size=args.batch,
+            show_progress_bar=True,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+        )
+        for j, vec in enumerate(emb):
+            vectors.append((i + j, vec, metas[i + j]))
+    print("Embedding complete; uploading...")
+
+    client.upsert(
+        collection_name=coll,
+        points=[
+            qm.PointStruct(id=int(pid), vector=v.tolist(), payload=meta)
+            for pid, v, meta in vectors
+        ],
+    )
+    print("Upsert complete.")
+
+
+if __name__ == "__main__":
+    main()

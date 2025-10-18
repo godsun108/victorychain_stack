@@ -1,0 +1,484 @@
+#!/usr/bin/env python3
+
+"""
+BINANCE US COMPLETE TOKEN SCANNER
+=================================
+Comprehensive scanner for ALL available tokens on Binance US
+- Real-time market data for every trading pair
+- Volume analysis and momentum detection
+- Price movement tracking
+- Liquidity assessment
+- Trading opportunity identification
+"""
+
+import ccxt
+import asyncio
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
+import json
+import time
+from dataclasses import dataclass, field
+from collections import defaultdict
+
+
+@dataclass
+class BinanceUSToken:
+    """Complete token information from Binance US"""
+
+    symbol: str
+    base_asset: str
+    quote_asset: str
+    price: float
+    price_change_24h: float
+    price_change_percent_24h: float
+    high_24h: float
+    low_24h: float
+    volume_24h: float
+    quote_volume_24h: float
+    bid_price: float
+    ask_price: float
+    bid_qty: float
+    ask_qty: float
+    open_price: float
+    prev_close_price: float
+    last_qty: float
+    trade_count_24h: int
+    timestamp: datetime
+    market_cap_rank: Optional[int] = None
+    trading_status: str = "TRADING"
+
+    @property
+    def spread_percent(self) -> float:
+        """Calculate bid-ask spread percentage"""
+        if self.bid_price and self.ask_price:
+            return ((self.ask_price - self.bid_price) / self.bid_price) * 100
+        return 0.0
+
+    @property
+    def volume_rating(self) -> str:
+        """Volume rating based on 24h volume"""
+        if self.quote_volume_24h > 10_000_000:
+            return "VERY_HIGH"
+        elif self.quote_volume_24h > 1_000_000:
+            return "HIGH"
+        elif self.quote_volume_24h > 100_000:
+            return "MEDIUM"
+        elif self.quote_volume_24h > 10_000:
+            return "LOW"
+        else:
+            return "VERY_LOW"
+
+    @property
+    def momentum_signal(self) -> str:
+        """Momentum signal based on price change"""
+        if self.price_change_percent_24h > 10:
+            return "STRONG_BUY"
+        elif self.price_change_percent_24h > 5:
+            return "BUY"
+        elif self.price_change_percent_24h > 2:
+            return "WEAK_BUY"
+        elif self.price_change_percent_24h > -2:
+            return "NEUTRAL"
+        elif self.price_change_percent_24h > -5:
+            return "WEAK_SELL"
+        elif self.price_change_percent_24h > -10:
+            return "SELL"
+        else:
+            return "STRONG_SELL"
+
+
+@dataclass
+class MarketAnalysis:
+    """Market analysis results"""
+
+    total_tokens: int
+    active_pairs: List[BinanceUSToken]
+    top_gainers: List[BinanceUSToken]
+    top_losers: List[BinanceUSToken]
+    highest_volume: List[BinanceUSToken]
+    momentum_plays: List[BinanceUSToken]
+    breakout_candidates: List[BinanceUSToken]
+    oversold_bounces: List[BinanceUSToken]
+    analysis_timestamp: datetime
+
+
+class BinanceUSCompleteScanner:
+    """Complete scanner for all Binance US tokens"""
+
+    def __init__(self):
+        # Your Binance US API credentials
+        self.api_key = (
+            "o0KEblMxyczeSMETOFC5Kp7wheZJVVk0JQ5tfGv5TGiLXX909VqcR59ofWFoytVX"
+        )
+        self.api_secret = (
+            "bjzQ1ZB3qoxE62r5uofcrPSLUYsYqqFyfzZaAdgjOBNHSZlnNiBXXm2zKBM8PMYg"
+        )
+
+        # Initialize exchange
+        self.exchange = ccxt.binanceus(
+            {
+                "apiKey": self.api_key,
+                "secret": self.api_secret,
+                "sandbox": False,
+                "enableRateLimit": True,
+                "options": {"defaultType": "spot"},
+            }
+        )
+
+        # Data storage
+        self.all_tokens: Dict[str, BinanceUSToken] = {}
+        self.markets_info = {}
+        self.account_info = {}
+
+        # Initialize connection
+        self._initialize_connection()
+
+    def _initialize_connection(self):
+        """Initialize connection and load market data"""
+        try:
+            print("🔗 Connecting to Binance US API...")
+
+            # Test connection
+            self.account_info = self.exchange.fetch_balance()
+            print("✅ API connection successful!")
+
+            # Load all markets
+            self.markets_info = self.exchange.load_markets()
+            print(f"📊 Loaded {len(self.markets_info)} trading pairs")
+
+        except Exception as e:
+            print(f"❌ Connection failed: {e}")
+            raise
+
+    async def scan_all_tokens(self) -> Dict[str, BinanceUSToken]:
+        """Scan ALL available tokens on Binance US"""
+        print("🔍 Scanning ALL Binance US tokens...")
+
+        try:
+            # Get 24hr ticker statistics for all symbols
+            tickers = self.exchange.fetch_tickers()
+            print(f"📡 Fetched data for {len(tickers)} trading pairs")
+
+            tokens = {}
+
+            for symbol, ticker in tickers.items():
+                try:
+                    # Parse symbol
+                    if "/" not in symbol:
+                        continue
+
+                    base_asset, quote_asset = symbol.split("/")
+
+                    # Create token object
+                    token = BinanceUSToken(
+                        symbol=symbol,
+                        base_asset=base_asset,
+                        quote_asset=quote_asset,
+                        price=ticker.get("last", 0),
+                        price_change_24h=ticker.get("change", 0),
+                        price_change_percent_24h=ticker.get("percentage", 0),
+                        high_24h=ticker.get("high", 0),
+                        low_24h=ticker.get("low", 0),
+                        volume_24h=ticker.get("baseVolume", 0),
+                        quote_volume_24h=ticker.get("quoteVolume", 0),
+                        bid_price=ticker.get("bid", 0),
+                        ask_price=ticker.get("ask", 0),
+                        bid_qty=ticker.get("bidVolume", 0),
+                        ask_qty=ticker.get("askVolume", 0),
+                        open_price=ticker.get("open", 0),
+                        prev_close_price=ticker.get("previousClose", 0),
+                        last_qty=0,  # Not available in ticker
+                        trade_count_24h=ticker.get("info", {}).get("count", 0),
+                        timestamp=datetime.now(),
+                    )
+
+                    tokens[symbol] = token
+
+                except Exception as e:
+                    print(f"⚠️ Error processing {symbol}: {e}")
+                    continue
+
+            self.all_tokens = tokens
+            print(f"✅ Successfully scanned {len(tokens)} tokens")
+
+            return tokens
+
+        except Exception as e:
+            print(f"❌ Error scanning tokens: {e}")
+            return {}
+
+    def analyze_all_tokens(self) -> MarketAnalysis:
+        """Comprehensive analysis of all tokens"""
+        print("📈 Analyzing ALL tokens for opportunities...")
+
+        if not self.all_tokens:
+            print("⚠️ No tokens loaded. Running scan first...")
+            asyncio.run(self.scan_all_tokens())
+
+        # Convert to list for analysis
+        token_list = list(self.all_tokens.values())
+
+        # Filter out zero-volume pairs
+        active_pairs = [t for t in token_list if t.quote_volume_24h > 0]
+
+        # Top gainers (sorted by percentage change)
+        top_gainers = sorted(
+            [t for t in active_pairs if t.price_change_percent_24h > 0],
+            key=lambda x: x.price_change_percent_24h,
+            reverse=True,
+        )[:20]
+
+        # Top losers
+        top_losers = sorted(
+            [t for t in active_pairs if t.price_change_percent_24h < 0],
+            key=lambda x: x.price_change_percent_24h,
+        )[:20]
+
+        # Highest volume
+        highest_volume = sorted(
+            active_pairs, key=lambda x: x.quote_volume_24h, reverse=True
+        )[:20]
+
+        # Momentum plays (strong price movement + volume)
+        momentum_plays = [
+            t
+            for t in active_pairs
+            if abs(t.price_change_percent_24h) > 5 and t.quote_volume_24h > 100_000
+        ]
+        momentum_plays.sort(key=lambda x: abs(x.price_change_percent_24h), reverse=True)
+
+        # Breakout candidates (high volume + positive momentum)
+        breakout_candidates = [
+            t
+            for t in active_pairs
+            if t.price_change_percent_24h > 3
+            and t.quote_volume_24h > 500_000
+            and t.price > t.low_24h * 1.05  # Price above recent low
+        ]
+        breakout_candidates.sort(key=lambda x: x.price_change_percent_24h, reverse=True)
+
+        # Oversold bounces (down significantly but showing signs of recovery)
+        oversold_bounces = [
+            t
+            for t in active_pairs
+            if t.price_change_percent_24h < -10
+            and t.quote_volume_24h > 50_000
+            and t.price > t.low_24h * 1.02  # Slightly above daily low
+        ]
+        oversold_bounces.sort(key=lambda x: x.price_change_percent_24h)
+
+        return MarketAnalysis(
+            total_tokens=len(token_list),
+            active_pairs=active_pairs,
+            top_gainers=top_gainers,
+            top_losers=top_losers,
+            highest_volume=highest_volume,
+            momentum_plays=momentum_plays[:15],
+            breakout_candidates=breakout_candidates[:15],
+            oversold_bounces=oversold_bounces[:15],
+            analysis_timestamp=datetime.now(),
+        )
+
+    def get_tokens_by_quote_asset(
+        self, quote_asset: str = "USDT"
+    ) -> List[BinanceUSToken]:
+        """Get all tokens for a specific quote asset"""
+        return [
+            token
+            for token in self.all_tokens.values()
+            if token.quote_asset == quote_asset and token.quote_volume_24h > 0
+        ]
+
+    def get_tokens_by_volume_range(
+        self, min_volume: float, max_volume: float = float("inf")
+    ) -> List[BinanceUSToken]:
+        """Get tokens within a specific volume range"""
+        return [
+            token
+            for token in self.all_tokens.values()
+            if min_volume <= token.quote_volume_24h <= max_volume
+        ]
+
+    def get_momentum_tokens(
+        self, min_change_percent: float = 5.0
+    ) -> List[BinanceUSToken]:
+        """Get tokens with strong momentum"""
+        return [
+            token
+            for token in self.all_tokens.values()
+            if abs(token.price_change_percent_24h) >= min_change_percent
+        ]
+
+    def search_tokens(self, search_term: str) -> List[BinanceUSToken]:
+        """Search tokens by symbol or base asset"""
+        search_term = search_term.upper()
+        return [
+            token
+            for token in self.all_tokens.values()
+            if search_term in token.base_asset or search_term in token.symbol
+        ]
+
+
+def display_market_analysis(analysis: MarketAnalysis):
+    """Display comprehensive market analysis"""
+    print("\n" + "=" * 100)
+    print("🚀 BINANCE US COMPLETE TOKEN ANALYSIS")
+    print("=" * 100)
+
+    print(f"\n📊 MARKET OVERVIEW:")
+    print(f"   🎯 Total Trading Pairs: {analysis.total_tokens}")
+    print(f"   📈 Active Pairs (with volume): {len(analysis.active_pairs)}")
+    print(
+        f"   🕐 Analysis Time: {analysis.analysis_timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+
+    # Top Gainers
+    print(f"\n🟢 TOP 15 GAINERS (24h):")
+    print("-" * 80)
+    for i, token in enumerate(analysis.top_gainers[:15], 1):
+        volume_str = (
+            f"${token.quote_volume_24h:,.0f}"
+            if token.quote_volume_24h > 1000
+            else f"${token.quote_volume_24h:.2f}"
+        )
+        print(
+            f"{i:2d}. {token.symbol:15s} ${token.price:>10.6f} 🟢 +{token.price_change_percent_24h:>6.2f}% Vol: {volume_str:>12s} {token.momentum_signal}"
+        )
+
+    # Top Losers
+    print(f"\n🔴 TOP 15 LOSERS (24h):")
+    print("-" * 80)
+    for i, token in enumerate(analysis.top_losers[:15], 1):
+        volume_str = (
+            f"${token.quote_volume_24h:,.0f}"
+            if token.quote_volume_24h > 1000
+            else f"${token.quote_volume_24h:.2f}"
+        )
+        print(
+            f"{i:2d}. {token.symbol:15s} ${token.price:>10.6f} 🔴 {token.price_change_percent_24h:>7.2f}% Vol: {volume_str:>12s} {token.momentum_signal}"
+        )
+
+    # Highest Volume
+    print(f"\n💹 HIGHEST VOLUME TOKENS:")
+    print("-" * 80)
+    for i, token in enumerate(analysis.highest_volume[:15], 1):
+        volume_str = f"${token.quote_volume_24h:,.0f}"
+        change_emoji = "🟢" if token.price_change_percent_24h > 0 else "🔴"
+        print(
+            f"{i:2d}. {token.symbol:15s} Vol: {volume_str:>15s} {change_emoji} {token.price_change_percent_24h:>6.2f}% {token.volume_rating}"
+        )
+
+    # Momentum Plays
+    print(f"\n⚡ MOMENTUM PLAYS ({len(analysis.momentum_plays)} found):")
+    print("-" * 80)
+    for i, token in enumerate(analysis.momentum_plays[:10], 1):
+        direction = "📈" if token.price_change_percent_24h > 0 else "📉"
+        volume_str = f"${token.quote_volume_24h:,.0f}"
+        print(
+            f"{i:2d}. {token.symbol:15s} {direction} {token.price_change_percent_24h:>6.2f}% Vol: {volume_str:>12s} Spread: {token.spread_percent:.3f}%"
+        )
+
+    # Breakout Candidates
+    print(f"\n🚀 BREAKOUT CANDIDATES ({len(analysis.breakout_candidates)} found):")
+    print("-" * 80)
+    for i, token in enumerate(analysis.breakout_candidates[:10], 1):
+        volume_str = f"${token.quote_volume_24h:,.0f}"
+        price_vs_low = ((token.price - token.low_24h) / token.low_24h) * 100
+        print(
+            f"{i:2d}. {token.symbol:15s} +{token.price_change_percent_24h:>5.2f}% Vol: {volume_str:>12s} Above Low: +{price_vs_low:.1f}%"
+        )
+
+    # Oversold Bounces
+    print(f"\n🔄 OVERSOLD BOUNCE CANDIDATES ({len(analysis.oversold_bounces)} found):")
+    print("-" * 80)
+    for i, token in enumerate(analysis.oversold_bounces[:10], 1):
+        volume_str = f"${token.quote_volume_24h:,.0f}"
+        price_vs_low = ((token.price - token.low_24h) / token.low_24h) * 100
+        print(
+            f"{i:2d}. {token.symbol:15s} {token.price_change_percent_24h:>6.2f}% Vol: {volume_str:>12s} Above Low: +{price_vs_low:.1f}%"
+        )
+
+
+async def run_complete_binance_us_scan():
+    """Run complete Binance US token scan and analysis"""
+    print("🔍 STARTING COMPLETE BINANCE US TOKEN SCAN")
+    print("=" * 60)
+
+    # Initialize scanner
+    scanner = BinanceUSCompleteScanner()
+
+    # Scan all tokens
+    all_tokens = await scanner.scan_all_tokens()
+
+    # Perform comprehensive analysis
+    analysis = scanner.analyze_all_tokens()
+
+    # Display results
+    display_market_analysis(analysis)
+
+    # Additional analysis by categories
+    print(f"\n📊 TOKEN BREAKDOWN BY QUOTE ASSET:")
+    quote_assets = {}
+    for token in analysis.active_pairs:
+        quote = token.quote_asset
+        if quote not in quote_assets:
+            quote_assets[quote] = 0
+        quote_assets[quote] += 1
+
+    for quote, count in sorted(quote_assets.items(), key=lambda x: x[1], reverse=True):
+        print(f"   {quote}: {count} pairs")
+
+    # Volume categories
+    print(f"\n💰 VOLUME CATEGORIES:")
+    volume_categories = {
+        "Mega (>$10M)": len(
+            [t for t in analysis.active_pairs if t.quote_volume_24h > 10_000_000]
+        ),
+        "High ($1M-$10M)": len(
+            [
+                t
+                for t in analysis.active_pairs
+                if 1_000_000 <= t.quote_volume_24h <= 10_000_000
+            ]
+        ),
+        "Medium ($100K-$1M)": len(
+            [
+                t
+                for t in analysis.active_pairs
+                if 100_000 <= t.quote_volume_24h <= 1_000_000
+            ]
+        ),
+        "Low ($10K-$100K)": len(
+            [
+                t
+                for t in analysis.active_pairs
+                if 10_000 <= t.quote_volume_24h <= 100_000
+            ]
+        ),
+        "Micro (<$10K)": len(
+            [t for t in analysis.active_pairs if t.quote_volume_24h < 10_000]
+        ),
+    }
+
+    for category, count in volume_categories.items():
+        print(f"   {category}: {count} tokens")
+
+    # Show account balance
+    print(f"\n💼 ACCOUNT INFORMATION:")
+    for currency, balance in scanner.account_info.get("total", {}).items():
+        if balance and balance > 0.0001:
+            print(f"   {currency}: {balance:.6f}")
+
+    print(f"\n✅ COMPLETE SCAN FINISHED!")
+    print(f"🎯 {len(all_tokens)} total tokens analyzed")
+    print(f"📈 {len(analysis.momentum_plays)} momentum opportunities found")
+    print(f"🚀 {len(analysis.breakout_candidates)} breakout candidates identified")
+
+    return scanner, analysis
+
+
+if __name__ == "__main__":
+    # Run complete scan
+    scanner, analysis = asyncio.run(run_complete_binance_us_scan())

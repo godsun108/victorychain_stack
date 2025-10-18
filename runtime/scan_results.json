@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-10-14T04:01:38.481785",
+  "momentum_signals": [],
+  "ml_signals": [],
+  "portfolio_diagnostics": {
+    "num_symbols": 3,
+    "timestamp": "2025-10-14T04:01:38.481246",
+    "investable_usd": 55.018740159,
+    "investable_per_asset": 18.339580053,
+    "mean_reversion_signals": [],
+    "pair_trading_signals": [],
+    "yield_opportunities": [],
+    "volatility_breakout_signals": [],
+    "multi_timeframe_momentum_signals": [],
+    "event_signals": [],
+    "insurance_signals": [],
+    "hedge_signals": [],
+    "top_momentum_assets": [
+      "SOL/USDT",
+      "BTC/USDT",
+      "ETH/USDT"
+    ]
+  },
+  "final_allocations": {
+    "BTC/USDT": 18.339580053,
+    "SOL/USDT": 18.339580053,
+    "ETH/USDT": 18.339580053
+  },
+  "notes": "Full strategy integration. All signals/diagnostics included. No trades/allocations this cycle, but scan and reserves maintained."
+}

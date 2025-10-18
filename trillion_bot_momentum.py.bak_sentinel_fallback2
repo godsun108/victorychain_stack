@@ -1,0 +1,830 @@
+from __future__ import annotations
+#!/usr/bin/env python3
+import logging
+import os
+import sys
+import time
+import json
+import math
+import statistics
+import threading
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Any, List, Optional, Tuple
+
+try:
+    UTC = datetime.UTC  # py311+
+except AttributeError:  # pragma: no cover
+    UTC = timezone.utc
+
+def now_utc():
+    return datetime.now(UTC)
+
+def _snap_for_market(client, symbol, price, amount, log=None, tag="precheck"):
+    """Snap price/amount to precision and enforce min notional.
+    Returns (price, amount, min_cost). Safe: falls back to originals on error.
+    """
+    try:
+        # Ensure markets loaded once
+        if not getattr(client, 'markets', None):
+            try:
+                client.load_markets()
+            except Exception:
+                pass
+        px = float(client.price_to_precision(symbol, price)) if price is not None else None
+        amt = float(client.amount_to_precision(symbol, amount))
+        info = getattr(client, 'markets', {}).get(symbol, {}) if hasattr(client, 'markets') else {}
+        lims = (info.get('limits', {}) or {})
+        min_cost = (lims.get('cost', {}) or {}).get('min')
+        # Fallback: derive min_notional from raw filters if cost.limits absent
+        if (min_cost is None) and info.get('info'):
+            try:
+                for f in info['info'].get('filters', []):
+                    if f.get('filterType') in ('MIN_NOTIONAL', 'NOTIONAL'):
+                        cand = f.get('minNotional') or f.get('notional')
+                        if cand is not None:
+                            min_cost = float(cand)
+            except Exception:
+                pass
+        min_cost_f = float(min_cost) if min_cost not in (None, '') else None
+        if min_cost_f is not None and px is not None and px * amt < min_cost_f:
+            need = (min_cost_f / max(px, 1e-12)) * 1.001
+            try:
+                amt = float(client.amount_to_precision(symbol, need))
+            except Exception:
+                amt = need
+        if log:
+            log.info(f"[order-size] {tag} {symbol} amt={amt} px={px} min_cost={min_cost_f}")
+        return px, amt, min_cost_f
+    except Exception as e:
+        if log:
+            try:
+                name = type(e).__name__
+            except Exception:
+                name = 'Exception'
+            log.warning(f"[order-size] snap failed ({tag}): {name}: {e}")
+        return price, amount, None
+
+# --- metrics v2 bot-aware patch (replaces previous) ---
+from collections import defaultdict
+from momentum.metrics_hook_v2 import (
+    start_metrics as _metrics_start,
+    inc_trade as _metrics_inc_trade,
+    set_position_size as _metrics_set_position_size,
+    set_weekly_pnl as _metrics_set_weekly_pnl,
+)
+from momentum.weekly_pnl import compute_weekly_pnl as _compute_weekly_pnl
+_BOT_ID = os.getenv("BOT_ID", "default")
+_METRICS_PORT = int(os.getenv("METRICS_PORT", "9108"))
+_LEDGER_FILE = os.getenv("LEDGER_FILE", "runtime/ledger/live_ledger.jsonl")
+_EMIT_WEEKLY_PNL = os.getenv("EMIT_WEEKLY_PNL", "1") in ("1", "true", "TRUE")
+_metrics_start(_METRICS_PORT, bot_id=_BOT_ID)  # idempotent
+_POSITION_SIZE = defaultdict(float)  # signed base units
+_last_pnl_emit = 0.0
+
+def _maybe_emit_weekly_pnl():
+    if not _EMIT_WEEKLY_PNL:
+        return
+    global _last_pnl_emit
+    now = time.time()
+    if now - _last_pnl_emit >= 60:
+        try:
+            weekly = _compute_weekly_pnl(_LEDGER_FILE)
+            _metrics_set_weekly_pnl(weekly, bot_id=_BOT_ID)
+        except Exception:
+            pass
+        _last_pnl_emit = now
+
+def _on_fill_metrics(symbol: str, side: str, qty: float):
+    # Normalize symbol to remove '/'
+    sym_flat = symbol.replace('/', '')
+    # increment trade counter
+    _metrics_inc_trade(sym_flat, side, bot_id=_BOT_ID)
+    # adjust signed position size
+    if side.upper() == 'BUY':
+        _POSITION_SIZE[sym_flat] += qty
+    else:
+        _POSITION_SIZE[sym_flat] -= qty
+    _metrics_set_position_size(sym_flat, _POSITION_SIZE[sym_flat], bot_id=_BOT_ID)
+    _maybe_emit_weekly_pnl()
+# --- end metrics patch v2 ---
+
+from dotenv import load_dotenv
+from loguru import logger
+
+# Governance ledger integration
+import governance.prompt_version as pv
+
+# Guarded adapter for order/cancel
+from libs.exchange_adapters.binance_us import (
+    get_client,
+    guarded_create_order,
+    guarded_cancel_order,
+)
+
+# VictoryChain anchor handoff
+try:
+    import anchor_victorychain as anchor_vc  # optional gateway handoff
+except Exception:
+    anchor_vc = None
+
+# Net-edge gate
+from momentum.integration_snippets import check_before_order
+
+# [inject] get_exchange_client fallback (prefers adapter; falls back to ccxt.binanceus)
+try:
+    # If you already have an adapter, use it
+    from momentum.exchange_adapters.binance_us import get_exchange_client as _gec  # type: ignore
+    def get_exchange_client():
+        return _gec()
+except Exception:
+    import os, logging
+    import ccxt
+    def get_exchange_client():
+        key = (os.getenv("BINANCEUS_KEY") or os.getenv("BINANCE_US_KEY") or os.getenv("BINANCEUS_KEY"))
+        secret = (os.getenv("BINANCEUS_SECRET") or os.getenv("BINANCE_US_SECRET") or os.getenv("BINANCE_API_SECRET"))
+        if not key or not secret:
+            raise RuntimeError("Missing BINANCEUS_KEY/BINANCEUS_SECRET (or equivalent) in environment")
+        ex = ccxt.binanceus({
+            "apiKey": key,
+            "secret": secret,
+            "enableRateLimit": True,
+            "options": {
+                "defaultType": "spot",
+                "adjustForTimeDifference": True,
+                "recvWindow": 5000
+            },
+        })
+        try:
+            mkts = ex.load_markets()
+            logging.info("markets loaded: %s symbols", len(mkts or {}))
+        except Exception as e:
+            logging.warning("load_markets failed: %s", e)
+        return ex
+
+
+
+# Optional dynamic universe
+try:
+    from momentum.universe_discovery import discover_universe as _discover_universe
+except Exception:
+    _discover_universe = None
+
+# Treasury conversions plan
+try:
+    from momentum.treasury_settle import plan_bank_conversions as _plan_bank_conversions
+except Exception:
+    _plan_bank_conversions = None
+
+# ===== env and config =====
+
+def load_env() -> None:
+    env_file = os.getenv("ENV", ".env.live")
+    if os.path.exists(env_file):
+        load_dotenv(env_file)
+    # Point ledger to configured path if provided
+    ledger_path = os.getenv("LEDGER_PATH")
+    if ledger_path:
+        pv.LEDGER_PATH = ledger_path
+
+
+def get_cfg() -> Dict[str, Any]:
+    return {
+        'MODE': os.getenv('MODE', 'live').lower(),
+        'EXCHANGE': os.getenv('EXCHANGE', 'binanceus'),
+        'QUOTE_PREFS': [s.strip() for s in os.getenv('QUOTE_PREFS', 'USDT,USD,USDC').split(',') if s.strip()],
+        'ALLOWED_SYMBOLS': [s.strip().upper() for s in os.getenv('ALLOWED_SYMBOLS', '').split(',') if s.strip()],
+        'EXCLUDE_BASES': set([s.strip().upper() for s in os.getenv('EXCLUDE_BASES', 'BTC,ETH').split(',') if s.strip()]),
+        'ISO_COINS': [s.strip().upper() for s in os.getenv('ISO_COINS', 'XRP,XLM,XDC,ALGO,IOTA,HBAR,QNT').split(',') if s.strip()],
+        'ISO_BANK_PCT': float(os.getenv('ISO_BANK_PCT', '0.25') or 0.25),
+        'ISO_MIN_PROFIT_USD': float(os.getenv('ISO_MIN_PROFIT_USD', '1.0') or 1.0),
+        'LOOKBACK_BREAKOUT': int(os.getenv('LOOKBACK_BREAKOUT', '40') or 40),
+        'TIMEFRAME': os.getenv('TIMEFRAME', '5m'),
+        'VOLUME_SURGE_MULT': float(os.getenv('VOLUME_SURGE_MULT', '1.3') or 1.3),
+        'RSI_MIN': int(os.getenv('RSI_MIN', '0') or 0),
+        'RSI_MAX': int(os.getenv('RSI_MAX', '80') or 80),
+        'MAX_NOTIONAL_PER_ORDER': float(os.getenv('MAX_NOTIONAL_PER_ORDER', '20') or 20),
+        'MAX_OPEN_TRADES': int(os.getenv('MAX_OPEN_TRADES', '1') or 1),
+        # Use up to this fraction of free quote balance per entry (0-1]
+        'QUOTE_ALLOC_PCT': float(os.getenv('QUOTE_ALLOC_PCT', '0.90') or 0.90),
+        'TAKER_FEE_PCT': float(os.getenv('TAKER_FEE_PCT', '0.10') or 0.10),
+        'TAKER_FEE_BPS': float(os.getenv('TAKER_FEE_BPS', str(int(float(os.getenv('TAKER_FEE_PCT', '0.10'))*100))) or 10),
+        'MAKER_FEE_BPS': float(os.getenv('MAKER_FEE_BPS', '0') or 0),
+        'SLIPPAGE_BPS': int(os.getenv('SLIPPAGE_BPS', '10') or 10),
+        'TRAILING_STOP_BPS': int(os.getenv('TRAILING_STOP_BPS', '300') or 300),
+        'MIN_PROFIT_EXIT_BPS': int(os.getenv('MIN_PROFIT_EXIT_BPS', '50') or 50),
+        'STATE_PATH': os.getenv('STATE_PATH', 'runtime/state/state.json'),
+        'LEDGER_PATH': os.getenv('LEDGER_PATH', 'runtime/ledger/live_ledger.jsonl'),
+        'PAUSE_FILE': os.getenv('PAUSE_FILE', 'runtime/PAUSE'),
+        # Auto top-up from XRP when no quote available
+        'AUTO_TOPUP_FROM_XRP': (os.getenv('AUTO_TOPUP_FROM_XRP', 'true').lower() == 'true'),
+        'TOPUP_XRP_PERCENT': float(os.getenv('TOPUP_XRP_PERCENT', '0.90') or 0.90),
+        # Exports
+        'EXPORTS_DIR': os.getenv('EXPORTS_DIR', 'runtime/exports'),
+        'EXPORT_SESSION_CRON_MINUTES': int(os.getenv('EXPORT_SESSION_CRON_MINUTES', '60') or 60),
+        # Approvals auto-mint knobs (new names with back-compat)
+        'APPROVAL_AUTO_MINT': (os.getenv('APPROVAL_AUTO_MINT', '').lower() or ('true' if os.getenv('MODE', 'live').lower() == 'live' else 'false')) == 'true',
+        'APPROVAL_TTL_SECONDS': int(os.getenv('APPROVAL_TTL_SECONDS', os.getenv('APPROVAL_MIN_TTL_SEC', '300')) or 300),
+        'APPROVAL_RENEW_MARGIN': int(os.getenv('APPROVAL_RENEW_MARGIN', os.getenv('APPROVAL_REFRESH_MARGIN_SEC', '60')) or 60),
+        'APPROVAL_TOKEN_PATH': os.getenv('APPROVAL_TOKEN_PATH', 'runtime/APPROVAL_TOKEN.txt'),
+        'APPROVAL_ACTION': os.getenv('APPROVAL_ACTION', 'order.create'),
+        'DRY_RUN': os.getenv('DRY_RUN', 'true').lower() == 'true',
+        'DYNAMIC_UNIVERSE': os.getenv('DYNAMIC_UNIVERSE', '0') == '1',
+        'UNIVERSE_QUOTES': [s.strip().upper() for s in os.getenv('UNIVERSE_QUOTES', 'USDT,USD').split(',') if s.strip()],
+        'UNIVERSE_MIN_24H_USD': float(os.getenv('UNIVERSE_MIN_24H_USD', '2000000') or 2000000),
+        'UNIVERSE_MAX_PAIRS': int(os.getenv('UNIVERSE_MAX_PAIRS', '25') or 25),
+        'UNIVERSE_EXCLUDE': set([s.strip().upper() for s in os.getenv('UNIVERSE_EXCLUDE', '').split(',') if s.strip()]),
+        'TREASURY_PCT': float(os.getenv('TREASURY_PCT', '0.0') or 0.0),
+        'BANK_ASSETS': [s.strip().upper() for s in os.getenv('BANK_ASSETS', 'XRP,HBAR').split(',') if s.strip()],
+        'BANK_SPLITS': [float(x) for x in os.getenv('BANK_SPLITS', '0.5,0.5').split(',') if x.strip()],
+        'BANK_MIN_CONVERT_USD': float(os.getenv('BANK_MIN_CONVERT_USD', '50') or 50),
+    }
+
+
+# ===== simple state + ledger with hash chain =====
+
+def ensure_dirs(cfg: Dict[str, Any]):
+    for p in [cfg['STATE_PATH'], cfg['LEDGER_PATH']]:
+        d = os.path.dirname(p)
+        if d:
+            os.makedirs(d, exist_ok=True)
+    # exports dir
+    os.makedirs(cfg['EXPORTS_DIR'], exist_ok=True)
+
+
+def read_last_hash(path: str) -> Optional[str]:
+    try:
+        with open(path, 'rb') as f:
+            last = None
+            for line in f:
+                last = line
+            if not last:
+                return None
+            import json as _json
+            rec = _json.loads(last.decode('utf-8', 'ignore'))
+            return rec.get('hash')
+    except Exception:
+        return None
+
+
+def read_first_hash(path: str) -> Optional[str]:
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                import json as _json
+                rec = _json.loads(line)
+                return rec.get('hash')
+    except Exception:
+        return None
+
+
+def iter_ledger(path: str) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except Exception:
+                    continue
+    except FileNotFoundError:
+        return []
+    return rows
+
+
+def write_ledger(event: str, data: Dict[str, Any]) -> None:
+    prev = read_last_hash(pv.LEDGER_PATH)
+    record = {
+        'ts': now_utc().isoformat().replace('+00:00','Z'),
+        'event': event,
+        'component': 'momentum.bot',
+        'prompt_hash': pv.compute_prompt_hash(),
+        'git_commit': pv.get_git_commit(),
+        **data,
+    }
+    import json as _json, hashlib as _hash
+    payload = _json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+    h = _hash.sha256((payload + (prev or '').encode())).hexdigest()
+    record['prev_hash'] = prev
+    record['hash'] = h
+    with open(pv.LEDGER_PATH, 'a', encoding='utf-8') as f:
+        f.write(_json.dumps(record) + "\n")
+
+
+def load_state(path: str) -> Dict[str, Any]:
+    try:
+        with open(path, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return {'positions': []}
+
+
+def save_state(path: str, state: Dict[str, Any]) -> None:
+    with open(path, 'w') as f:
+        json.dump(state, f, indent=2, sort_keys=True)
+
+
+# ===== data utils =====
+
+def rsi(values: List[float], period: int = 14) -> float:
+    if len(values) < period + 1:
+        return 50.0
+    gains, losses = [], []
+    for i in range(1, period + 1):
+        delta = values[-i] - values[-i - 1]
+        if delta >= 0:
+            gains.append(delta)
+        else:
+            losses.append(-delta)
+    avg_gain = (sum(gains) / period) if gains else 0.0
+    avg_loss = (sum(losses) / period) if losses else 1e-9
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
+
+
+# ===== missing helper restorations + new floor helper =====
+
+def _get_free_quote(client, quote: str) -> float:
+    try:
+        bal = client.fetch_balance()
+        if isinstance(bal, dict):
+            free_map = bal.get('free') or {}
+            if isinstance(free_map, dict) and quote in free_map:
+                return float(free_map.get(quote) or 0.0)
+            if quote in bal and isinstance(bal.get(quote), dict):
+                return float(bal.get(quote, {}).get('free') or 0.0)
+    except Exception:
+        pass
+    return 0.0
+
+def _get_free_asset(client, asset: str) -> float:
+    try:
+        bal = client.fetch_balance()
+        free_map = bal.get('free') or {}
+        if isinstance(free_map, dict):
+            return float(free_map.get(asset, 0.0) or 0.0)
+        if asset in bal and isinstance(bal.get(asset), dict):
+            return float(bal.get(asset, {}).get('free') or 0.0)
+    except Exception:
+        pass
+    return 0.0
+
+def _pick_xrp_symbol(markets: Dict[str, Any], quotes: List[str]) -> Optional[str]:
+    for q in [x.upper() for x in quotes]:
+        s = f"XRP/{q}"
+        if s in markets:
+            return s
+    return None
+
+def _estimate_net(entry_price: float, exit_price: float, amount: float, cfg: Dict[str, Any]) -> Dict[str, float]:
+    gross = (exit_price - entry_price) * amount
+    fee_rate = float(cfg['TAKER_FEE_PCT']) / 100.0
+    slip_rate = float(cfg['SLIPPAGE_BPS']) / 10000.0
+    notional_entry = entry_price * amount
+    notional_exit = exit_price * max(amount, 0.0)
+    fees = (notional_entry + notional_exit) * fee_rate
+    slippage = (notional_entry + notional_exit) * slip_rate
+    net = gross - fees - slippage
+    return {
+        'profit_gross_usd': round(gross, 8),
+        'fees_est_usd': round(fees, 8),
+        'slippage_est_usd': round(slippage, 8),
+        'profit_net_usd': round(net, 8),
+    }
+
+def _floor_to_step(x: float, step: float) -> float:
+    try:
+        step_f = float(step)
+        if step_f <= 0:
+            return x
+        return (int(x / step_f)) * step_f
+    except Exception:
+        return x
+
+# Quote top-up with hard floor & min-notional guard
+
+def _ensure_quote_liquidity(client, cfg: Dict[str, Any], quote: str) -> None:
+    try:
+        free_quote = _get_free_quote(client, quote)
+        if free_quote > 0:
+            return
+        if not cfg.get('AUTO_TOPUP_FROM_XRP', True):
+            return
+        mkts = load_markets(client)
+        xrp_sym = _pick_xrp_symbol(mkts, cfg['QUOTE_PREFS'])
+        if not xrp_sym:
+            return
+        free_xrp = _get_free_asset(client, 'XRP')
+        if free_xrp <= 0:
+            return
+        sell_amt = max(0.0, float(cfg.get('TOPUP_XRP_PERCENT', 0.90)) * free_xrp)
+        if sell_amt <= 0:
+            return
+        # indicative price
+        px = 0.0
+        try:
+            tk = client.fetch_ticker(xrp_sym) or {}
+            px = float(tk.get('last') or tk.get('close') or tk.get('ask') or tk.get('bid') or 0.0)
+        except Exception:
+            px = 0.0
+        # precision snap
+        try:
+            sell_amt = float(client.amount_to_precision(xrp_sym, sell_amt))
+        except Exception:
+            pass
+        mkt = getattr(client, 'markets', {}).get(xrp_sym, {}) if hasattr(client, 'markets') else {}
+        limits = (mkt.get('limits') or {}) if isinstance(mkt, dict) else {}
+        cost_limits = limits.get('cost') or {}
+        amt_limits = limits.get('amount') or {}
+        min_cost = cost_limits.get('min')
+        step = amt_limits.get('step')
+        if min_cost and px > 0 and sell_amt * px < float(min_cost):
+            need = (float(min_cost)/max(px,1e-12))*1.001
+            if step:
+                try:
+                    step_f = float(step)
+                    need = (math.ceil(need/step_f))*step_f
+                except Exception:
+                    pass
+            sell_amt = need
+        if step:
+            sell_amt = _floor_to_step(sell_amt, float(step) if step else 0.0)
+        try:
+            sell_amt = float(client.amount_to_precision(xrp_sym, sell_amt))
+        except Exception:
+            pass
+        if min_cost and px>0 and sell_amt*px < 0.99*float(min_cost):
+            logger.warning(f"XRP top-up skipped: below min notional after clamp {xrp_sym} cost={sell_amt*px:.4f} < {min_cost}")
+            return
+        logger.info(f"XRP top-up issuing market sell: symbol={xrp_sym} amount={sell_amt} est_quote={sell_amt*px:.4f} quote={quote}")
+        try:
+            guarded_create_order(xrp_sym, 'sell', 'market', sell_amt)
+            write_ledger('xrp_topup', {
+                'symbol': xrp_sym,
+                'amount_xrp': round(sell_amt, 8),
+                'est_quote_received': round(sell_amt * max(px, 0.0), 8),
+                'quote': quote
+            })
+        except Exception as e:
+            logger.warning(f"XRP top-up failed: {e}")
+    except Exception:
+        pass
+
+# ...existing code...
+
+def _adjust_amount_step(client, symbol: str, amount: float):
+    try:
+        m = getattr(client, 'markets', {}).get(symbol, {}) if hasattr(client, 'markets') else {}
+        step = None
+        filters = (m.get('info') or {}).get('filters', []) if isinstance(m.get('info'), dict) else []
+        for f in filters:
+            if f.get('filterType') == 'LOT_SIZE':
+                ss = f.get('stepSize')
+                try:
+                    step = float(ss)
+                except (TypeError, ValueError):
+                    step = None
+                break
+        if step and step > 0:
+            orig = amount
+            # floor to step
+            adj = (int((amount + 1e-12) / step)) * step
+            # ensure > 0
+            if adj <= 0:
+                adj = step
+            try:
+                adj = float(client.amount_to_precision(symbol, adj))
+            except Exception:
+                pass
+            if abs(adj - orig) / max(orig, 1e-12) > 1e-9:
+                logger.info(f"[order-size] step_adjust {symbol} from={orig} to={adj} step={step}")
+            return adj
+    except Exception:
+        pass
+    return amount
+
+
+def run_once(cfg: Dict[str, Any], state: Dict[str, Any], client, sentinel: "Sentinel") -> Dict[str, Any]:
+    # Respect MAX_OPEN_TRADES
+    open_count = len(state.get('positions', []))
+    universe = make_universe(load_markets(client), cfg)
+    if sentinel.paused():
+        logger.warning(f"PAUSED: {sentinel.paused_reason}")
+        return state
+
+    # Manage existing position(s): trailing stop/exit
+    new_positions: List[Dict[str, Any]] = []
+    for pos in state.get('positions', []):
+        sym = pos['symbol']
+        t0 = time.time()
+        try:
+            ticker = client.fetch_ticker(sym)
+        except Exception as e:
+            logger.warning(f"fetch_ticker failed {sym}: {e}")
+            sentinel.record_error()
+            continue
+        latency = time.time() - t0
+        sentinel.record_latency(latency)
+        last = float(ticker.get('last') or ticker.get('close') or 0)
+        if last <= 0:
+            new_positions.append(pos)
+            continue
+        # Update trailing stop (profit-only): do not allow stop below breakeven+margin
+        trail = cfg['TRAILING_STOP_BPS'] / 10000.0
+        fee_rate = float(cfg['TAKER_FEE_PCT']) / 100.0
+        slip_rate = float(cfg['SLIPPAGE_BPS']) / 10000.0
+        breakeven_gain = (2 * fee_rate) + (2 * slip_rate)  # entry+exit costs
+        margin_gain = cfg['MIN_PROFIT_EXIT_BPS'] / 10000.0
+        min_profit_gain = breakeven_gain + margin_gain
+        pos['peak'] = max(pos.get('peak', pos['entry_price']), last)
+        # candidate trailing stop price
+        trail_stop = pos['peak'] * (1 - trail)
+        # minimum stop to ensure net-profit-only exit
+        min_stop = pos['entry_price'] * (1 + min_profit_gain)
+        pos['stop'] = max(
+            pos.get('stop', min_stop),
+            trail_stop,
+            min_stop,
+        )
+        # Exit only if net profit would be positive
+        amt = pos['amount']
+        est = _estimate_net(pos['entry_price'], last, amt, cfg)
+        net_ok = est['profit_net_usd'] > 0
+        should_exit = last <= pos['stop'] and net_ok
+        if should_exit:
+            try:
+                # Net-edge gate for SELL close
+                try:
+                    expected_alpha_bps = ((last / max(1e-9, pos['entry_price'])) - 1.0) * 10000.0
+                    logger.info("[edge] check_before_order SELL symbol={} price={} amt={} exp_alpha_bps={}", sym, last, amt, round(expected_alpha_bps, 3))
+                    if not check_before_order(sym, 'SELL', last, amt, expected_alpha_bps, expected_alpha_bps=5):
+                        logger.info("[edge] skip: net edge < costs (fees+slippage+gas+buffer)")
+                        new_positions.append(pos)
+                        continue
+                except Exception:
+                    pass
+                # Step-size adjust before SELL
+                amt = _adjust_amount_step(client, sym, amt)
+                # FINAL HARD FLOOR STEP + MIN NOTIONAL CLAMP (SELL)
+                try:
+                    mkt = getattr(client, 'markets', {}).get(sym, {}) if hasattr(client, 'markets') else {}
+                    limits = (mkt.get('limits') or {}) if isinstance(mkt, dict) else {}
+                    cost_limits = limits.get('cost') or {}
+                    amt_limits = limits.get('amount') or {}
+                    min_cost = cost_limits.get('min')
+                    step = amt_limits.get('step')
+                    price_ref = last
+                    if min_cost:
+                        need = (float(min_cost)/max(price_ref,1e-12))*1.001
+                        if step:
+                            try:
+                                stf = float(step)
+                                need = (math.ceil(need/stf))*stf
+                            except Exception:
+                                pass
+                    amt = max(amt, need)
+                    if step:
+                        try:
+                            amt = _floor_to_step(amt, float(step))
+                        except Exception:
+                            pass
+                    try:
+                        amt = float(client.amount_to_precision(sym, amt))
+                    except Exception:
+                        pass
+                    if min_cost and price_ref*amt < 0.99*float(min_cost):
+                        logger.info(f"[skip] below min notional after clamp {sym} cost={price_ref*amt:.4f} < {min_cost}")
+                        new_positions.append(pos)
+                        continue
+                    logger.info(f"[order-size] final SELL {sym} px={price_ref} amt={amt} step={step} min_cost={min_cost}")
+                except Exception:
+                    pass
+                res = guarded_create_order(sym, 'sell', 'market', amt)
+                # metrics hook
+                try:
+                    _on_fill_metrics(sym.replace('/', ''), 'SELL', amt)
+                except Exception:
+                    pass
+                # ISO bank if net profit >= threshold
+                profit_net = max(0.0, est['profit_net_usd'])
+                if profit_net >= cfg['ISO_MIN_PROFIT_USD'] and cfg['ISO_BANK_PCT'] > 0:
+                    bank = profit_net * cfg['ISO_BANK_PCT']
+                    write_ledger('iso_bank', {'profit_usd_net': profit_net, 'bank_usd': round(bank, 8)})
+                    # Update reserves snapshot after profitable close
+                    try:
+                        write_iso_reserves_snapshot(cfg)
+                    except Exception as e:
+                        logger.warning(f"reserves snapshot failed: {e}")
+                # Treasury plan: siphon a percentage of realized PnL into XRP/HBAR plan
+                try:
+                    t_pct = float(cfg.get('TREASURY_PCT', 0.0) or 0.0)
+                    if t_pct > 0 and profit_net > 0:
+                        to_treasury = profit_net * t_pct
+                        if to_treasury >= float(cfg.get('BANK_MIN_CONVERT_USD', 50)) and _plan_bank_conversions:
+                            legs = _plan_bank_conversions(to_treasury)
+                            logger.info("[treasury] banking plan legs: {}", legs)
+                except Exception as e:
+                    logger.warning(f"treasury plan failed: {e}")
+            except Exception as e:
+                logger.error(f"close failed {sym}: {e}")
+                sentinel.record_error()
+                new_positions.append(pos)
+            continue
+        new_positions.append(pos)
+    state['positions'] = new_positions
+
+    # Entry logic
+    if open_count < cfg['MAX_OPEN_TRADES'] and os.getenv('APPROVAL_TOKEN'):
+        pick = pick_entry(client, universe, cfg)
+        if pick:
+            sym, px = pick
+            try:
+                quote = sym.split('/')[1].upper()
+            except Exception:
+                quote = 'USDT'
+            # Ensure we have quote by topping up from XRP if needed
+            _ensure_quote_liquidity(client, cfg, quote)
+            free_quote = _get_free_quote(client, quote)
+            desired = max(0.0, float(free_quote) * float(cfg.get('QUOTE_ALLOC_PCT', 0.90)))
+            cap = float(cfg.get('MAX_NOTIONAL_PER_ORDER', 0) or 0)
+            notional = desired if cap <= 0 else min(desired, cap)
+            if notional <= 0:
+                logger.warning(f"No free {quote} to allocate (free={free_quote}); skipping entry")
+                return state
+            amt = max(1e-9, notional / max(px, 1e-9))
+            # NEW: pre-snap before edge gate to prevent step_size rejections
+            px_snapped, amt_snapped, _mc = _snap_for_market(client, sym, px, amt, log=logger, tag="entry-pre0")
+            if px_snapped is not None:
+                px = px_snapped
+            amt = amt_snapped
+            try:
+                # Net-edge gate (BUY entries only)
+                try:
+                    taker_fee_pct = float(cfg.get('TAKER_FEE_PCT', 0.10) or 0.10)
+                    taker_fee_bps = taker_fee_pct * 100.0
+                    slippage_bps = float(cfg.get('SLIPPAGE_BPS', 10) or 10)
+                    buffer_bps = float(os.getenv('EDGE_BUFFER_BPS', '3') or 3)
+                    expected_alpha_bps = float(cfg.get('MIN_PROFIT_EXIT_BPS', 50) or 50) + (2 * taker_fee_bps) + (2 * slippage_bps) + buffer_bps
+                    logger.info("[edge] check_before_order BUY symbol={} price={} amt={} exp_alpha_bps={}", sym, px, amt, round(expected_alpha_bps, 3))
+                    if not check_before_order(sym, 'BUY', px, amt, expected_alpha_bps, expected_alpha_bps=5):
+                        logger.info("[edge] skip: net edge < costs (fees+slippage+gas+buffer)")
+                        return state
+                except Exception:
+                    pass
+                # --- SNAP PRICE/AMOUNT + MIN-NOTIONAL BEFORE ANY VALIDATION (second stage) ---
+                try:
+                    price = float(client.price_to_precision(sym, px))
+                    amt_local = float(client.amount_to_precision(sym, amt))
+                    # Step-size adjust after precision snap (BUY)
+                    amt_local = _adjust_amount_step(client, sym, amt_local)
+                    mkt = getattr(client, 'markets', {}).get(sym, {}) if hasattr(client, 'markets') else {}
+                    limits = (mkt.get('limits') or {}) if isinstance(mkt, dict) else {}
+                    cost_limits = limits.get('cost') if isinstance(limits.get('cost'), dict) else {}
+                    min_cost = cost_limits.get('min') if cost_limits else None
+                    precision = (mkt.get('precision') or {}) if isinstance(mkt, dict) else {}
+                    prec_amt = precision.get('amount') if isinstance(precision, dict) else None
+                    if prec_amt is not None:
+                        try:
+                            ip = int(prec_amt)
+                            if ip <= 0:
+                                amt_local = int(amt_local)
+                            else:
+                                q = 10 ** ip
+                                amt_local = int(amt_local * q) / q
+                        except Exception:
+                            pass
+                    if min_cost:
+                        if price * amt_local < min_cost:
+                            need = (min_cost / max(price, 1e-12)) * 1.001
+                            amt_local = float(client.amount_to_precision(sym, need))
+                            if prec_amt is not None:
+                                try:
+                                    ip = int(prec_amt)
+                                    if ip <= 0:
+                                        amt_local = int(amt_local)
+                                    else:
+                                        q = 10 ** ip
+                                        amt_local = int(amt_local * q) / q
+                                except Exception:
+                                    pass
+                        if price * amt_local < 0.99 * (min_cost or 0):
+                            logger.info(f"[skip] below min notional {sym} cost={price*amt_local:.4f} < {min_cost}")
+                            return state
+                    logger.info(f"[entry-pre] {sym} snapped_px={price} snapped_amt={amt_local}")
+                    px = price
+                    amt = amt_local
+                except Exception as _e:
+                    logger.warning(f"pre-snap second stage failed {sym}: {_e}")
+                # --- END SNAP BLOCK ---
+                # FINAL HARD FLOOR STEP + MIN NOTIONAL (BUY)
+                try:
+                    mkt = getattr(client, 'markets', {}).get(sym, {}) if hasattr(client, 'markets') else {}
+                    limits = (mkt.get('limits') or {}) if isinstance(mkt, dict) else {}
+                    cost_limits = limits.get('cost') or {}
+                    amt_limits = limits.get('amount') or {}
+                    min_cost = cost_limits.get('min')
+                    step = amt_limits.get('step')
+                    price_ref = px
+                    if min_cost:
+                        need = (float(min_cost)/max(price_ref,1e-12))*1.001
+                        if step:
+                            try:
+                                stf = float(step)
+                                need = (math.ceil(need/stf))*stf
+                            except Exception:
+                                pass
+                    amt = max(amt, need)
+                    if step:
+                        try:
+                            amt = _floor_to_step(amt, float(step))
+                        except Exception:
+                            pass
+                    try:
+                        amt = float(client.amount_to_precision(sym, amt))
+                    except Exception:
+                        pass
+                    if min_cost and price_ref*amt < 0.99*float(min_cost):
+                        logger.info(f"[skip] below min notional after clamp {sym} cost={price_ref*amt:.4f} < {min_cost}")
+                        return state
+                    logger.info(f"[order-size] final BUY {sym} px={price_ref} amt={amt} step={step} min_cost={min_cost}")
+                except Exception:
+                    pass
+                res = guarded_create_order(sym, 'buy', 'market', amt)
+                # initialize stop at breakeven+margin to enforce profit-only exits
+                fee_rate = float(cfg['TAKER_FEE_PCT']) / 100.0
+                slip_rate = float(cfg['SLIPPAGE_BPS']) / 10000.0
+                min_profit_gain = (2 * fee_rate) + (2 * slip_rate) + (cfg['MIN_PROFIT_EXIT_BPS'] / 10000.0)
+                pos = {
+                    'symbol': sym,
+                    'amount': amt,
+                    'entry_price': px,
+                    'peak': px,
+                    'stop': px * (1 + min_profit_gain),
+                }
+                state['positions'].append(pos)
+                write_ledger('trade_open', {'symbol': sym, 'amount': amt, 'entry_price': px, 'quote_used': quote, 'notional_est': round(notional, 8)})
+                # metrics hook (BUY fill)
+                try:
+                    _on_fill_metrics(sym.replace('/', ''), 'BUY', amt)
+                except Exception:
+                    pass
+            except Exception as e:
+                logger.error(f"open failed {sym}: {e}")
+                sentinel.record_error()
+    return state
+
+# ===== main loop restore =====
+
+def main():
+    load_env()
+    cfg = get_cfg()
+    ensure_dirs(cfg)
+    # Point pv paths to cfg versions
+    pv.LEDGER_PATH = cfg['LEDGER_PATH']
+    state = load_state(cfg['STATE_PATH'])
+    client = get_exchange_client()
+    try:
+        client.load_markets()
+    except Exception:
+        pass
+    sentinel = Sentinel(cfg)
+    refresher = ApprovalRefresher(cfg)
+    refresher.start()
+    if '--export-session' in sys.argv:
+        emit_session_summary(cfg)
+        return
+    once = '--once' in sys.argv or os.getenv('SINGLE_TICK') == '1'
+    logger.info("Momentum bot started; mode={}, quotes={}, caps notional=${} open_trades={} trail={}bps", cfg['MODE'], cfg['QUOTE_PREFS'], cfg['MAX_NOTIONAL_PER_ORDER'], cfg['MAX_OPEN_TRADES'], cfg['TRAILING_STOP_BPS'])
+    last_export = 0.0
+    try:
+        while True:
+            state = run_once(cfg, state, client, sentinel)
+            save_state(cfg['STATE_PATH'], state)
+            if time.time() - last_export >= max(60, cfg['EXPORT_SESSION_CRON_MINUTES'] * 60):
+                try:
+                    emit_session_summary(cfg)
+                    write_iso_reserves_snapshot(cfg)
+                except Exception as e:
+                    logger.warning(f"export failed: {e}")
+                last_export = time.time()
+            if once:
+                break
+            time.sleep(30)
+    except KeyboardInterrupt:
+        logger.info("Exiting...")
+    finally:
+        try:
+            emit_session_summary(cfg)
+        except Exception as e:
+            logger.warning(f"final export failed: {e}")
+        try:
+            refresher.stop()
+        except Exception:
+            pass
+
+if __name__ == '__main__':
+    main() 

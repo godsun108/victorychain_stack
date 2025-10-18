@@ -1,0 +1,55 @@
+import logging
+logging.getLogger().setLevel(logging.INFO)
+
+try:
+    import ccxt
+
+    _orig_create = ccxt.binanceus.create_order  # keep original for delegation
+
+    def _snap_for_market(ex, symbol, price, amount):
+        """Snap price/amount to precision and bump to min notional if needed.
+        (Per simplified spec: only enforces min_notional when price provided.)
+        """
+        try:
+            if not getattr(ex, "markets", None):
+                ex.load_markets()
+            # snap price if provided
+            px = None if price is None else float(ex.price_to_precision(symbol, float(price)))
+            # snap amount
+            amt = float(ex.amount_to_precision(symbol, float(amount)))
+            # enforce min notional (limit orders only)
+            info = (ex.markets or {}).get(symbol, {}) or {}
+            min_cost = ((info.get("limits") or {}).get("cost") or {}).get("min")
+            if min_cost and px is not None:
+                try:
+                    mc = float(min_cost)
+                    notional = px * amt
+                    if notional < mc:
+                        need = (mc / max(px, 1e-12)) * 1.001
+                        amt = float(ex.amount_to_precision(symbol, need))
+                except Exception:
+                    pass
+            return px, amt
+        except Exception:
+            return price, amount  # never block
+
+    def _create_order_snap(self, symbol, type, side, amount, price=None, params=None):  # noqa: A002
+        try:
+            logging.info("[patch] create_order snap symbol=%s orig_amt=%.12g orig_px=%s", symbol, amount, price)
+            px, amt = _snap_for_market(self, symbol, price, amount)
+            if px is not None:
+                logging.info("[patch] create_order snap %s amt=%.12g price=%s notional=%s", symbol, amt, px, amt * px)
+            else:
+                logging.info("[patch] create_order snap %s amt=%.12g (market order)", symbol, amt)
+        except Exception as e:
+            logging.warning("[patch] create_order snap failed: %s", e)
+            px, amt = price, amount
+        return _orig_create(self, symbol, type, side, amt, px, params or {})
+
+    ccxt.binanceus.create_order = _create_order_snap
+    logging.info("[patch] simple create_order snap active")
+
+except Exception:
+    import traceback
+    print("Error in sitecustomize; set PYTHONVERBOSE for traceback:")
+    traceback.print_exc()

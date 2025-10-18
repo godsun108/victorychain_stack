@@ -1,0 +1,445 @@
+#!/usr/bin/env python3
+
+"""
+💎 MICROCAP MOMENTUM EXECUTION ENGINE
+Live demonstration of enhanced microcap momentum strategies beyond GALA
+Implements ultra-aggressive scanning results with proper risk management
+"""
+
+import json
+import os
+import sys
+import time
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass, asdict
+
+# Add project root to path
+sys.path.append(os.path.dirname(__file__))
+
+try:
+    from binance.client import Client
+    from binance.exceptions import BinanceAPIException
+
+    binance_available = True
+except ImportError:
+    binance_available = False
+
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "config", ".env"))
+
+
+@dataclass
+class MicrocapPosition:
+    """Microcap position with full execution details"""
+
+    symbol: str
+    entry_price: float
+    position_size_usd: float
+    position_percentage: float
+    stop_loss_price: float
+    target_prices: List[float]
+    current_price: float
+    unrealized_pnl: float
+    risk_rating: str
+    catalyst_status: str
+    execution_time: datetime
+    exit_strategy: str
+
+
+class MicrocapMomentumEngine:
+    """Live microcap momentum execution engine"""
+
+    def __init__(self, portfolio_size: float = 10000.0):
+        self.portfolio_size = portfolio_size
+        self.available_capital = portfolio_size
+        self.positions = []
+        self.execution_log = []
+
+        print(f"💎 MICROCAP MOMENTUM ENGINE INITIALIZED")
+        print(f"💰 Portfolio Size: ${portfolio_size:,.2f}")
+        print(f"🎯 Focus: Ultra-aggressive microcap opportunities beyond GALA")
+
+        # Load latest scan results
+        self.load_scan_results()
+
+        # Risk management parameters
+        self.risk_params = {
+            "max_position_size": 0.25,  # 25% max per position
+            "stop_loss_threshold": -0.20,  # -20% stop loss
+            "max_total_allocation": 0.85,  # 85% max total allocation
+            "cash_reserve": 0.15,  # 15% cash reserve
+            "profit_taking_stages": [0.40, 1.00, 3.00, 8.00, 20.00],  # Profit stages
+        }
+
+    def load_scan_results(self):
+        """Load latest ultra-aggressive scan results"""
+        try:
+            # Load the latest ultra-aggressive scan
+            with open("ultra_aggressive_microcap_hunt_20250805_194658.json", "r") as f:
+                self.scan_data = json.load(f)
+                self.opportunities = self.scan_data["opportunities"]
+            print(f"✅ Loaded {len(self.opportunities)} ultra-aggressive opportunities")
+
+            # Load comprehensive microcap scan as backup
+            with open("all_microcap_scan_20250805_194439.json", "r") as f:
+                self.backup_scan = json.load(f)
+            print(
+                f"✅ Backup scan loaded with {len(self.backup_scan['opportunities'])} opportunities"
+            )
+
+        except FileNotFoundError:
+            print("⚠️ Scan result files not found - using simulation data")
+            self.opportunities = []
+            self.scan_data = {}
+
+    def calculate_position_size(self, opportunity: Dict) -> Tuple[float, float]:
+        """Calculate optimal position size for opportunity"""
+        recommended_pct = opportunity.get("position_percentage", 10.0) / 100.0
+        max_allowed = self.risk_params["max_position_size"]
+
+        # Use smaller of recommended or max allowed
+        final_pct = min(recommended_pct, max_allowed)
+
+        # Calculate USD amount
+        position_usd = self.available_capital * final_pct
+
+        return position_usd, final_pct * 100.0
+
+    def execute_microcap_entry(
+        self, opportunity: Dict, simulation: bool = True
+    ) -> bool:
+        """Execute entry into microcap position"""
+        symbol = opportunity["symbol"]
+        entry_price = opportunity["price"]
+
+        position_usd, position_pct = self.calculate_position_size(opportunity)
+
+        if position_usd < 50:  # Minimum position size
+            print(f"❌ {symbol}: Position too small (${position_usd:.2f})")
+            return False
+
+        if self.available_capital < position_usd:
+            print(f"❌ {symbol}: Insufficient capital (${self.available_capital:.2f})")
+            return False
+
+        # Calculate stop loss and targets
+        stop_loss = entry_price * (1 + self.risk_params["stop_loss_threshold"])
+        targets = [
+            entry_price * (1 + target)
+            for target in self.risk_params["profit_taking_stages"]
+        ]
+
+        # Create position
+        position = MicrocapPosition(
+            symbol=symbol,
+            entry_price=entry_price,
+            position_size_usd=position_usd,
+            position_percentage=position_pct,
+            stop_loss_price=stop_loss,
+            target_prices=targets,
+            current_price=entry_price,
+            unrealized_pnl=0.0,
+            risk_rating=opportunity.get("risk_assessment", "HIGH_RISK"),
+            catalyst_status="WAITING",
+            execution_time=datetime.now(),
+            exit_strategy="STAGED_PROFIT_TAKING",
+        )
+
+        if simulation:
+            print(f"🚀 SIMULATION: {symbol} position opened")
+            print(f"   💰 Size: ${position_usd:,.2f} ({position_pct:.1f}%)")
+            print(f"   📍 Entry: ${entry_price:.8f}")
+            print(f"   🛑 Stop: ${stop_loss:.8f} (-20%)")
+            print(f"   🎯 Target 1: ${targets[0]:.8f} (+40%)")
+            print(f"   🎯 Target 2: ${targets[1]:.8f} (+100%)")
+
+            # Update available capital
+            self.available_capital -= position_usd
+            self.positions.append(position)
+
+            # Log execution
+            self.execution_log.append(
+                {
+                    "action": "OPEN_POSITION",
+                    "symbol": symbol,
+                    "price": entry_price,
+                    "size_usd": position_usd,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
+
+            return True
+        else:
+            print(f"📝 LIVE TRADING: Would execute {symbol} position")
+            return False
+
+    def monitor_positions(self, current_prices: Dict = None) -> None:
+        """Monitor all open positions"""
+        if not self.positions:
+            print("📊 No positions to monitor")
+            return
+
+        print(f"\n📊 POSITION MONITORING")
+        print("-" * 50)
+
+        total_pnl = 0.0
+
+        for i, position in enumerate(self.positions, 1):
+            # Simulate price movement (in real scenario, get from API)
+            if current_prices and position.symbol in current_prices:
+                current_price = current_prices[position.symbol]
+            else:
+                # Simulate slight price movement
+                price_change = np.random.uniform(-0.05, 0.05)  # ±5% movement
+                current_price = position.entry_price * (1 + price_change)
+
+            position.current_price = current_price
+
+            # Calculate P&L
+            pnl_pct = (current_price - position.entry_price) / position.entry_price
+            pnl_usd = position.position_size_usd * pnl_pct
+            position.unrealized_pnl = pnl_usd
+            total_pnl += pnl_usd
+
+            # Check stop loss
+            if current_price <= position.stop_loss_price:
+                print(
+                    f"🛑 STOP LOSS: {position.symbol} hit stop at ${current_price:.8f}"
+                )
+                self.execute_stop_loss(position)
+                continue
+
+            # Check profit targets
+            for j, target in enumerate(position.target_prices):
+                if current_price >= target:
+                    profit_pct = self.risk_params["profit_taking_stages"][j] * 100
+                    print(
+                        f"🎯 TARGET HIT: {position.symbol} reached +{profit_pct:.0f}% target"
+                    )
+                    self.consider_profit_taking(position, j)
+                    break
+
+            # Display position status
+            status_emoji = "🟢" if pnl_usd > 0 else "🔴" if pnl_usd < 0 else "⚪"
+            print(f"{status_emoji} {i}. {position.symbol}")
+            print(f"   📍 Entry: ${position.entry_price:.8f}")
+            print(f"   💹 Current: ${current_price:.8f}")
+            print(f"   💰 P&L: ${pnl_usd:+.2f} ({pnl_pct:+.1%})")
+            print(f"   🛑 Stop: ${position.stop_loss_price:.8f}")
+
+        print(f"\n💼 PORTFOLIO SUMMARY")
+        print(f"   💰 Total P&L: ${total_pnl:+.2f}")
+        print(f"   💵 Available Capital: ${self.available_capital:,.2f}")
+        print(f"   📊 Total Portfolio: ${self.portfolio_size + total_pnl:,.2f}")
+
+    def execute_stop_loss(self, position: MicrocapPosition) -> None:
+        """Execute stop loss for position"""
+        print(f"🛑 Executing stop loss for {position.symbol}")
+
+        # Return capital (minus loss)
+        loss = position.position_size_usd * self.risk_params["stop_loss_threshold"]
+        self.available_capital += position.position_size_usd + loss
+
+        # Log stop loss
+        self.execution_log.append(
+            {
+                "action": "STOP_LOSS",
+                "symbol": position.symbol,
+                "entry_price": position.entry_price,
+                "exit_price": position.current_price,
+                "loss_usd": loss,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+        # Remove position
+        self.positions.remove(position)
+
+    def consider_profit_taking(
+        self, position: MicrocapPosition, target_level: int
+    ) -> None:
+        """Consider taking profits at target levels"""
+        profit_pct = self.risk_params["profit_taking_stages"][target_level]
+
+        if target_level == 0:  # First target - take 25%
+            sell_pct = 0.25
+        elif target_level == 1:  # Second target - take 50%
+            sell_pct = 0.50
+        elif target_level == 2:  # Third target - take 75%
+            sell_pct = 0.75
+        else:  # Higher targets - scale out more
+            sell_pct = 0.90
+
+        sell_amount = position.position_size_usd * sell_pct
+        profit = sell_amount * profit_pct
+
+        print(f"💰 Taking {sell_pct:.0%} profits on {position.symbol}")
+        print(f"   💵 Profit: ${profit:,.2f}")
+
+        # Update position size
+        position.position_size_usd *= 1 - sell_pct
+        self.available_capital += sell_amount + profit
+
+        # Log profit taking
+        self.execution_log.append(
+            {
+                "action": "PROFIT_TAKING",
+                "symbol": position.symbol,
+                "target_level": target_level,
+                "sell_percentage": sell_pct,
+                "profit_usd": profit,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+    def execute_ultra_aggressive_strategy(self) -> None:
+        """Execute the ultra-aggressive microcap strategy"""
+        print(f"\n🚀 EXECUTING ULTRA-AGGRESSIVE MICROCAP STRATEGY")
+        print("=" * 60)
+        print("⚠️ MAXIMUM RISK - MAXIMUM REWARD APPROACH")
+        print("Beyond GALA concentration - Portfolio diversification")
+
+        if not self.opportunities:
+            print("❌ No opportunities loaded")
+            return
+
+        # Sort opportunities by ultra rating
+        sorted_ops = sorted(
+            self.opportunities, key=lambda x: x.get("ultra_rating", 0), reverse=True
+        )
+
+        print(f"\n🎯 TOP OPPORTUNITIES FOR EXECUTION")
+        print("-" * 40)
+
+        executed_positions = 0
+        total_allocated = 0.0
+
+        for i, opp in enumerate(sorted_ops[:8], 1):  # Top 8 opportunities
+            symbol = opp["symbol"]
+            rating = opp.get("ultra_rating", 0)
+            action = opp.get("immediate_action", "UNKNOWN")
+
+            print(f"\n{i}. {symbol} - Rating: {rating:.1f}%")
+            print(f"   Action: {action}")
+
+            # Check if we should execute
+            if rating >= 70.0 and executed_positions < 5:  # Limit to top 5 positions
+                if self.execute_microcap_entry(opp, simulation=True):
+                    executed_positions += 1
+                    total_allocated += opp.get("position_percentage", 0)
+
+                    if total_allocated >= 80:  # Stop at 80% allocation
+                        print(f"🛑 Allocation limit reached ({total_allocated:.1f}%)")
+                        break
+            else:
+                print(
+                    f"   ⏭️ Skipping: Rating below threshold or position limit reached"
+                )
+
+        print(f"\n📊 EXECUTION SUMMARY")
+        print(f"   🎯 Positions Opened: {executed_positions}")
+        print(f"   💰 Total Allocated: {total_allocated:.1f}%")
+        print(f"   💵 Remaining Capital: ${self.available_capital:,.2f}")
+
+        # Show portfolio allocation
+        print(f"\n💼 CURRENT PORTFOLIO ALLOCATION")
+        print("-" * 40)
+        for pos in self.positions:
+            allocation_pct = (pos.position_size_usd / self.portfolio_size) * 100
+            print(
+                f"   {pos.symbol}: ${pos.position_size_usd:,.2f} ({allocation_pct:.1f}%)"
+            )
+
+    def generate_execution_report(self) -> None:
+        """Generate comprehensive execution report"""
+        timestamp = datetime.now()
+
+        report = {
+            "timestamp": timestamp.isoformat(),
+            "strategy": "ULTRA_AGGRESSIVE_MICROCAP_MOMENTUM",
+            "portfolio_size": self.portfolio_size,
+            "available_capital": self.available_capital,
+            "positions": [asdict(pos) for pos in self.positions],
+            "execution_log": self.execution_log,
+            "risk_parameters": self.risk_params,
+            "total_positions": len(self.positions),
+            "total_allocated_usd": sum(pos.position_size_usd for pos in self.positions),
+            "allocation_percentage": (
+                sum(pos.position_size_usd for pos in self.positions)
+                / self.portfolio_size
+            )
+            * 100,
+        }
+
+        filename = (
+            f"microcap_execution_report_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
+        )
+        with open(filename, "w") as f:
+            json.dump(report, f, indent=2, default=str)
+
+        print(f"\n💾 Execution report saved: {filename}")
+
+    def run_monitoring_cycle(self, cycles: int = 3) -> None:
+        """Run monitoring cycles to demonstrate position management"""
+        print(f"\n📊 RUNNING {cycles} MONITORING CYCLES")
+        print("=" * 50)
+
+        for cycle in range(1, cycles + 1):
+            print(f"\n🔄 CYCLE {cycle}")
+            print("-" * 20)
+
+            # Simulate some time passing
+            time.sleep(1)
+
+            # Monitor positions with simulated price changes
+            self.monitor_positions()
+
+            if cycle < cycles:
+                print(f"\n⏳ Waiting for next cycle...")
+                time.sleep(2)
+
+
+def main():
+    """Main execution function"""
+    print("💎 MICROCAP MOMENTUM EXECUTION ENGINE")
+    print("=" * 50)
+    print("Live demonstration of enhanced microcap strategies")
+    print("Beyond GALA - Ultra-aggressive portfolio diversification")
+
+    # Initialize engine with $10,000 portfolio
+    engine = MicrocapMomentumEngine(portfolio_size=10000.0)
+
+    # Execute ultra-aggressive strategy
+    engine.execute_ultra_aggressive_strategy()
+
+    # Run monitoring cycles
+    engine.run_monitoring_cycle(cycles=3)
+
+    # Generate final report
+    engine.generate_execution_report()
+
+    # Final summary
+    print(f"\n✅ MICROCAP MOMENTUM EXECUTION COMPLETE")
+    print("=" * 50)
+    print("🚀 Strategy: Ultra-aggressive microcap diversification beyond GALA")
+    print("💎 Focus: Maximum risk/reward opportunities")
+    print("⚠️ Risk: EXTREME - Only use capital you can afford to lose")
+    print("🎯 Reward: Life-changing potential with proper risk management")
+
+    if engine.positions:
+        total_invested = sum(pos.position_size_usd for pos in engine.positions)
+        allocation_pct = (total_invested / engine.portfolio_size) * 100
+        print(f"\n📊 Final Portfolio Status:")
+        print(f"   💰 Total Invested: ${total_invested:,.2f} ({allocation_pct:.1f}%)")
+        print(f"   💵 Cash Reserve: ${engine.available_capital:,.2f}")
+        print(f"   🎯 Active Positions: {len(engine.positions)}")
+
+    print(f"\n⚠️ Remember: This demonstrates ultra-aggressive microcap strategies")
+    print("Monitor positions continuously and follow stop-loss discipline!")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,75 @@
+groups:
+- name: momentum-live
+  rules:
+  - alert: BotHeartbeatStale
+    expr: time() - momentum_heartbeat_ts > 120
+    for: 2m
+    labels: {severity: page}
+    annotations:
+      summary: "Momentum heartbeat stale"
+      description: "No heartbeat for >120s"
+
+  - alert: ExporterSilent
+    expr: up == 0
+    for: 2m
+    labels: {severity: warn}
+    annotations:
+      summary: "Exporter down"
+      description: "Prometheus cannot scrape the bot"
+
+  - alert: ApprovalTokenExpiring
+    expr: (momentum_approval_token_expiry_ts - time()) < 120
+    for: 1m
+    labels: {severity: warn}
+    annotations:
+      summary: "Approval token near expiry"
+      description: "Less than 2 minutes remain on approval token"
+
+  - alert: PersistentVarGate
+    expr: increase(risk_var_breach_total[15m]) > 0
+    for: 15m
+    labels: {severity: warn}
+    annotations:
+      summary: "VaR gate persists"
+      description: "New entries blocked by VaR for 15m+"
+
+  - alert: ZeroFillsButOrders
+    expr: rate(momentum_orders_total[10m]) > 0 and rate(momentum_trades_total[10m]) == 0
+    for: 10m
+    labels: {severity: warn}
+    annotations:
+      summary: "Orders but no fills"
+      description: "Potential rejects or market paused"
+
+  - alert: DrawdownSpike
+    expr: momentum_intraday_drawdown_pct > 5
+    for: 5m
+    labels: {severity: page}
+    annotations:
+      summary: "Intraday drawdown >5%"
+      description: "Circuit breaker candidate"
+
+  # --- Newly appended alerts ---
+  - alert: DailyLossOrLosingStreak
+    expr: risk_daily_realized_pnl_usd < 0
+    for: 30m
+    labels: {severity: warn}
+    annotations:
+      summary: "Daily realized PnL negative"
+      description: "risk_daily_realized_pnl_usd < 0 for 30m"
+
+  - alert: ApprovalTokenStale
+    expr: (momentum_approval_token_expiry_ts - time()) < 60
+    for: 1m
+    labels: {severity: warn}
+    annotations:
+      summary: "Approval token missing/expiring"
+      description: "Token expires in under 60s or not exported"
+
+  - alert: PriceFeedStale
+    expr: max by(symbol) (momentum_price_staleness_sec) > 5
+    for: 1m
+    labels: {severity: warn}
+    annotations:
+      summary: "Price feed stale"
+      description: "Last tick older than 5s"

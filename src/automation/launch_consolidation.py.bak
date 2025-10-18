@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+"""
+🚀 CLAUDE CONSOLIDATION LAUNCHER
+Quick launcher for automated portfolio consolidation
+"""
+
+import os
+import sys
+import subprocess
+from datetime import datetime
+
+def main():
+    print("🤖 CLAUDE-POWERED PORTFOLIO CONSOLIDATION")
+    print("=" * 50)
+    print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    if len(sys.argv) > 1:
+        command = sys.argv[1].lower()
+        
+        if command == 'auto':
+            print("🤖 Running automated consolidation...")
+            subprocess.run(['python3', 'claude_auto_consolidator.py'])
+            
+        elif command == 'schedule':
+            print("⏰ Starting consolidation scheduler...")
+            subprocess.run(['python3', 'auto_consolidation_scheduler.py', 'start'])
+            
+        elif command == 'status':
+            print("📊 Checking portfolio status...")
+            subprocess.run(['python3', 'view_portfolio.py'])
+            
+        elif command == 'manual':
+            target = sys.argv[2] if len(sys.argv) > 2 else None
+            if target:
+                subprocess.run(['python3', 'robust_consolidator.py', target])
+            else:
+                subprocess.run(['python3', 'portfolio_consolidator.py'])
+                
+        else:
+            show_help()
+    else:
+        # Default: run automated consolidation
+        print("🤖 Running automated Claude analysis and consolidation...")
+        subprocess.run(['python3', 'claude_auto_consolidator.py'])
+
+def show_help():
+    print("""
+🤖 CLAUDE CONSOLIDATION OPTIONS:
+
+Usage: python3 launch_consolidation.py [COMMAND]
+
+Commands:
+  auto      - Run automated Claude analysis and consolidation (default)
+  schedule  - Start scheduled consolidation service (every 6 hours)
+  status    - Show current portfolio status
+  manual    - Run manual consolidation with user input
+  
+Examples:
+  python3 launch_consolidation.py                # Auto consolidation
+  python3 launch_consolidation.py auto          # Same as above
+  python3 launch_consolidation.py schedule      # Start scheduler
+  python3 launch_consolidation.py status        # Portfolio status
+  python3 launch_consolidation.py manual        # Manual mode
+    """)
+
+if __name__ == "__main__":
+    main()

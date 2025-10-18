@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VictoryChain Trading Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .card h3 {
+            margin-bottom: 1rem;
+            color: #64B5F6;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .positive {
+            color: #4CAF50;
+        }
+        
+        .negative {
+            color: #F44336;
+        }
+        
+        .signal {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .signal.buy {
+            border-left-color: #4CAF50;
+        }
+        
+        .signal.sell {
+            border-left-color: #F44336;
+        }
+        
+        .trade {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .auto-refresh {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 VictoryChain Trading Dashboard</h1>
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator"></div>
+                <span>System Online</span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator"></div>
+                <span>Claude AI Connected</span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator"></div>
+                <span>Binance API Active</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="auto-refresh">
+        <span id="last-update">Last update: --:--:--</span>
+    </div>
+    
+    <div class="dashboard-grid">
+        <!-- Portfolio Overview -->
+        <div class="card">
+            <h3>💼 Portfolio Overview</h3>
+            <div id="portfolio-data">
+                <div class="metric">
+                    <span>Total Value:</span>
+                    <span id="total-value">$0.00</span>
+                </div>
+                <div class="metric">
+                    <span>Total P&L:</span>
+                    <span id="total-pnl" class="positive">$0.00</span>
+                </div>
+                <div class="metric">
+                    <span>P&L %:</span>
+                    <span id="total-pnl-pct" class="positive">0.00%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Performance Metrics -->
+        <div class="card">
+            <h3>📈 Performance</h3>
+            <div id="performance-data">
+                <div class="metric">
+                    <span>Daily P&L:</span>
+                    <span id="daily-pnl">$0.00</span>
+                </div>
+                <div class="metric">
+                    <span>Win Rate:</span>
+                    <span id="win-rate">0%</span>
+                </div>
+                <div class="metric">
+                    <span>Total Trades:</span>
+                    <span id="total-trades">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Status -->
+        <div class="card">
+            <h3>⚙️ System Status</h3>
+            <div id="system-status">
+                <div class="metric">
+                    <span>Health:</span>
+                    <span id="system-health">Checking...</span>
+                </div>
+                <div class="metric">
+                    <span>Modules:</span>
+                    <span id="modules-status">0/0</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Signals -->
+        <div class="card">
+            <h3>🎯 Active Signals</h3>
+            <div id="signals-list">
+                <p>No active signals</p>
+            </div>
+        </div>
+        
+        <!-- Recent Trades -->
+        <div class="card">
+            <h3>📋 Recent Trades</h3>
+            <div id="trades-list">
+                <p>No recent trades</p>
+            </div>
+        </div>
+        
+        <!-- Market Overview -->
+        <div class="card">
+            <h3>🌍 Market Overview</h3>
+            <div id="market-data">
+                <div class="metric">
+                    <span>BTC Price:</span>
+                    <span id="btc-price">$0.00</span>
+                </div>
+                <div class="metric">
+                    <span>ETH Price:</span>
+                    <span id="eth-price">$0.00</span>
+                </div>
+                <div class="metric">
+                    <span>Fear & Greed:</span>
+                    <span id="fear-greed">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        socket.on('connect', function() {
+            console.log('Connected to VictoryChain Dashboard');
+        });
+        
+        socket.on('dashboard_update', function(data) {
+            updateDashboard(data);
+            document.getElementById('last-update').textContent = 
+                'Last update: ' + new Date().toLocaleTimeString();
+        });
+        
+        function updateDashboard(data) {
+            // Update portfolio
+            if (data.portfolio) {
+                document.getElementById('total-value').textContent = 
+                    '$' + data.portfolio.total_value.toLocaleString();
+                document.getElementById('total-pnl').textContent = 
+                    '$' + data.portfolio.total_pnl.toLocaleString();
+                document.getElementById('total-pnl-pct').textContent = 
+                    data.portfolio.total_pnl_pct.toFixed(2) + '%';
+            }
+            
+            // Update performance
+            if (data.performance_metrics) {
+                const perf = data.performance_metrics;
+                document.getElementById('daily-pnl').textContent = 
+                    '$' + perf.daily_pnl.toLocaleString();
+                document.getElementById('win-rate').textContent = 
+                    perf.win_rate.toFixed(1) + '%';
+                document.getElementById('total-trades').textContent = 
+                    perf.total_trades;
+            }
+            
+            // Update system status
+            if (data.system_status) {
+                const status = data.system_status;
+                document.getElementById('system-health').textContent = 
+                    status.system_health;
+                document.getElementById('modules-status').textContent = 
+                    status.modules_loaded + '/' + status.total_modules;
+            }
+            
+            // Update market data
+            if (data.market_data) {
+                const market = data.market_data;
+                document.getElementById('btc-price').textContent = 
+                    '$' + market.btc_price.toLocaleString();
+                document.getElementById('eth-price').textContent = 
+                    '$' + market.eth_price.toLocaleString();
+                document.getElementById('fear-greed').textContent = 
+                    market.fear_greed_index;
+            }
+            
+            // Update signals
+            if (data.active_signals) {
+                const signalsList = document.getElementById('signals-list');
+                if (data.active_signals.length === 0) {
+                    signalsList.innerHTML = '<p>No active signals</p>';
+                } else {
+                    signalsList.innerHTML = data.active_signals.map(signal => `
+                        <div class="signal ${signal.action.toLowerCase()}">
+                            <strong>${signal.symbol}</strong> - ${signal.action}<br>
+                            <small>Confidence: ${(signal.confidence * 100).toFixed(0)}% | ${signal.strategy}</small>
+                        </div>
+                    `).join('');
+                }
+            }
+            
+            // Update trades
+            if (data.recent_trades) {
+                const tradesList = document.getElementById('trades-list');
+                if (data.recent_trades.length === 0) {
+                    tradesList.innerHTML = '<p>No recent trades</p>';
+                } else {
+                    tradesList.innerHTML = data.recent_trades.map(trade => `
+                        <div class="trade">
+                            <div>
+                                <strong>${trade.symbol}</strong> ${trade.action}<br>
+                                <small>${trade.quantity} @ $${trade.price}</small>
+                            </div>
+                            <div>$${trade.value}</div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+        
+        // Initial data load
+        fetch('/api/data')
+            .then(response => response.json())
+            .then(data => updateDashboard(data))
+            .catch(error => console.error('Error loading dashboard data:', error));
+    </script>
+</body>
+</html>

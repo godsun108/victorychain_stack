@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""
+Simple Claude API Test Script
+Tests if the Claude API key is working properly
+"""
+
+import requests
+import json
+import os
+
+
+def test_claude_api():
+    api_key = os.getenv(
+        "CLAUDE_API_KEY",
+        "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",
+    )
+
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+    }
+
+    payload = {
+        "model": "claude-3-5-sonnet-20241022",
+        "max_tokens": 100,
+        "messages": [
+            {
+                "role": "user",
+                "content": "Analyze BTC price momentum: Current price $96,000, up 5% in 24h, volume increased 20%. Should I buy? Answer in 50 words.",
+            }
+        ],
+    }
+
+    try:
+        print("🤖 Testing Claude API...")
+        response = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers=headers,
+            json=payload,
+            timeout=30,
+        )
+
+        print(f"Status Code: {response.status_code}")
+
+        if response.status_code == 200:
+            result = response.json()
+            print("✅ Claude API is working!")
+            print(f"Response: {result['content'][0]['text']}")
+            return True
+        else:
+            print(f"❌ Claude API error: {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
+
+    except Exception as e:
+        print(f"❌ Error testing Claude API: {e}")
+        return False
+
+
+if __name__ == "__main__":
+    test_claude_api()

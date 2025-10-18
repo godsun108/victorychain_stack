@@ -1,0 +1,29 @@
+{
+  "real_money_mode": true,
+  "activation_timestamp": "2025-08-09T10:38:25.134868",
+  "starting_capital": 1000.0,
+  "safety_limits": {
+    "max_daily_loss_percent": 1.0,
+    "max_position_size_percent": 2.0,
+    "emergency_stop_percent": 5.0,
+    "min_confidence_threshold": 0.9,
+    "max_concurrent_positions": 3,
+    "cash_reserve_percent": 50.0,
+    "max_position_value_usd": 100.0
+  },
+  "enhanced_protections": {
+    "manual_approval_required": true,
+    "daily_trade_limit": 5,
+    "cooling_off_period_minutes": 60,
+    "stop_loss_percent": 3.0,
+    "take_profit_percent": 5.0,
+    "risk_management_active": true
+  },
+  "api_config": {
+    "exchange": "binanceus",
+    "sandbox_mode": false,
+    "api_key": "YOUR_REAL_BINANCE_US_API_KEY",
+    "api_secret": "YOUR_REAL_BINANCE_US_API_SECRET",
+    "enable_rate_limit": true
+  }
+}

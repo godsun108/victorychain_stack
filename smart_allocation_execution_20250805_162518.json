@@ -1,0 +1,177 @@
+{
+  "timestamp": "20250805_162518",
+  "allocation_strategy": {
+    "strategy": "momentum_recovery_hybrid",
+    "allocations": {
+      "MAGICUSDT": {
+        "percentage": 0.12,
+        "reasoning": "75% recovery probability, gaming sector leader, oversold after +49% surge",
+        "entry_price": 0.235,
+        "target_price": 0.31,
+        "stop_loss": 0.21,
+        "priority": 1
+      },
+      "ETHUSDT": {
+        "percentage": 0.1,
+        "reasoning": "Highest momentum score, buying the dip, strong volume",
+        "entry_price": 3600,
+        "target_price": 4650,
+        "stop_loss": 3300,
+        "priority": 2
+      },
+      "ILVUSDT": {
+        "percentage": 0.08,
+        "reasoning": "Gaming sector leader, +7.62% performance, high volume",
+        "entry_price": 18.0,
+        "target_price": 24.0,
+        "stop_loss": 16.5,
+        "priority": 3
+      },
+      "BTCUSDT": {
+        "percentage": 0.08,
+        "reasoning": "Highest volume, safe accumulation, slight dip",
+        "entry_price": 113000,
+        "target_price": 130000,
+        "stop_loss": 105000,
+        "priority": 4
+      },
+      "1000REKTUSDT": {
+        "percentage": 0.05,
+        "reasoning": "+5.68% momentum, high volume surge, small cap potential",
+        "entry_price": 0.0012,
+        "target_price": 0.0015,
+        "stop_loss": 0.0011,
+        "priority": 5
+      },
+      "CASH_RESERVE": {
+        "percentage": 0.2,
+        "reasoning": "Market volatility buffer, opportunity fund",
+        "priority": 6
+      }
+    },
+    "reasoning": {},
+    "total_allocated": 0.63
+  },
+  "execution_results": {
+    "timestamp": "2025-08-05T16:25:18.124030",
+    "orders": [
+      {
+        "symbol": "MAGICUSDT",
+        "type": "DEMO_BUY",
+        "amount": 120.0,
+        "quantity": 510.63829787234044,
+        "price": 0.235,
+        "status": "DEMO",
+        "reasoning": "75% recovery probability, gaming sector leader, oversold after +49% surge"
+      },
+      {
+        "symbol": "ETHUSDT",
+        "type": "DEMO_BUY",
+        "amount": 100.0,
+        "quantity": 0.027777777777777776,
+        "price": 3600,
+        "status": "DEMO",
+        "reasoning": "Highest momentum score, buying the dip, strong volume"
+      },
+      {
+        "symbol": "ILVUSDT",
+        "type": "DEMO_BUY",
+        "amount": 80.0,
+        "quantity": 4.444444444444445,
+        "price": 18.0,
+        "status": "DEMO",
+        "reasoning": "Gaming sector leader, +7.62% performance, high volume"
+      },
+      {
+        "symbol": "BTCUSDT",
+        "type": "DEMO_BUY",
+        "amount": 80.0,
+        "quantity": 0.0007079646017699115,
+        "price": 113000,
+        "status": "DEMO",
+        "reasoning": "Highest volume, safe accumulation, slight dip"
+      },
+      {
+        "symbol": "1000REKTUSDT",
+        "type": "DEMO_BUY",
+        "amount": 50.0,
+        "quantity": 41666.66666666667,
+        "price": 0.0012,
+        "status": "DEMO",
+        "reasoning": "+5.68% momentum, high volume surge, small cap potential"
+      }
+    ],
+    "errors": [],
+    "total_invested": 430.0
+  },
+  "learnings_applied": {
+    "magic_pattern": {
+      "surge_gain": 49.42,
+      "correction": -11.85,
+      "recovery_probability": 0.75,
+      "current_price": 0.238,
+      "target_price": 0.31,
+      "entry_range": [
+        0.23,
+        0.24
+      ]
+    },
+    "top_performers": [
+      {
+        "symbol": "ILVUSDT",
+        "change": 7.62,
+        "volume": 87899,
+        "sector": "gaming"
+      },
+      {
+        "symbol": "RENUSDT",
+        "change": 17.04,
+        "volume": 3912,
+        "sector": "general"
+      },
+      {
+        "symbol": "1000REKTUSDT",
+        "change": 5.68,
+        "volume": 43985,
+        "sector": "general"
+      }
+    ],
+    "high_volume_leaders": [
+      {
+        "symbol": "BTCUSDT",
+        "volume": 924638,
+        "change": -1.04,
+        "sector": "layer1"
+      },
+      {
+        "symbol": "ETHUSDT",
+        "volume": 883465,
+        "change": -2.45,
+        "sector": "layer1"
+      },
+      {
+        "symbol": "XRPUSDT",
+        "volume": 643409,
+        "change": -3.23,
+        "sector": "general"
+      }
+    ],
+    "sector_momentum": {
+      "gaming": {
+        "avg_score": 10.0,
+        "tokens": 1,
+        "status": "hot"
+      },
+      "layer1": {
+        "avg_score": 9.2,
+        "tokens": 5,
+        "status": "hot"
+      },
+      "general": {
+        "avg_score": 7.9,
+        "tokens": 19,
+        "status": "hot"
+      }
+    }
+  }
+}

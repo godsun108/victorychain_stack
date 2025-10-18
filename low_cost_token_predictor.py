@@ -1,0 +1,345 @@
+#!/usr/bin/env python3
+
+"""
+🎯 LOW-COST TOKEN PREDICTOR
+AI analysis and predictions for tokens in the 0.001 to 0.01 price range
+Focus on high potential, affordable entry points with momentum signals
+"""
+
+import json
+import os
+import sys
+from datetime import datetime
+from typing import List, Dict, Any
+import statistics
+
+# Add project root to path
+sys.path.append(os.path.dirname(__file__))
+
+try:
+    from binance.client import Client
+    from binance.exceptions import BinanceAPIException
+
+    binance_available = True
+except ImportError:
+    binance_available = False
+
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "config", ".env"))
+
+
+class LowCostTokenPredictor:
+    """AI predictor for low-cost tokens with high potential"""
+
+    def __init__(self):
+        # Initialize Binance client
+        self.BINANCEUS_KEY = os.getenv("BINANCEUS_KEY")
+        self.BINANCEUS_SECRET = os.getenv("BINANCEUS_SECRET")
+        self.client = None
+
+        if binance_available and self.BINANCEUS_KEY:
+            try:
+                self.client = Client(self.BINANCEUS_KEY, self.BINANCEUS_SECRET)
+                print("✅ Low-Cost Token Predictor connected to Binance")
+            except Exception as e:
+                print(f"⚠️ Binance client error: {e}")
+
+        # Load existing token analysis
+        self.token_data = self._load_token_data()
+
+        # AI prediction parameters for low-cost tokens
+        self.prediction_weights = {
+            "momentum_score": 0.25,
+            "volume_growth": 0.20,
+            "volatility": 0.15,
+            "sector_strength": 0.15,
+            "market_cap_potential": 0.10,
+            "technical_indicators": 0.10,
+            "social_sentiment": 0.05,
+        }
+
+    def _load_token_data(self) -> List[Dict]:
+        """Load comprehensive token analysis data"""
+        try:
+            with open("comprehensive_token_analysis_20250805_155947.json", "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print("⚠️ Token analysis file not found")
+            return []
+
+    def filter_low_cost_tokens(self) -> List[Dict]:
+        """Filter tokens in 0.001 to 0.01 price range"""
+        low_cost_tokens = []
+
+        for token in self.token_data:
+            price = token.get("price", 0)
+            if 0.001 <= price <= 0.01:
+                low_cost_tokens.append(token)
+
+        return sorted(
+            low_cost_tokens, key=lambda x: x.get("momentum_score", 0), reverse=True
+        )
+
+    def calculate_ai_prediction_score(self, token: Dict) -> Dict:
+        """Calculate comprehensive AI prediction score for a token"""
+
+        # Base metrics
+        momentum_score = token.get("momentum_score", 0)
+        volume = token.get("volume_24h_usdt", 0)
+        price_change = token.get("price_change_24h", 0)
+        volatility = token.get("volatility", 0)
+        price = token.get("price", 0)
+
+        # Volume growth factor (higher volume = better liquidity)
+        volume_score = min(volume / 10000, 10) if volume > 0 else 0  # Scale to 0-10
+
+        # Volatility assessment (moderate volatility is ideal)
+        volatility_score = 10 - abs(volatility * 100 - 5)  # Optimal around 5%
+        volatility_score = max(0, volatility_score)
+
+        # Sector strength
+        sector_multipliers = {
+            "gaming": 1.2,
+            "defi": 1.15,
+            "layer1": 1.1,
+            "meme": 1.05,
+            "nft": 1.1,
+            "metaverse": 1.15,
+            "general": 1.0,
+        }
+        sector = token.get("sector", "general")
+        sector_score = momentum_score * sector_multipliers.get(sector, 1.0)
+
+        # Market cap potential (lower price = higher upside potential)
+        market_cap_score = (
+            (0.01 - price) / 0.009 * 10
+        )  # Scale based on how low the price is
+
+        # Technical indicators
+        tech_score = 5.0  # Base score (would calculate from RSI, MACD, etc.)
+        if price_change > 0:
+            tech_score += min(price_change, 5)  # Positive momentum bonus
+
+        # Social sentiment (placeholder - would integrate Twitter, Reddit, etc.)
+        social_score = 5.0  # Neutral baseline
+
+        # Calculate weighted prediction score
+        prediction_score = (
+            momentum_score * self.prediction_weights["momentum_score"]
+            + volume_score * self.prediction_weights["volume_growth"]
+            + volatility_score * self.prediction_weights["volatility"]
+            + sector_score * self.prediction_weights["sector_strength"]
+            + market_cap_score * self.prediction_weights["market_cap_potential"]
+            + tech_score * self.prediction_weights["technical_indicators"]
+            + social_score * self.prediction_weights["social_sentiment"]
+        )
+
+        # Generate prediction category
+        if prediction_score >= 8.0:
+            prediction = "STRONG_BUY"
+            confidence = min(0.95, 0.7 + (prediction_score - 8) * 0.05)
+        elif prediction_score >= 6.5:
+            prediction = "BUY"
+            confidence = min(0.85, 0.6 + (prediction_score - 6.5) * 0.1)
+        elif prediction_score >= 5.0:
+            prediction = "HOLD"
+            confidence = min(0.75, 0.5 + (prediction_score - 5) * 0.1)
+        else:
+            prediction = "CAUTION"
+            confidence = min(0.65, 0.4 + prediction_score * 0.05)
+
+        # Calculate potential targets
+        base_target = price * (1 + 0.5)  # 50% base target
+        if prediction == "STRONG_BUY":
+            target_multiplier = 2.0 + (prediction_score - 8) * 0.5  # 200-400% potential
+        elif prediction == "BUY":
+            target_multiplier = (
+                1.5 + (prediction_score - 6.5) * 0.3
+            )  # 150-200% potential
+        else:
+            target_multiplier = 1.2  # 20% conservative target
+
+        target_price = price * target_multiplier
+
+        return {
+            "prediction_score": round(prediction_score, 2),
+            "prediction": prediction,
+            "confidence": round(confidence, 3),
+            "target_price": round(target_price, 6),
+            "potential_gain": round((target_multiplier - 1) * 100, 1),
+            "risk_level": (
+                "HIGH" if volatility > 0.1 else "MEDIUM" if volatility > 0.05 else "LOW"
+            ),
+            "entry_recommendation": self._get_entry_strategy(token, prediction_score),
+            "timeframe": (
+                "1-3 months" if prediction in ["STRONG_BUY", "BUY"] else "3-6 months"
+            ),
+        }
+
+    def _get_entry_strategy(self, token: Dict, prediction_score: float) -> Dict:
+        """Generate entry strategy for the token"""
+        price = token.get("price", 0)
+        price_change = token.get("price_change_24h", 0)
+
+        if prediction_score >= 8.0:
+            if price_change < -5:
+                strategy = "AGGRESSIVE_BUY_DIP"
+                allocation = 0.15  # 15% of portfolio
+            else:
+                strategy = "MOMENTUM_BUY"
+                allocation = 0.12  # 12% of portfolio
+        elif prediction_score >= 6.5:
+            strategy = "GRADUAL_ACCUMULATION"
+            allocation = 0.08  # 8% of portfolio
+        else:
+            strategy = "WAIT_AND_WATCH"
+            allocation = 0.03  # 3% speculative allocation
+
+        return {
+            "strategy": strategy,
+            "suggested_allocation": allocation,
+            "entry_price": round(price * 0.98, 6),  # Slight discount
+            "stop_loss": round(price * 0.85, 6),  # 15% stop loss
+            "take_profit_1": round(price * 1.25, 6),  # 25% first target
+            "take_profit_2": round(price * 1.5, 6),  # 50% second target
+        }
+
+    def generate_predictions_report(self) -> Dict:
+        """Generate comprehensive predictions for low-cost tokens"""
+
+        print("🔍 Analyzing tokens in $0.001 - $0.01 price range...")
+
+        low_cost_tokens = self.filter_low_cost_tokens()
+
+        if not low_cost_tokens:
+            return {"error": "No tokens found in specified price range"}
+
+        print(f"📊 Found {len(low_cost_tokens)} tokens in price range")
+
+        predictions = []
+
+        for token in low_cost_tokens:
+            prediction_data = self.calculate_ai_prediction_score(token)
+
+            enhanced_token = {
+                **token,
+                **prediction_data,
+                "analysis_timestamp": datetime.now().isoformat(),
+            }
+
+            predictions.append(enhanced_token)
+
+        # Sort by prediction score
+        predictions.sort(key=lambda x: x["prediction_score"], reverse=True)
+
+        # Generate summary statistics
+        strong_buys = [p for p in predictions if p["prediction"] == "STRONG_BUY"]
+        buys = [p for p in predictions if p["prediction"] == "BUY"]
+        avg_potential = statistics.mean([p["potential_gain"] for p in predictions])
+
+        report = {
+            "analysis_timestamp": datetime.now().isoformat(),
+            "price_range": {"min": 0.001, "max": 0.01},
+            "total_tokens_analyzed": len(predictions),
+            "summary": {
+                "strong_buy_count": len(strong_buys),
+                "buy_count": len(buys),
+                "average_potential_gain": round(avg_potential, 1),
+                "top_prediction_score": (
+                    predictions[0]["prediction_score"] if predictions else 0
+                ),
+            },
+            "top_10_predictions": predictions[:10],
+            "all_predictions": predictions,
+        }
+
+        return report
+
+    def print_top_predictions(self, report: Dict, top_n: int = 5):
+        """Print formatted top predictions"""
+
+        predictions = report.get("top_10_predictions", [])[:top_n]
+
+        print(f"\n🎯 TOP {top_n} LOW-COST TOKEN PREDICTIONS")
+        print("=" * 80)
+
+        for i, token in enumerate(predictions, 1):
+            print(f"\n{i}. {token['symbol']} - ${token['price']:.6f}")
+            print(
+                f"   Prediction: {token['prediction']} (Score: {token['prediction_score']}/10)"
+            )
+            print(f"   Confidence: {token['confidence']:.1%}")
+            print(f"   Potential Gain: {token['potential_gain']:.1f}%")
+            print(f"   Target Price: ${token['target_price']:.6f}")
+            print(f"   24h Change: {token['price_change_24h']:.2f}%")
+            print(f"   Volume: ${token['volume_24h_usdt']:,.0f}")
+            print(f"   Sector: {token['sector'].title()}")
+            print(f"   Risk Level: {token['risk_level']}")
+            print(f"   Entry Strategy: {token['entry_recommendation']['strategy']}")
+            print(
+                f"   Suggested Allocation: {token['entry_recommendation']['suggested_allocation']:.1%}"
+            )
+
+
+def main():
+    """Main execution function"""
+
+    print("🚀 LOW-COST TOKEN AI PREDICTOR")
+    print("=" * 50)
+
+    predictor = LowCostTokenPredictor()
+
+    # Generate predictions
+    report = predictor.generate_predictions_report()
+
+    if "error" in report:
+        print(f"❌ Error: {report['error']}")
+        return
+
+    # Print summary
+    print(f"\n📊 ANALYSIS SUMMARY")
+    print(f"Tokens Analyzed: {report['total_tokens_analyzed']}")
+    print(f"Strong Buy Signals: {report['summary']['strong_buy_count']}")
+    print(f"Buy Signals: {report['summary']['buy_count']}")
+    print(f"Average Potential Gain: {report['summary']['average_potential_gain']:.1f}%")
+
+    # Print top predictions
+    predictor.print_top_predictions(report, top_n=10)
+
+    # Save detailed report
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"low_cost_token_predictions_{timestamp}.json"
+
+    with open(filename, "w") as f:
+        json.dump(report, f, indent=2)
+
+    print(f"\n💾 Detailed report saved: {filename}")
+
+    # Investment recommendations
+    print(f"\n💡 INVESTMENT RECOMMENDATIONS")
+    print("=" * 50)
+
+    strong_buys = [
+        p for p in report["all_predictions"] if p["prediction"] == "STRONG_BUY"
+    ]
+    if strong_buys:
+        print("🔥 IMMEDIATE OPPORTUNITIES (Strong Buy):")
+        for token in strong_buys[:3]:
+            print(
+                f"   • {token['symbol']}: ${token['price']:.6f} → ${token['target_price']:.6f} ({token['potential_gain']:.1f}%)"
+            )
+
+    buys = [p for p in report["all_predictions"] if p["prediction"] == "BUY"]
+    if buys:
+        print("\n📈 ACCUMULATION TARGETS (Buy):")
+        for token in buys[:3]:
+            print(
+                f"   • {token['symbol']}: ${token['price']:.6f} → ${token['target_price']:.6f} ({token['potential_gain']:.1f}%)"
+            )
+
+    print(f"\n🎯 PREDICTION COMPLETE!")
+
+
+if __name__ == "__main__":
+    main()

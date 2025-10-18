@@ -1,0 +1,199 @@
+{
+  "SHIBUSDT": {
+    "symbol": "SHIBUSDT",
+    "current_price": 1.194e-05,
+    "trend_direction": "UP",
+    "trend_strength": "STRONG",
+    "sentiment": "BULLISH",
+    "momentum_score": 8.1,
+    "volatility_index": 0.44069937196385706,
+    "volume_profile": {
+      "current": 76215.3,
+      "trend": 1,
+      "surge_factor": 1.5243060000000002
+    },
+    "support_levels": [
+      1.1342999999999998e-05,
+      1.0746e-05,
+      1.0148999999999999e-05
+    ],
+    "resistance_levels": [
+      1.2537e-05,
+      1.3134e-05,
+      1.3730999999999998e-05
+    ],
+    "technical_indicators": {
+      "rsi": 54.756901805250806,
+      "macd": 9.318212027291884e-08,
+      "macd_signal": 8.386390824562695e-08,
+      "macd_histogram": 9.318212027291884e-09,
+      "bollinger_upper": 1.2336819536939365e-05,
+      "bollinger_middle": 1.1835345378560334e-05,
+      "bollinger_lower": 1.1333871220181303e-05
+    },
+    "fundamental_score": 60.0,
+    "catalyst_events": [
+      "BULLISH_PATTERN",
+      "STRONG_MOMENTUM"
+    ],
+    "risk_factors": [
+      "ULTRA_LOW_PRICE"
+    ],
+    "confidence_score": 100,
+    "prediction": {
+      "direction": "UP",
+      "probability": 0.748,
+      "confidence": 100,
+      "technical_score": 0.4,
+      "momentum_score": 0.6199999999999999,
+      "sentiment_score": 0.5,
+      "volume_score": 0.5
+    }
+  },
+  "FLOKIUSDT": {
+    "symbol": "FLOKIUSDT",
+    "current_price": 0.00010212,
+    "trend_direction": "UP",
+    "trend_strength": "MODERATE",
+    "sentiment": "NEUTRAL",
+    "momentum_score": 7.8,
+    "volatility_index": 0.5704025469463643,
+    "volume_profile": {
+      "current": 67310.0,
+      "trend": 1,
+      "surge_factor": 1.3462
+    },
+    "support_levels": [
+      9.7014e-05,
+      9.1908e-05,
+      8.6802e-05
+    ],
+    "resistance_levels": [
+      0.000107226,
+      0.00011233200000000001,
+      0.000117438
+    ],
+    "technical_indicators": {
+      "rsi": 49.67839399984547,
+      "macd": 2.4626384436561013e-07,
+      "macd_signal": 2.2163745992904912e-07,
+      "macd_histogram": 2.4626384436561008e-08,
+      "bollinger_upper": 0.00010484214780856408,
+      "bollinger_middle": 0.00010081255293870774,
+      "bollinger_lower": 9.678295806885141e-05
+    },
+    "fundamental_score": 70.0,
+    "catalyst_events": [],
+    "risk_factors": [
+      "ULTRA_LOW_PRICE"
+    ],
+    "confidence_score": 90.0,
+    "prediction": {
+      "direction": "UP",
+      "probability": 0.674,
+      "confidence": 90.0,
+      "technical_score": 0.4,
+      "momentum_score": 0.56,
+      "sentiment_score": 0.0,
+      "volume_score": 0.2
+    }
+  },
+  "BONKUSDT": {
+    "symbol": "BONKUSDT",
+    "current_price": 2.443e-05,
+    "trend_direction": "UP",
+    "trend_strength": "MODERATE",
+    "sentiment": "NEUTRAL",
+    "momentum_score": 7.7,
+    "volatility_index": 0.34433411512264755,
+    "volume_profile": {
+      "current": 46821.0,
+      "trend": -1,
+      "surge_factor": 0.93642
+    },
+    "support_levels": [
+      2.32085e-05,
+      2.1987e-05,
+      2.07655e-05
+    ],
+    "resistance_levels": [
+      2.5651500000000003e-05,
+      2.6873000000000005e-05,
+      2.80945e-05
+    ],
+    "technical_indicators": {
+      "rsi": 49.85252372631944,
+      "macd": 1.5453949293793193e-07,
+      "macd_signal": 1.3908554364413874e-07,
+      "macd_histogram": 1.5453949293793193e-08,
+      "bollinger_upper": 2.5030044572718498e-05,
+      "bollinger_middle": 2.419686006567865e-05,
+      "bollinger_lower": 2.33636755586388e-05
+    },
+    "fundamental_score": 60.0,
+    "catalyst_events": [
+      "BULLISH_PATTERN"
+    ],
+    "risk_factors": [
+      "ULTRA_LOW_PRICE"
+    ],
+    "confidence_score": 75.0,
+    "prediction": {
+      "direction": "UP",
+      "probability": 0.651,
+      "confidence": 75.0,
+      "technical_score": 0.4,
+      "momentum_score": 0.54,
+      "sentiment_score": 0.0,
+      "volume_score": -0.2
+    }
+  },
+  "PEPEUSDT": {
+    "symbol": "PEPEUSDT",
+    "current_price": 1.006e-05,
+    "trend_direction": "UP",
+    "trend_strength": "MODERATE",
+    "sentiment": "NEUTRAL",
+    "momentum_score": 6.9,
+    "volatility_index": 0.24828046854609614,
+    "volume_profile": {
+      "current": 30349.0,
+      "trend": -1,
+      "surge_factor": 0.60698
+    },
+    "support_levels": [
+      9.557e-06,
+      9.054e-06,
+      8.551e-06
+    ],
+    "resistance_levels": [
+      1.0563e-05,
+      1.1066e-05,
+      1.1568999999999999e-05
+    ],
+    "technical_indicators": {
+      "rsi": 61.36530644717744,
+      "macd": 3.2824246868014796e-08,
+      "macd_signal": 2.9541822181213316e-08,
+      "macd_histogram": 3.2824246868014803e-09,
+      "bollinger_upper": 1.037597184731414e-05,
+      "bollinger_middle": 1.0104259640937372e-05,
+      "bollinger_lower": 9.832547434560604e-06
+    },
+    "fundamental_score": 60.0,
+    "catalyst_events": [],
+    "risk_factors": [
+      "ULTRA_LOW_PRICE"
+    ],
+    "confidence_score": 60.0,
+    "prediction": {
+      "direction": "UP",
+      "probability": 0.627,
+      "confidence": 60.0,
+      "technical_score": 0.4,
+      "momentum_score": 0.3800000000000001,
+      "sentiment_score": 0.0,
+      "volume_score": -0.2
+    }
+  }
+}

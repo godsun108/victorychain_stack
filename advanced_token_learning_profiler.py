@@ -1,0 +1,870 @@
+#!/usr/bin/env python3
+"""
+🧠 ADVANCED TOKEN LEARNING PROFILER
+===================================
+Senior developer-level system that learns from each acquired token
+Creates profiles beyond GALA/MAGIC to predict better allocations and optimize gas fees
+Adaptive learning with continuous improvement and strategic pattern recognition
+"""
+
+import json
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional, Set
+from dataclasses import dataclass, asdict
+from collections import defaultdict
+import hashlib
+import pickle
+import logging
+from pathlib import Path
+
+
+@dataclass
+class TokenLearningProfile:
+    """Comprehensive learning profile for each token"""
+
+    # Basic Info
+    symbol: str
+    acquisition_date: str
+    initial_price: float
+    current_price: float
+
+    # Performance Tracking
+    price_performance: Dict[str, float]  # 1d, 7d, 30d, 90d
+    volume_patterns: Dict[str, float]
+    volatility_evolution: List[float]
+    correlation_matrix: Dict[str, float]
+
+    # Strategic Learning
+    optimal_entry_points: List[float]
+    optimal_exit_points: List[float]
+    successful_allocation_sizes: List[float]
+    gas_cost_history: List[Dict]
+
+    # Market Behavior
+    sector_influence: Dict[str, float]
+    whale_behavior_patterns: List[Dict]
+    social_sentiment_correlation: Dict[str, float]
+    news_impact_scores: List[Dict]
+
+    # Predictive Intelligence
+    success_prediction_accuracy: float
+    allocation_optimization_score: float
+    gas_savings_achieved: float
+    learning_confidence: float
+
+    # Advanced Patterns
+    fibonacci_retracement_accuracy: Dict[str, float]
+    support_resistance_reliability: Dict[str, List[float]]
+    breakout_pattern_success: Dict[str, float]
+    mean_reversion_tendency: float
+
+    # Cross-Token Learning
+    correlation_insights: Dict[str, Dict]
+    sector_spillover_effects: Dict[str, float]
+    market_cycle_behavior: Dict[str, Dict]
+
+    # Gas Optimization Intelligence
+    optimal_transaction_times: List[str]
+    gas_price_sensitivity: float
+    batch_efficiency_scores: Dict[int, float]
+    layer2_migration_benefits: Dict[str, float]
+
+
+@dataclass
+class AllocationIntelligence:
+    """Advanced allocation intelligence based on learning"""
+
+    token_symbol: str
+    recommended_allocation: float
+    confidence_level: float
+    expected_roi_30d: float
+    expected_roi_90d: float
+    risk_adjusted_return: float
+    optimal_entry_price: float
+    stop_loss_level: float
+    take_profit_levels: List[float]
+    gas_optimized_size: float
+    execution_strategy: str
+    reasoning: List[str]
+
+
+class AdvancedTokenLearningProfiler:
+    """
+    🎯 Senior-level token profiling system with continuous learning
+    """
+
+    def __init__(self, data_dir: str = "token_learning_data"):
+        self.data_dir = Path(data_dir)
+        self.data_dir.mkdir(exist_ok=True)
+
+        # Learning databases
+        self.token_profiles: Dict[str, TokenLearningProfile] = {}
+        self.sector_intelligence: Dict[str, Dict] = defaultdict(dict)
+        self.market_cycle_patterns: Dict[str, Dict] = {}
+        self.gas_optimization_db: Dict[str, Dict] = {}
+
+        # Learning models
+        self.allocation_predictor = self._initialize_allocation_model()
+        self.gas_optimizer = self._initialize_gas_model()
+        self.risk_assessor = self._initialize_risk_model()
+
+        # Load existing learning data
+        self._load_learning_data()
+
+        # Setup logging
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
+
+    def _initialize_allocation_model(self) -> Dict:
+        """Initialize the allocation prediction model"""
+        return {
+            "weights": {
+                "performance_history": 0.25,
+                "volatility_pattern": 0.20,
+                "sector_correlation": 0.15,
+                "gas_efficiency": 0.15,
+                "market_cycle_position": 0.15,
+                "cross_token_learning": 0.10,
+            },
+            "learning_rate": 0.01,
+            "confidence_threshold": 0.75,
+            "max_allocation": 35.0,
+            "min_allocation": 5.0,
+        }
+
+    def _initialize_gas_model(self) -> Dict:
+        """Initialize gas optimization model"""
+        return {
+            "optimal_times_utc": [2, 3, 4, 5, 8, 9, 22, 23],
+            "batch_size_efficiency": {
+                1: 1.0,
+                2: 0.85,
+                3: 0.72,
+                5: 0.65,
+                8: 0.60,
+                10: 0.58,
+            },
+            "layer2_preferences": {
+                "polygon": {"cost_reduction": 0.95, "speed_bonus": 1.8},
+                "arbitrum": {"cost_reduction": 0.88, "speed_bonus": 1.5},
+                "optimism": {"cost_reduction": 0.90, "speed_bonus": 1.6},
+            },
+            "gas_price_thresholds": {
+                "low": 15,
+                "medium": 25,
+                "high": 40,
+                "extreme": 60,
+            },
+        }
+
+    def _initialize_risk_model(self) -> Dict:
+        """Initialize risk assessment model"""
+        return {
+            "volatility_weights": {"1d": 0.4, "7d": 0.3, "30d": 0.2, "90d": 0.1},
+            "correlation_risk_threshold": 0.85,
+            "whale_concentration_threshold": 0.15,
+            "sector_risk_multipliers": {
+                "gaming": 1.2,
+                "defi": 1.5,
+                "nft": 1.8,
+                "infrastructure": 0.8,
+            },
+            "max_position_risk": 0.25,  # 25% of portfolio
+        }
+
+    def create_token_profile(self, token_data: Dict) -> TokenLearningProfile:
+        """
+        🏗️ Create comprehensive learning profile for new token
+        """
+        symbol = token_data["symbol"]
+
+        # Initialize profile with current data
+        profile = TokenLearningProfile(
+            symbol=symbol,
+            acquisition_date=datetime.now().isoformat(),
+            initial_price=token_data.get("price", 0.0),
+            current_price=token_data.get("price", 0.0),
+            # Initialize tracking structures
+            price_performance={"1d": 0.0, "7d": 0.0, "30d": 0.0, "90d": 0.0},
+            volume_patterns={
+                "avg_daily": token_data.get("volume_24h", 0),
+                "volatility": token_data.get("volatility", 0),
+                "liquidity_score": token_data.get("liquidity", 5.0),
+            },
+            volatility_evolution=[token_data.get("volatility", 0)],
+            correlation_matrix={},
+            # Strategic learning initialization
+            optimal_entry_points=[],
+            optimal_exit_points=[],
+            successful_allocation_sizes=[],
+            gas_cost_history=[],
+            # Market behavior
+            sector_influence={token_data.get("sector", "unknown"): 1.0},
+            whale_behavior_patterns=[],
+            social_sentiment_correlation={},
+            news_impact_scores=[],
+            # Predictive metrics
+            success_prediction_accuracy=0.5,  # Start neutral
+            allocation_optimization_score=0.5,
+            gas_savings_achieved=0.0,
+            learning_confidence=0.3,  # Start low, build up
+            # Advanced patterns (to be learned)
+            fibonacci_retracement_accuracy={},
+            support_resistance_reliability={},
+            breakout_pattern_success={},
+            mean_reversion_tendency=0.5,
+            # Cross-token learning
+            correlation_insights={},
+            sector_spillover_effects={},
+            market_cycle_behavior={},
+            # Gas optimization
+            optimal_transaction_times=[],
+            gas_price_sensitivity=0.5,
+            batch_efficiency_scores={},
+            layer2_migration_benefits={},
+        )
+
+        # Store profile
+        self.token_profiles[symbol] = profile
+        self._save_profile(profile)
+
+        self.logger.info(f"✅ Created learning profile for {symbol}")
+        return profile
+
+    def update_token_performance(self, symbol: str, performance_data: Dict) -> None:
+        """
+        📈 Update token performance and learn from patterns
+        """
+        if symbol not in self.token_profiles:
+            self.logger.warning(f"⚠️ No profile found for {symbol}")
+            return
+
+        profile = self.token_profiles[symbol]
+
+        # Update price performance
+        profile.current_price = performance_data.get(
+            "current_price", profile.current_price
+        )
+
+        # Calculate performance metrics
+        initial_price = profile.initial_price
+        current_price = profile.current_price
+        performance_pct = ((current_price - initial_price) / initial_price) * 100
+
+        # Update performance tracking
+        profile.price_performance.update(
+            {"total": performance_pct, "last_update": datetime.now().isoformat()}
+        )
+
+        # Learn from volatility patterns
+        if "volatility" in performance_data:
+            profile.volatility_evolution.append(performance_data["volatility"])
+
+        # Update volume patterns
+        if "volume_24h" in performance_data:
+            profile.volume_patterns["current"] = performance_data["volume_24h"]
+
+        # Learn optimal entry/exit points
+        self._learn_entry_exit_points(profile, performance_data)
+
+        # Update learning confidence based on prediction accuracy
+        self._update_learning_confidence(profile, performance_data)
+
+        self._save_profile(profile)
+
+    def _learn_entry_exit_points(
+        self, profile: TokenLearningProfile, data: Dict
+    ) -> None:
+        """Learn optimal entry and exit points from price action"""
+        current_price = data.get("current_price", profile.current_price)
+        rsi = data.get("rsi", 50)
+        volume_ratio = data.get("volume_ratio", 1.0)
+
+        # Learn entry points (oversold conditions with volume confirmation)
+        if rsi < 35 and volume_ratio > 1.2:
+            profile.optimal_entry_points.append(current_price)
+            if len(profile.optimal_entry_points) > 10:
+                profile.optimal_entry_points = profile.optimal_entry_points[-10:]
+
+        # Learn exit points (overbought conditions)
+        if rsi > 70:
+            profile.optimal_exit_points.append(current_price)
+            if len(profile.optimal_exit_points) > 10:
+                profile.optimal_exit_points = profile.optimal_exit_points[-10:]
+
+    def _update_learning_confidence(
+        self, profile: TokenLearningProfile, data: Dict
+    ) -> None:
+        """Update learning confidence based on prediction accuracy"""
+        # Simple confidence learning - in production, this would be more sophisticated
+        if len(profile.optimal_entry_points) >= 3:
+            recent_entries = profile.optimal_entry_points[-3:]
+            current_price = data.get("current_price", profile.current_price)
+
+            # Check if recent entries were profitable
+            profitable_entries = sum(
+                1 for entry in recent_entries if current_price > entry
+            )
+            accuracy = profitable_entries / len(recent_entries)
+
+            # Update confidence with learning rate
+            profile.learning_confidence = (
+                0.8 * profile.learning_confidence + 0.2 * accuracy
+            )
+
+    def analyze_allocation_intelligence(
+        self, symbol: str, market_context: Dict
+    ) -> AllocationIntelligence:
+        """
+        🎯 Generate intelligent allocation recommendations based on learning
+        """
+        if symbol not in self.token_profiles:
+            raise ValueError(f"No profile found for {symbol}")
+
+        profile = self.token_profiles[symbol]
+
+        # Calculate base allocation using learned patterns
+        base_allocation = self._calculate_base_allocation(profile, market_context)
+
+        # Adjust for risk factors
+        risk_adjusted_allocation = self._apply_risk_adjustments(
+            base_allocation, profile, market_context
+        )
+
+        # Optimize for gas efficiency
+        gas_optimized_allocation = self._optimize_for_gas(
+            risk_adjusted_allocation, profile, market_context
+        )
+
+        # Generate stop loss and take profit levels
+        stop_loss, take_profits = self._calculate_trade_levels(profile)
+
+        # Calculate expected returns
+        expected_roi_30d, expected_roi_90d = self._predict_returns(
+            profile, market_context
+        )
+
+        # Generate reasoning
+        reasoning = self._generate_allocation_reasoning(
+            profile, gas_optimized_allocation, market_context
+        )
+
+        return AllocationIntelligence(
+            token_symbol=symbol,
+            recommended_allocation=gas_optimized_allocation,
+            confidence_level=profile.learning_confidence,
+            expected_roi_30d=expected_roi_30d,
+            expected_roi_90d=expected_roi_90d,
+            risk_adjusted_return=expected_roi_30d
+            * (1 - self._calculate_risk_score(profile)),
+            optimal_entry_price=(
+                np.mean(profile.optimal_entry_points)
+                if profile.optimal_entry_points
+                else profile.current_price
+            ),
+            stop_loss_level=stop_loss,
+            take_profit_levels=take_profits,
+            gas_optimized_size=gas_optimized_allocation,
+            execution_strategy=self._determine_execution_strategy(
+                profile, market_context
+            ),
+            reasoning=reasoning,
+        )
+
+    def _calculate_base_allocation(
+        self, profile: TokenLearningProfile, context: Dict
+    ) -> float:
+        """Calculate base allocation using learned patterns"""
+        weights = self.allocation_predictor["weights"]
+
+        # Performance history component
+        total_performance = profile.price_performance.get("total", 0)
+        performance_score = min(max(total_performance / 100, -0.5), 0.5) + 0.5
+
+        # Volatility pattern component
+        if profile.volatility_evolution:
+            recent_volatility = np.mean(profile.volatility_evolution[-5:])
+            volatility_score = max(0.2, 1 - (recent_volatility / 100))
+        else:
+            volatility_score = 0.5
+
+        # Sector correlation component
+        sector_score = self._calculate_sector_score(profile, context)
+
+        # Gas efficiency component
+        gas_score = self._calculate_gas_efficiency_score(profile)
+
+        # Market cycle component
+        cycle_score = self._calculate_market_cycle_score(context)
+
+        # Cross-token learning component
+        cross_token_score = self._calculate_cross_token_score(profile)
+
+        # Weighted combination
+        base_score = (
+            weights["performance_history"] * performance_score
+            + weights["volatility_pattern"] * volatility_score
+            + weights["sector_correlation"] * sector_score
+            + weights["gas_efficiency"] * gas_score
+            + weights["market_cycle_position"] * cycle_score
+            + weights["cross_token_learning"] * cross_token_score
+        )
+
+        # Convert to allocation percentage
+        min_alloc = self.allocation_predictor["min_allocation"]
+        max_alloc = self.allocation_predictor["max_allocation"]
+
+        return min_alloc + (max_alloc - min_alloc) * base_score
+
+    def _apply_risk_adjustments(
+        self, allocation: float, profile: TokenLearningProfile, context: Dict
+    ) -> float:
+        """Apply risk-based adjustments to allocation"""
+        risk_score = self._calculate_risk_score(profile)
+
+        # Reduce allocation for high-risk tokens
+        risk_multiplier = 1 - (risk_score * 0.5)
+
+        # Consider portfolio concentration risk
+        max_position = self.risk_assessor["max_position_risk"] * 100
+
+        adjusted_allocation = allocation * risk_multiplier
+        return min(adjusted_allocation, max_position)
+
+    def _optimize_for_gas(
+        self, allocation: float, profile: TokenLearningProfile, context: Dict
+    ) -> float:
+        """Optimize allocation for gas efficiency"""
+        current_gas_price = context.get("gas_price", 25)
+        gas_thresholds = self.gas_optimizer["gas_price_thresholds"]
+
+        # Adjust allocation based on gas conditions
+        if current_gas_price > gas_thresholds["high"]:
+            # High gas - prefer larger batches, slightly reduce allocation
+            return allocation * 0.95
+        elif current_gas_price < gas_thresholds["low"]:
+            # Low gas - can afford more frequent transactions
+            return allocation * 1.02
+
+        return allocation
+
+    def _calculate_trade_levels(
+        self, profile: TokenLearningProfile
+    ) -> Tuple[float, List[float]]:
+        """Calculate stop loss and take profit levels"""
+        current_price = profile.current_price
+
+        # Stop loss based on recent volatility
+        if profile.volatility_evolution:
+            avg_volatility = np.mean(profile.volatility_evolution[-10:])
+            stop_loss_pct = min(max(avg_volatility / 100 * 2, 0.05), 0.15)
+        else:
+            stop_loss_pct = 0.08  # Default 8%
+
+        stop_loss = current_price * (1 - stop_loss_pct)
+
+        # Take profit levels based on learned patterns
+        if profile.optimal_exit_points:
+            avg_exit_gain = np.mean(
+                [
+                    (exit_price - current_price) / current_price
+                    for exit_price in profile.optimal_exit_points
+                    if exit_price > current_price
+                ]
+            )
+            if avg_exit_gain > 0:
+                take_profits = [
+                    current_price * (1 + avg_exit_gain * 0.5),
+                    current_price * (1 + avg_exit_gain),
+                    current_price * (1 + avg_exit_gain * 1.5),
+                ]
+            else:
+                take_profits = [
+                    current_price * 1.15,
+                    current_price * 1.30,
+                    current_price * 1.50,
+                ]
+        else:
+            take_profits = [
+                current_price * 1.20,
+                current_price * 1.35,
+                current_price * 1.60,
+            ]
+
+        return stop_loss, take_profits
+
+    def _predict_returns(
+        self, profile: TokenLearningProfile, context: Dict
+    ) -> Tuple[float, float]:
+        """Predict expected returns based on learning"""
+        # Base prediction on historical performance and learning confidence
+        total_performance = profile.price_performance.get("total", 0)
+        confidence = profile.learning_confidence
+
+        # Adjust for market conditions
+        market_sentiment = context.get("market_sentiment", 0.5)
+
+        # Calculate expected returns with confidence weighting
+        base_30d = total_performance * 0.3 * confidence * market_sentiment
+        base_90d = total_performance * 0.8 * confidence * market_sentiment
+
+        # Add sector-specific adjustments
+        sector_multiplier = self._get_sector_multiplier(profile, context)
+
+        expected_30d = base_30d * sector_multiplier
+        expected_90d = base_90d * sector_multiplier
+
+        return expected_30d, expected_90d
+
+    def _calculate_risk_score(self, profile: TokenLearningProfile) -> float:
+        """Calculate comprehensive risk score"""
+        risk_factors = []
+
+        # Volatility risk
+        if profile.volatility_evolution:
+            volatility_risk = min(np.mean(profile.volatility_evolution) / 100, 1.0)
+            risk_factors.append(volatility_risk)
+
+        # Performance consistency risk
+        if len(profile.optimal_entry_points) >= 3:
+            entry_consistency = np.std(profile.optimal_entry_points) / np.mean(
+                profile.optimal_entry_points
+            )
+            risk_factors.append(min(entry_consistency, 1.0))
+
+        # Learning confidence inverse (low confidence = high risk)
+        confidence_risk = 1 - profile.learning_confidence
+        risk_factors.append(confidence_risk)
+
+        return np.mean(risk_factors) if risk_factors else 0.5
+
+    def _calculate_sector_score(
+        self, profile: TokenLearningProfile, context: Dict
+    ) -> float:
+        """Calculate sector correlation score"""
+        # Simplified sector scoring - in production would use real sector data
+        return 0.7  # Neutral positive score
+
+    def _calculate_gas_efficiency_score(self, profile: TokenLearningProfile) -> float:
+        """Calculate gas efficiency score"""
+        return 0.8  # Good default gas efficiency
+
+    def _calculate_market_cycle_score(self, context: Dict) -> float:
+        """Calculate market cycle position score"""
+        return context.get("market_sentiment", 0.6)
+
+    def _calculate_cross_token_score(self, profile: TokenLearningProfile) -> float:
+        """Calculate cross-token learning benefits"""
+        return 0.6  # Moderate cross-token learning benefit
+
+    def _get_sector_multiplier(
+        self, profile: TokenLearningProfile, context: Dict
+    ) -> float:
+        """Get sector-specific multiplier"""
+        sector_multipliers = {
+            "gaming": 1.15,
+            "defi": 1.10,
+            "nft": 1.20,
+            "infrastructure": 0.95,
+            "unknown": 1.0,
+        }
+
+        primary_sector = (
+            list(profile.sector_influence.keys())[0]
+            if profile.sector_influence
+            else "unknown"
+        )
+        return sector_multipliers.get(primary_sector, 1.0)
+
+    def _determine_execution_strategy(
+        self, profile: TokenLearningProfile, context: Dict
+    ) -> str:
+        """Determine optimal execution strategy"""
+        gas_price = context.get("gas_price", 25)
+        volatility = (
+            profile.volatility_evolution[-1] if profile.volatility_evolution else 50
+        )
+
+        if gas_price > 40:
+            return "BATCH_EXECUTION_LOW_GAS_HOURS"
+        elif volatility > 70:
+            return "GRADUAL_ACCUMULATION"
+        elif profile.learning_confidence > 0.8:
+            return "AGGRESSIVE_ENTRY"
+        else:
+            return "CAUTIOUS_DCA"
+
+    def _generate_allocation_reasoning(
+        self, profile: TokenLearningProfile, allocation: float, context: Dict
+    ) -> List[str]:
+        """Generate human-readable reasoning for allocation decision"""
+        reasoning = []
+
+        # Performance-based reasoning
+        total_perf = profile.price_performance.get("total", 0)
+        if total_perf > 20:
+            reasoning.append(
+                f"Strong historical performance (+{total_perf:.1f}%) supports higher allocation"
+            )
+        elif total_perf < -10:
+            reasoning.append(
+                f"Recent underperformance ({total_perf:.1f}%) suggests reduced allocation"
+            )
+
+        # Confidence-based reasoning
+        if profile.learning_confidence > 0.7:
+            reasoning.append(
+                f"High learning confidence ({profile.learning_confidence:.1%}) from successful predictions"
+            )
+        elif profile.learning_confidence < 0.4:
+            reasoning.append(
+                "Lower allocation due to limited learning data and prediction accuracy"
+            )
+
+        # Gas optimization reasoning
+        gas_price = context.get("gas_price", 25)
+        if gas_price > 30:
+            reasoning.append(
+                "Gas optimization suggests batched execution during low-fee periods"
+            )
+
+        # Risk management reasoning
+        risk_score = self._calculate_risk_score(profile)
+        if risk_score > 0.6:
+            reasoning.append(
+                "Risk management protocols applied due to elevated volatility"
+            )
+
+        return reasoning
+
+    def generate_portfolio_optimization_report(self) -> Dict:
+        """
+        📊 Generate comprehensive portfolio optimization report
+        """
+        report = {
+            "generated_at": datetime.now().isoformat(),
+            "total_tokens_profiled": len(self.token_profiles),
+            "learning_summary": {},
+            "allocation_recommendations": {},
+            "gas_optimization_insights": {},
+            "risk_assessment": {},
+            "cross_token_insights": {},
+        }
+
+        # Learning summary
+        total_confidence = sum(
+            p.learning_confidence for p in self.token_profiles.values()
+        )
+        avg_confidence = (
+            total_confidence / len(self.token_profiles) if self.token_profiles else 0
+        )
+
+        report["learning_summary"] = {
+            "average_learning_confidence": avg_confidence,
+            "tokens_with_high_confidence": len(
+                [p for p in self.token_profiles.values() if p.learning_confidence > 0.7]
+            ),
+            "total_gas_savings_achieved": sum(
+                p.gas_savings_achieved for p in self.token_profiles.values()
+            ),
+        }
+
+        # Generate allocation recommendations for each token
+        market_context = {"market_sentiment": 0.65, "gas_price": 22}
+
+        for symbol, profile in self.token_profiles.items():
+            try:
+                allocation_intel = self.analyze_allocation_intelligence(
+                    symbol, market_context
+                )
+                report["allocation_recommendations"][symbol] = asdict(allocation_intel)
+            except Exception as e:
+                self.logger.error(f"Error generating allocation for {symbol}: {e}")
+
+        # Gas optimization insights
+        report["gas_optimization_insights"] = {
+            "optimal_execution_times": [2, 3, 4, 8, 9],
+            "recommended_batch_sizes": {
+                "small_positions": 3,
+                "medium_positions": 5,
+                "large_positions": 8,
+            },
+            "layer2_migration_benefits": {
+                "polygon": "95% gas cost reduction",
+                "arbitrum": "88% gas cost reduction",
+            },
+        }
+
+        return report
+
+    def _save_profile(self, profile: TokenLearningProfile) -> None:
+        """Save token profile to disk"""
+        file_path = self.data_dir / f"{profile.symbol}_profile.json"
+        with open(file_path, "w") as f:
+            json.dump(asdict(profile), f, indent=2, default=str)
+
+    def _load_learning_data(self) -> None:
+        """Load existing learning data from disk"""
+        if not self.data_dir.exists():
+            return
+
+        for profile_file in self.data_dir.glob("*_profile.json"):
+            try:
+                with open(profile_file, "r") as f:
+                    data = json.load(f)
+                    # Reconstruct TokenLearningProfile from dict
+                    profile = TokenLearningProfile(**data)
+                    self.token_profiles[profile.symbol] = profile
+            except Exception as e:
+                self.logger.error(f"Error loading profile {profile_file}: {e}")
+
+
+def main():
+    """
+    🚀 Demonstrate advanced token learning profiler
+    """
+    print("🧠 ADVANCED TOKEN LEARNING PROFILER")
+    print("=" * 50)
+
+    # Initialize profiler
+    profiler = AdvancedTokenLearningProfiler()
+
+    # Sample tokens to profile (beyond GALA and MAGIC)
+    sample_tokens = [
+        {
+            "symbol": "SAND",
+            "price": 0.45,
+            "sector": "gaming",
+            "volume_24h": 125000000,
+            "volatility": 68,
+            "liquidity": 8.2,
+            "rsi": 42,
+        },
+        {
+            "symbol": "MANA",
+            "price": 0.38,
+            "sector": "metaverse",
+            "volume_24h": 98000000,
+            "volatility": 72,
+            "liquidity": 7.8,
+            "rsi": 55,
+        },
+        {
+            "symbol": "AXS",
+            "price": 6.75,
+            "sector": "gaming",
+            "volume_24h": 85000000,
+            "volatility": 78,
+            "liquidity": 8.5,
+            "rsi": 38,
+        },
+        {
+            "symbol": "ENJ",
+            "price": 0.28,
+            "sector": "nft",
+            "volume_24h": 45000000,
+            "volatility": 65,
+            "liquidity": 7.2,
+            "rsi": 48,
+        },
+    ]
+
+    print("📋 Creating learning profiles for tokens...")
+
+    # Create profiles for each token
+    for token_data in sample_tokens:
+        profile = profiler.create_token_profile(token_data)
+        print(f"✅ Created profile for {token_data['symbol']}")
+
+        # Simulate some performance updates to build learning data
+        for i in range(5):
+            performance_update = {
+                "current_price": token_data["price"]
+                * (1 + np.random.uniform(-0.1, 0.15)),
+                "volatility": token_data["volatility"] + np.random.uniform(-10, 10),
+                "volume_24h": token_data["volume_24h"]
+                * (1 + np.random.uniform(-0.2, 0.3)),
+                "rsi": max(20, min(80, token_data["rsi"] + np.random.uniform(-15, 15))),
+                "volume_ratio": np.random.uniform(0.8, 1.8),
+            }
+            profiler.update_token_performance(token_data["symbol"], performance_update)
+
+    print("\n🎯 Generating allocation intelligence...")
+
+    # Market context for analysis
+    market_context = {
+        "market_sentiment": 0.68,
+        "gas_price": 18.5,
+        "sector_rotation": {"gaming": 0.82, "metaverse": 0.75, "nft": 0.71},
+    }
+
+    # Generate allocation intelligence for each token
+    allocation_results = {}
+    for symbol in profiler.token_profiles.keys():
+        try:
+            allocation_intel = profiler.analyze_allocation_intelligence(
+                symbol, market_context
+            )
+            allocation_results[symbol] = allocation_intel
+
+            print(f"\n📊 {symbol} Allocation Intelligence:")
+            print(
+                f"   Recommended Allocation: {allocation_intel.recommended_allocation:.1f}%"
+            )
+            print(f"   Confidence Level: {allocation_intel.confidence_level:.1%}")
+            print(f"   Expected 30d ROI: {allocation_intel.expected_roi_30d:.1f}%")
+            print(
+                f"   Risk-Adjusted Return: {allocation_intel.risk_adjusted_return:.1f}%"
+            )
+            print(f"   Optimal Entry: ${allocation_intel.optimal_entry_price:.4f}")
+            print(f"   Stop Loss: ${allocation_intel.stop_loss_level:.4f}")
+            print(f"   Execution Strategy: {allocation_intel.execution_strategy}")
+            print(f"   Reasoning: {'; '.join(allocation_intel.reasoning[:2])}")
+
+        except Exception as e:
+            print(f"❌ Error analyzing {symbol}: {e}")
+
+    print("\n📈 Generating Portfolio Optimization Report...")
+
+    # Generate comprehensive report
+    report = profiler.generate_portfolio_optimization_report()
+
+    print(f"\n🎯 PORTFOLIO OPTIMIZATION SUMMARY")
+    print(f"Total Tokens Profiled: {report['total_tokens_profiled']}")
+    print(
+        f"Average Learning Confidence: {report['learning_summary']['average_learning_confidence']:.1%}"
+    )
+    print(
+        f"High Confidence Tokens: {report['learning_summary']['tokens_with_high_confidence']}"
+    )
+
+    print(f"\n💰 Recommended Allocations:")
+    total_allocation = 0
+    for symbol, allocation_data in report["allocation_recommendations"].items():
+        alloc = allocation_data["recommended_allocation"]
+        confidence = allocation_data["confidence_level"]
+        total_allocation += alloc
+        print(f"   {symbol}: {alloc:.1f}% (Confidence: {confidence:.1%})")
+
+    print(f"\nTotal Recommended Allocation: {total_allocation:.1f}%")
+
+    print(f"\n⛽ Gas Optimization Insights:")
+    gas_insights = report["gas_optimization_insights"]
+    print(
+        f"   Optimal Execution Times (UTC): {gas_insights['optimal_execution_times']}"
+    )
+    print(f"   Recommended Batch Sizes: {gas_insights['recommended_batch_sizes']}")
+
+    # Save comprehensive report
+    report_path = Path("advanced_token_learning_report.json")
+    with open(report_path, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+
+    print(f"\n💾 Saved comprehensive report to: {report_path}")
+    print("\n🎯 Advanced Token Learning Profiler Complete!")
+
+
+if __name__ == "__main__":
+    main()

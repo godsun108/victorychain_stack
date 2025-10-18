@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+
+"""
+LIVE TRADING BOT LAUNCHER
+========================
+Launches the 24/7 automated trading bot with full monitoring and safety checks.
+"""
+
+import subprocess
+import sys
+import os
+import time
+import signal
+import json
+from datetime import datetime
+
+def check_dependencies():
+    """Check if all required dependencies are available"""
+    required_packages = [
+        'asyncio', 'aiohttp', 'numpy', 'pandas'
+    ]
+    
+    missing = []
+    for package in required_packages:
+        try:
+            __import__(package)
+        except ImportError:
+            missing.append(package)
+    
+    if missing:
+        print(f"❌ Missing packages: {', '.join(missing)}")
+        print("💡 Install with: pip install " + " ".join(missing))
+        return False
+    
+    return True
+
+def setup_environment():
+    """Setup environment for live trading"""
+    print("⚙️ Setting up trading environment...")
+    
+    # Create necessary directories
+    os.makedirs('logs', exist_ok=True)
+    os.makedirs('data', exist_ok=True)
+    os.makedirs('backups', exist_ok=True)
+    
+    # Create config if it doesn't exist
+    config_file = 'trading_config.json'
+    if not os.path.exists(config_file):
+        default_config = {
+            "max_position_size": 1000.0,
+            "risk_per_trade": 0.02,
+            "max_daily_trades": 50,
+            "emergency_stop_enabled": True,
+            "gas_protection_enabled": True,
+            "testnet_mode": True,
+            "log_level": "INFO"
+        }
+        
+        with open(config_file, 'w') as f:
+            json.dump(default_config, f, indent=2)
+        
+        print(f"✅ Created default config: {config_file}")
+    
+    print("✅ Environment setup complete")
+
+def display_startup_banner():
+    """Display startup banner"""
+    print("\n" + "=" * 80)
+    print("🚀 VICTORYCHAIN LIVE 24/7 AUTOMATED TRADING BOT")
+    print("=" * 80)
+    print("🛡️ ULTIMATE GAS PROTECTION: ENABLED")
+    print("🤖 AI PREDICTIONS & MCP VALIDATION: ENABLED") 
+    print("⚖️ RISK MANAGEMENT & PORTFOLIO REBALANCING: ENABLED")
+    print("🚨 EMERGENCY STOPS & SAFETY CHECKS: ENABLED")
+    print("📊 REAL-TIME MONITORING & LOGGING: ENABLED")
+    print("🧪 TESTNET MODE: ENABLED (Safe for testing)")
+    print("=" * 80)
+    print(f"🕐 Launch Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 80)
+
+def get_user_confirmation():
+    """Get user confirmation before starting live trading"""
+    print("\n⚠️  IMPORTANT SAFETY NOTICE:")
+    print("   • This bot will run 24/7 automated trading")
+    print("   • All safety measures are enabled by default")
+    print("   • Bot is configured for TESTNET (paper trading)")
+    print("   • You can stop anytime with Ctrl+C")
+    print("   • Emergency stops will trigger on safety violations")
+    
+    while True:
+        response = input("\n🤔 Do you want to start the live trading bot? (yes/no): ").lower().strip()
+        if response in ['yes', 'y']:
+            return True
+        elif response in ['no', 'n']:
+            return False
+        else:
+            print("Please enter 'yes' or 'no'")
+
+def run_trading_bot():
+    """Run the live trading bot"""
+    try:
+        print("\n🚀 Starting Live 24/7 Trading Bot...")
+        print("📝 All activity will be logged to 'live_trading_bot.log'")
+        print("🛑 Press Ctrl+C to stop the bot safely")
+        print("-" * 60)
+        
+        # Run the bot
+        process = subprocess.Popen([
+            sys.executable, 'live_24x7_trading_bot.py'
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        
+        # Stream output in real-time
+        for line in iter(process.stdout.readline, ''):
+            if line:
+                print(line.rstrip())
+        
+        process.wait()
+        
+    except KeyboardInterrupt:
+        print("\n🛑 Stopping trading bot safely...")
+        if 'process' in locals():
+            process.terminate()
+            process.wait()
+        print("✅ Trading bot stopped successfully")
+        
+    except Exception as e:
+        print(f"❌ Error running trading bot: {e}")
+
+def main():
+    """Main launcher function"""
+    print("🔍 Checking system requirements...")
+    
+    # Check dependencies
+    if not check_dependencies():
+        print("❌ System requirements not met. Please install missing packages.")
+        return
+    
+    print("✅ All dependencies available")
+    
+    # Setup environment
+    setup_environment()
+    
+    # Display banner
+    display_startup_banner()
+    
+    # Get confirmation
+    if not get_user_confirmation():
+        print("👋 Launch cancelled by user")
+        return
+    
+    # Check if bot file exists
+    if not os.path.exists('live_24x7_trading_bot.py'):
+        print("❌ Trading bot file not found: live_24x7_trading_bot.py")
+        return
+    
+    # Final warning
+    print("\n⏰ Starting in 3 seconds...")
+    for i in range(3, 0, -1):
+        print(f"   {i}...")
+        time.sleep(1)
+    
+    # Run the bot
+    run_trading_bot()
+    
+    print("\n👋 Trading bot session ended")
+    print(f"📅 Session End: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+if __name__ == "__main__":
+    main()

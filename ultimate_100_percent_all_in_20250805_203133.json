@@ -1,0 +1,336 @@
+{
+  "system_type": "ULTIMATE_100_PERCENT_ALL_IN",
+  "execution_result": {
+    "execution_timestamp": "2025-08-05T20:31:33.217397",
+    "strategy": "ULTIMATE_100_PERCENT_ALL_IN",
+    "total_allocation": 100.0,
+    "positions": [
+      {
+        "symbol": "SHIBUSDT",
+        "allocation_percent": 59.535000000000004,
+        "position_value": 5953.500000000001,
+        "entry_price": 1.194e-05,
+        "stop_loss_price": 1.0746e-05,
+        "targets": [
+          1.791e-05,
+          2.388e-05,
+          4.776e-05,
+          0.00011939999999999999,
+          0.00060894
+        ],
+        "confidence_score": 81.0,
+        "moon_potential": 5000.0,
+        "risk_level": "MAXIMUM"
+      },
+      {
+        "symbol": "FLOKIUSDT",
+        "allocation_percent": 28.6416,
+        "position_value": 2864.16,
+        "entry_price": 0.00010212,
+        "stop_loss_price": 8.986560000000001e-05,
+        "targets": [
+          0.00015318,
+          0.00020424,
+          0.00040848,
+          0.0010212,
+          0.0031657200000000003
+        ],
+        "confidence_score": 78.0,
+        "moon_potential": 3000.0,
+        "risk_level": "EXTREME"
+      },
+      {
+        "symbol": "BONKUSDT",
+        "allocation_percent": 11.823399999999996,
+        "position_value": 1182.3399999999997,
+        "entry_price": 2.443e-05,
+        "stop_loss_price": 2.14984e-05,
+        "targets": [
+          3.6645e-05,
+          4.886e-05,
+          9.772e-05,
+          0.00024430000000000003,
+          0.0006351800000000001
+        ],
+        "confidence_score": 77.0,
+        "moon_potential": 2500.0,
+        "risk_level": "EXTREME"
+      }
+    ],
+    "capital_deployed": 10000.0,
+    "cash_remaining": 0.0
+  },
+  "performance_scenarios": {
+    "conservative": {
+      "total_value": 17500.0,
+      "total_profit": 7500.0,
+      "return_percent": 75.0,
+      "details": [
+        {
+          "symbol": "SHIBUSDT",
+          "initial_value": 5953.500000000001,
+          "final_value": 10418.625000000002,
+          "profit": 4465.125000000001,
+          "return_percent": 75.0
+        },
+        {
+          "symbol": "FLOKIUSDT",
+          "initial_value": 2864.16,
+          "final_value": 5012.28,
+          "profit": 2148.12,
+          "return_percent": 75.0
+        },
+        {
+          "symbol": "BONKUSDT",
+          "initial_value": 1182.3399999999997,
+          "final_value": 2069.0949999999993,
+          "profit": 886.7549999999997,
+          "return_percent": 75.0
+        }
+      ]
+    },
+    "realistic": {
+      "total_value": 35000.0,
+      "total_profit": 25000.0,
+      "return_percent": 250.0,
+      "details": [
+        {
+          "symbol": "SHIBUSDT",
+          "initial_value": 5953.500000000001,
+          "final_value": 20837.250000000004,
+          "profit": 14883.750000000004,
+          "return_percent": 250.0
+        },
+        {
+          "symbol": "FLOKIUSDT",
+          "initial_value": 2864.16,
+          "final_value": 10024.56,
+          "profit": 7160.4,
+          "return_percent": 250.0
+        },
+        {
+          "symbol": "BONKUSDT",
+          "initial_value": 1182.3399999999997,
+          "final_value": 4138.189999999999,
+          "profit": 2955.849999999999,
+          "return_percent": 250.0
+        }
+      ]
+    },
+    "optimistic": {
+      "total_value": 90000.0,
+      "total_profit": 80000.0,
+      "return_percent": 800.0,
+      "details": [
+        {
+          "symbol": "SHIBUSDT",
+          "initial_value": 5953.500000000001,
+          "final_value": 53581.50000000001,
+          "profit": 47628.00000000001,
+          "return_percent": 800.0
+        },
+        {
+          "symbol": "FLOKIUSDT",
+          "initial_value": 2864.16,
+          "final_value": 25777.44,
+          "profit": 22913.28,
+          "return_percent": 800.0
+        },
+        {
+          "symbol": "BONKUSDT",
+          "initial_value": 1182.3399999999997,
+          "final_value": 10641.059999999998,
+          "profit": 9458.719999999998,
+          "return_percent": 800.0
+        }
+      ]
+    },
+    "moon_mission": {
+      "total_value": 260000.00000000003,
+      "total_profit": 250000.00000000003,
+      "return_percent": 2500.0000000000005,
+      "details": [
+        {
+          "symbol": "SHIBUSDT",
+          "initial_value": 5953.500000000001,
+          "final_value": 154791.00000000003,
+          "profit": 148837.50000000003,
+          "return_percent": 2500.0
+        },
+        {
+          "symbol": "FLOKIUSDT",
+          "initial_value": 2864.16,
+          "final_value": 74468.16,
+          "profit": 71604.0,
+          "return_percent": 2500.0
+        },
+        {
+          "symbol": "BONKUSDT",
+          "initial_value": 1182.3399999999997,
+          "final_value": 30740.839999999993,
+          "profit": 29558.499999999993,
+          "return_percent": 2500.0
+        }
+      ]
+    }
+  },
+  "monitoring_result": {
+    "monitoring_cycles": 5,
+    "final_pnl": 645.0237573141162,
+    "final_portfolio_value": 10645.023757314117,
+    "final_return_percent": 6.4502375731411625,
+    "cycle_details": [
+      {
+        "cycle": 1,
+        "cycle_pnl": 407.79314994385885,
+        "cumulative_pnl": 407.79314994385885,
+        "positions": [
+          {
+            "symbol": "SHIBUSDT",
+            "current_price": 1.2764170322640498e-05,
+            "pnl_percent": 6.902599017089603,
+            "pnl_dollar": 410.9462324824296,
+            "target_hit": null
+          },
+          {
+            "symbol": "FLOKIUSDT",
+            "current_price": 0.00010289733842028771,
+            "pnl_percent": 0.7612009599370415,
+            "pnl_dollar": 21.802013414132766,
+            "target_hit": null
+          },
+          {
+            "symbol": "BONKUSDT",
+            "current_price": 2.3914367445807005e-05,
+            "pnl_percent": -2.110653107625855,
+            "pnl_dollar": -24.955095952703527,
+            "target_hit": null
+          }
+        ]
+      },
+      {
+        "cycle": 2,
+        "cycle_pnl": -111.69793809538928,
+        "cumulative_pnl": 296.0952118484696,
+        "positions": [
+          {
+            "symbol": "SHIBUSDT",
+            "current_price": 1.1527249646196717e-05,
+            "pnl_percent": -3.4568706348683613,
+            "pnl_dollar": -205.80479324688793,
+            "target_hit": null
+          },
+          {
+            "symbol": "FLOKIUSDT",
+            "current_price": 0.0001068392764420137,
+            "pnl_percent": 4.621304780663627,
+            "pnl_dollar": 132.36156300585534,
+            "target_hit": null
+          },
+          {
+            "symbol": "BONKUSDT",
+            "current_price": 2.3639565342556344e-05,
+            "pnl_percent": -3.2355082171250835,
+            "pnl_dollar": -38.2547078543567,
+            "target_hit": null
+          }
+        ]
+      },
+      {
+        "cycle": 3,
+        "cycle_pnl": -212.01912200704865,
+        "cumulative_pnl": 84.07608984142095,
+        "positions": [
+          {
+            "symbol": "SHIBUSDT",
+            "current_price": 1.1578079242700462e-05,
+            "pnl_percent": -3.031162121436664,
+            "pnl_dollar": -180.46023689973183,
+            "target_hit": null
+          },
+          {
+            "symbol": "FLOKIUSDT",
+            "current_price": 9.87872580746213e-05,
+            "pnl_percent": -3.2635545685259553,
+            "pnl_dollar": -93.473424529893,
+            "target_hit": null
+          },
+          {
+            "symbol": "BONKUSDT",
+            "current_price": 2.5709303921117054e-05,
+            "pnl_percent": 5.236610401625265,
+            "pnl_dollar": 61.91453942257615,
+            "target_hit": null
+          }
+        ]
+      },
+      {
+        "cycle": 4,
+        "cycle_pnl": 305.16875628592726,
+        "cumulative_pnl": 389.2448461273482,
+        "positions": [
+          {
+            "symbol": "SHIBUSDT",
+            "current_price": 1.2287840132313147e-05,
+            "pnl_percent": 2.9132339389710875,
+            "pnl_dollar": 173.43938255664372,
+            "target_hit": null
+          },
+          {
+            "symbol": "FLOKIUSDT",
+            "current_price": 0.00010627469843556301,
+            "pnl_percent": 4.068447351706823,
+            "pnl_dollar": 116.52684166864613,
+            "target_hit": null
+          },
+          {
+            "symbol": "BONKUSDT",
+            "current_price": 2.4744121029688054e-05,
+            "pnl_percent": 1.2858003671226053,
+            "pnl_dollar": 15.202532060637406,
+            "target_hit": null
+          }
+        ]
+      },
+      {
+        "cycle": 5,
+        "cycle_pnl": 255.77891118676806,
+        "cumulative_pnl": 645.0237573141162,
+        "positions": [
+          {
+            "symbol": "SHIBUSDT",
+            "current_price": 1.2613969713993943e-05,
+            "pnl_percent": 5.644637470636043,
+            "pnl_dollar": 336.0534918143169,
+            "target_hit": null
+          },
+          {
+            "symbol": "FLOKIUSDT",
+            "current_price": 9.819927040358441e-05,
+            "pnl_percent": -3.8393356799996026,
+            "pnl_dollar": -109.9647168122766,
+            "target_hit": null
+          },
+          {
+            "symbol": "BONKUSDT",
+            "current_price": 2.5043469921505575e-05,
+            "pnl_percent": 2.5111335305181064,
+            "pnl_dollar": 29.69013618472777,
+            "target_hit": null
+          }
+        ]
+      }
+    ]
+  },
+  "risk_warnings": {
+    "maximum_risk": "100% loss possible",
+    "extreme_volatility": "50%+ daily swings expected",
+    "psychological_pressure": "Extreme stress during volatility",
+    "continuous_monitoring": "24/7 attention required"
+  },
+  "reward_potential": {
+    "life_changing_gains": "Possible with proper execution",
+    "portfolio_transformation": "Small account to large account possible",
+    "early_retirement": "Achievable with moon targets hit"
+  }
+}

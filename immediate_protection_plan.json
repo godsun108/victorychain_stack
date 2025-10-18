@@ -1,0 +1,20 @@
+{
+  "activation_time": "2025-08-09T09:58:58.497160",
+  "original_portfolio_value": 5.6532517969,
+  "max_allowed_loss": 0.847987769535,
+  "stop_loss_level": 4.805264027365,
+  "protected_assets": {},
+  "protection_orders": [],
+  "monitoring_config": {
+    "portfolio_check_interval": 60,
+    "loss_alert_threshold": 0.05,
+    "emergency_threshold": 0.1,
+    "stop_loss_threshold": 0.15,
+    "rebalance_threshold": 0.07
+  },
+  "position_limits": {
+    "max_position_size": 0.28266258984500003,
+    "max_daily_risk": 0.113065035938,
+    "max_concurrent_positions": 6
+  }
+}

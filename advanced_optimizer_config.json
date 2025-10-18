@@ -1,0 +1,112 @@
+{
+  "advanced_position_optimizer_config": {
+    "trading_settings": {
+      "real_money_mode": true,
+      "starting_capital": 5000.0,
+      "position_currency": "BTC/USDT",
+      "target_daily_roi": 0.05,
+      "compound_reinvestment": true
+    },
+    
+    "position_switching": {
+      "min_switch_profit_percent": 3.0,
+      "high_confidence_profit_percent": 5.0,
+      "ultra_confidence_profit_percent": 8.0,
+      "max_positions_per_day": 10,
+      "confidence_threshold": 0.70
+    },
+    
+    "gas_optimization": {
+      "max_gas_cost_percent": 0.25,
+      "gas_efficiency_threshold": 0.15,
+      "prefer_low_gas_tokens": true,
+      "gas_cost_tracking": true
+    },
+    
+    "market_analysis": {
+      "market_scan_depth": 500,
+      "technical_analysis_periods": [5, 15, 30, 60],
+      "minimum_liquidity_usd": 100000,
+      "exclude_low_volume_tokens": true,
+      "sentiment_analysis_weight": 0.10
+    },
+    
+    "iso_20022_reserves": {
+      "profit_to_reserves_percent": 20.0,
+      "reserve_optimization_threshold": 0.08,
+      "min_reserve_balance": 50.0,
+      "auto_rebalance": true,
+      "preferred_allocation": {
+        "XRP": 0.30,
+        "XLM": 0.25,
+        "ALGO": 0.20,
+        "USDC": 0.15,
+        "HBAR": 0.10
+      }
+    },
+    
+    "cycle_timing": {
+      "ultra_high_volatility_cycle_minutes": 5,
+      "high_volatility_cycle_minutes": 10,
+      "medium_volatility_cycle_minutes": 20,
+      "low_volatility_cycle_minutes": 45,
+      "extreme_low_volatility_cycle_minutes": 60,
+      "volatility_thresholds": {
+        "ultra_high": 0.08,
+        "high": 0.05,
+        "medium": 0.03,
+        "low": 0.015
+      }
+    },
+    
+    "risk_management": {
+      "max_daily_loss_percent": 5.0,
+      "position_stop_loss_percent": 8.0,
+      "take_profit_percent": 12.0,
+      "emergency_stop_loss_percent": 15.0,
+      "max_concurrent_positions": 3
+    },
+    
+    "monitoring": {
+      "log_level": "INFO",
+      "performance_alerts": true,
+      "profit_notifications": true,
+      "error_notifications": true,
+      "daily_reports": true
+    },
+    
+    "binance_us_api": {
+      "api_key": "o0KEblMxyczeSMETOFC5Kp7wheZJVVk0JQ5tfGv5TGiLXX909VqcR59ofWFoytVX",
+      "api_secret": "bjzQ1ZB3qoxE62r5uofcrPSLUYsYqqFyfzZaAdgjOBNHSZlnNiBXXm2zKBM8PMYg",
+      "testnet": false,
+      "rate_limit": true,
+      "timeout": 30
+    },
+    
+    "tokens_to_analyze": [
+      "BTC/USDT", "ETH/USDT", "BNB/USDT", "ADA/USDT", "SOL/USDT",
+      "MATIC/USDT", "DOT/USDT", "AVAX/USDT", "LINK/USDT", "UNI/USDT",
+      "ATOM/USDT", "LTC/USDT", "BCH/USDT", "ETC/USDT", "XLM/USDT",
+      "XRP/USDT", "ALGO/USDT", "DOGE/USDT", "SHIB/USDT", "TRX/USDT",
+      "FTM/USDT", "NEAR/USDT", "FLOW/USDT", "ICP/USDT", "THETA/USDT",
+      "VET/USDT", "FIL/USDT", "SAND/USDT", "MANA/USDT", "GALA/USDT"
+    ],
+    
+    "iso_20022_tokens": [
+      "XRP", "XLM", "ALGO", "HBAR", "QNT", "IOTA", "XDC", "USDC", "USDT"
+    ],
+    
+    "excluded_tokens": [
+      "SHIB/USD", "DOGE/USD", "PEPE/USD"
+    ],
+    
+    "advanced_features": {
+      "ai_assisted_analysis": true,
+      "machine_learning_predictions": true,
+      "sentiment_based_weighting": true,
+      "cross_market_arbitrage": false,
+      "options_strategy_integration": false,
+      "yield_farming_integration": false
+    }
+  }
+}

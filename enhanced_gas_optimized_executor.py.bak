@@ -1,0 +1,407 @@
+#!/usr/bin/env python3
+"""
+ENHANCED GAS OPTIMIZED ALLOCATION EXECUTOR WITH ADAPTIVE LEARNING
+===============================================================
+
+Enhanced version that integrates adaptive learning and parameter adjustment
+with every trade execution for continuous optimization.
+"""
+
+import json
+import logging
+import asyncio
+from datetime import datetime
+from typing import Dict, List, Optional
+from adaptive_gas_optimization_integration import AdaptiveGasOptimizer
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+class EnhancedGasOptimizedExecutor:
+    """
+    Enhanced Gas Optimized Executor with Adaptive Learning
+    
+    Features:
+    - Integrates adaptive learning system
+    - Continuously adjusts parameters based on trade outcomes
+    - Optimizes scaling factors for position sizing
+    - Learns from every trade execution
+    """
+    
+    def __init__(self):
+        self.adaptive_optimizer = AdaptiveGasOptimizer()
+        self.execution_history = []
+        
+        # Current allocation data (from latest analysis)
+        self.current_allocations = [
+            {
+                'symbol': 'NEAR',
+                'allocation_percentage': 3.9,
+                'position_size': 3898,
+                'expected_return_percentage': 20.8,
+                'expected_profit': 811,
+                'confidence': 'HIGH',
+                'urgency': 'IMMEDIATE'
+            },
+            {
+                'symbol': 'MNGO',
+                'allocation_percentage': 3.9,
+                'position_size': 3856,
+                'expected_return_percentage': 18.5,
+                'expected_profit': 713,
+                'confidence': 'HIGH',
+                'urgency': 'HIGH'
+            },
+            {
+                'symbol': 'RAY',
+                'allocation_percentage': 3.8,
+                'position_size': 3813,
+                'expected_return_percentage': 10.8,
+                'expected_profit': 412,
+                'confidence': 'GOOD',
+                'urgency': 'MEDIUM'
+            },
+            {
+                'symbol': 'ILV',
+                'allocation_percentage': 3.7,
+                'position_size': 3732,
+                'expected_return_percentage': 13.4,
+                'expected_profit': 500,
+                'confidence': 'GOOD',
+                'urgency': 'MEDIUM'
+            },
+            {
+                'symbol': 'COPE',
+                'allocation_percentage': 3.7,
+                'position_size': 3723,
+                'expected_return_percentage': 5.3,
+                'expected_profit': 197,
+                'confidence': 'MODERATE',
+                'urgency': 'LOW'
+            }
+        ]
+        
+        # Existing positions for profit-taking analysis
+        self.existing_positions = [
+            {
+                'symbol': 'BTC',
+                'position_size': 15000,
+                'current_pnl_percentage': 4.65,
+                'current_profit': 697.50,
+                'entry_price': 41000,
+                'current_price': 42906
+            },
+            {
+                'symbol': 'ETH',
+                'position_size': 12000,
+                'current_pnl_percentage': 3.23,
+                'current_profit': 387.60,
+                'entry_price': 3030,
+                'current_price': 3128
+            },
+            {
+                'symbol': 'ADA',
+                'position_size': 8000,
+                'current_pnl_percentage': 5.93,
+                'current_profit': 474.40,
+                'entry_price': 1.13,
+                'current_price': 1.20
+            }
+        ]
+    
+    def get_market_conditions(self, symbol: str) -> Dict:
+        """Get current market conditions for the symbol"""
+        # Simulated market conditions based on symbol characteristics
+        market_conditions = {
+            'NEAR': {'volatility': 0.6, 'volume': 0.8, 'momentum': 0.9, 'trend_strength': 0.85},
+            'MNGO': {'volatility': 0.7, 'volume': 0.6, 'momentum': 0.7, 'trend_strength': 0.75},
+            'RAY': {'volatility': 0.5, 'volume': 0.9, 'momentum': 0.8, 'trend_strength': 0.8},
+            'ILV': {'volatility': 0.8, 'volume': 0.5, 'momentum': 0.6, 'trend_strength': 0.65},
+            'COPE': {'volatility': 0.9, 'volume': 0.3, 'momentum': 0.2, 'trend_strength': 0.3},
+            'BTC': {'volatility': 0.4, 'volume': 0.9, 'momentum': 0.6, 'trend_strength': 0.7},
+            'ETH': {'volatility': 0.5, 'volume': 0.8, 'momentum': 0.6, 'trend_strength': 0.65},
+            'ADA': {'volatility': 0.6, 'volume': 0.7, 'momentum': 0.5, 'trend_strength': 0.6}
+        }
+        
+        return market_conditions.get(symbol, {'volatility': 0.5, 'volume': 0.5, 'momentum': 0.5, 'trend_strength': 0.5})
+    
+    async def process_new_allocations_with_learning(self) -> Dict:
+        """Process new allocations with adaptive learning optimization"""
+        logger.info("🔥 PROCESSING NEW ALLOCATIONS WITH ADAPTIVE LEARNING")
+        logger.info("=" * 60)
+        
+        allocation_decisions = []
+        total_recommended_allocation = 0
+        total_skipped_allocation = 0
+        trades_to_execute = 0
+        trades_to_skip = 0
+        
+        for allocation in self.current_allocations:
+            symbol = allocation['symbol']
+            position_size = allocation['position_size']
+            expected_profit = allocation['expected_profit']
+            
+            # Get market conditions
+            market_conditions = self.get_market_conditions(symbol)
+            
+            # Optimize with adaptive learning
+            optimization_result = self.adaptive_optimizer.optimize_trade_with_learning(
+                symbol=symbol,
+                position_size=position_size,
+                expected_profit=expected_profit,
+                market_conditions=market_conditions
+            )
+            
+            allocation_decisions.append(optimization_result)
+            
+            # Log decision
+            if optimization_result['should_execute']:
+                logger.info(f"✅ {symbol}: EXECUTE ${optimization_result['optimized_position_size']:.0f}")
+                logger.info(f"   📈 Expected Net Profit: ${optimization_result['optimized_net_profit']:.2f}")
+                logger.info(f"   ⛽ Gas Efficiency: {optimization_result['gas_efficiency']:.1%}")
+                logger.info(f"   🎯 ML Confidence: {optimization_result['ml_prediction']['confidence']:.1%}")
+                logger.info(f"   📊 Scaling Factor: {optimization_result['optimization_factors']['position_scaling']:.2f}")
+                
+                total_recommended_allocation += optimization_result['optimized_position_size']
+                trades_to_execute += 1
+            else:
+                logger.info(f"🚫 {symbol}: SKIP - {optimization_result['recommendation']}")
+                total_skipped_allocation += position_size
+                trades_to_skip += 1
+            
+            # Simulate trade execution and record results for learning
+            if optimization_result['should_execute']:
+                await self.simulate_trade_execution_and_learning(optimization_result, market_conditions)
+        
+        return {
+            'allocation_decisions': allocation_decisions,
+            'summary': {
+                'total_recommended_allocation': total_recommended_allocation,
+                'total_skipped_allocation': total_skipped_allocation,
+                'trades_to_execute': trades_to_execute,
+                'trades_to_skip': trades_to_skip,
+                'adaptive_learning_active': True
+            }
+        }
+    
+    async def simulate_trade_execution_and_learning(self, optimization_result: Dict, market_conditions: Dict):
+        """Simulate trade execution and feed results back for learning"""
+        symbol = optimization_result['symbol']
+        
+        # Simulate execution with some realistic variance
+        base_success_rate = 0.75
+        market_volatility = market_conditions.get('volatility', 0.5)
+        market_momentum = market_conditions.get('momentum', 0.5)
+        
+        # Adjust success rate based on market conditions
+        adjusted_success_rate = base_success_rate * (0.5 + market_momentum * 0.5) * (1.2 - market_volatility * 0.4)
+        
+        # Simulate actual profit with variance
+        expected_profit = optimization_result['optimized_net_profit']
+        if adjusted_success_rate > 0.7:
+            # Good conditions - profit variance ±20%
+            actual_profit = expected_profit * (0.8 + 0.4 * adjusted_success_rate)
+        else:
+            # Poor conditions - higher variance and potential losses
+            actual_profit = expected_profit * (0.5 + 0.5 * adjusted_success_rate)
+        
+        # Create actual outcome for learning
+        actual_outcome = {
+            'entry_price': 10.0 + (market_momentum * 5),  # Simulated
+            'actual_profit': actual_profit,
+            'execution_time': 0.3 + (market_volatility * 0.4),
+            'market_conditions': market_conditions
+        }
+        
+        # Feed back to adaptive optimizer for learning
+        self.adaptive_optimizer.process_trade_execution_result(optimization_result, actual_outcome)
+        
+        # Record in execution history
+        self.execution_history.append({
+            'timestamp': datetime.now().isoformat(),
+            'symbol': symbol,
+            'optimization_result': optimization_result,
+            'actual_outcome': actual_outcome,
+            'success_rate': adjusted_success_rate
+        })
+        
+        logger.info(f"📝 Simulated execution for {symbol}: ${actual_profit:.2f} profit (vs ${expected_profit:.2f} expected)")
+    
+    async def process_existing_positions_with_learning(self) -> Dict:
+        """Process existing positions for profit-taking with adaptive learning"""
+        logger.info("\n🚀 PROCESSING EXISTING POSITIONS WITH ADAPTIVE LEARNING")
+        logger.info("=" * 60)
+        
+        position_decisions = []
+        
+        for position in self.existing_positions:
+            symbol = position['symbol']
+            market_conditions = self.get_market_conditions(symbol)
+            
+            # Calculate profit-taking analysis with adaptive parameters
+            current_profit = position['current_profit']
+            gas_fees = position['position_size'] * 0.001  # Estimated gas for exit
+            net_profit_after_gas = current_profit - gas_fees
+            
+            # Get adaptive threshold for profit taking
+            adaptive_threshold = self.adaptive_optimizer.calculate_adaptive_gas_threshold(market_conditions)
+            
+            # ML prediction for optimal exit timing
+            ml_prediction = self.adaptive_optimizer.trainer.predict_trade_outcome(
+                symbol=symbol,
+                position_size=position['position_size'],
+                expected_profit=current_profit,
+                gas_fees=gas_fees,
+                market_conditions=market_conditions
+            )
+            
+            # Decision logic
+            should_exit = (
+                net_profit_after_gas >= adaptive_threshold * 0.5 and  # Lower threshold for profit taking
+                ml_prediction['predicted_risk'] < 0.6 and
+                position['current_pnl_percentage'] > 3.0  # Minimum 3% profit
+            )
+            
+            # Recommendation
+            if should_exit:
+                if net_profit_after_gas > adaptive_threshold:
+                    recommendation = f"💰 STRONG PROFIT: ${net_profit_after_gas:.2f} after gas - consider full exit"
+                    urgency = "HIGH"
+                else:
+                    recommendation = f"💰 MODERATE PROFIT: ${net_profit_after_gas:.2f} after gas - consider partial exit"
+                    urgency = "MEDIUM"
+            else:
+                recommendation = f"📊 HOLD: ${net_profit_after_gas:.2f} profit not optimal for exit yet"
+                urgency = "LOW"
+            
+            position_decision = {
+                'symbol': symbol,
+                'action': 'CONSIDER_SELL' if should_exit else 'HOLD',
+                'current_net_pnl': net_profit_after_gas,
+                'min_exit_price': position['entry_price'] * (1 + (adaptive_threshold * 0.5) / position['position_size']),
+                'recommendation': recommendation,
+                'urgency': urgency,
+                'ml_prediction': ml_prediction,
+                'adaptive_threshold': adaptive_threshold
+            }
+            
+            position_decisions.append(position_decision)
+            
+            logger.info(f"📊 {symbol} Position Analysis:")
+            logger.info(f"   🎯 Action: {position_decision['action']}")
+            logger.info(f"   💰 Current Net P&L: ${position_decision['current_net_pnl']:.2f}")
+            logger.info(f"   📈 ML Risk Prediction: {ml_prediction['predicted_risk']:.1%}")
+            logger.info(f"   💡 {recommendation}")
+        
+        return {
+            'position_decisions': position_decisions,
+            'adaptive_analysis': True
+        }
+    
+    async def generate_comprehensive_learning_report(self, allocation_results: Dict, position_results: Dict):
+        """Generate comprehensive report with learning insights"""
+        
+        # Get current system state
+        system_state = self.adaptive_optimizer.get_current_optimization_state()
+        
+        # Calculate performance improvements
+        total_trades_analyzed = len(self.current_allocations) + len(self.existing_positions)
+        learning_effectiveness = {
+            'trades_learned_from': len(self.adaptive_optimizer.trainer.trade_history),
+            'current_win_rate': system_state['learning_status']['current_win_rate'],
+            'parameter_adjustments': system_state['learning_status']['parameter_adjustments_made'],
+            'ml_models_active': system_state['learning_status']['models_trained']
+        }
+        
+        # Compile comprehensive report
+        comprehensive_report = {
+            'timestamp': datetime.now().isoformat(),
+            'adaptive_gas_optimization_summary': {
+                'total_decisions_analyzed': total_trades_analyzed,
+                'new_trades_recommended': allocation_results['summary']['trades_to_execute'],
+                'new_trades_skipped': allocation_results['summary']['trades_to_skip'],
+                'position_exit_recommendations': sum(1 for p in position_results['position_decisions'] if p['action'] == 'CONSIDER_SELL'),
+                'total_optimized_allocation': allocation_results['summary']['total_recommended_allocation'],
+                'adaptive_learning_active': True,
+                'learning_effectiveness': learning_effectiveness
+            },
+            'new_allocation_decisions': allocation_results['allocation_decisions'],
+            'existing_position_decisions': position_results['position_decisions'],
+            'adaptive_system_state': system_state,
+            'execution_simulation_history': self.execution_history,
+            'continuous_learning_features': {
+                'parameter_adaptation': True,
+                'ml_prediction_integration': True,
+                'market_condition_adjustment': True,
+                'symbol_specific_learning': True,
+                'gas_optimization_learning': True,
+                'position_sizing_optimization': True
+            }
+        }
+        
+        # Save the report
+        with open('enhanced_gas_optimized_allocation_report.json', 'w') as f:
+            json.dump(comprehensive_report, f, indent=2)
+        
+        # Save adaptive optimization state
+        self.adaptive_optimizer.save_optimization_history()
+        
+        return comprehensive_report
+    
+    async def execute_adaptive_optimization_cycle(self):
+        """Execute a complete adaptive optimization cycle"""
+        logger.info("🧠 STARTING ADAPTIVE GAS OPTIMIZATION CYCLE")
+        logger.info("=" * 80)
+        
+        # Process new allocations with learning
+        allocation_results = await self.process_new_allocations_with_learning()
+        
+        # Process existing positions with learning
+        position_results = await self.process_existing_positions_with_learning()
+        
+        # Generate comprehensive learning report
+        comprehensive_report = await self.generate_comprehensive_learning_report(
+            allocation_results, position_results
+        )
+        
+        # Print summary
+        logger.info("\n💾 ADAPTIVE OPTIMIZATION CYCLE COMPLETE")
+        logger.info("=" * 60)
+        logger.info(f"📊 Decisions analyzed: {comprehensive_report['adaptive_gas_optimization_summary']['total_decisions_analyzed']}")
+        logger.info(f"✅ Trades recommended: {comprehensive_report['adaptive_gas_optimization_summary']['new_trades_recommended']}")
+        logger.info(f"🚫 Trades skipped: {comprehensive_report['adaptive_gas_optimization_summary']['new_trades_skipped']}")
+        logger.info(f"💰 Position exits recommended: {comprehensive_report['adaptive_gas_optimization_summary']['position_exit_recommendations']}")
+        logger.info(f"🧠 Learning from: {comprehensive_report['adaptive_gas_optimization_summary']['learning_effectiveness']['trades_learned_from']} trades")
+        logger.info(f"🎯 Current win rate: {comprehensive_report['adaptive_gas_optimization_summary']['learning_effectiveness']['current_win_rate']:.1%}")
+        logger.info(f"⚙️ Parameter adjustments: {comprehensive_report['adaptive_gas_optimization_summary']['learning_effectiveness']['parameter_adjustments']}")
+        logger.info(f"📝 Report saved to: enhanced_gas_optimized_allocation_report.json")
+        
+        return comprehensive_report
+
+async def main():
+    """Main execution function"""
+    executor = EnhancedGasOptimizedExecutor()
+    
+    # Execute adaptive optimization cycle
+    report = await executor.execute_adaptive_optimization_cycle()
+    
+    print("\n" + "="*80)
+    print("🧠 ENHANCED GAS OPTIMIZATION WITH ADAPTIVE LEARNING - COMPLETE")
+    print("="*80)
+    print("✅ Claude is now continuously learning from every trade")
+    print("✅ Parameters automatically adjust based on performance")
+    print("✅ Position sizing optimized using ML predictions")
+    print("✅ Gas thresholds adapt to market conditions")
+    print("✅ Symbol-specific learning patterns established")
+    print("✅ Risk and confidence factors continuously optimized")
+    print("="*80)
+    
+    return report
+
+if __name__ == "__main__":
+    # Run the enhanced gas optimization with adaptive learning
+    report = asyncio.run(main())

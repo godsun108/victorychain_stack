@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-08-05T20:02:22.338573",
+  "strategy": "AI_OPTIMIZED_ULTRA_AGGRESSIVE_MICROCAP",
+  "ai_optimizer": "CLAUDE_STYLE_STOP_LOSS_OPTIMIZER",
+  "portfolio_size": 10000.0,
+  "available_capital": 10000.0,
+  "positions": [],
+  "execution_log": [],
+  "risk_parameters": {
+    "max_position_size": 0.25,
+    "max_total_allocation": 0.85,
+    "cash_reserve": 0.15,
+    "ai_confidence_threshold": 0.7,
+    "profit_taking_stages": [
+      0.25,
+      0.5,
+      1.0,
+      2.0,
+      5.0,
+      10.0
+    ],
+    "stop_loss_update_frequency": 1,
+    "volatility_monitoring": true
+  },
+  "ai_metrics": {
+    "total_ai_positions": 0,
+    "average_ai_confidence": 0,
+    "average_risk_score": 0,
+    "total_stop_adjustments": 0,
+    "ai_stop_types": {}
+  },
+  "total_positions": 0,
+  "total_allocated_usd": 0,
+  "allocation_percentage": 0.0
+}

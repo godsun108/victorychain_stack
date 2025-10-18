@@ -1,0 +1,514 @@
+#!/usr/bin/env python3
+# REWRITE: Consolidated momentum bot with Phase-1 risk, audit, model versioning, metrics.
+from __future__ import annotations
+import os, sys, time, json, math, threading, statistics, logging, signal
+from dataclasses import dataclass, field
+from datetime import datetime, timezone, timedelta
+from typing import Dict, Any, List, Optional
+
+try:
+    UTC = datetime.UTC  # py311+
+except AttributeError:  # pragma: no cover
+    UTC = timezone.utc
+
+def now_utc():
+    return datetime.now(UTC)
+
+MODEL_VERSION = os.getenv('MODEL_VERSION', 'v1')
+BOT_ID = os.getenv('BOT_ID', 'default')
+
+# ---- Environment / Config ----
+from dotenv import load_dotenv
+try:
+    import governance.prompt_version as pv
+except Exception:  # minimal fallback
+    class _PV:
+        LEDGER_PATH = 'runtime/ledger/live_ledger.jsonl'
+        def compute_prompt_hash(self): return 'na'
+        def get_git_commit(self): return os.getenv('GIT_COMMIT','unknown')
+    pv = _PV()  # type: ignore
+
+ENV_FILE = os.getenv('ENV', '.env.live')
+if os.path.exists(ENV_FILE):
+    load_dotenv(ENV_FILE)
+
+# ---- Metrics (extend existing metrics server if available) ----
+try:
+    from momentum.metrics_hook_v2 import start_metrics
+    start_metrics(int(os.getenv('METRICS_PORT','9108')), bot_id=BOT_ID)  # idempotent
+except Exception:
+    pass
+
+_prom_ok = False
+try:
+    from prometheus_client import Gauge, Counter, Histogram
+    METRIC_DAILY_REAL = Gauge('momentum_daily_realized_pnl_usd','Realized PnL today (USD)', ['bot_id'])
+    METRIC_DD_PCT = Gauge('momentum_intraday_drawdown_pct','Realized drawdown pct', ['bot_id'])
+    METRIC_RISK_BLOCK = Gauge('momentum_risk_blocking','1 if risk gate active (labeled by reason)', ['bot_id','reason'])
+    METRIC_REJECTS = Counter('momentum_order_rejects_total','Order rejects', ['bot_id','reason'])
+    METRIC_SLIPPAGE = Histogram('momentum_slippage_bps','Slippage (bps)', buckets=[1,2,5,10,20,50,100,200,500,1000])
+    METRIC_HEARTBEAT = Gauge('momentum_heartbeat_ts','Unix ts heartbeat', ['bot_id'])
+    _prom_ok = True
+except Exception:
+    class _Dummy:
+        def labels(self,*a,**k): return self
+        def set(self,*_): pass
+        def inc(self,*_): pass
+        def observe(self,*_): pass
+    METRIC_DAILY_REAL = METRIC_DD_PCT = METRIC_RISK_BLOCK = METRIC_REJECTS = METRIC_SLIPPAGE = METRIC_HEARTBEAT = _Dummy()
+
+# ---- Paths ----
+LEDGER_PATH = os.getenv('LEDGER_PATH', 'runtime/ledger/live_ledger.jsonl')
+pv.LEDGER_PATH = LEDGER_PATH  # sync
+STATE_PATH = os.getenv('STATE_PATH', 'runtime/state/state.json')
+AUDIT_LOG_PATH = os.getenv('AUDIT_LOG_PATH', 'runtime/audit/audit_log.jsonl')
+HEARTBEAT_PATH = os.getenv('HEARTBEAT_PATH', 'runtime/heartbeat.json')
+PAUSE_FILE = os.getenv('PAUSE_FILE', 'runtime/PAUSE')
+
+os.makedirs(os.path.dirname(LEDGER_PATH), exist_ok=True)
+os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
+os.makedirs(os.path.dirname(AUDIT_LOG_PATH), exist_ok=True)
+
+# ---- Config values ----
+CFG = {
+    'DRY_RUN': os.getenv('DRY_RUN','true').lower()=='true',
+    'MAX_NOTIONAL_PER_ORDER': float(os.getenv('MAX_NOTIONAL_PER_ORDER','20') or 20),
+    'QUOTE_SYMBOL': os.getenv('QUOTE_SYMBOL','USDT'),
+    'SYMBOLS': [s.strip().upper() for s in os.getenv('ALLOWED_SYMBOLS','').split(',') if s.strip()],
+    'LOOKBACK_BREAKOUT': int(os.getenv('LOOKBACK_BREAKOUT','40') or 40),
+    'MIN_PROFIT_EXIT_BPS': int(os.getenv('MIN_PROFIT_EXIT_BPS','50') or 50),
+    'TRAILING_STOP_BPS': int(os.getenv('TRAILING_STOP_BPS','300') or 300),
+    'TAKER_FEE_BPS': float(os.getenv('TAKER_FEE_BPS','10') or 10),
+    'SLIPPAGE_BPS': int(os.getenv('SLIPPAGE_BPS','10') or 10),
+    'DAILY_MAX_LOSS_USD': float(os.getenv('DAILY_MAX_LOSS_USD','100') or 100),
+    'INTRADAY_MAX_DRAWDOWN_PCT': float(os.getenv('INTRADAY_MAX_DRAWDOWN_PCT','10') or 10),
+    'HEARTBEAT_SEC': int(os.getenv('HEARTBEAT_SEC','15') or 15),
+    'RISK_BLOCK_COOLDOWN_SEC': int(os.getenv('RISK_BLOCK_COOLDOWN_SEC','300') or 300),
+    'SLEEP_LOOP_SEC': float(os.getenv('SLEEP_LOOP_SEC','3') or 3),
+}
+
+# Dynamic discover (optional)
+try:
+    from momentum.universe_discovery import discover_universe as _discover_universe
+except Exception:
+    _discover_universe = None
+if not CFG['SYMBOLS'] and _discover_universe:
+    try:
+        CFG['SYMBOLS'] = _discover_universe(max_pairs=10)
+    except Exception:
+        CFG['SYMBOLS'] = []
+
+if not CFG['SYMBOLS']:
+    # minimal fallback
+    CFG['SYMBOLS'] = ['XRP/USDT', 'HBAR/USDT']
+
+# ---- Exchange / adapter (guarded_create_order) ----
+try:
+    from libs.exchange_adapters.binance_us import get_client, guarded_create_order
+except Exception:
+    import ccxt
+    def get_client():  # simple fallback
+        key = os.getenv('BINANCEUS_API_KEY') or os.getenv('BINANCEUS_KEY')
+        secret = os.getenv('BINANCEUS_API_SECRET') or os.getenv('BINANCE_API_SECRET')
+        ex = ccxt.binanceus({'apiKey': key or 'DUMMY', 'secret': secret or 'DUMMY', 'enableRateLimit': True})
+        try: ex.load_markets()
+        except Exception: pass
+        return ex
+    def guarded_create_order(client, symbol, type_, side, amount, price=None, params=None):
+        if CFG['DRY_RUN']:
+            return {'id':'dry-'+str(time.time()), 'symbol':symbol, 'side':side, 'type':type_, 'amount':amount, 'price':price, 'status':'closed', 'filled':amount}
+        return client.create_order(symbol, type_, side, amount, price, params or {})
+
+CLIENT = get_client()
+try:
+    CLIENT.load_markets()
+except Exception:
+    pass
+
+# ---- Snapping helper ----
+def _snap(symbol: str, price: Optional[float], amount: float):
+    try:
+        if not getattr(CLIENT,'markets',None):
+            CLIENT.load_markets()
+        m = CLIENT.markets.get(symbol, {})
+        if price is not None:
+            price = float(CLIENT.price_to_precision(symbol, price))
+        amount = float(CLIENT.amount_to_precision(symbol, amount))
+        lims = (m.get('limits',{}) or {})
+        min_cost = (lims.get('cost',{}) or {}).get('min')
+        if min_cost and price is not None and price*amount < float(min_cost):
+            need = float(min_cost)/max(price,1e-12)*1.001
+            amount = float(CLIENT.amount_to_precision(symbol, need))
+        return price, amount
+    except Exception as e:
+        logging.warning('snap_fail %s %s', symbol, e)
+        return price, amount
+
+# ---- Ledger / Audit ----
+_hash_cache_last: Optional[str] = None
+
+def _read_last_hash() -> Optional[str]:
+    global _hash_cache_last
+    try:
+        with open(LEDGER_PATH,'rb') as f:
+            last=None
+            for line in f: last=line
+            if not last: return None
+            rec=json.loads(last.decode('utf-8','ignore'))
+            _hash_cache_last = rec.get('hash')
+            return _hash_cache_last
+    except Exception:
+        return None
+
+def _write_ledger(event: str, data: Dict[str,Any]):
+    prev = _read_last_hash()
+    record = {
+        'ts': now_utc().isoformat().replace('+00:00','Z'),
+        'event': event,
+        'component': 'momentum.bot',
+        'model_version': MODEL_VERSION,
+        'bot_id': BOT_ID,
+        'prompt_hash': getattr(pv,'compute_prompt_hash', lambda: 'na')(),
+        'git_commit': getattr(pv,'get_git_commit', lambda: 'unknown')(),
+        **data,
+    }
+    import hashlib
+    payload = json.dumps(record, sort_keys=True, separators=(',',':')).encode()
+    h = hashlib.sha256(payload + (prev or '').encode()).hexdigest()
+    record['prev_hash']=prev
+    record['hash']=h
+    with open(LEDGER_PATH,'a',encoding='utf-8') as f:
+        f.write(json.dumps(record)+'\n')
+
+_def_audit_lock = threading.Lock()
+
+def audit(event: str, data: Dict[str,Any]):
+    try:
+        with _def_audit_lock:
+            with open(AUDIT_LOG_PATH,'a',encoding='utf-8') as f:
+                rec={'ts':now_utc().isoformat().replace('+00:00','Z'),'event':event,'model_version':MODEL_VERSION,'bot_id':BOT_ID,**data}
+                f.write(json.dumps(rec)+'\n')
+    except Exception:
+        pass
+
+# ---- Risk / PnL tracking (realized only) ----
+@dataclass
+class RiskState:
+    realized_today: float = 0.0
+    peak_realized: float = 0.0
+    last_reset_day: str = ''  # YYYY-MM-DD
+    risk_block_reason: Optional[str] = None
+    last_block_ts: float = 0.0
+
+RISK = RiskState()
+
+# parse historical realized from ledger (only today)
+TODAY = now_utc().date().isoformat()
+RISK.last_reset_day = TODAY
+if os.path.exists(LEDGER_PATH):
+    try:
+        with open(LEDGER_PATH,'r',encoding='utf-8') as f:
+            for line in f:
+                if not line.strip(): continue
+                try:
+                    rec=json.loads(line)
+                except Exception: continue
+                if rec.get('event')=='FILL':
+                    ts = rec.get('ts','')[:10]
+                    if ts==TODAY:
+                        RISK.realized_today += float(rec.get('realized_pnl_delta',0) or 0)
+                        RISK.peak_realized = max(RISK.peak_realized, RISK.realized_today)
+    except Exception:
+        pass
+
+# ---- Position / State ----
+@dataclass
+class Position:
+    symbol: str
+    qty: float
+    entry_price: float
+    last_high: float
+    side: str = 'LONG'
+
+POSITIONS: Dict[str, Position] = {}
+STATE_LOCK = threading.Lock()
+
+# load persisted state (optional future use)
+if os.path.exists(STATE_PATH):
+    try:
+        with open(STATE_PATH,'r') as f:
+            raw=json.load(f)
+            for sym,p in raw.get('positions',{}).items():
+                POSITIONS[sym]=Position(**p)
+    except Exception:
+        pass
+
+# ---- Heartbeat / Dead-man ----
+_shutdown = threading.Event()
+
+def _heartbeat_loop():
+    while not _shutdown.wait(CFG['HEARTBEAT_SEC']):
+        ts = int(time.time())
+        try:
+            with open(HEARTBEAT_PATH,'w') as f:
+                json.dump({'ts':ts,'bot_id':BOT_ID}, f)
+            METRIC_HEARTBEAT.labels(BOT_ID).set(ts)
+        except Exception:
+            pass
+
+hb_thr = threading.Thread(target=_heartbeat_loop, daemon=True, name='heartbeat')
+
+# ---- Utility: risk evaluation ----
+
+def _risk_update_metrics():
+    METRIC_DAILY_REAL.labels(BOT_ID).set(RISK.realized_today)
+    drawdown = 0.0
+    if RISK.peak_realized > 0:
+        drawdown = (RISK.peak_realized - RISK.realized_today)/RISK.peak_realized*100.0
+    METRIC_DD_PCT.labels(BOT_ID).set(drawdown)
+    # clear gauges for reasons first (simple approach: just set current reason=1 else 0 for a small set)
+    for reason in ['daily_loss','drawdown']:
+        val = 1 if RISK.risk_block_reason==reason else 0
+        METRIC_RISK_BLOCK.labels(BOT_ID, reason).set(val)
+
+
+def _check_day_rollover():
+    global TODAY
+    cur_day = now_utc().date().isoformat()
+    if cur_day != RISK.last_reset_day:
+        # rollover
+        _write_ledger('DAILY_RESET', {'prev_day': RISK.last_reset_day, 'model_version': MODEL_VERSION})
+        audit('DAILY_RESET', {'prev_day':RISK.last_reset_day})
+        RISK.realized_today = 0.0
+        RISK.peak_realized = 0.0
+        RISK.last_reset_day = cur_day
+        RISK.risk_block_reason = None
+        TODAY = cur_day
+
+
+def _risk_gate_new_entry() -> bool:
+    # returns True if allowed
+    _check_day_rollover()
+    # evaluate limits
+    # daily loss
+    if RISK.realized_today <= -CFG['DAILY_MAX_LOSS_USD']:
+        if RISK.risk_block_reason != 'daily_loss':
+            RISK.risk_block_reason='daily_loss'; RISK.last_block_ts=time.time()
+            _write_ledger('RISK_LIMIT_TRIGGER', {'reason':'daily_loss','realized_today':RISK.realized_today})
+            audit('RISK_LIMIT_TRIGGER', {'reason':'daily_loss','realized_today':RISK.realized_today})
+        return False
+    # drawdown
+    if RISK.peak_realized > 0:
+        dd_pct = (RISK.peak_realized - RISK.realized_today)/RISK.peak_realized*100.0
+        if dd_pct >= CFG['INTRADAY_MAX_DRAWDOWN_PCT']:
+            if RISK.risk_block_reason != 'drawdown':
+                RISK.risk_block_reason='drawdown'; RISK.last_block_ts=time.time()
+                _write_ledger('RISK_LIMIT_TRIGGER', {'reason':'drawdown','drawdown_pct':dd_pct})
+                audit('RISK_LIMIT_TRIGGER', {'reason':'drawdown','drawdown_pct':dd_pct})
+            return False
+    # panic file
+    if os.path.exists(PAUSE_FILE):
+        if RISK.risk_block_reason != 'panic_file':
+            RISK.risk_block_reason='panic_file'; RISK.last_block_ts=time.time()
+            audit('RISK_LIMIT_TRIGGER', {'reason':'panic_file'})
+        return False
+    # else clear non-hard reasons
+    if RISK.risk_block_reason in ('daily_loss','drawdown','panic_file'):
+        # keep until manual day reset or condition clears (for panic remove file)
+        if RISK.risk_block_reason=='panic_file' and not os.path.exists(PAUSE_FILE):
+            RISK.risk_block_reason=None
+        elif RISK.risk_block_reason in ('daily_loss','drawdown'):
+            # stay blocked rest of day
+            pass
+    return RISK.risk_block_reason is None
+
+# ---- Order / Fill Simulation (since fills not streamed) ----
+
+def _estimate_slippage_bps(intended_px: float, exec_px: float) -> float:
+    try:
+        return abs(exec_px-intended_px)/max(intended_px,1e-12)*10000.0
+    except Exception:
+        return 0.0
+
+
+def _record_fill(symbol: str, side: str, qty: float, price: float, is_close: bool):
+    # Realized pnl only on close (long only model)
+    realized = 0.0
+    if is_close:
+        pos = POSITIONS.get(symbol)
+        if pos:
+            realized = (price - pos.entry_price) * qty - (CFG['TAKER_FEE_BPS']/10000.0)*price*qty
+            RISK.realized_today += realized
+            RISK.peak_realized = max(RISK.peak_realized, RISK.realized_today)
+    _write_ledger('FILL', {
+        'symbol': symbol,
+        'side': side,
+        'qty': qty,
+        'price': price,
+        'realized_pnl_delta': realized,
+        'realized_pnl_today': RISK.realized_today,
+    })
+    audit('FILL', {'symbol':symbol,'side':side,'qty':qty,'price':price,'realized':realized})
+    _risk_update_metrics()
+
+# ---- Signal Logic (simplified momentum breakout) ----
+# We will fetch recent candles via CCXT if available; fallback to ticker
+
+def _fetch_ohlcv(symbol: str, limit: int) -> Optional[List[List[float]]]:
+    try:
+        return CLIENT.fetch_ohlcv(symbol, timeframe='5m', limit=limit)
+    except Exception:
+        return None
+
+
+def _should_open_long(symbol: str) -> Optional[Dict[str,Any]]:
+    candles = _fetch_ohlcv(symbol, CFG['LOOKBACK_BREAKOUT'])
+    if not candles or len(candles) < 5:
+        return None
+    closes = [c[4] for c in candles]
+    highs = [c[2] for c in candles]
+    last_close = closes[-1]
+    prev_high_window = max(highs[-CFG['LOOKBACK_BREAKOUT']:-1]) if len(highs) >= CFG['LOOKBACK_BREAKOUT'] else max(highs[:-1])
+    if last_close > prev_high_window:
+        return {'price': last_close, 'breakout_ref': prev_high_window}
+    return None
+
+
+def _should_close_long(symbol: str, pos: Position) -> Optional[Dict[str,Any]]:
+    candles = _fetch_ohlcv(symbol, 10)
+    px = None
+    if candles:
+        px = candles[-1][4]
+        high = max(c[2] for c in candles[-10:])
+        pos.last_high = max(pos.last_high, high)
+    else:
+        try:
+            t = CLIENT.fetch_ticker(symbol)
+            px = t.get('last') or t.get('close')
+        except Exception:
+            pass
+    if px is None:
+        return None
+    gain_bps = (px - pos.entry_price)/pos.entry_price*10000.0
+    if gain_bps >= CFG['MIN_PROFIT_EXIT_BPS']:
+        # trailing stop logic
+        trail_trigger = pos.last_high * (1 - CFG['TRAILING_STOP_BPS']/10000.0)
+        if px <= trail_trigger:
+            return {'price': px, 'reason':'trailing_stop', 'gain_bps':gain_bps}
+    return None
+
+# ---- Main trading operations ----
+REJECT_COUNTS: Dict[str,int] = {}
+
+def _reject(reason: str, detail: Dict[str,Any]):
+    REJECT_COUNTS[reason] = REJECT_COUNTS.get(reason,0)+1
+    METRIC_REJECTS.labels(BOT_ID, reason).inc()
+    _write_ledger('ORDER_SKIPPED', {'reason':reason, **detail})
+    audit('ORDER_SKIPPED', {'reason':reason, **detail})
+
+
+def place_order(symbol: str, side: str, qty: float, intended_price: float, order_type: str='market') -> Optional[Dict[str,Any]]:
+    price_for_create = None if order_type=='market' else intended_price
+    price_for_create, qty = _snap(symbol, price_for_create, qty)
+    _write_ledger('PRE_ORDER', {'symbol':symbol,'side':side,'qty':qty,'price':price_for_create,'type':order_type})
+    audit('PRE_ORDER', {'symbol':symbol,'side':side,'qty':qty,'price':price_for_create,'type':order_type})
+    try:
+        resp = guarded_create_order(CLIENT, symbol, order_type, side, qty, price_for_create, params=None)
+        _write_ledger('ORDER_OK', {'symbol':symbol,'side':side,'qty':qty,'price':price_for_create,'resp_id':resp.get('id')})
+        audit('ORDER_OK', {'symbol':symbol,'side':side,'qty':qty,'price':price_for_create})
+        exec_price = intended_price if order_type=='market' else price_for_create or intended_price
+        sl_bps = _estimate_slippage_bps(intended_price, exec_price)
+        METRIC_SLIPPAGE.observe(sl_bps)
+        is_close = (side.upper()=='SELL')
+        _record_fill(symbol, side, qty, exec_price, is_close=is_close)
+        return resp
+    except Exception as e:
+        _reject('create_error', {'symbol':symbol,'err':str(e)})
+        return None
+
+
+# Basic sizing: fixed notional divided by last price.
+
+def _compute_qty(symbol: str, price: float) -> float:
+    notional = min(CFG['MAX_NOTIONAL_PER_ORDER'],  CFG['MAX_NOTIONAL_PER_ORDER'])
+    qty = notional / max(price, 1e-12)
+    return qty
+
+
+# ---- Main loop ----
+STOP_REQUESTED = False
+
+def _signal_handler(sig, frame):
+    global STOP_REQUESTED
+    STOP_REQUESTED = True
+signal.signal(signal.SIGINT, _signal_handler)
+signal.signal(signal.SIGTERM, _signal_handler)
+
+
+def run_once():
+    _risk_update_metrics()
+    if STOP_REQUESTED: return False
+    if not CFG['SYMBOLS']:
+        time.sleep(1); return True
+    for symbol in CFG['SYMBOLS']:
+        if STOP_REQUESTED: break
+        # Existing position? consider exit
+        pos = POSITIONS.get(symbol)
+        if pos:
+            decision = _should_close_long(symbol, pos)
+            if decision:
+                place_order(symbol, 'SELL', pos.qty, decision['price'])
+                with STATE_LOCK:
+                    POSITIONS.pop(symbol, None)
+                # ledger close marked via FILL realized
+                continue
+        # Entry logic
+        if pos:  # already have position
+            continue
+        if not _risk_gate_new_entry():
+            _reject('risk_limit', {'symbol':symbol,'active_reason':RISK.risk_block_reason})
+            continue
+        if os.path.exists(PAUSE_FILE):
+            _reject('panic_file', {'symbol':symbol})
+            continue
+        sig = _should_open_long(symbol)
+        if not sig:
+            continue
+        qty = _compute_qty(symbol, sig['price'])
+        if qty <= 0:
+            _reject('zero_qty', {'symbol':symbol})
+            continue
+        resp = place_order(symbol, 'BUY', qty, sig['price'])
+        if resp:
+            with STATE_LOCK:
+                POSITIONS[symbol] = Position(symbol=symbol, qty=qty, entry_price=sig['price'], last_high=sig['price'])
+    return True
+
+
+def persist_state():
+    try:
+        with open(STATE_PATH,'w') as f:
+            json.dump({'positions': {s: vars(p) for s,p in POSITIONS.items()}}, f)
+    except Exception:
+        pass
+
+
+def main():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+    hb_thr.start()
+    logging.info('Bot start model_version=%s bot_id=%s dry_run=%s symbols=%s', MODEL_VERSION, BOT_ID, CFG['DRY_RUN'], CFG['SYMBOLS'])
+    start_ts = time.time()
+    while not STOP_REQUESTED:
+        try:
+            alive = run_once()
+            persist_state()
+            if not alive:
+                break
+        except Exception as e:
+            logging.exception('loop_error: %s', e)
+        time.sleep(CFG['SLEEP_LOOP_SEC'])
+    _shutdown.set()
+    logging.info('Bot exit uptime=%.1fs', time.time()-start_ts)
+
+if __name__ == '__main__':
+    main()

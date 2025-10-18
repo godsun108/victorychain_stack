@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-08-05T20:47:11.902146",
+  "signals_generated": 2,
+  "trades_executed": 2,
+  "portfolio_value": 100000,
+  "risk_assessment": {
+    "total_risk": 0.0,
+    "concentration_risk": 0.0,
+    "var_95": 0.0
+  },
+  "performance_metrics": {
+    "total_return": 0.0,
+    "sharpe_ratio": 0.0,
+    "max_drawdown": 0.0,
+    "win_rate": 0.0,
+    "total_trades": 2
+  },
+  "positions": 2
+}

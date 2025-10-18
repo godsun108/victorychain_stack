@@ -1,0 +1,297 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Momentum Predictor
+AI-powered token analysis for 20-30% gain opportunities
+"""
+
+import requests
+import json
+import os
+import time
+from datetime import datetime
+from typing import List, Dict, Optional
+
+class MomentumPredictor:
+    def __init__(self):
+        self.claude_api_key = os.getenv('CLAUDE_API_KEY', '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')
+        self.binance_us_base = "https://api.binance.us"
+        
+    def get_market_data(self, symbols: List[str]) -> Dict[str, Dict]:
+        """Get current market data from Binance US"""
+        try:
+            # Get 24hr ticker statistics
+            response = requests.get(f"{self.binance_us_base}/api/v3/ticker/24hr")
+            if response.status_code == 200:
+                tickers = response.json()
+                
+                market_data = {}
+                for ticker in tickers:
+                    symbol = ticker['symbol']
+                    if symbol in symbols or symbols == ['ALL_USDT']:
+                        if symbol.endswith('USDT'):
+                            market_data[symbol] = {
+                                'symbol': symbol,
+                                'price': float(ticker['lastPrice']),
+                                'change_24h': float(ticker['priceChangePercent']),
+                                'volume_24h': float(ticker['volume']) * float(ticker['lastPrice']),
+                                'volume_change': float(ticker['count']),  # Trade count as proxy
+                                'high_24h': float(ticker['highPrice']),
+                                'low_24h': float(ticker['lowPrice']),
+                            }
+                return market_data
+            else:
+                print(f"❌ Failed to fetch market data: {response.status_code}")
+                return {}
+        except Exception as e:
+            print(f"❌ Error fetching market data: {e}")
+            return {}
+
+    def analyze_with_ai(self, symbol: str, market_data: Dict) -> Dict:
+        """Get AI analysis for momentum potential"""
+        prompt = f"""Analyze {symbol} for 20-30% momentum potential in next 24-48 hours:
+
+CURRENT DATA:
+- Price: ${market_data['price']:.6f}
+- 24h Change: {market_data['change_24h']:.2f}%
+- 24h Volume: ${market_data['volume_24h']:,.0f}
+- 24h High: ${market_data['high_24h']:.6f}
+- 24h Low: ${market_data['low_24h']:.6f}
+
+ANALYSIS REQUIREMENTS:
+1. Can this token gain 20-30% in next 24-48 hours? (YES/NO)
+2. Confidence score (0-100)
+3. Predicted price target
+4. Key momentum catalysts
+5. Risk level (LOW/MEDIUM/HIGH)
+6. Optimal hold duration (hours)
+
+Focus on: Volume surge, breakout patterns, momentum indicators, whale activity.
+
+Respond with EXACT format:
+PREDICTION: YES/NO
+CONFIDENCE: [0-100]
+TARGET_PRICE: $[price]
+GAIN_PERCENT: [percentage]
+RISK_LEVEL: LOW/MEDIUM/HIGH
+HOLD_HOURS: [hours]
+REASONING: [brief explanation]"""
+
+        try:
+            payload = {
+                "model": "claude-3-5-sonnet-20241022",
+                "max_tokens": 300,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
+            headers = {
+                'x-api-key': self.claude_api_key,
+                'Content-Type': 'application/json',
+                'anthropic-version': '2023-06-01'
+            }
+            
+            response = requests.post(
+                'https://api.anthropic.com/v1/messages',
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                ai_text = result['content'][0]['text']
+                return self.parse_ai_response(ai_text, market_data)
+            else:
+                print(f"⚠️ AI API error for {symbol}: {response.status_code}")
+                return self.fallback_analysis(market_data)
+                
+        except Exception as e:
+            print(f"⚠️ AI analysis failed for {symbol}: {e}")
+            return self.fallback_analysis(market_data)
+
+    def parse_ai_response(self, ai_text: str, market_data: Dict) -> Dict:
+        """Parse AI response into structured data"""
+        lines = ai_text.split('\n')
+        result = {
+            'prediction': 'NO',
+            'confidence': 50,
+            'target_price': market_data['price'],
+            'gain_percent': 0,
+            'risk_level': 'HIGH',
+            'hold_hours': 24,
+            'reasoning': ai_text[:150] + "..."
+        }
+        
+        for line in lines:
+            line = line.strip()
+            if line.startswith('PREDICTION:'):
+                result['prediction'] = 'YES' if 'YES' in line.upper() else 'NO'
+            elif line.startswith('CONFIDENCE:'):
+                try:
+                    result['confidence'] = int(''.join(filter(str.isdigit, line)))
+                except:
+                    pass
+            elif line.startswith('TARGET_PRICE:'):
+                try:
+                    price_str = line.replace('TARGET_PRICE:', '').replace('$', '').strip()
+                    result['target_price'] = float(price_str)
+                except:
+                    pass
+            elif line.startswith('GAIN_PERCENT:'):
+                try:
+                    result['gain_percent'] = float(''.join(filter(str.isdigit, line.replace('.', 'X'))).replace('X', '.'))
+                except:
+                    pass
+            elif line.startswith('RISK_LEVEL:'):
+                if 'LOW' in line.upper():
+                    result['risk_level'] = 'LOW'
+                elif 'MEDIUM' in line.upper():
+                    result['risk_level'] = 'MEDIUM'
+                else:
+                    result['risk_level'] = 'HIGH'
+            elif line.startswith('HOLD_HOURS:'):
+                try:
+                    result['hold_hours'] = int(''.join(filter(str.isdigit, line)))
+                except:
+                    pass
+        
+        # Calculate gain percent if not provided
+        if result['gain_percent'] == 0 and result['target_price'] > market_data['price']:
+            result['gain_percent'] = (result['target_price'] - market_data['price']) / market_data['price'] * 100
+            
+        return result
+
+    def fallback_analysis(self, market_data: Dict) -> Dict:
+        """Simple technical analysis fallback"""
+        change_24h = market_data['change_24h']
+        price = market_data['price']
+        
+        # Simple momentum scoring
+        if change_24h > 15:
+            prediction = 'YES'
+            confidence = 75
+            gain_estimate = min(change_24h * 1.5, 30)
+        elif change_24h > 5:
+            prediction = 'YES' if change_24h > 8 else 'NO'
+            confidence = 60
+            gain_estimate = max(change_24h * 1.2, 15)
+        else:
+            prediction = 'NO'
+            confidence = 30
+            gain_estimate = 5
+            
+        return {
+            'prediction': prediction,
+            'confidence': confidence,
+            'target_price': price * (1 + gain_estimate/100),
+            'gain_percent': gain_estimate,
+            'risk_level': 'HIGH' if gain_estimate > 25 else 'MEDIUM',
+            'hold_hours': 24,
+            'reasoning': f"Technical analysis: {change_24h:.1f}% momentum, volume analysis"
+        }
+
+    def scan_opportunities(self) -> List[Dict]:
+        """Scan for high momentum opportunities"""
+        print("🔍 Scanning Binance US tokens for 20-30% momentum opportunities...")
+        
+        # Focus on high-volume USDT pairs
+        focus_symbols = [
+            'BTCUSDT', 'ETHUSDT', 'XRPUSDT', 'SOLUSDT', 'ADAUSDT',
+            'DOTUSDT', 'LINKUSDT', 'AVAXUSDT', 'MATICUSDT', 'ATOMUSDT',
+            'SHIBUSDT', 'PEPEUSDT', 'FLOKIUSDT', 'BONKUSDT', 'ALGOUSDT',
+            'XLMUSDT', 'HBARUSDT', 'IOTAUSDT', 'VETUSDT', 'ICPUSDT'
+        ]
+        
+        market_data = self.get_market_data(focus_symbols)
+        opportunities = []
+        
+        print(f"📊 Analyzing {len(market_data)} tokens with AI...")
+        
+        for symbol, data in market_data.items():
+            print(f"   Analyzing {symbol}...", end=" ")
+            
+            analysis = self.analyze_with_ai(symbol, data)
+            
+            if (analysis['prediction'] == 'YES' and 
+                analysis['confidence'] >= 65 and 
+                analysis['gain_percent'] >= 20):
+                
+                opportunities.append({
+                    'symbol': symbol,
+                    'current_price': data['price'],
+                    'change_24h': data['change_24h'],
+                    'volume_24h': data['volume_24h'],
+                    **analysis
+                })
+                print(f"✅ OPPORTUNITY! {analysis['gain_percent']:.1f}% potential")
+            else:
+                print(f"❌ Below threshold")
+            
+            # Rate limiting
+            time.sleep(0.5)
+        
+        # Sort by potential (gain * confidence)
+        opportunities.sort(key=lambda x: x['gain_percent'] * (x['confidence']/100), reverse=True)
+        
+        return opportunities
+
+def main():
+    print("🔮 VictoryChain Momentum Predictor")
+    print("=====================================")
+    print("🎯 AI-Powered 20-30% Gain Opportunities")
+    print("")
+    
+    predictor = MomentumPredictor()
+    opportunities = predictor.scan_opportunities()
+    
+    print("\n" + "="*60)
+    print("🚀 HIGH MOMENTUM OPPORTUNITIES (20%+ Potential)")
+    print("="*60)
+    
+    if not opportunities:
+        print("❌ No high-momentum opportunities found at this time")
+        print("   • Current market conditions may not support 20%+ moves")
+        print("   • Try scanning again in 10-15 minutes")
+        print("   • Consider lowering thresholds for smaller opportunities")
+    else:
+        for i, opp in enumerate(opportunities, 1):
+            print(f"\n{i}. {opp['symbol']} 📈")
+            print(f"   Current Price:    ${opp['current_price']:.6f}")
+            print(f"   Target Price:     ${opp['target_price']:.6f}")
+            print(f"   Gain Potential:   {opp['gain_percent']:.1f}%")
+            print(f"   AI Confidence:    {opp['confidence']}%")
+            print(f"   24h Change:       {opp['change_24h']:.2f}%")
+            print(f"   24h Volume:       ${opp['volume_24h']:,.0f}")
+            print(f"   Risk Level:       {opp['risk_level']}")
+            print(f"   Hold Duration:    {opp['hold_hours']} hours")
+            print(f"   AI Analysis:      {opp['reasoning']}")
+            
+            # Investment recommendation
+            risk_emoji = "🟢" if opp['risk_level'] == 'LOW' else "🟡" if opp['risk_level'] == 'MEDIUM' else "🔴"
+            print(f"   Risk Rating:      {risk_emoji} {opp['risk_level']}")
+        
+        print(f"\n💡 TRADING RECOMMENDATIONS:")
+        print(f"   • Found {len(opportunities)} high-potential opportunities")
+        print(f"   • Focus on top 1-3 tokens for best risk/reward")
+        print(f"   • Use position sizing: $50-100 per token")
+        print(f"   • Set stop losses at -8% to protect capital")
+        print(f"   • Take profits at target prices or after hold duration")
+        
+        # Show example trade setup for top opportunity
+        if opportunities:
+            top = opportunities[0]
+            print(f"\n🎯 EXAMPLE TRADE SETUP ({top['symbol']}):")
+            print(f"   Entry Price:      ${top['current_price']:.6f}")
+            print(f"   Target Price:     ${top['target_price']:.6f} (+{top['gain_percent']:.1f}%)")
+            print(f"   Stop Loss:        ${top['current_price'] * 0.92:.6f} (-8%)")
+            print(f"   Position Size:    $75 (recommended)")
+            print(f"   Quantity:         {75/top['current_price']:.4f} {top['symbol'].replace('USDT', '')}")
+    
+    print(f"\n⚠️  IMPORTANT DISCLAIMERS:")
+    print(f"   • This is AI-powered analysis, not financial advice")
+    print(f"   • Cryptocurrency trading involves significant risk")
+    print(f"   • Only invest what you can afford to lose")
+    print(f"   • Always do your own research before trading")
+    print(f"   • Past performance doesn't guarantee future results")
+
+if __name__ == "__main__":
+    main()

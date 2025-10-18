@@ -1,0 +1,19 @@
+{
+  "iso_banked_usd": 0,
+  "iso_breakdown": {
+    "ALGO": 0.0,
+    "HBAR": 0.0,
+    "IOTA": 0.0,
+    "QNT": 0.0,
+    "XDC": 0.0,
+    "XLM": 0.0,
+    "XRP": 0.0
+  },
+  "ledger_head": "01cfe4bd60248a59de544f08443cba5b9bb23255d233d11bfbadb5a2d1abab55",
+  "ledger_tail": "a8fa08c9176367440cadd30a12b4317054ce7f97bf46452bce994a0a210f6094",
+  "realized_pnl_usd": 0.0,
+  "session_id": "2025-09-28T00:00Z",
+  "session_start_ts": 1759017600,
+  "trades_closed": 0,
+  "ts": 1759047980
+}

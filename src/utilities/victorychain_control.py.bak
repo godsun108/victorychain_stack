@@ -1,0 +1,446 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Master Control Center
+Ultimate launcher and controller for all trading strategies
+"""
+
+import os
+import sys
+import json
+import time
+import subprocess
+import logging
+from datetime import datetime
+from typing import Dict, List, Optional
+from dotenv import load_dotenv
+
+class VictoryChainControl:
+    def __init__(self):
+        load_dotenv()
+        
+        # Setup logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(f'master_control_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+                logging.StreamHandler()
+            ]
+        )
+        self.logger = logging.getLogger(__name__)
+        
+        # Available strategies
+        self.strategies = {
+            'ultimate': {
+                'name': 'Ultimate Trading Orchestrator',
+                'script': 'ultimate_trading_orchestrator.py',
+                'description': 'The final evolution - combines all successful strategies',
+                'risk': 'Medium-High',
+                'recommended': True
+            },
+            'smart_gains': {
+                'name': 'Smart Gains-Only Bot',
+                'script': 'smart_gains_bot.py',
+                'description': 'Conservative gains-only approach with AI analysis',
+                'risk': 'Low-Medium',
+                'recommended': True
+            },
+            'claude_trader': {
+                'name': 'Claude Non-Popular Token Trader',
+                'script': 'claude_non_popular_trader.py',
+                'description': 'AI-powered trading of micro-cap tokens',
+                'risk': 'High',
+                'recommended': False
+            },
+            'ai_hunter': {
+                'name': 'AI Non-Popular Hunter',
+                'script': 'ai_non_popular_hunter.py',
+                'description': 'Pattern learning for micro-cap opportunities',
+                'risk': 'High',
+                'recommended': False
+            },
+            'enhanced_bot': {
+                'name': 'Enhanced Trading Bot',
+                'script': 'enhanced_trading_bot.py',
+                'description': 'Multi-strategy trading with momentum analysis',
+                'risk': 'Medium',
+                'recommended': True
+            },
+            'master_bot': {
+                'name': 'Master Trading Bot',
+                'script': 'master_trading_bot.py',
+                'description': 'Comprehensive trading with all features',
+                'risk': 'Medium-High', 
+                'recommended': True
+            }
+        }
+        
+        # Analysis tools
+        self.analysis_tools = {
+            'dashboard': {
+                'name': 'Trading Performance Dashboard',
+                'script': 'trading_dashboard.py',
+                'description': 'Real-time performance monitoring'
+            },
+            'token_analyzer': {
+                'name': 'Comprehensive Token Analyzer',
+                'script': 'comprehensive_token_analyzer.py',
+                'description': 'Deep analysis of all tradable tokens'
+            },
+            'opportunity_scanner': {
+                'name': 'Trading Opportunity Scanner',
+                'script': 'trading_opportunity_scanner.py',
+                'description': 'Scan for immediate trading opportunities'
+            },
+            'portfolio_check': {
+                'name': 'Portfolio Holdings Check',
+                'script': 'check_holdings.py',
+                'description': 'View current portfolio and balances'
+            }
+        }
+    
+    def check_environment(self) -> bool:
+        """Check if environment is properly configured"""
+        try:
+            # Check API keys
+            if not os.getenv('BINANCEUS_KEY') or not os.getenv('BINANCEUS_SECRET'):
+                print("❌ Binance API keys not found in .env file")
+                return False
+            
+            # Check Python modules
+            required_modules = ['binance', 'pandas', 'numpy', 'requests', 'python-dotenv']
+            
+            for module in required_modules:
+                try:
+                    __import__(module.replace('-', '_'))
+                except ImportError:
+                    print(f"❌ Required module '{module}' not installed")
+                    print(f"   Install with: pip install {module}")
+                    return False
+            
+            print("✅ Environment check passed")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Environment check failed: {e}")
+            return False
+    
+    def get_portfolio_status(self) -> Dict:
+        """Get quick portfolio status"""
+        try:
+            result = subprocess.run([sys.executable, 'check_holdings.py'], 
+                                  capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                output = result.stdout
+                # Extract total portfolio value
+                for line in output.split('\n'):
+                    if 'TOTAL PORTFOLIO VALUE:' in line:
+                        value_str = line.split('$')[1] if '$' in line else '0'
+                        try:
+                            total_value = float(value_str)
+                            return {'total_value': total_value, 'status': 'success'}
+                        except:
+                            pass
+            
+            return {'total_value': 0, 'status': 'error'}
+            
+        except Exception as e:
+            self.logger.error(f"Error getting portfolio status: {e}")
+            return {'total_value': 0, 'status': 'error'}
+    
+    def display_main_menu(self):
+        """Display the main control menu"""
+        print("\n" + "="*80)
+        print("🎯 VICTORYCHAIN MASTER CONTROL CENTER")
+        print("="*80)
+        
+        # Portfolio status
+        portfolio = self.get_portfolio_status()
+        if portfolio['status'] == 'success':
+            print(f"💰 Current Portfolio Value: ${portfolio['total_value']:.2f}")
+        else:
+            print("💰 Portfolio Status: Checking...")
+        
+        print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print()
+        
+        print("🚀 TRADING STRATEGIES")
+        print("-" * 40)
+        
+        for key, strategy in self.strategies.items():
+            status = "⭐ RECOMMENDED" if strategy['recommended'] else "   Advanced"
+            print(f"{key:12s} | {status} | {strategy['name']}")
+            print(f"             Risk: {strategy['risk']:10s} | {strategy['description']}")
+            print()
+        
+        print("📊 ANALYSIS TOOLS")
+        print("-" * 40)
+        
+        for key, tool in self.analysis_tools.items():
+            print(f"{key:12s} | {tool['name']}")
+            print(f"             {tool['description']}")
+            print()
+        
+        print("🔧 SYSTEM COMMANDS")
+        print("-" * 40)
+        print("env_check    | Check environment and API connectivity")
+        print("install_deps | Install required Python dependencies")
+        print("update_all   | Update all trading bots to latest version")
+        print("cleanup      | Clean up old logs and temporary files")
+        print("quit         | Exit the control center")
+        print()
+    
+    def run_strategy(self, strategy_key: str) -> bool:
+        """Run a specific trading strategy"""
+        try:
+            if strategy_key not in self.strategies:
+                print(f"❌ Unknown strategy: {strategy_key}")
+                return False
+            
+            strategy = self.strategies[strategy_key]
+            script_path = strategy['script']
+            
+            if not os.path.exists(script_path):
+                print(f"❌ Script not found: {script_path}")
+                return False
+            
+            print(f"🚀 Launching: {strategy['name']}")
+            print(f"📜 Script: {script_path}")
+            print(f"⚠️  Risk Level: {strategy['risk']}")
+            print()
+            
+            # Confirm for high-risk strategies
+            if strategy['risk'] == 'High':
+                confirm = input("⚠️  HIGH RISK STRATEGY - Type 'YES' to confirm: ")
+                if confirm != 'YES':
+                    print("❌ Launch cancelled")
+                    return False
+            
+            # Launch the strategy
+            subprocess.run([sys.executable, script_path])
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error launching strategy: {e}")
+            return False
+    
+    def run_analysis_tool(self, tool_key: str) -> bool:
+        """Run an analysis tool"""
+        try:
+            if tool_key not in self.analysis_tools:
+                print(f"❌ Unknown tool: {tool_key}")
+                return False
+            
+            tool = self.analysis_tools[tool_key]
+            script_path = tool['script']
+            
+            if not os.path.exists(script_path):
+                print(f"❌ Script not found: {script_path}")
+                return False
+            
+            print(f"📊 Running: {tool['name']}")
+            print(f"📜 Script: {script_path}")
+            print()
+            
+            subprocess.run([sys.executable, script_path])
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error running analysis tool: {e}")
+            return False
+    
+    def install_dependencies(self):
+        """Install required Python dependencies"""
+        try:
+            print("📦 Installing required dependencies...")
+            
+            dependencies = [
+                'python-binance',
+                'pandas',
+                'numpy', 
+                'requests',
+                'python-dotenv',
+                'scikit-learn',
+                'anthropic'
+            ]
+            
+            for dep in dependencies:
+                print(f"Installing {dep}...")
+                result = subprocess.run([sys.executable, '-m', 'pip', 'install', dep],
+                                      capture_output=True, text=True)
+                
+                if result.returncode == 0:
+                    print(f"✅ {dep} installed successfully")
+                else:
+                    print(f"❌ Failed to install {dep}: {result.stderr}")
+            
+            print("✅ Dependency installation completed")
+            
+        except Exception as e:
+            print(f"❌ Error installing dependencies: {e}")
+    
+    def cleanup_files(self):
+        """Clean up old logs and temporary files"""
+        try:
+            print("🧹 Cleaning up old files...")
+            
+            # Clean up log files older than 7 days
+            import glob
+            from pathlib import Path
+            
+            log_files = glob.glob("*.log")
+            cleaned_count = 0
+            
+            for log_file in log_files:
+                file_path = Path(log_file)
+                file_age = datetime.now() - datetime.fromtimestamp(file_path.stat().st_mtime)
+                
+                if file_age.days > 7:
+                    os.remove(log_file)
+                    cleaned_count += 1
+                    print(f"   Removed: {log_file}")
+            
+            # Clean up old JSON state files
+            json_files = glob.glob("*_state_*.json") + glob.glob("*_snapshot_*.json")
+            
+            for json_file in json_files:
+                file_path = Path(json_file)
+                file_age = datetime.now() - datetime.fromtimestamp(file_path.stat().st_mtime)
+                
+                if file_age.days > 3:
+                    os.remove(json_file)
+                    cleaned_count += 1
+                    print(f"   Removed: {json_file}")
+            
+            print(f"✅ Cleanup completed - removed {cleaned_count} files")
+            
+        except Exception as e:
+            print(f"❌ Error during cleanup: {e}")
+    
+    def quick_start_wizard(self):
+        """Quick start wizard for new users"""
+        print("\n🧙‍♂️ VICTORYCHAIN QUICK START WIZARD")
+        print("="*50)
+        print("Let's get you started with the best trading strategy for your needs.")
+        print()
+        
+        # Risk tolerance
+        print("1️⃣  What's your risk tolerance?")
+        print("   A) Conservative - Focus on safer trades")
+        print("   B) Balanced - Mix of safety and growth")  
+        print("   C) Aggressive - Higher risk for higher rewards")
+        risk_choice = input("Choose (A/B/C): ").upper()
+        
+        # Experience level
+        print("\n2️⃣  What's your trading experience?")
+        print("   A) Beginner - New to crypto trading")
+        print("   B) Intermediate - Some trading experience")
+        print("   C) Expert - Experienced trader")
+        exp_choice = input("Choose (A/B/C): ").upper()
+        
+        # Portfolio size
+        portfolio = self.get_portfolio_status()
+        portfolio_size = portfolio.get('total_value', 0)
+        
+        print(f"\n3️⃣  Detected portfolio size: ${portfolio_size:.2f}")
+        
+        # Recommendation engine
+        print("\n🎯 RECOMMENDATION")
+        print("-" * 30)
+        
+        if risk_choice == 'A' or exp_choice == 'A' or portfolio_size < 100:
+            recommended = 'smart_gains'
+            print("✅ RECOMMENDED: Smart Gains-Only Bot")
+            print("   • Conservative approach")
+            print("   • High win rate focus")
+            print("   • Built-in risk management")
+        
+        elif risk_choice == 'C' and exp_choice == 'C' and portfolio_size > 200:
+            recommended = 'ultimate'
+            print("✅ RECOMMENDED: Ultimate Trading Orchestrator")
+            print("   • Advanced multi-strategy approach")
+            print("   • AI-powered analysis")
+            print("   • Maximum profit potential")
+        
+        else:
+            recommended = 'enhanced_bot'
+            print("✅ RECOMMENDED: Enhanced Trading Bot")
+            print("   • Balanced risk/reward")
+            print("   • Proven strategies")
+            print("   • Good for most traders")
+        
+        print()
+        launch = input("🚀 Launch recommended strategy? (Y/n): ").lower()
+        
+        if launch != 'n' and launch != 'no':
+            return self.run_strategy(recommended)
+        
+        return False
+    
+    def run(self):
+        """Main control loop"""
+        try:
+            # Environment check
+            if not self.check_environment():
+                print("\n🔧 Fix environment issues before continuing")
+                install = input("Install dependencies now? (Y/n): ").lower()
+                if install != 'n' and install != 'no':
+                    self.install_dependencies()
+                    if not self.check_environment():
+                        return
+            
+            print("✅ VictoryChain Control Center Ready")
+            
+            # Offer quick start for first-time users
+            quick_start = input("\n🧙‍♂️ Run Quick Start Wizard? (Y/n): ").lower()
+            if quick_start != 'n' and quick_start != 'no':
+                if self.quick_start_wizard():
+                    return
+            
+            # Main control loop
+            while True:
+                self.display_main_menu()
+                
+                command = input("Enter command: ").strip().lower()
+                
+                if command == 'quit' or command == 'q' or command == 'exit':
+                    print("👋 Goodbye!")
+                    break
+                
+                elif command == 'env_check':
+                    self.check_environment()
+                
+                elif command == 'install_deps':
+                    self.install_dependencies()
+                
+                elif command == 'cleanup':
+                    self.cleanup_files()
+                
+                elif command in self.strategies:
+                    self.run_strategy(command)
+                
+                elif command in self.analysis_tools:
+                    self.run_analysis_tool(command)
+                
+                elif command == 'help' or command == 'h':
+                    continue  # Redisplay menu
+                
+                else:
+                    print(f"❌ Unknown command: {command}")
+                    print("   Type 'help' to see available commands")
+                
+                input("\nPress Enter to continue...")
+                
+        except KeyboardInterrupt:
+            print("\n👋 Control Center stopped by user")
+        except Exception as e:
+            print(f"❌ Critical error: {e}")
+
+def main():
+    """Main function"""
+    control = VictoryChainControl()
+    control.run()
+
+if __name__ == "__main__":
+    main()

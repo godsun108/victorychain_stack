@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Lightweight Prometheus metrics server utilities for strategy runtime.
+
+Usage:
+    from scripts.strategy_metrics import start_metrics_server, inc_trade, set_open_positions, set_weekly_pnl
+    start_metrics_server(9108)
+    inc_trade("BTCUSD", "BUY")
+    set_open_positions("BTCUSD", 2)
+    set_weekly_pnl(127.45)
+
+Exposes /metrics on the chosen port.
+"""
+import threading
+from typing import Dict
+from prometheus_client import Counter, Gauge, start_http_server
+
+_trade_counter = Counter(
+    "vc_trades_total",
+    "Total trades executed by symbol and side",
+    labelnames=("symbol", "side"),
+)
+_open_positions = Gauge(
+    "vc_open_positions",
+    "Current open position count per symbol",
+    labelnames=("symbol",),
+)
+_weekly_pnl = Gauge(
+    "vc_weekly_pnl_usd",
+    "Week-to-date realized PnL in USD",
+)
+
+_started = False
+_lock = threading.Lock()
+
+def start_metrics_server(port: int = 9108):
+    global _started
+    with _lock:
+        if _started:
+            return
+        # Non-blocking HTTP server
+        start_http_server(port)
+        _started = True
+
+
+def inc_trade(symbol: str, side: str):
+    _trade_counter.labels(symbol=symbol, side=side.upper()).inc()
+
+
+def set_open_positions(symbol: str, count: int):
+    _open_positions.labels(symbol=symbol).set(count)
+
+
+def set_weekly_pnl(value: float):
+    _weekly = float(value)
+    _weekly_pnl.set(_weekly)

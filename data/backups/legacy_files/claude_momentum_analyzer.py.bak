@@ -1,0 +1,409 @@
+#!/usr/bin/env python3
+"""
+Claude-Powered Momentum Analysis System
+Uses Claude AI to analyze comprehensive market data and provide trading insights
+"""
+
+import os
+import json
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from dotenv import load_dotenv
+import anthropic
+
+class ClaudeMomentumAnalyzer:
+    def __init__(self):
+        load_dotenv()
+        
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv('BINANCEUS_KEY'),
+            api_secret=os.getenv('BINANCEUS_SECRET'),
+            tld='us'
+        )
+        
+        # Initialize Claude client
+        self.claude_client = anthropic.Anthropic(
+            api_key=os.getenv('CLAUDE_API_KEY')
+        )
+        
+        print("🤖 Claude-Powered Momentum Analyzer initialized")
+    
+    def get_comprehensive_market_data(self) -> Dict:
+        """Get comprehensive market data for Claude analysis"""
+        print("📊 Gathering comprehensive market data...")
+        
+        # Get all tickers
+        tickers = self.client.get_ticker()
+        usdt_pairs = [t for t in tickers if t['symbol'].endswith('USDT') and t['symbol'] != 'USDCUSDT']
+        
+        market_data = {
+            'timestamp': datetime.now().isoformat(),
+            'total_pairs': len(usdt_pairs),
+            'tokens': []
+        }
+        
+        # Analyze top tokens by volume
+        volume_ranked = sorted(usdt_pairs, key=lambda x: float(x['quoteVolume']), reverse=True)
+        
+        for i, ticker in enumerate(volume_ranked[:50]):  # Top 50 by volume
+            symbol = ticker['symbol']
+            token = symbol.replace('USDT', '')
+            
+            try:
+                # Get momentum score
+                momentum_score = self.get_momentum_score(symbol)
+                
+                # Get additional data
+                daily_change = float(ticker['priceChangePercent'])
+                volume_24h = float(ticker['quoteVolume'])
+                price = float(ticker['lastPrice'])
+                
+                # Get recent performance
+                klines = self.client.get_klines(symbol=symbol, interval='1h', limit=24)
+                if klines:
+                    hourly_changes = []
+                    for j in range(1, min(12, len(klines))):  # Last 12 hours
+                        prev_price = float(klines[j-1][4])
+                        curr_price = float(klines[j][4])
+                        change = ((curr_price - prev_price) / prev_price) * 100
+                        hourly_changes.append(change)
+                
+                token_data = {
+                    'symbol': symbol,
+                    'token': token,
+                    'momentum_score': momentum_score,
+                    'daily_change': daily_change,
+                    'volume_24h': volume_24h,
+                    'price': price,
+                    'hourly_changes': hourly_changes,
+                    'volume_rank': i + 1
+                }
+                
+                market_data['tokens'].append(token_data)
+                
+                time.sleep(0.05)  # Rate limiting
+                
+            except Exception as e:
+                print(f"⚠️ Error analyzing {symbol}: {e}")
+                continue
+        
+        # Add market summary stats
+        all_changes = [t['daily_change'] for t in market_data['tokens']]
+        market_data['market_summary'] = {
+            'avg_change': np.mean(all_changes),
+            'median_change': np.median(all_changes),
+            'positive_tokens': len([c for c in all_changes if c > 0]),
+            'negative_tokens': len([c for c in all_changes if c < 0]),
+            'high_momentum_count': len([t for t in market_data['tokens'] if t['momentum_score'] > 100]),
+            'total_volume': sum([t['volume_24h'] for t in market_data['tokens']])
+        }
+        
+        return market_data
+    
+    def get_momentum_score(self, symbol: str) -> float:
+        """Calculate advanced momentum score"""
+        try:
+            # Get various timeframe data
+            klines_1h = self.client.get_klines(symbol=symbol, interval='1h', limit=24)
+            klines_4h = self.client.get_klines(symbol=symbol, interval='4h', limit=12) 
+            klines_1d = self.client.get_klines(symbol=symbol, interval='1d', limit=7)
+            
+            if not klines_1h or not klines_4h or not klines_1d:
+                return 0
+            
+            # Calculate price changes
+            current_price = float(klines_1h[-1][4])
+            price_1h_ago = float(klines_1h[-2][4]) if len(klines_1h) > 1 else current_price
+            price_4h_ago = float(klines_4h[-2][4]) if len(klines_4h) > 1 else current_price
+            price_24h_ago = float(klines_1d[-2][4]) if len(klines_1d) > 1 else current_price
+            
+            change_1h = ((current_price - price_1h_ago) / price_1h_ago) * 100
+            change_4h = ((current_price - price_4h_ago) / price_4h_ago) * 100
+            change_24h = ((current_price - price_24h_ago) / price_24h_ago) * 100
+            
+            # Volume analysis
+            volumes = [float(k[5]) for k in klines_1h[-6:]]
+            avg_volume = np.mean(volumes[:-1]) if len(volumes) > 1 else volumes[0]
+            current_volume = volumes[-1]
+            volume_surge = (current_volume / avg_volume) if avg_volume > 0 else 1
+            
+            # Momentum calculation
+            momentum_score = 50  # Base score
+            momentum_score += change_1h * 3    # Recent movement is most important
+            momentum_score += change_4h * 2    # Medium-term trend
+            momentum_score += change_24h * 1   # Longer-term context
+            
+            # Volume factor
+            if volume_surge > 2:
+                momentum_score += 20
+            elif volume_surge > 1.5:
+                momentum_score += 10
+            elif volume_surge < 0.5:
+                momentum_score -= 10
+            
+            # Consistency bonus
+            if change_1h > 0 and change_4h > 0 and change_24h > 0:
+                momentum_score += 15
+            
+            return max(momentum_score, 0)
+            
+        except Exception as e:
+            return 0
+    
+    def get_current_portfolio(self) -> Dict:
+        """Get current portfolio status"""
+        try:
+            account = self.client.get_account()
+            portfolio = {'positions': {}, 'total_value': 0}
+            
+            for balance in account['balances']:
+                free = float(balance['free'])
+                locked = float(balance['locked'])
+                total = free + locked
+                
+                if total > 0:
+                    if balance['asset'] == 'USDT':
+                        portfolio['positions'][balance['asset']] = {
+                            'amount': total,
+                            'usd_value': total,
+                            'daily_change': 0
+                        }
+                        portfolio['total_value'] += total
+                    else:
+                        try:
+                            symbol = balance['asset'] + 'USDT'
+                            ticker = self.client.get_ticker(symbol=symbol)
+                            price = float(ticker['lastPrice'])
+                            usd_value = total * price
+                            daily_change = float(ticker['priceChangePercent'])
+                            
+                            portfolio['positions'][balance['asset']] = {
+                                'amount': total,
+                                'usd_value': usd_value,
+                                'daily_change': daily_change
+                            }
+                            portfolio['total_value'] += usd_value
+                        except:
+                            continue
+            
+            return portfolio
+        except Exception as e:
+            print(f"Error getting portfolio: {e}")
+            return {'positions': {}, 'total_value': 0}
+    
+    def ask_claude_for_analysis(self, market_data: Dict, portfolio_data: Dict) -> Dict:
+        """Ask Claude to analyze market data and provide trading insights"""
+        
+        # Prepare data summary for Claude
+        top_movers = sorted(market_data['tokens'], key=lambda x: x['daily_change'], reverse=True)[:10]
+        top_momentum = sorted(market_data['tokens'], key=lambda x: x['momentum_score'], reverse=True)[:10]
+        high_volume = sorted(market_data['tokens'], key=lambda x: x['volume_24h'], reverse=True)[:10]
+        
+        prompt = f"""
+You are an expert cryptocurrency trading analyst. I need you to analyze comprehensive market data and provide intelligent trading recommendations.
+
+CURRENT MARKET DATA (Top 50 tokens by volume):
+- Total pairs analyzed: {market_data['total_pairs']}
+- Market summary: {json.dumps(market_data['market_summary'], indent=2)}
+
+TOP 10 DAILY MOVERS:
+{json.dumps([{k: v for k, v in token.items() if k in ['token', 'daily_change', 'momentum_score', 'volume_24h']} for token in top_movers], indent=2)}
+
+TOP 10 MOMENTUM SCORES:
+{json.dumps([{k: v for k, v in token.items() if k in ['token', 'momentum_score', 'daily_change', 'volume_24h']} for token in top_momentum], indent=2)}
+
+TOP 10 BY VOLUME:
+{json.dumps([{k: v for k, v in token.items() if k in ['token', 'volume_24h', 'daily_change', 'momentum_score']} for token in high_volume], indent=2)}
+
+CURRENT PORTFOLIO:
+{json.dumps(portfolio_data, indent=2)}
+
+Please provide a comprehensive analysis including:
+
+1. MARKET OVERVIEW: What's the overall market sentiment and trend?
+
+2. TOP OPPORTUNITIES: Which 3-5 tokens show the best buy/hold potential and why?
+
+3. PORTFOLIO ANALYSIS: How is my current portfolio positioned? What should I hold vs sell?
+
+4. RISK ASSESSMENT: What are the main risks in the current market?
+
+5. SPECIFIC RECOMMENDATIONS: Concrete buy/sell/hold actions with reasoning
+
+6. MOMENTUM INSIGHTS: Which tokens have genuine momentum vs false signals?
+
+7. VOLUME ANALYSIS: How does trading volume support or contradict price movements?
+
+Format your response as JSON with clear sections and actionable insights.
+        """
+        
+        try:
+            print("🤖 Asking Claude for market analysis...")
+            
+            response = self.claude_client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=4000,
+                temperature=0.3,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+            
+            analysis_text = response.content[0].text
+            
+            # Try to extract JSON if Claude provided it
+            try:
+                if '```json' in analysis_text:
+                    json_start = analysis_text.find('```json') + 7
+                    json_end = analysis_text.find('```', json_start)
+                    json_text = analysis_text[json_start:json_end].strip()
+                    claude_analysis = json.loads(json_text)
+                else:
+                    # If not JSON format, structure the response
+                    claude_analysis = {
+                        'raw_analysis': analysis_text,
+                        'timestamp': datetime.now().isoformat(),
+                        'status': 'text_response'
+                    }
+            except:
+                claude_analysis = {
+                    'raw_analysis': analysis_text,
+                    'timestamp': datetime.now().isoformat(),
+                    'status': 'text_response'
+                }
+            
+            return claude_analysis
+            
+        except Exception as e:
+            print(f"❌ Error getting Claude analysis: {e}")
+            return {'error': str(e), 'timestamp': datetime.now().isoformat()}
+    
+    def generate_claude_powered_report(self) -> Dict:
+        """Generate comprehensive report with Claude AI insights"""
+        print("🚀 GENERATING CLAUDE-POWERED MARKET ANALYSIS")
+        print("=" * 60)
+        
+        # Get market data
+        market_data = self.get_comprehensive_market_data()
+        portfolio_data = self.get_current_portfolio()
+        
+        # Get Claude's analysis
+        claude_analysis = self.ask_claude_for_analysis(market_data, portfolio_data)
+        
+        # Combine everything
+        comprehensive_report = {
+            'timestamp': datetime.now().isoformat(),
+            'market_data': market_data,
+            'portfolio_data': portfolio_data,
+            'claude_analysis': claude_analysis,
+            'system_recommendations': self.generate_system_recommendations(market_data, claude_analysis)
+        }
+        
+        # Save report
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"claude_market_analysis_{timestamp}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(comprehensive_report, f, indent=2)
+        
+        # Display key insights
+        self.display_claude_insights(claude_analysis, market_data)
+        
+        print(f"\n💾 Full report saved: {filename}")
+        
+        return comprehensive_report
+    
+    def generate_system_recommendations(self, market_data: Dict, claude_analysis: Dict) -> Dict:
+        """Generate system-level trading recommendations"""
+        
+        # Find best opportunities based on combined criteria
+        tokens = market_data['tokens']
+        
+        buy_candidates = []
+        hold_candidates = []
+        sell_candidates = []
+        
+        for token in tokens:
+            momentum = token['momentum_score']
+            change = token['daily_change']
+            volume = token['volume_24h']
+            
+            # Buy criteria: Good momentum + decent volume + positive trend
+            if momentum > 100 and volume > 100000 and change > 2:
+                buy_candidates.append({
+                    'token': token['token'],
+                    'momentum': momentum,
+                    'change': change,
+                    'volume': volume,
+                    'confidence': 'high' if momentum > 120 else 'medium'
+                })
+            
+            # Hold criteria: Positive change + reasonable momentum
+            elif change > 0 and momentum > 80:
+                hold_candidates.append({
+                    'token': token['token'],
+                    'momentum': momentum,
+                    'change': change,
+                    'confidence': 'high' if change > 5 else 'medium'
+                })
+            
+            # Potential sell: Negative momentum + poor performance
+            elif momentum < 50 and change < -10:
+                sell_candidates.append({
+                    'token': token['token'],
+                    'momentum': momentum,
+                    'change': change,
+                    'risk_level': 'high' if change < -20 else 'medium'
+                })
+        
+        return {
+            'buy_candidates': sorted(buy_candidates, key=lambda x: x['momentum'], reverse=True)[:5],
+            'hold_candidates': sorted(hold_candidates, key=lambda x: x['change'], reverse=True)[:10],
+            'sell_candidates': sorted(sell_candidates, key=lambda x: x['change'])[:5],
+            'market_sentiment': 'bullish' if market_data['market_summary']['avg_change'] > 2 else 'bearish' if market_data['market_summary']['avg_change'] < -2 else 'neutral'
+        }
+    
+    def display_claude_insights(self, claude_analysis: Dict, market_data: Dict):
+        """Display Claude's key insights in a readable format"""
+        print("\n🤖 CLAUDE AI MARKET INSIGHTS")
+        print("=" * 50)
+        
+        if 'raw_analysis' in claude_analysis:
+            # Display raw text analysis
+            analysis = claude_analysis['raw_analysis']
+            
+            # Extract key sections if possible
+            sections = analysis.split('\n\n')
+            for section in sections[:6]:  # Show first 6 paragraphs
+                if len(section.strip()) > 20:
+                    print(f"📊 {section.strip()}")
+                    print("-" * 50)
+        
+        else:
+            # Display structured analysis
+            for key, value in claude_analysis.items():
+                if key not in ['timestamp', 'status']:
+                    print(f"📊 {key.upper()}:")
+                    if isinstance(value, str):
+                        print(f"   {value}")
+                    elif isinstance(value, list):
+                        for item in value[:3]:  # Show top 3
+                            print(f"   • {item}")
+                    print("-" * 50)
+
+def main():
+    analyzer = ClaudeMomentumAnalyzer()
+    report = analyzer.generate_claude_powered_report()
+    
+    print("\n🎯 Analysis complete! Check the generated report for detailed insights.")
+
+if __name__ == "__main__":
+    main()

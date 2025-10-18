@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+import asyncio
+from real_time_opportunity_maximizer import RealTimeOpportunityMaximizer
+
+async def get_full_data():
+    maximizer = RealTimeOpportunityMaximizer(initial_capital=100000)
+    opportunities = await maximizer.scan_all_tokens_for_opportunities()
+    allocations = maximizer.calculate_optimal_allocations(opportunities)
+    
+    print('📊 ALL 10 CURRENT ALLOCATIONS:')
+    for i, alloc in enumerate(allocations):
+        print(f'{i+1}. {alloc.symbol}: {alloc.allocation_percentage:.1%} (${alloc.allocation_amount:,.0f}) - {alloc.expected_return:.1%} return')
+    
+    # Sample positions for maximization
+    positions = {
+        'BTC': {'current_price': 45000, 'entry_price': 43000, 'size': 0.15},
+        'ETH': {'current_price': 3200, 'entry_price': 3100, 'size': 0.12},
+        'ADA': {'current_price': 1.25, 'entry_price': 1.18, 'size': 0.08}
+    }
+    maximizations = maximizer.maximize_existing_positions(positions)
+    
+    print('\n🚀 POSITION MAXIMIZATIONS:')
+    for max_rec in maximizations:
+        profit = ((positions[max_rec.symbol]['current_price'] - positions[max_rec.symbol]['entry_price']) / positions[max_rec.symbol]['entry_price']) * 100
+        print(f'{max_rec.symbol}: {max_rec.recommended_action} (Current: {profit:+.1f}%)')
+
+asyncio.run(get_full_data())

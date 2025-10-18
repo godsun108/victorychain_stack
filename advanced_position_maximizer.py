@@ -1,0 +1,679 @@
+#!/usr/bin/env python3
+
+"""
+ADVANCED POSITION MAXIMIZER & GAIN CAPITALIZER
+==============================================
+This system continuously monitors positions and maximizes gains by:
+1. Real-time position optimization
+2. Dynamic profit-taking strategies
+3. Loss minimization with intelligent stops
+4. Compound gain maximization
+5. Risk-adjusted position scaling
+
+Features:
+- Intelligent position sizing based on market conditions
+- Dynamic stop-loss and take-profit levels
+- Momentum-based position scaling
+- Multi-timeframe analysis for optimal entries/exits
+- Risk-adjusted compound growth strategies
+"""
+
+import asyncio
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass, field
+import json
+import logging
+from enum import Enum
+import os
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+TRAILING_STOP_ACTIVATION_PCT = float(
+    os.getenv("TRAILING_STOP_ACTIVATION_PCT", 0.50)
+)  # 50% gain
+TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", 0.10))  # 10% trailing stop
+MIN_PROFIT_EXIT_PCT = float(os.getenv("MIN_PROFIT_EXIT_PCT", 0.05))  # 5% minimum profit
+
+
+class PositionAction(Enum):
+    HOLD = "HOLD"
+    SCALE_IN = "SCALE_IN"
+    SCALE_OUT = "SCALE_OUT"
+    TAKE_PROFIT = "TAKE_PROFIT"
+    STOP_LOSS = "STOP_LOSS"
+    REBALANCE = "REBALANCE"
+
+
+@dataclass
+class Position:
+    symbol: str
+    entry_price: float
+    current_price: float
+    position_size: float
+    unrealized_pnl: float
+    unrealized_pnl_pct: float
+    entry_timestamp: datetime
+    current_timestamp: datetime
+    stop_loss_price: float
+    take_profit_price: float
+    risk_score: float
+    confidence_level: float
+    market_cap: float
+    volume_24h: float
+    predicted_gain_7d: float
+    technical_score: float
+    momentum_score: float
+
+
+@dataclass
+class PositionRecommendation:
+    symbol: str
+    action: PositionAction
+    recommended_size: float
+    target_price: float
+    stop_loss: float
+    take_profit: float
+    urgency: str  # LOW, MEDIUM, HIGH, CRITICAL
+    reasoning: str
+    expected_gain: float
+    max_risk: float
+    confidence: float
+    time_horizon: str  # SHORT, MEDIUM, LONG
+
+
+class AdvancedPositionMaximizer:
+    """Advanced position maximizer for optimal gain capitalization"""
+
+    def __init__(self, max_portfolio_value: float = 100000):
+        self.max_portfolio_value = max_portfolio_value
+        self.max_single_position = 0.15  # Max 15% per position
+        self.max_total_risk = 0.6  # Max 60% total risk exposure
+        self.profit_scaling_threshold = 0.05  # Start scaling at 5% profit
+        self.loss_scaling_threshold = -0.03  # Start reducing at 3% loss
+
+        # Position tracking
+        self.active_positions = {}
+        self.position_history = []
+        self.total_realized_gains = 0.0
+        self.total_unrealized_gains = 0.0
+
+        # Performance metrics
+        self.win_rate = 0.0
+        self.avg_gain = 0.0
+        self.avg_loss = 0.0
+        self.sharpe_ratio = 0.0
+        self.max_drawdown = 0.0
+
+    def update_position(
+        self, symbol: str, current_price: float, market_data: Dict
+    ) -> Position:
+        """Update existing position with current market data"""
+        if symbol not in self.active_positions:
+            logger.warning(f"⚠️ Position {symbol} not found in active positions")
+            return None
+
+        position = self.active_positions[symbol]
+
+        # Update price and PnL
+        position.current_price = current_price
+        position.current_timestamp = datetime.now()
+        position.unrealized_pnl = (
+            current_price - position.entry_price
+        ) * position.position_size
+        position.unrealized_pnl_pct = (current_price / position.entry_price - 1) * 100
+
+        # Update market data
+        position.market_cap = market_data.get("market_cap", position.market_cap)
+        position.volume_24h = market_data.get("volume_24h", position.volume_24h)
+        position.predicted_gain_7d = market_data.get(
+            "predicted_gain_7d", position.predicted_gain_7d
+        )
+        position.technical_score = market_data.get(
+            "technical_score", position.technical_score
+        )
+        position.momentum_score = market_data.get(
+            "momentum_score", position.momentum_score
+        )
+
+        # Update dynamic stop-loss and take-profit
+        self._update_dynamic_levels(position)
+
+        logger.info(
+            f"📊 Updated {symbol}: ${current_price:.4f} | PnL: {position.unrealized_pnl_pct:.2f}%"
+        )
+
+        return position
+
+    def analyze_position_optimization(
+        self, position: Position
+    ) -> PositionRecommendation:
+        """Analyze position for optimization opportunities"""
+
+        # Calculate time in position
+        time_in_position = position.current_timestamp - position.entry_timestamp
+        days_in_position = time_in_position.total_seconds() / 86400
+
+        # Analyze current performance
+        pnl_pct = position.unrealized_pnl_pct
+
+        # Decision logic for position optimization
+
+        # 1. PROFIT TAKING SCENARIOS
+        if pnl_pct > 20:  # Exceptional gains
+            return PositionRecommendation(
+                symbol=position.symbol,
+                action=PositionAction.TAKE_PROFIT,
+                recommended_size=position.position_size * 0.5,  # Take 50% profit
+                target_price=position.current_price,
+                stop_loss=position.current_price * 0.9,  # Trailing stop
+                take_profit=position.current_price * 1.1,
+                urgency="HIGH",
+                reasoning="Exceptional gains (>20%) - secure profits while letting remainder run",
+                expected_gain=pnl_pct * 0.5,
+                max_risk=10.0,
+                confidence=0.9,
+                time_horizon="SHORT",
+            )
+
+        elif pnl_pct > 10:  # Strong gains
+            if position.momentum_score > 7 and position.technical_score > 7:
+                # Strong momentum - scale out partially
+                return PositionRecommendation(
+                    symbol=position.symbol,
+                    action=PositionAction.SCALE_OUT,
+                    recommended_size=position.position_size * 0.3,  # Reduce by 30%
+                    target_price=position.current_price,
+                    stop_loss=position.current_price * 0.92,
+                    take_profit=position.current_price * 1.15,
+                    urgency="MEDIUM",
+                    reasoning="Strong gains with good momentum - partial profit taking",
+                    expected_gain=pnl_pct * 0.3,
+                    max_risk=8.0,
+                    confidence=0.8,
+                    time_horizon="MEDIUM",
+                )
+            else:
+                # Weakening momentum - take more profits
+                return PositionRecommendation(
+                    symbol=position.symbol,
+                    action=PositionAction.TAKE_PROFIT,
+                    recommended_size=position.position_size * 0.6,
+                    target_price=position.current_price,
+                    stop_loss=position.current_price * 0.88,
+                    take_profit=position.current_price * 1.08,
+                    urgency="HIGH",
+                    reasoning="Good gains but weakening momentum - secure majority of profits",
+                    expected_gain=pnl_pct * 0.6,
+                    max_risk=12.0,
+                    confidence=0.85,
+                    time_horizon="SHORT",
+                )
+
+        # 2. SCALING IN SCENARIOS (when price dips but fundamentals strong)
+        elif -5 < pnl_pct < 5:  # Near breakeven
+            if (
+                position.predicted_gain_7d > 10
+                and position.technical_score > 6
+                and position.confidence_level > 0.7
+            ):
+
+                # Good opportunity to scale in
+                additional_size = min(
+                    position.position_size * 0.5,  # Max 50% increase
+                    self.max_portfolio_value * 0.05,  # Max 5% of portfolio
+                )
+
+                return PositionRecommendation(
+                    symbol=position.symbol,
+                    action=PositionAction.SCALE_IN,
+                    recommended_size=additional_size,
+                    target_price=position.current_price,
+                    stop_loss=position.current_price * 0.9,
+                    take_profit=position.current_price * 1.2,
+                    urgency="MEDIUM",
+                    reasoning="Near breakeven with strong fundamentals - opportunity to scale in",
+                    expected_gain=position.predicted_gain_7d,
+                    max_risk=10.0,
+                    confidence=position.confidence_level,
+                    time_horizon="MEDIUM",
+                )
+
+        # 3. LOSS MITIGATION SCENARIOS
+        elif pnl_pct < -10:  # Significant losses
+            return PositionRecommendation(
+                symbol=position.symbol,
+                action=PositionAction.STOP_LOSS,
+                recommended_size=position.position_size,  # Close entire position
+                target_price=position.current_price,
+                stop_loss=position.current_price,
+                take_profit=0,
+                urgency="CRITICAL",
+                reasoning="Significant losses (>10%) - cut losses to preserve capital",
+                expected_gain=pnl_pct,
+                max_risk=abs(pnl_pct),
+                confidence=0.95,
+                time_horizon="IMMEDIATE",
+            )
+
+        elif pnl_pct < -5:  # Moderate losses
+            if position.technical_score < 4 or position.confidence_level < 0.4:
+                # Weak technicals - reduce position
+                return PositionRecommendation(
+                    symbol=position.symbol,
+                    action=PositionAction.SCALE_OUT,
+                    recommended_size=position.position_size * 0.5,  # Reduce by 50%
+                    target_price=position.current_price,
+                    stop_loss=position.current_price * 0.92,
+                    take_profit=position.current_price * 1.1,
+                    urgency="HIGH",
+                    reasoning="Moderate losses with weak technicals - reduce exposure",
+                    expected_gain=pnl_pct * 0.5,
+                    max_risk=abs(pnl_pct) * 0.5,
+                    confidence=0.7,
+                    time_horizon="SHORT",
+                )
+
+        # 4. HOLD SCENARIOS
+        # Default to hold with updated stop-loss
+        return PositionRecommendation(
+            symbol=position.symbol,
+            action=PositionAction.HOLD,
+            recommended_size=position.position_size,
+            target_price=position.take_profit_price,
+            stop_loss=position.stop_loss_price,
+            take_profit=position.take_profit_price,
+            urgency="LOW",
+            reasoning="Position within normal range - maintain with updated stops",
+            expected_gain=position.predicted_gain_7d,
+            max_risk=abs(pnl_pct) if pnl_pct < 0 else 5.0,
+            confidence=position.confidence_level,
+            time_horizon="MEDIUM",
+        )
+
+    def _update_dynamic_levels(self, position: Position):
+        """Update dynamic stop-loss and take-profit levels"""
+        current_price = position.current_price
+        pnl_pct = position.unrealized_pnl_pct
+
+        # Dynamic stop-loss (trailing stop)
+        if pnl_pct > 15:  # In significant profit
+            position.stop_loss_price = current_price * 0.9  # 10% trailing stop
+        elif pnl_pct > 5:  # In moderate profit
+            position.stop_loss_price = max(
+                position.entry_price * 1.02,  # Minimum 2% profit
+                current_price * 0.92,  # 8% trailing stop
+            )
+        else:  # At loss or small profit
+            position.stop_loss_price = position.entry_price * 0.92  # 8% from entry
+
+        # Dynamic take-profit
+        volatility_multiplier = 1 + (
+            position.momentum_score / 20
+        )  # Higher momentum = higher targets
+
+        if position.technical_score > 7:
+            position.take_profit_price = current_price * (1.15 * volatility_multiplier)
+        elif position.technical_score > 5:
+            position.take_profit_price = current_price * (1.1 * volatility_multiplier)
+        else:
+            position.take_profit_price = current_price * (1.08 * volatility_multiplier)
+
+    def calculate_optimal_position_size(
+        self,
+        symbol: str,
+        entry_price: float,
+        market_data: Dict,
+        available_capital: float,
+    ) -> float:
+        """Calculate optimal position size for new entries"""
+
+        risk_score = market_data.get("risk_score", 5.0)
+        confidence = market_data.get("confidence_level", 0.5)
+        predicted_gain = market_data.get("predicted_gain_7d", 5.0)
+        volatility = market_data.get("volatility", 0.1)
+
+        # Base position size calculation
+        risk_adjusted_confidence = confidence * (10 - risk_score) / 10
+
+        # Kelly Criterion inspired sizing
+        win_probability = confidence
+        avg_win = predicted_gain / 100
+        avg_loss = volatility * 2  # Estimate max loss as 2x volatility
+
+        kelly_fraction = (
+            win_probability * avg_win - (1 - win_probability) * avg_loss
+        ) / avg_win
+        kelly_fraction = max(0, min(kelly_fraction, 0.25))  # Cap at 25%
+
+        # Combine factors
+        position_fraction = (
+            kelly_fraction * 0.4  # Kelly criterion weight
+            + risk_adjusted_confidence * 0.3  # Confidence weight
+            + (predicted_gain / 50) * 0.2  # Expected return weight
+            + (1 - volatility) * 0.1  # Volatility weight
+        )
+
+        # Apply portfolio constraints
+        max_position_value = min(
+            available_capital * self.max_single_position,  # Portfolio limit
+            available_capital * position_fraction,  # Calculated optimal
+            market_data.get("max_position_size", float("inf")),  # Liquidity limit
+        )
+
+        position_size = max_position_value / entry_price
+
+        logger.info(
+            f"💰 Optimal position size for {symbol}: {position_size:.2f} tokens (${max_position_value:,.0f})"
+        )
+        logger.info(
+            f"   📊 Kelly Fraction: {kelly_fraction:.3f}, Risk Score: {risk_score:.1f}, Confidence: {confidence:.2f}"
+        )
+
+        return position_size
+
+    def add_new_position(
+        self, symbol: str, entry_price: float, position_size: float, market_data: Dict
+    ) -> Position:
+        """Add new position to tracking"""
+
+        position = Position(
+            symbol=symbol,
+            entry_price=entry_price,
+            current_price=entry_price,
+            position_size=position_size,
+            unrealized_pnl=0.0,
+            unrealized_pnl_pct=0.0,
+            entry_timestamp=datetime.now(),
+            current_timestamp=datetime.now(),
+            stop_loss_price=entry_price * 0.92,  # Initial 8% stop
+            take_profit_price=entry_price * 1.15,  # Initial 15% target
+            risk_score=market_data.get("risk_score", 5.0),
+            confidence_level=market_data.get("confidence_level", 0.5),
+            market_cap=market_data.get("market_cap", 0),
+            volume_24h=market_data.get("volume_24h", 0),
+            predicted_gain_7d=market_data.get("predicted_gain_7d", 5.0),
+            technical_score=market_data.get("technical_score", 5.0),
+            momentum_score=market_data.get("momentum_score", 5.0),
+        )
+
+        self.active_positions[symbol] = position
+
+        logger.info(
+            f"📈 Added new position: {symbol} @ ${entry_price:.4f} (Size: {position_size:.2f})"
+        )
+
+        return position
+
+    def close_position(
+        self, symbol: str, exit_price: float, reason: str = "Manual close"
+    ):
+        """Close position and record performance"""
+        if symbol not in self.active_positions:
+            logger.warning(f"⚠️ Cannot close position {symbol} - not found")
+            return
+
+        position = self.active_positions[symbol]
+
+        # Calculate final PnL
+        realized_pnl = (exit_price - position.entry_price) * position.position_size
+        realized_pnl_pct = (exit_price / position.entry_price - 1) * 100
+
+        # Update totals
+        self.total_realized_gains += realized_pnl
+
+        # Record in history
+        self.position_history.append(
+            {
+                "symbol": symbol,
+                "entry_price": position.entry_price,
+                "exit_price": exit_price,
+                "position_size": position.position_size,
+                "realized_pnl": realized_pnl,
+                "realized_pnl_pct": realized_pnl_pct,
+                "entry_timestamp": position.entry_timestamp,
+                "exit_timestamp": datetime.now(),
+                "reason": reason,
+                "days_held": (datetime.now() - position.entry_timestamp).total_seconds()
+                / 86400,
+            }
+        )
+
+        # Remove from active positions
+        del self.active_positions[symbol]
+
+        logger.info(
+            f"🏁 Closed {symbol}: {realized_pnl_pct:.2f}% (${realized_pnl:.2f}) - {reason}"
+        )
+
+    def get_portfolio_summary(self) -> Dict:
+        """Get comprehensive portfolio summary"""
+        total_unrealized = sum(
+            pos.unrealized_pnl for pos in self.active_positions.values()
+        )
+        total_position_value = sum(
+            pos.current_price * pos.position_size
+            for pos in self.active_positions.values()
+        )
+
+        # Calculate performance metrics
+        if self.position_history:
+            closed_trades = len(self.position_history)
+            winning_trades = len(
+                [t for t in self.position_history if t["realized_pnl"] > 0]
+            )
+            self.win_rate = winning_trades / closed_trades if closed_trades > 0 else 0
+
+            gains = [
+                t["realized_pnl"]
+                for t in self.position_history
+                if t["realized_pnl"] > 0
+            ]
+            losses = [
+                t["realized_pnl"]
+                for t in self.position_history
+                if t["realized_pnl"] < 0
+            ]
+
+            self.avg_gain = np.mean(gains) if gains else 0
+            self.avg_loss = np.mean(losses) if losses else 0
+
+        return {
+            "timestamp": datetime.now(),
+            "active_positions": len(self.active_positions),
+            "total_position_value": total_position_value,
+            "total_unrealized_pnl": total_unrealized,
+            "total_realized_pnl": self.total_realized_gains,
+            "total_pnl": total_unrealized + self.total_realized_gains,
+            "win_rate": self.win_rate,
+            "avg_gain": self.avg_gain,
+            "avg_loss": self.avg_loss,
+            "closed_trades": len(self.position_history),
+            "positions": {
+                symbol: {
+                    "current_price": pos.current_price,
+                    "unrealized_pnl": pos.unrealized_pnl,
+                    "unrealized_pnl_pct": pos.unrealized_pnl_pct,
+                    "days_held": (datetime.now() - pos.entry_timestamp).total_seconds()
+                    / 86400,
+                }
+                for symbol, pos in self.active_positions.items()
+            },
+        }
+
+
+class GainCapitalizationEngine:
+    """Engine to continuously capitalize on gain opportunities"""
+
+    def __init__(self, position_maximizer: AdvancedPositionMaximizer):
+        self.position_maximizer = position_maximizer
+        self.monitoring_active = False
+        self.recommendations_queue = []
+
+    async def start_monitoring(self):
+        """Start continuous position monitoring and optimization"""
+        self.monitoring_active = True
+        logger.info("🔄 Starting continuous gain capitalization monitoring...")
+
+        while self.monitoring_active:
+            try:
+                # Get current market data for all positions
+                for (
+                    symbol,
+                    position,
+                ) in self.position_maximizer.active_positions.items():
+                    # Simulate market data update (replace with real API calls)
+                    market_data = await self._get_real_time_data(symbol)
+
+                    # Update position
+                    updated_position = self.position_maximizer.update_position(
+                        symbol, market_data["current_price"], market_data
+                    )
+
+                    # Analyze for optimization
+                    recommendation = (
+                        self.position_maximizer.analyze_position_optimization(
+                            updated_position
+                        )
+                    )
+
+                    # Queue high-priority recommendations
+                    if recommendation.urgency in ["HIGH", "CRITICAL"]:
+                        self.recommendations_queue.append(recommendation)
+                        logger.info(
+                            f"🚨 {recommendation.urgency} recommendation for {symbol}: {recommendation.action.value}"
+                        )
+
+                # Brief pause between cycles
+                await asyncio.sleep(30)  # Check every 30 seconds
+
+            except Exception as e:
+                logger.error(f"❌ Error in monitoring cycle: {e}")
+                await asyncio.sleep(60)  # Wait longer on error
+
+    async def _get_real_time_data(self, symbol: str) -> Dict:
+        """Get real-time market data for symbol"""
+        # Simulate real-time data (replace with actual API calls)
+        base_price = 50.0  # Base price for simulation
+
+        return {
+            "current_price": base_price * (1 + np.random.uniform(-0.05, 0.05)),
+            "volume_24h": np.random.uniform(1000000, 10000000),
+            "market_cap": np.random.uniform(100000000, 1000000000),
+            "predicted_gain_7d": np.random.uniform(-10, 25),
+            "technical_score": np.random.uniform(3, 9),
+            "momentum_score": np.random.uniform(2, 8),
+            "risk_score": np.random.uniform(3, 8),
+            "confidence_level": np.random.uniform(0.4, 0.9),
+        }
+
+    def get_pending_recommendations(self) -> List[PositionRecommendation]:
+        """Get all pending recommendations"""
+        pending = self.recommendations_queue.copy()
+        self.recommendations_queue.clear()
+        return pending
+
+    def stop_monitoring(self):
+        """Stop continuous monitoring"""
+        self.monitoring_active = False
+        logger.info("⏹️ Stopped gain capitalization monitoring")
+
+
+async def main():
+    """Main function to demonstrate position maximization"""
+    logger.info("🚀 Starting Advanced Position Maximizer & Gain Capitalizer")
+
+    # Initialize system
+    maximizer = AdvancedPositionMaximizer(max_portfolio_value=100000)
+    engine = GainCapitalizationEngine(maximizer)
+
+    # Add some sample positions
+    sample_positions = [
+        {"symbol": "ETH", "entry_price": 2000.0, "size": 5.0},
+        {"symbol": "ADA", "entry_price": 0.50, "size": 4000.0},
+        {"symbol": "SOL", "entry_price": 25.0, "size": 40.0},
+    ]
+
+    for pos in sample_positions:
+        market_data = {
+            "risk_score": np.random.uniform(4, 7),
+            "confidence_level": np.random.uniform(0.6, 0.9),
+            "predicted_gain_7d": np.random.uniform(5, 20),
+            "technical_score": np.random.uniform(6, 9),
+            "momentum_score": np.random.uniform(5, 8),
+            "market_cap": np.random.uniform(10**9, 10**11),
+            "volume_24h": np.random.uniform(10**6, 10**8),
+        }
+
+        maximizer.add_new_position(
+            pos["symbol"], pos["entry_price"], pos["size"], market_data
+        )
+
+    try:
+        # Start monitoring
+        monitoring_task = asyncio.create_task(engine.start_monitoring())
+
+        # Run for demonstration (in production, this would run continuously)
+        for cycle in range(10):  # Run 10 monitoring cycles
+            await asyncio.sleep(5)  # Wait 5 seconds between cycles
+
+            # Check for recommendations
+            recommendations = engine.get_pending_recommendations()
+
+            if recommendations:
+                logger.info(
+                    f"📋 Cycle {cycle + 1}: {len(recommendations)} recommendations"
+                )
+                for rec in recommendations:
+                    logger.info(
+                        f"   {rec.symbol}: {rec.action.value} - {rec.reasoning}"
+                    )
+
+            # Show portfolio summary every few cycles
+            if cycle % 3 == 0:
+                summary = maximizer.get_portfolio_summary()
+                logger.info("📊 PORTFOLIO SUMMARY:")
+                logger.info(
+                    f"   💰 Total Value: ${summary['total_position_value']:,.0f}"
+                )
+                logger.info(
+                    f"   📈 Unrealized PnL: ${summary['total_unrealized_pnl']:,.2f}"
+                )
+                logger.info(f"   🎯 Win Rate: {summary['win_rate']*100:.1f}%")
+
+        # Stop monitoring
+        engine.stop_monitoring()
+
+    except KeyboardInterrupt:
+        logger.info("⏹️ Stopping position maximizer...")
+        engine.stop_monitoring()
+
+    # Final summary
+    final_summary = maximizer.get_portfolio_summary()
+    logger.info("🏁 FINAL PORTFOLIO SUMMARY:")
+    logger.info(
+        f"   💰 Total Portfolio Value: ${final_summary['total_position_value']:,.0f}"
+    )
+    logger.info(f"   📈 Total PnL: ${final_summary['total_pnl']:,.2f}")
+    logger.info(f"   📊 Active Positions: {final_summary['active_positions']}")
+    logger.info(f"   🎯 Win Rate: {final_summary['win_rate']*100:.1f}%")
+
+
+if __name__ == "__main__":
+    print("💎 ADVANCED POSITION MAXIMIZER & GAIN CAPITALIZER 💎")
+    print("=" * 80)
+    print(
+        "🎯 MISSION: Maximize gains on every position through intelligent optimization"
+    )
+    print(
+        "⚡ FEATURES: Dynamic stops, profit scaling, risk management, compound growth"
+    )
+    print("🔄 OPERATION: Continuous 24/7 position monitoring and optimization")
+    print("=" * 80)
+
+    asyncio.run(main())

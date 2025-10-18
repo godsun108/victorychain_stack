@@ -1,0 +1,605 @@
+#!/usr/bin/env python3
+
+"""
+🌟 ALL MICROCAP MOMENTUM SCANNER
+Comprehensive scanner for ALL microcap tokens with momentum potential
+Scans entire market for high-risk, high-reward opportunities beyond GALA
+"""
+
+import json
+import os
+import sys
+import time
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional, Any
+import uuid
+from dataclasses import dataclass, asdict
+
+# Add project root to path
+sys.path.append(os.path.dirname(__file__))
+
+try:
+    from binance.client import Client
+    from binance.exceptions import BinanceAPIException
+
+    binance_available = True
+except ImportError:
+    binance_available = False
+
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "config", ".env"))
+
+
+@dataclass
+class MicrocapOpportunity:
+    """Microcap opportunity with full market analysis"""
+
+    symbol: str
+    price: float
+    volume_24h: float
+    price_change_24h: float
+    momentum_score: float
+    microcap_rating: float
+    entry_confidence: str
+    risk_reward_ratio: float
+    ai_analysis: str
+    action_recommendation: str
+    position_percentage: float
+    stop_loss_price: float
+    target_levels: List[float]
+    catalyst_potential: str
+    sector_momentum: str
+    compared_to_gala: str
+
+
+class AllMicrocapScanner:
+    """Comprehensive microcap momentum scanner for entire market"""
+
+    def __init__(self):
+        print("🔍 Initializing ALL MICROCAP SCANNER...")
+        self.load_market_data()
+
+        # Comprehensive scanning parameters
+        self.scan_params = {
+            "max_price": 3.0,  # Upper price limit for microcaps
+            "min_price": 0.00001,  # Lower price limit
+            "min_volume": 100,  # Minimum daily volume
+            "min_momentum": 0.5,  # Minimum momentum score
+            "sectors_priority": [
+                "gaming",
+                "ai",
+                "metaverse",
+                "nft",
+                "meme",
+                "defi",
+                "layer1",
+            ],
+            "risk_level": "EXTREME_HIGH_REWARD",
+            "max_position_per_token": 25.0,
+            "stop_loss_threshold": -15.0,
+            "profit_targets": [30.0, 75.0, 200.0, 500.0, 1000.0],
+        }
+
+        # GALA comparison baseline (from previous analysis)
+        self.gala_baseline = {
+            "momentum_score": 8.5,
+            "volume_pattern": "strong",
+            "sector_strength": "gaming_leader",
+            "price_action": "bullish_setup",
+        }
+
+    def load_market_data(self):
+        """Load all available market data"""
+        self.all_tokens = []
+
+        # Load comprehensive token analysis
+        try:
+            with open("comprehensive_token_analysis_20250805_155947.json", "r") as f:
+                data = json.load(f)
+                self.all_tokens.extend(data)
+            print(f"✅ Loaded {len(data)} tokens from comprehensive analysis")
+        except FileNotFoundError:
+            print("⚠️ Comprehensive analysis file not found")
+
+        # Load Binance US tokens
+        try:
+            with open("all_binance_us_tokens.json", "r") as f:
+                binance_data = json.load(f)
+                # Merge with existing data
+                existing_symbols = {
+                    token.get("symbol", "") for token in self.all_tokens
+                }
+                for token in binance_data:
+                    if token.get("symbol", "") not in existing_symbols:
+                        self.all_tokens.append(token)
+            print(f"✅ Added Binance US tokens, total: {len(self.all_tokens)}")
+        except FileNotFoundError:
+            print("⚠️ Binance US tokens file not found")
+
+        # Load momentum data
+        try:
+            with open("all_token_momentum.json", "r") as f:
+                momentum_data = json.load(f)
+                self.momentum_data = momentum_data
+            print(f"✅ Loaded momentum data for enhanced analysis")
+        except FileNotFoundError:
+            self.momentum_data = {}
+            print("⚠️ Momentum data file not found")
+
+        print(f"📊 Total tokens available for scanning: {len(self.all_tokens)}")
+
+    def calculate_microcap_potential(self, token: Dict) -> float:
+        """Calculate comprehensive microcap potential score"""
+        potential = 0.0
+
+        price = token.get("price", 0.0)
+        volume = token.get("volume_24h_usdt", token.get("volume_24h", 0.0))
+        momentum = token.get("momentum_score", 0.0)
+        price_change = token.get("price_change_24h", 0.0)
+        sector = token.get("sector", "unknown").lower()
+
+        # Ultra-low price potential (35% weight)
+        if price <= 0.00001:
+            potential += 35.0  # Extreme potential
+        elif price <= 0.0001:
+            potential += 32.0
+        elif price <= 0.001:
+            potential += 28.0
+        elif price <= 0.01:
+            potential += 25.0
+        elif price <= 0.1:
+            potential += 20.0
+        elif price <= 0.5:
+            potential += 15.0
+        elif price <= 1.0:
+            potential += 12.0
+        elif price <= 2.0:
+            potential += 8.0
+        else:
+            potential += 5.0
+
+        # Volume activity (25% weight)
+        if volume >= 50000:
+            potential += 25.0
+        elif volume >= 20000:
+            potential += 22.0
+        elif volume >= 10000:
+            potential += 18.0
+        elif volume >= 5000:
+            potential += 15.0
+        elif volume >= 1000:
+            potential += 12.0
+        elif volume >= 500:
+            potential += 8.0
+        else:
+            potential += 4.0
+
+        # Momentum strength (20% weight)
+        if momentum >= 15.0:
+            potential += 20.0
+        elif momentum >= 10.0:
+            potential += 18.0
+        elif momentum >= 7.0:
+            potential += 15.0
+        elif momentum >= 5.0:
+            potential += 12.0
+        elif momentum >= 3.0:
+            potential += 10.0
+        elif momentum >= 1.0:
+            potential += 7.0
+        else:
+            potential += 3.0
+
+        # Sector potential (15% weight)
+        if any(s in sector for s in ["gaming", "ai", "metaverse"]):
+            potential += 15.0
+        elif any(s in sector for s in ["nft", "meme", "layer1"]):
+            potential += 12.0
+        elif any(s in sector for s in ["defi", "infrastructure"]):
+            potential += 10.0
+        else:
+            potential += 6.0
+
+        # Price action momentum (5% weight)
+        if price_change > 10.0:
+            potential += 5.0
+        elif price_change > 5.0:
+            potential += 4.0
+        elif price_change > 0:
+            potential += 3.0
+        elif price_change > -5.0:
+            potential += 2.0
+        else:
+            potential += 1.0
+
+        return min(potential, 100.0)
+
+    def compare_to_gala(self, token: Dict, potential: float) -> str:
+        """Compare token potential to GALA baseline"""
+        symbol = token["symbol"]
+        momentum = token.get("momentum_score", 0.0)
+        sector = token.get("sector", "unknown").lower()
+
+        if potential >= 80.0 and momentum >= 8.0:
+            return f"⭐ SUPERIOR TO GALA - {symbol} shows higher potential than GALA's gaming dominance"
+        elif potential >= 70.0 and momentum >= 6.0:
+            return f"🟰 COMPARABLE TO GALA - {symbol} has similar momentum patterns to GALA"
+        elif potential >= 60.0:
+            return f"🔄 DIFFERENT NICHE - {symbol} offers unique opportunity outside GALA's gaming focus"
+        elif "gaming" in sector:
+            return f"🎮 GAMING ALTERNATIVE - {symbol} competes in GALA's gaming sector space"
+        else:
+            return f"📊 ALTERNATIVE PLAY - {symbol} provides diversification from GALA concentration"
+
+    def generate_ai_analysis(
+        self, token: Dict, potential: float, gala_comparison: str
+    ) -> str:
+        """Generate comprehensive AI analysis"""
+        symbol = token["symbol"]
+        price = token["price"]
+        volume = token.get("volume_24h_usdt", token.get("volume_24h", 0.0))
+        momentum = token.get("momentum_score", 0.0)
+        sector = token.get("sector", "unknown")
+
+        if potential >= 85.0:
+            analysis = f"""
+🚀 EXTREME POTENTIAL MICROCAP: {symbol}
+
+OPPORTUNITY PROFILE:
+• Price: ${price:.8f} (Ultra-low entry)
+• Volume: ${volume:,.0f} (Active trading)
+• Momentum: {momentum:.1f}/10 (Strong signal)
+• Sector: {sector}
+
+GALA COMPARISON:
+{gala_comparison}
+
+RISK/REWARD ASSESSMENT:
+• Potential: EXTREME (1000%+ possible)
+• Risk Level: MAXIMUM (Total loss possible)
+• Timeline: Immediate to 6 months
+• Catalyst Dependency: HIGH
+
+STRATEGY:
+• ALL-IN consideration for highest conviction
+• 20-25% position for diversified approach
+• Strict -15% stop loss MANDATORY
+• Staged profit taking: 30%, 75%, 200%, 500%
+
+⚠️ EXTREME RISK: Only use capital you can lose 100%
+🎯 EXTREME REWARD: Potential 10x-100x if catalysts align
+            """
+        elif potential >= 75.0:
+            analysis = f"""
+⚡ HIGH POTENTIAL MICROCAP: {symbol}
+
+OPPORTUNITY ASSESSMENT:
+• Price: ${price:.8f}
+• Volume: ${volume:,.0f}
+• Momentum: {momentum:.1f}/10
+• Sector: {sector}
+
+COMPARED TO GALA:
+{gala_comparison}
+
+POTENTIAL FACTORS:
+• Strong microcap fundamentals
+• 5-50x potential with right catalysts
+• Better risk/reward than established tokens
+• Early position advantage
+
+RECOMMENDED APPROACH:
+• 10-20% allocation
+• -15% stop loss protection
+• Targets: +30%, +75%, +200%
+• Monitor for catalyst triggers
+
+RISK: HIGH | REWARD: VERY HIGH
+            """
+        elif potential >= 65.0:
+            analysis = f"""
+📈 MODERATE MICROCAP POTENTIAL: {symbol}
+
+CURRENT STATUS:
+• Price: ${price:.8f}
+• Volume: ${volume:,.0f}
+• Momentum: {momentum:.1f}/10
+• Sector: {sector}
+
+GALA RELATIONSHIP:
+{gala_comparison}
+
+OPPORTUNITY NOTES:
+• Solid microcap fundamentals
+• 2-10x potential possible
+• Lower risk than extreme plays
+• Good portfolio diversifier
+
+BALANCED APPROACH:
+• 5-15% position size
+• -12% stop loss
+• Conservative targets: +25%, +50%, +100%
+• Patience required for development
+
+RISK: MODERATE-HIGH | REWARD: HIGH
+            """
+        else:
+            analysis = f"""
+👀 WATCH LIST CANDIDATE: {symbol}
+
+MONITORING STATUS:
+• Price: ${price:.8f}
+• Limited momentum: {momentum:.1f}/10
+• Volume: ${volume:,.0f}
+
+COMPARED TO GALA:
+{gala_comparison}
+
+ASSESSMENT:
+• Needs catalyst development
+• Monitor for momentum increase
+• Potential future opportunity
+• Currently below action threshold
+
+RECOMMENDATION: WATCH & WAIT
+            """
+
+        return analysis
+
+    def scan_all_microcaps(self) -> List[MicrocapOpportunity]:
+        """Comprehensive scan of all microcap opportunities"""
+        print("🔍 Scanning ALL microcap tokens for opportunities...")
+        opportunities = []
+
+        for token in self.all_tokens:
+            try:
+                price = token.get("price", 0.0)
+                volume = token.get("volume_24h_usdt", token.get("volume_24h", 0.0))
+
+                # Microcap criteria check
+                if (
+                    price <= self.scan_params["max_price"]
+                    and price >= self.scan_params["min_price"]
+                    and volume >= self.scan_params["min_volume"]
+                ):
+
+                    potential = self.calculate_microcap_potential(token)
+
+                    if potential >= 50.0:  # Only high-potential opportunities
+                        gala_comparison = self.compare_to_gala(token, potential)
+                        ai_analysis = self.generate_ai_analysis(
+                            token, potential, gala_comparison
+                        )
+
+                        # Determine action and position size
+                        if potential >= 85.0:
+                            action = "IMMEDIATE BUY - EXTREME POTENTIAL"
+                            position_pct = 25.0
+                            confidence = "EXTREME_HIGH"
+                        elif potential >= 75.0:
+                            action = "STRONG BUY - HIGH POTENTIAL"
+                            position_pct = 20.0
+                            confidence = "HIGH"
+                        elif potential >= 65.0:
+                            action = "BUY - GOOD POTENTIAL"
+                            position_pct = 15.0
+                            confidence = "MODERATE_HIGH"
+                        else:
+                            action = "CONSIDER - WATCH CLOSELY"
+                            position_pct = 10.0
+                            confidence = "MODERATE"
+
+                        # Calculate targets and stop loss
+                        stop_loss = price * (
+                            1 + self.scan_params["stop_loss_threshold"] / 100
+                        )
+                        targets = [
+                            price * (1 + target / 100)
+                            for target in self.scan_params["profit_targets"]
+                        ]
+
+                        # Risk/reward calculation
+                        risk_reward = (
+                            (targets[0] - price) / (price - stop_loss)
+                            if price > stop_loss
+                            else 1.0
+                        )
+
+                        # Sector momentum assessment
+                        sector = token.get("sector", "unknown").lower()
+                        if any(s in sector for s in ["gaming", "ai", "metaverse"]):
+                            sector_momentum = "HOT_SECTOR"
+                        elif any(s in sector for s in ["nft", "meme"]):
+                            sector_momentum = "VOLATILE_SECTOR"
+                        else:
+                            sector_momentum = "NEUTRAL_SECTOR"
+
+                        # Catalyst potential
+                        if potential >= 80.0:
+                            catalyst = "IMMEDIATE_CATALYST_POTENTIAL"
+                        elif potential >= 70.0:
+                            catalyst = "STRONG_CATALYST_SETUP"
+                        else:
+                            catalyst = "DEVELOPING_CATALYST"
+
+                        opportunity = MicrocapOpportunity(
+                            symbol=token["symbol"],
+                            price=price,
+                            volume_24h=volume,
+                            price_change_24h=token.get("price_change_24h", 0.0),
+                            momentum_score=token.get("momentum_score", 0.0),
+                            microcap_rating=potential,
+                            entry_confidence=confidence,
+                            risk_reward_ratio=risk_reward,
+                            ai_analysis=ai_analysis,
+                            action_recommendation=action,
+                            position_percentage=position_pct,
+                            stop_loss_price=stop_loss,
+                            target_levels=targets,
+                            catalyst_potential=catalyst,
+                            sector_momentum=sector_momentum,
+                            compared_to_gala=gala_comparison,
+                        )
+
+                        opportunities.append(opportunity)
+
+            except Exception as e:
+                continue  # Skip problematic tokens
+
+        # Sort by microcap rating (highest potential first)
+        opportunities.sort(key=lambda x: x.microcap_rating, reverse=True)
+
+        print(f"✅ Found {len(opportunities)} high-potential microcap opportunities")
+        return opportunities
+
+    def execute_comprehensive_scan(self):
+        """Execute comprehensive microcap scan and generate report"""
+        timestamp = datetime.now()
+        print(f"\n🌟 ALL MICROCAP MOMENTUM SCANNER")
+        print("=" * 50)
+        print(f"Scan Time: {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Total Tokens Analyzed: {len(self.all_tokens)}")
+        print(f"Microcap Criteria: Price <= ${self.scan_params['max_price']}")
+
+        opportunities = self.scan_all_microcaps()
+
+        if not opportunities:
+            print("❌ No microcap opportunities found matching criteria")
+            return []
+
+        print(f"\n🎯 TOP MICROCAP OPPORTUNITIES")
+        print("-" * 50)
+
+        # Display top 10 opportunities
+        for i, opp in enumerate(opportunities[:10], 1):
+            print(f"\n#{i}. {opp.symbol}")
+            print(f"   💰 Price: ${opp.price:.8f}")
+            print(f"   🎯 Potential: {opp.microcap_rating:.1f}%")
+            print(f"   📊 Action: {opp.action_recommendation}")
+            print(f"   💪 Position: {opp.position_percentage:.0f}%")
+            print(f"   📈 Risk/Reward: {opp.risk_reward_ratio:.1f}:1")
+            print(f"   🔥 Catalyst: {opp.catalyst_potential}")
+            print(f"   🎮 vs GALA: {opp.compared_to_gala[:50]}...")
+
+        # Detailed analysis for top 5
+        print(f"\n📋 DETAILED AI ANALYSIS - TOP 5 OPPORTUNITIES")
+        print("=" * 60)
+
+        for i, opp in enumerate(opportunities[:5], 1):
+            print(f"\n{'-'*15} OPPORTUNITY #{i}: {opp.symbol} {'-'*15}")
+            print(opp.ai_analysis)
+
+            print(f"\n📊 EXECUTION PLAN:")
+            print(f"• Action: {opp.action_recommendation}")
+            print(f"• Position Size: {opp.position_percentage:.0f}%")
+            print(f"• Entry Price: ${opp.price:.8f}")
+            print(f"• Stop Loss: ${opp.stop_loss_price:.8f} (-15%)")
+            print(f"• Target 1: ${opp.target_levels[0]:.8f} (+30%)")
+            print(f"• Target 2: ${opp.target_levels[1]:.8f} (+75%)")
+            print(f"• Target 3: ${opp.target_levels[2]:.8f} (+200%)")
+            print(f"• Sector: {opp.sector_momentum}")
+
+        # Summary statistics
+        extreme_potential = len([o for o in opportunities if o.microcap_rating >= 85])
+        high_potential = len([o for o in opportunities if o.microcap_rating >= 75])
+        immediate_buys = len(
+            [o for o in opportunities if "IMMEDIATE" in o.action_recommendation]
+        )
+
+        print(f"\n📊 SCAN SUMMARY")
+        print("=" * 40)
+        print(f"🎯 Total Opportunities: {len(opportunities)}")
+        print(f"🚀 Extreme Potential (85%+): {extreme_potential}")
+        print(f"⚡ High Potential (75%+): {high_potential}")
+        print(f"🔥 Immediate Buy Signals: {immediate_buys}")
+
+        # Portfolio allocation suggestions
+        print(f"\n💼 PORTFOLIO ALLOCATION SUGGESTIONS")
+        print("-" * 40)
+        total_allocation = 0
+        for i, opp in enumerate(opportunities[:5], 1):
+            print(f"{i}. {opp.symbol}: {opp.position_percentage:.0f}% allocation")
+            total_allocation += opp.position_percentage
+        print(f"Total Suggested Allocation: {total_allocation:.0f}%")
+
+        if total_allocation > 100:
+            print("⚠️ OVER-ALLOCATION: Reduce position sizes or select fewer tokens")
+
+        # Save comprehensive report
+        report = {
+            "timestamp": timestamp.isoformat(),
+            "scan_type": "ALL_MICROCAP_MOMENTUM_SCAN",
+            "total_tokens_analyzed": len(self.all_tokens),
+            "opportunities_found": len(opportunities),
+            "extreme_potential_count": extreme_potential,
+            "high_potential_count": high_potential,
+            "immediate_buy_count": immediate_buys,
+            "scan_parameters": self.scan_params,
+            "opportunities": [asdict(opp) for opp in opportunities],
+            "portfolio_allocation": total_allocation,
+            "risk_warning": "EXTREME RISK: Microcap investments can result in 100% loss",
+        }
+
+        filename = f"all_microcap_scan_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
+        with open(filename, "w") as f:
+            json.dump(report, f, indent=2, default=str)
+
+        print(f"\n💾 Comprehensive scan report saved: {filename}")
+
+        # Final warnings and recommendations
+        print(f"\n⚠️ CRITICAL RISK WARNINGS")
+        print("=" * 40)
+        print("• Microcap tokens are EXTREMELY volatile")
+        print("• Total loss of investment is possible")
+        print("• Only invest risk capital you can afford to lose")
+        print("• Set stop losses and stick to them")
+        print("• Take profits at targets - don't get greedy")
+        print("• Monitor positions continuously")
+        print("• Diversify across multiple opportunities")
+
+        return opportunities
+
+
+def main():
+    """Main execution function"""
+    print("🌟 ALL MICROCAP MOMENTUM SCANNER")
+    print("=" * 40)
+    print("Comprehensive scanning beyond GALA for ALL microcap opportunities")
+    print("High-risk, high-reward market-wide analysis")
+
+    scanner = AllMicrocapScanner()
+    opportunities = scanner.execute_comprehensive_scan()
+
+    if opportunities:
+        print(f"\n⚡ IMMEDIATE ACTION SUMMARY:")
+        immediate_opportunities = [
+            o for o in opportunities if "IMMEDIATE" in o.action_recommendation
+        ]
+
+        for opp in immediate_opportunities[:3]:
+            print(
+                f"• {opp.symbol}: {opp.action_recommendation} - {opp.position_percentage:.0f}% position"
+            )
+
+        print(f"\n🎯 BEYOND GALA INSIGHTS:")
+        gaming_alternatives = [
+            o
+            for o in opportunities
+            if "gaming" in o.sector_momentum.lower() or "GALA" in o.compared_to_gala
+        ]
+        non_gaming = [o for o in opportunities if o not in gaming_alternatives]
+
+        print(f"• Gaming Sector Alternatives: {len(gaming_alternatives)} opportunities")
+        print(f"• Non-Gaming Diversification: {len(non_gaming)} opportunities")
+        print(f"• Total Market Coverage: {len(opportunities)} microcap opportunities")
+
+    else:
+        print("❌ No immediate microcap opportunities found")
+
+    print("\n✅ All microcap momentum scan completed!")
+
+
+if __name__ == "__main__":
+    main()

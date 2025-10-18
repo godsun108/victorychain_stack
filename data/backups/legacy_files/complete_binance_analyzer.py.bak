@@ -1,0 +1,613 @@
+#!/usr/bin/env python3
+"""
+Complete Binance US Token Analyzer
+Analyze ALL available tokens on Binance US with comprehensive data
+"""
+
+import os
+import json
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from dotenv import load_dotenv
+
+class CompleteBinanceAnalyzer:
+    def __init__(self):
+        load_dotenv()
+        
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv('BINANCEUS_KEY'),
+            api_secret=os.getenv('BINANCEUS_SECRET'),
+            tld='us'
+        )
+        
+        print("🌟 Complete Binance US Token Analyzer initialized")
+        print("📊 Preparing to analyze ALL available tokens...")
+    
+    def get_all_trading_symbols(self) -> List[Dict]:
+        """Get all trading symbols from Binance US"""
+        
+        print("🔍 Getting all trading symbols from Binance US...")
+        
+        try:
+            exchange_info = self.client.get_exchange_info()
+            symbols = exchange_info['symbols']
+            
+            # Filter for active trading symbols
+            active_symbols = []
+            for symbol in symbols:
+                if symbol['status'] == 'TRADING':
+                    active_symbols.append({
+                        'symbol': symbol['symbol'],
+                        'baseAsset': symbol['baseAsset'],
+                        'quoteAsset': symbol['quoteAsset'],
+                        'status': symbol['status'],
+                        'permissions': symbol['permissions'],
+                        'filters': symbol['filters']
+                    })
+            
+            print(f"✅ Found {len(active_symbols)} active trading symbols")
+            
+            # Categorize by quote asset
+            categories = {}
+            for symbol in active_symbols:
+                quote = symbol['quoteAsset']
+                if quote not in categories:
+                    categories[quote] = []
+                categories[quote].append(symbol)
+            
+            print("📊 Categories found:")
+            for quote, syms in categories.items():
+                print(f"   {quote}: {len(syms)} pairs")
+            
+            return active_symbols
+            
+        except Exception as e:
+            print(f"❌ Failed to get exchange info: {e}")
+            return []
+    
+    def get_all_24hr_tickers(self) -> Dict:
+        """Get 24hr ticker data for all symbols"""
+        
+        print("📈 Getting 24hr ticker data for all symbols...")
+        
+        try:
+            tickers = self.client.get_ticker()
+            
+            ticker_dict = {}
+            for ticker in tickers:
+                ticker_dict[ticker['symbol']] = {
+                    'price': float(ticker['lastPrice']),
+                    'change': float(ticker['priceChange']),
+                    'changePercent': float(ticker['priceChangePercent']),
+                    'high': float(ticker['highPrice']),
+                    'low': float(ticker['lowPrice']),
+                    'volume': float(ticker['volume']),
+                    'quoteVolume': float(ticker['quoteVolume']),
+                    'openPrice': float(ticker['openPrice']),
+                    'count': int(ticker['count'])
+                }
+            
+            print(f"✅ Got ticker data for {len(ticker_dict)} symbols")
+            return ticker_dict
+            
+        except Exception as e:
+            print(f"❌ Failed to get ticker data: {e}")
+            return {}
+    
+    def analyze_token_metrics(self, symbols: List[Dict], tickers: Dict) -> List[Dict]:
+        """Analyze comprehensive metrics for all tokens"""
+        
+        print(f"🔬 Analyzing comprehensive metrics for {len(symbols)} tokens...")
+        
+        analyzed_tokens = []
+        
+        for i, symbol_info in enumerate(symbols):
+            try:
+                symbol = symbol_info['symbol']
+                
+                # Progress indicator
+                if (i + 1) % 50 == 0:
+                    print(f"📊 Processed {i + 1}/{len(symbols)} tokens...")
+                
+                # Get ticker data
+                ticker = tickers.get(symbol, {})
+                if not ticker:
+                    continue
+                
+                # Basic metrics
+                current_price = ticker['price']
+                change_24h = ticker['changePercent']
+                volume_24h = ticker['quoteVolume']
+                trade_count = ticker['count']
+                
+                # Calculate additional metrics
+                price_range_24h = ticker['high'] - ticker['low']
+                price_range_percent = (price_range_24h / ticker['low']) * 100 if ticker['low'] > 0 else 0
+                
+                avg_trade_size = volume_24h / trade_count if trade_count > 0 else 0
+                
+                # Volatility estimation
+                volatility = price_range_percent
+                
+                # Volume strength (relative to price)
+                volume_price_ratio = volume_24h / current_price if current_price > 0 else 0
+                
+                # Momentum indicators
+                momentum_score = change_24h  # Simple momentum based on 24h change
+                
+                # Liquidity estimation (based on trade count and volume)
+                liquidity_score = np.log10(trade_count + 1) * np.log10(volume_24h + 1)
+                
+                # Market cap estimation (if we had supply data, we'd use it)
+                # For now, use volume as a proxy for market activity
+                activity_score = np.log10(volume_24h + 1)
+                
+                # Risk score (higher volatility = higher risk)
+                risk_score = min(volatility / 20, 5)  # Cap at 5
+                
+                # Opportunity score (combination of momentum, volume, and low risk)
+                opportunity_score = (
+                    (momentum_score / 10) * 0.4 +  # Momentum component
+                    (activity_score / 5) * 0.3 +   # Activity component
+                    (max(0, 5 - risk_score) / 5) * 0.3  # Low risk bonus
+                )
+                
+                analyzed_tokens.append({
+                    'symbol': symbol,
+                    'baseAsset': symbol_info['baseAsset'],
+                    'quoteAsset': symbol_info['quoteAsset'],
+                    'price_data': {
+                        'current_price': current_price,
+                        'change_24h': change_24h,
+                        'high_24h': ticker['high'],
+                        'low_24h': ticker['low'],
+                        'open_price': ticker['openPrice'],
+                        'price_range_24h': price_range_24h,
+                        'price_range_percent': price_range_percent,
+                    },
+                    'volume_data': {
+                        'volume_24h': ticker['volume'],
+                        'quote_volume_24h': volume_24h,
+                        'trade_count_24h': trade_count,
+                        'avg_trade_size': avg_trade_size,
+                        'volume_price_ratio': volume_price_ratio,
+                    },
+                    'analysis_metrics': {
+                        'volatility': volatility,
+                        'momentum_score': momentum_score,
+                        'liquidity_score': liquidity_score,
+                        'activity_score': activity_score,
+                        'risk_score': risk_score,
+                        'opportunity_score': opportunity_score,
+                    },
+                    'classification': self.classify_token(
+                        change_24h, volatility, volume_24h, current_price
+                    )
+                })
+                
+                # Rate limiting
+                if i % 10 == 0:
+                    time.sleep(0.1)
+                
+            except Exception as e:
+                print(f"❌ Error analyzing {symbol}: {e}")
+                continue
+        
+        print(f"✅ Successfully analyzed {len(analyzed_tokens)} tokens")
+        return analyzed_tokens
+    
+    def classify_token(self, change_24h: float, volatility: float, volume: float, price: float) -> Dict:
+        """Classify token based on various criteria"""
+        
+        # Performance classification
+        if change_24h > 10:
+            performance = "STRONG_GAINER"
+        elif change_24h > 5:
+            performance = "GAINER"
+        elif change_24h > 0:
+            performance = "POSITIVE"
+        elif change_24h > -5:
+            performance = "NEGATIVE"
+        elif change_24h > -10:
+            performance = "LOSER"
+        else:
+            performance = "STRONG_LOSER"
+        
+        # Volatility classification
+        if volatility > 20:
+            vol_class = "HIGH_VOLATILITY"
+        elif volatility > 10:
+            vol_class = "MEDIUM_VOLATILITY"
+        else:
+            vol_class = "LOW_VOLATILITY"
+        
+        # Volume classification
+        if volume > 10000000:  # 10M+
+            volume_class = "HIGH_VOLUME"
+        elif volume > 1000000:  # 1M+
+            volume_class = "MEDIUM_VOLUME"
+        else:
+            volume_class = "LOW_VOLUME"
+        
+        # Price classification
+        if price > 100:
+            price_class = "HIGH_PRICE"
+        elif price > 10:
+            price_class = "MEDIUM_PRICE"
+        elif price > 1:
+            price_class = "LOW_PRICE"
+        else:
+            price_class = "VERY_LOW_PRICE"  # Under $1
+        
+        # Overall category
+        if performance in ["STRONG_GAINER", "GAINER"] and volume_class == "HIGH_VOLUME":
+            category = "HOT_MOMENTUM"
+        elif performance in ["STRONG_LOSER", "LOSER"] and volume_class == "HIGH_VOLUME":
+            category = "HEAVY_SELLING"
+        elif vol_class == "HIGH_VOLATILITY" and volume_class in ["HIGH_VOLUME", "MEDIUM_VOLUME"]:
+            category = "HIGH_ACTIVITY"
+        elif vol_class == "LOW_VOLATILITY" and volume_class == "LOW_VOLUME":
+            category = "QUIET"
+        else:
+            category = "NORMAL"
+        
+        return {
+            'performance': performance,
+            'volatility': vol_class,
+            'volume': volume_class,
+            'price_range': price_class,
+            'category': category
+        }
+    
+    def generate_comprehensive_rankings(self, tokens: List[Dict]) -> Dict:
+        """Generate comprehensive rankings for all tokens"""
+        
+        print("🏆 Generating comprehensive rankings...")
+        
+        rankings = {
+            'by_performance': sorted(tokens, key=lambda x: x['price_data']['change_24h'], reverse=True),
+            'by_volume': sorted(tokens, key=lambda x: x['volume_data']['quote_volume_24h'], reverse=True),
+            'by_volatility': sorted(tokens, key=lambda x: x['analysis_metrics']['volatility'], reverse=True),
+            'by_opportunity': sorted(tokens, key=lambda x: x['analysis_metrics']['opportunity_score'], reverse=True),
+            'by_activity': sorted(tokens, key=lambda x: x['analysis_metrics']['activity_score'], reverse=True),
+            'by_momentum': sorted(tokens, key=lambda x: x['analysis_metrics']['momentum_score'], reverse=True),
+            'by_liquidity': sorted(tokens, key=lambda x: x['analysis_metrics']['liquidity_score'], reverse=True),
+        }
+        
+        return rankings
+    
+    def generate_category_analysis(self, tokens: List[Dict]) -> Dict:
+        """Generate analysis by categories"""
+        
+        print("📊 Generating category analysis...")
+        
+        # Group by quote asset
+        by_quote = {}
+        for token in tokens:
+            quote = token['quoteAsset']
+            if quote not in by_quote:
+                by_quote[quote] = []
+            by_quote[quote].append(token)
+        
+        # Group by classification
+        by_category = {}
+        for token in tokens:
+            category = token['classification']['category']
+            if category not in by_category:
+                by_category[category] = []
+            by_category[category].append(token)
+        
+        # Performance statistics by quote asset
+        quote_stats = {}
+        for quote, quote_tokens in by_quote.items():
+            if len(quote_tokens) > 0:
+                changes = [t['price_data']['change_24h'] for t in quote_tokens]
+                volumes = [t['volume_data']['quote_volume_24h'] for t in quote_tokens]
+                
+                quote_stats[quote] = {
+                    'count': len(quote_tokens),
+                    'avg_change': np.mean(changes),
+                    'median_change': np.median(changes),
+                    'total_volume': sum(volumes),
+                    'avg_volume': np.mean(volumes),
+                    'gainers': len([c for c in changes if c > 0]),
+                    'losers': len([c for c in changes if c < 0]),
+                }
+        
+        return {
+            'by_quote_asset': by_quote,
+            'by_category': by_category,
+            'quote_statistics': quote_stats,
+            'category_counts': {cat: len(tokens) for cat, tokens in by_category.items()}
+        }
+    
+    def find_special_opportunities(self, tokens: List[Dict]) -> Dict:
+        """Find special trading opportunities"""
+        
+        print("🎯 Finding special trading opportunities...")
+        
+        opportunities = {
+            'momentum_breakouts': [],
+            'volume_spikes': [],
+            'volatility_plays': [],
+            'undervalued_gems': [],
+            'high_activity_low_price': [],
+            'strong_performers': [],
+            'recovery_candidates': [],
+        }
+        
+        for token in tokens:
+            symbol = token['symbol']
+            price_data = token['price_data']
+            volume_data = token['volume_data']
+            metrics = token['analysis_metrics']
+            classification = token['classification']
+            
+            # Momentum breakouts (high positive change with high volume)
+            if (price_data['change_24h'] > 5 and 
+                volume_data['quote_volume_24h'] > 1000000 and
+                metrics['volatility'] > 10):
+                opportunities['momentum_breakouts'].append({
+                    'symbol': symbol,
+                    'change': price_data['change_24h'],
+                    'volume': volume_data['quote_volume_24h'],
+                    'score': metrics['opportunity_score']
+                })
+            
+            # Volume spikes (very high volume relative to typical patterns)
+            if (volume_data['trade_count_24h'] > 1000 and
+                volume_data['quote_volume_24h'] > 5000000):
+                opportunities['volume_spikes'].append({
+                    'symbol': symbol,
+                    'volume': volume_data['quote_volume_24h'],
+                    'trades': volume_data['trade_count_24h'],
+                    'avg_size': volume_data['avg_trade_size']
+                })
+            
+            # Volatility plays (high volatility with decent volume)
+            if (metrics['volatility'] > 15 and
+                volume_data['quote_volume_24h'] > 500000):
+                opportunities['volatility_plays'].append({
+                    'symbol': symbol,
+                    'volatility': metrics['volatility'],
+                    'volume': volume_data['quote_volume_24h'],
+                    'range': price_data['price_range_percent']
+                })
+            
+            # Undervalued gems (low price, positive momentum, decent volume)
+            if (price_data['current_price'] < 1 and
+                price_data['change_24h'] > 0 and
+                volume_data['quote_volume_24h'] > 100000):
+                opportunities['undervalued_gems'].append({
+                    'symbol': symbol,
+                    'price': price_data['current_price'],
+                    'change': price_data['change_24h'],
+                    'volume': volume_data['quote_volume_24h']
+                })
+            
+            # High activity low price (under $10, high volume)
+            if (price_data['current_price'] < 10 and
+                volume_data['quote_volume_24h'] > 2000000):
+                opportunities['high_activity_low_price'].append({
+                    'symbol': symbol,
+                    'price': price_data['current_price'],
+                    'volume': volume_data['quote_volume_24h'],
+                    'activity': metrics['activity_score']
+                })
+            
+            # Strong performers (high positive change, sustained volume)
+            if (price_data['change_24h'] > 8 and
+                volume_data['quote_volume_24h'] > 1000000):
+                opportunities['strong_performers'].append({
+                    'symbol': symbol,
+                    'change': price_data['change_24h'],
+                    'volume': volume_data['quote_volume_24h'],
+                    'momentum': metrics['momentum_score']
+                })
+            
+            # Recovery candidates (oversold but with increasing volume)
+            if (price_data['change_24h'] < -5 and
+                price_data['change_24h'] > -15 and  # Not too oversold
+                volume_data['quote_volume_24h'] > 500000):
+                opportunities['recovery_candidates'].append({
+                    'symbol': symbol,
+                    'change': price_data['change_24h'],
+                    'volume': volume_data['quote_volume_24h'],
+                    'price': price_data['current_price']
+                })
+        
+        # Sort each opportunity list
+        for key in opportunities:
+            if key == 'momentum_breakouts':
+                opportunities[key].sort(key=lambda x: x['score'], reverse=True)
+            elif key == 'volume_spikes':
+                opportunities[key].sort(key=lambda x: x['volume'], reverse=True)
+            elif key == 'strong_performers':
+                opportunities[key].sort(key=lambda x: x['change'], reverse=True)
+            else:
+                opportunities[key].sort(key=lambda x: x.get('volume', 0), reverse=True)
+        
+        print(f"🎯 Found opportunities:")
+        for category, items in opportunities.items():
+            print(f"   {category}: {len(items)} items")
+        
+        return opportunities
+    
+    def run_complete_analysis(self) -> Dict:
+        """Run complete analysis of all Binance US tokens"""
+        
+        print("🚀 Starting Complete Binance US Token Analysis...")
+        
+        start_time = time.time()
+        
+        # Get all trading symbols
+        symbols = self.get_all_trading_symbols()
+        if not symbols:
+            print("❌ No symbols found")
+            return {}
+        
+        # Get 24hr ticker data
+        tickers = self.get_all_24hr_tickers()
+        if not tickers:
+            print("❌ No ticker data found")
+            return {}
+        
+        # Analyze token metrics
+        analyzed_tokens = self.analyze_token_metrics(symbols, tickers)
+        if not analyzed_tokens:
+            print("❌ No tokens analyzed")
+            return {}
+        
+        # Generate rankings
+        rankings = self.generate_comprehensive_rankings(analyzed_tokens)
+        
+        # Generate category analysis
+        category_analysis = self.generate_category_analysis(analyzed_tokens)
+        
+        # Find special opportunities
+        opportunities = self.find_special_opportunities(analyzed_tokens)
+        
+        # Compile results
+        results = {
+            'analysis_timestamp': datetime.now().isoformat(),
+            'analysis_duration_seconds': time.time() - start_time,
+            'total_symbols_analyzed': len(analyzed_tokens),
+            'total_symbols_available': len(symbols),
+            'tokens': analyzed_tokens,
+            'rankings': rankings,
+            'category_analysis': category_analysis,
+            'special_opportunities': opportunities,
+            'market_summary': self.generate_market_summary(analyzed_tokens, category_analysis)
+        }
+        
+        # Save results
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'complete_binance_analysis_{timestamp}.json'
+        
+        with open(filename, 'w') as f:
+            json.dump(results, f, indent=2, default=str)
+        
+        print(f"✅ Complete Binance US Analysis completed!")
+        print(f"📁 Results saved to: {filename}")
+        print(f"📊 Analyzed {len(analyzed_tokens)} tokens")
+        print(f"⏱️  Duration: {time.time() - start_time:.1f} seconds")
+        
+        return results
+    
+    def generate_market_summary(self, tokens: List[Dict], category_analysis: Dict) -> Dict:
+        """Generate overall market summary"""
+        
+        # Overall market statistics
+        changes = [t['price_data']['change_24h'] for t in tokens]
+        volumes = [t['volume_data']['quote_volume_24h'] for t in tokens]
+        
+        gainers = len([c for c in changes if c > 0])
+        losers = len([c for c in changes if c < 0])
+        unchanged = len(changes) - gainers - losers
+        
+        return {
+            'total_tokens': len(tokens),
+            'market_sentiment': {
+                'gainers': gainers,
+                'losers': losers,
+                'unchanged': unchanged,
+                'gainer_ratio': gainers / len(changes) if changes else 0,
+            },
+            'market_metrics': {
+                'avg_change': np.mean(changes),
+                'median_change': np.median(changes),
+                'total_volume': sum(volumes),
+                'avg_volume': np.mean(volumes),
+                'max_gainer': max(changes) if changes else 0,
+                'max_loser': min(changes) if changes else 0,
+            },
+            'quote_asset_breakdown': category_analysis.get('quote_statistics', {}),
+            'top_categories': category_analysis.get('category_counts', {}),
+        }
+    
+    def print_analysis_summary(self, results: Dict):
+        """Print comprehensive analysis summary"""
+        
+        print("\n" + "="*80)
+        print("🌟 COMPLETE BINANCE US TOKEN ANALYSIS SUMMARY")
+        print("="*80)
+        
+        summary = results.get('market_summary', {})
+        
+        # Market overview
+        print(f"\n📊 MARKET OVERVIEW:")
+        print(f"   Total Tokens Analyzed: {summary.get('total_tokens', 0):,}")
+        
+        sentiment = summary.get('market_sentiment', {})
+        print(f"   Gainers: {sentiment.get('gainers', 0):,} ({sentiment.get('gainer_ratio', 0):.1%})")
+        print(f"   Losers: {sentiment.get('losers', 0):,}")
+        print(f"   Unchanged: {sentiment.get('unchanged', 0):,}")
+        
+        metrics = summary.get('market_metrics', {})
+        print(f"   Average Change: {metrics.get('avg_change', 0):+.2f}%")
+        print(f"   Total Volume: ${metrics.get('total_volume', 0):,.0f}")
+        print(f"   Top Gainer: {metrics.get('max_gainer', 0):+.2f}%")
+        print(f"   Top Loser: {metrics.get('max_loser', 0):+.2f}%")
+        
+        # Top performers
+        rankings = results.get('rankings', {})
+        top_gainers = rankings.get('by_performance', [])[:10]
+        
+        if top_gainers:
+            print(f"\n🚀 TOP GAINERS:")
+            for i, token in enumerate(top_gainers, 1):
+                print(f"   {i:2d}. {token['symbol']:15} {token['price_data']['change_24h']:+7.2f}% "
+                      f"${token['price_data']['current_price']:>10.4f} "
+                      f"Vol: ${token['volume_data']['quote_volume_24h']:>12,.0f}")
+        
+        # Top by volume
+        top_volume = rankings.get('by_volume', [])[:10]
+        if top_volume:
+            print(f"\n📈 TOP BY VOLUME:")
+            for i, token in enumerate(top_volume, 1):
+                print(f"   {i:2d}. {token['symbol']:15} ${token['volume_data']['quote_volume_24h']:>15,.0f} "
+                      f"{token['price_data']['change_24h']:+7.2f}% "
+                      f"${token['price_data']['current_price']:>8.4f}")
+        
+        # Special opportunities
+        opportunities = results.get('special_opportunities', {})
+        print(f"\n🎯 SPECIAL OPPORTUNITIES:")
+        for category, items in opportunities.items():
+            if items:
+                print(f"   {category.replace('_', ' ').title()}: {len(items)} tokens")
+                if category == 'momentum_breakouts' and items:
+                    top_item = items[0]
+                    print(f"      Top: {top_item['symbol']} ({top_item['change']:+.2f}%)")
+                elif category == 'strong_performers' and items:
+                    top_item = items[0]
+                    print(f"      Top: {top_item['symbol']} ({top_item['change']:+.2f}%)")
+        
+        # Quote asset breakdown
+        quote_stats = summary.get('quote_asset_breakdown', {})
+        if quote_stats:
+            print(f"\n💰 BY QUOTE ASSET:")
+            for quote, stats in sorted(quote_stats.items(), key=lambda x: x[1]['total_volume'], reverse=True):
+                print(f"   {quote:>6}: {stats['count']:>3} pairs, "
+                      f"Avg: {stats['avg_change']:+6.2f}%, "
+                      f"Vol: ${stats['total_volume']:>12,.0f}")
+
+def main():
+    """Main execution function"""
+    
+    analyzer = CompleteBinanceAnalyzer()
+    
+    # Run complete analysis
+    results = analyzer.run_complete_analysis()
+    
+    if results:
+        analyzer.print_analysis_summary(results)
+    
+    print("\n🎉 Complete Binance US analysis finished!")
+
+if __name__ == "__main__":
+    main()

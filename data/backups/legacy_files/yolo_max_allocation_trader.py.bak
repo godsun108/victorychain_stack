@@ -1,0 +1,422 @@
+#!/usr/bin/env python3
+"""
+YOLO Maximum Allocation Trader
+Goes ALL-IN on the most unexpected/unpopular token
+WARNING: EXTREMELY HIGH RISK - Only for those who want maximum risk/reward
+"""
+
+import os
+import json
+import time
+import logging
+from datetime import datetime
+from typing import Dict, List, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from binance.exceptions import BinanceAPIException
+from dotenv import load_dotenv
+
+class YOLOMaxAllocationTrader:
+    def __init__(self):
+        load_dotenv()
+        
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv('BINANCEUS_KEY'),
+            api_secret=os.getenv('BINANCEUS_SECRET'),
+            tld='us'
+        )
+        
+        # Setup logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(f'yolo_trader_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+                logging.StreamHandler()
+            ]
+        )
+        self.logger = logging.getLogger(__name__)
+        
+        # YOLO Configuration - MAXIMUM RISK
+        self.max_allocation_pct = 0.95  # Use 95% of USDT balance
+        self.min_volume_usd = 300       # Ultra low volume only
+        self.max_volume_usd = 2000      # Avoid anything too popular
+        
+        self.logger.info("🎯 YOLO Maximum Allocation Trader initialized")
+        self.logger.info("⚠️  WARNING: EXTREME RISK MODE - ALL ALLOCATION TO ONE TOKEN")
+
+    def get_portfolio_balance(self) -> Dict:
+        """Get current USDT balance"""
+        try:
+            account = self.client.get_account()
+            
+            for balance in account['balances']:
+                if balance['asset'] == 'USDT':
+                    free_balance = float(balance['free'])
+                    self.logger.info(f"💰 USDT Balance: ${free_balance:.2f}")
+                    return {
+                        'usdt_balance': free_balance,
+                        'available_to_trade': free_balance * self.max_allocation_pct
+                    }
+            
+            return {'usdt_balance': 0, 'available_to_trade': 0}
+            
+        except Exception as e:
+            self.logger.error(f"Error getting balance: {e}")
+            return {'usdt_balance': 0, 'available_to_trade': 0}
+
+    def find_most_unexpected_tokens(self) -> List[Dict]:
+        """Find the most unexpected/unpopular tokens"""
+        try:
+            # Get all symbols
+            exchange_info = self.client.get_exchange_info()
+            usdt_pairs = []
+            
+            for symbol_info in exchange_info['symbols']:
+                if (symbol_info['status'] == 'TRADING' and 
+                    symbol_info['quoteAsset'] == 'USDT' and
+                    'SPOT' in symbol_info['permissions']):
+                    usdt_pairs.append(symbol_info['symbol'])
+            
+            # Get 24hr ticker data
+            tickers = self.client.get_ticker()
+            ticker_dict = {t['symbol']: t for t in tickers}
+            
+            unexpected_tokens = []
+            
+            for symbol in usdt_pairs:
+                if symbol in ticker_dict:
+                    ticker = ticker_dict[symbol]
+                    volume_usd = float(ticker['quoteVolume'])
+                    price_change = float(ticker['priceChangePercent'])
+                    
+                    # Find ultra low volume tokens (most unexpected)
+                    if self.min_volume_usd <= volume_usd <= self.max_volume_usd:
+                        # Calculate "unexpectedness score"
+                        volume_score = 1 / max(volume_usd, 100)  # Lower volume = higher score
+                        volatility_score = abs(price_change) / 100  # Higher volatility = more unexpected
+                        
+                        # Special bonus for weird token names (meme potential)
+                        name_bonus = 0
+                        token_name = symbol.replace('USDT', '').lower()
+                        weird_keywords = ['mog', 'pepe', 'shib', 'doge', 'moon', 'rocket', 'safe', 'inu', 'floki', 'elon', 'cat', 'frog', 'wojak']
+                        if any(keyword in token_name for keyword in weird_keywords):
+                            name_bonus = 0.5
+                        
+                        unexpectedness_score = (volume_score * 1000) + volatility_score + name_bonus
+                        
+                        unexpected_tokens.append({
+                            'symbol': symbol,
+                            'volume_usd': volume_usd,
+                            'price_change_24h': price_change,
+                            'current_price': float(ticker['lastPrice']),
+                            'unexpectedness_score': unexpectedness_score,
+                            'name_bonus': name_bonus > 0
+                        })
+            
+            # Sort by unexpectedness score (highest first)
+            unexpected_tokens.sort(key=lambda x: x['unexpectedness_score'], reverse=True)
+            
+            self.logger.info(f"🔍 Found {len(unexpected_tokens)} ultra-unexpected tokens")
+            return unexpected_tokens[:20]  # Top 20 most unexpected
+            
+        except Exception as e:
+            self.logger.error(f"Error finding unexpected tokens: {e}")
+            return []
+
+    def analyze_token_for_yolo(self, token: Dict) -> Dict:
+        """Deep analysis for YOLO potential"""
+        try:
+            symbol = token['symbol']
+            self.logger.info(f"🔬 Deep YOLO analysis: {symbol}")
+            
+            # Get kline data
+            klines = self.client.get_klines(symbol=symbol, interval='1h', limit=100)
+            
+            if not klines:
+                return {'yolo_score': 0, 'reason': 'No price data'}
+            
+            # Convert to DataFrame
+            df = pd.DataFrame(klines, columns=[
+                'timestamp', 'open', 'high', 'low', 'close', 'volume',
+                'close_time', 'quote_volume', 'trades', 'taker_buy_base',
+                'taker_buy_quote', 'ignored'
+            ])
+            
+            for col in ['open', 'high', 'low', 'close', 'volume']:
+                df[col] = pd.to_numeric(df[col])
+            
+            latest = df.iloc[-1]
+            
+            # YOLO scoring factors
+            yolo_factors = []
+            
+            # 1. Ultra low volume (more room to move)
+            volume_factor = min(5.0, 2000 / max(token['volume_usd'], 100))
+            yolo_factors.append(('Ultra Low Volume', volume_factor))
+            
+            # 2. Recent volatility (momentum potential)
+            volatility = abs(token['price_change_24h'])
+            if volatility > 10:
+                volatility_factor = min(3.0, volatility / 10)
+                yolo_factors.append(('High Volatility', volatility_factor))
+            
+            # 3. Price near recent lows (potential bounce)
+            recent_low = df['low'].tail(24).min()
+            current_price = token['current_price']
+            if current_price <= recent_low * 1.05:  # Within 5% of recent low
+                bounce_factor = 2.0
+                yolo_factors.append(('Near Recent Low', bounce_factor))
+            
+            # 4. Meme/weird name bonus
+            if token['name_bonus']:
+                meme_factor = 1.5
+                yolo_factors.append(('Meme Potential', meme_factor))
+            
+            # 5. Random YOLO factor (because why not?)
+            import random
+            random_factor = random.uniform(0.5, 2.0)
+            yolo_factors.append(('Pure YOLO Energy', random_factor))
+            
+            # Calculate total YOLO score
+            total_yolo_score = sum(factor[1] for factor in yolo_factors)
+            
+            analysis = {
+                'symbol': symbol,
+                'yolo_score': total_yolo_score,
+                'factors': yolo_factors,
+                'volume_usd': token['volume_usd'],
+                'price_change_24h': token['price_change_24h'],
+                'current_price': current_price,
+                'unexpectedness_score': token['unexpectedness_score'],
+                'reason': f"YOLO Score: {total_yolo_score:.1f} - {', '.join([f[0] for f in yolo_factors])}"
+            }
+            
+            return analysis
+            
+        except Exception as e:
+            self.logger.error(f"Error analyzing {symbol}: {e}")
+            return {'yolo_score': 0, 'reason': f'Analysis error: {e}'}
+
+    def execute_yolo_trade(self, token_analysis: Dict, available_balance: float) -> bool:
+        """Execute the YOLO trade - ALL IN!"""
+        try:
+            symbol = token_analysis['symbol']
+            trade_amount = available_balance
+            
+            if trade_amount < 10:  # Minimum trade size
+                self.logger.warning(f"Trade amount too small: ${trade_amount:.2f}")
+                return False
+            
+            # Get symbol info for precision
+            exchange_info = self.client.get_exchange_info()
+            symbol_info = None
+            for s in exchange_info['symbols']:
+                if s['symbol'] == symbol:
+                    symbol_info = s
+                    break
+            
+            if not symbol_info:
+                self.logger.error(f"Symbol {symbol} not found in exchange info")
+                return False
+            
+            # Get precision and minimum notional
+            price_precision = None
+            qty_precision = None
+            min_notional = 10.0  # Default minimum
+            
+            for filter_item in symbol_info['filters']:
+                if filter_item['filterType'] == 'PRICE_FILTER':
+                    tick_size = float(filter_item['tickSize'])
+                    price_precision = len(str(tick_size).rstrip('0').split('.')[-1]) if '.' in str(tick_size) else 0
+                elif filter_item['filterType'] == 'LOT_SIZE':
+                    step_size = float(filter_item['stepSize'])
+                    qty_precision = len(str(step_size).rstrip('0').split('.')[-1]) if '.' in str(step_size) else 0
+                elif filter_item['filterType'] == 'NOTIONAL':
+                    min_notional = float(filter_item['minNotional'])
+            
+            # Adjust trade amount to meet minimum notional
+            if trade_amount < min_notional:
+                trade_amount = min_notional
+                self.logger.info(f"Adjusted trade amount to meet minimum notional: ${trade_amount:.2f}")
+            
+            self.logger.info(f"🚀 EXECUTING YOLO TRADE!")
+            self.logger.info(f"🎯 Token: {symbol}")
+            self.logger.info(f"💰 Amount: ${trade_amount:.2f} (ALL IN!)")
+            self.logger.info(f"🎰 YOLO Score: {token_analysis['yolo_score']:.1f}")
+            self.logger.info(f"📊 Volume: ${token_analysis['volume_usd']:.0f}")
+            self.logger.info(f"📈 24h Change: {token_analysis['price_change_24h']:+.2f}%")
+            self.logger.info(f"🔧 Min Notional: ${min_notional:.2f}")
+            
+            # Round trade amount to avoid precision issues
+            trade_amount = round(trade_amount, 2)
+            
+            self.logger.info(f"🔥 GOING ALL IN ON {symbol}!")
+            
+            # Execute market buy order with proper precision
+            order = self.client.order_market_buy(
+                symbol=symbol,
+                quoteOrderQty=trade_amount
+            )
+            
+            self.logger.info(f"✅ YOLO TRADE EXECUTED!")
+            self.logger.info(f"📄 Order ID: {order['orderId']}")
+            self.logger.info(f"💎 You now own {symbol} worth ${trade_amount:.2f}")
+            self.logger.info(f"🚀 TO THE MOON OR BUST!")
+            
+            # Save trade details
+            trade_record = {
+                'timestamp': datetime.now().isoformat(),
+                'symbol': symbol,
+                'amount_usd': trade_amount,
+                'order_id': order['orderId'],
+                'yolo_score': token_analysis['yolo_score'],
+                'reasoning': token_analysis['reason'],
+                'order_details': order
+            }
+            
+            filename = f"yolo_trade_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            with open(filename, 'w') as f:
+                json.dump(trade_record, f, indent=2, default=str)
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error executing YOLO trade: {e}")
+            
+            # Try with a smaller amount if precision error
+            if "Precision is over the maximum" in str(e) or "Invalid quantity" in str(e):
+                try:
+                    self.logger.info("🔄 Retrying with adjusted amount...")
+                    # Try with 90% of original amount
+                    retry_amount = round(available_balance * 0.9, 2)
+                    
+                    order = self.client.order_market_buy(
+                        symbol=symbol,
+                        quoteOrderQty=retry_amount
+                    )
+                    
+                    self.logger.info(f"✅ YOLO TRADE EXECUTED (Adjusted)!")
+                    self.logger.info(f"📄 Order ID: {order['orderId']}")
+                    self.logger.info(f"💎 You now own {symbol} worth ${retry_amount:.2f}")
+                    return True
+                    
+                except Exception as retry_error:
+                    self.logger.error(f"Retry also failed: {retry_error}")
+            
+            return False
+
+    def run_yolo_session(self):
+        """Run the YOLO trading session"""
+        try:
+            print("🎰 YOLO MAXIMUM ALLOCATION TRADER")
+            print("=" * 50)
+            print("⚠️  EXTREME HIGH RISK WARNING!")
+            print("This will allocate 95% of your USDT to ONE unexpected token")
+            print("You could lose almost everything!")
+            print()
+            
+            # Get portfolio balance
+            portfolio = self.get_portfolio_balance()
+            if portfolio['usdt_balance'] < 10:
+                print(f"❌ Insufficient USDT balance: ${portfolio['usdt_balance']:.2f}")
+                return
+            
+            print(f"💰 Available USDT: ${portfolio['usdt_balance']:.2f}")
+            print(f"🎯 YOLO Amount: ${portfolio['available_to_trade']:.2f} (95%)")
+            print()
+            
+            # Final warning
+            confirm1 = input("⚠️  Type 'I UNDERSTAND THE EXTREME RISK' to continue: ")
+            if confirm1 != "I UNDERSTAND THE EXTREME RISK":
+                print("❌ YOLO cancelled - play it safe!")
+                return
+            
+            confirm2 = input("🎰 Type 'YOLO TO THE MOON' to execute: ")
+            if confirm2 != "YOLO TO THE MOON":
+                print("❌ YOLO cancelled - maybe next time!")
+                return
+            
+            print("🚀 YOLO MODE ACTIVATED!")
+            print()
+            
+            # Find most unexpected tokens
+            self.logger.info("🔍 Searching for the most unexpected tokens...")
+            unexpected_tokens = self.find_most_unexpected_tokens()
+            
+            if not unexpected_tokens:
+                print("❌ No suitable unexpected tokens found")
+                return
+            
+            print("🎯 TOP 10 MOST UNEXPECTED TOKENS:")
+            print("-" * 60)
+            for i, token in enumerate(unexpected_tokens[:10], 1):
+                print(f"{i:2d}. {token['symbol']:12s} | Vol: ${token['volume_usd']:6.0f} | "
+                      f"24h: {token['price_change_24h']:+6.2f}% | "
+                      f"Score: {token['unexpectedness_score']:.3f}")
+            print()
+            
+            # Analyze top 5 for YOLO potential
+            self.logger.info("🔬 Deep YOLO analysis of top candidates...")
+            yolo_candidates = []
+            
+            for token in unexpected_tokens[:5]:
+                analysis = self.analyze_token_for_yolo(token)
+                if analysis['yolo_score'] > 0:
+                    yolo_candidates.append(analysis)
+            
+            if not yolo_candidates:
+                print("❌ No suitable YOLO candidates found")
+                return
+            
+            # Sort by YOLO score
+            yolo_candidates.sort(key=lambda x: x['yolo_score'], reverse=True)
+            
+            print("🎰 YOLO ANALYSIS RESULTS:")
+            print("-" * 70)
+            for i, candidate in enumerate(yolo_candidates, 1):
+                print(f"{i}. {candidate['symbol']:12s} | YOLO Score: {candidate['yolo_score']:5.1f}")
+                print(f"   Volume: ${candidate['volume_usd']:6.0f} | 24h: {candidate['price_change_24h']:+6.2f}%")
+                print(f"   Factors: {candidate['reason']}")
+                print()
+            
+            # THE CHOSEN ONE
+            chosen_token = yolo_candidates[0]
+            print(f"🎯 THE CHOSEN TOKEN: {chosen_token['symbol']}")
+            print(f"🎰 YOLO Score: {chosen_token['yolo_score']:.1f}")
+            print(f"🚀 Going ALL IN with ${portfolio['available_to_trade']:.2f}!")
+            print()
+            
+            final_confirm = input("🔥 Type 'EXECUTE YOLO' for final confirmation: ")
+            if final_confirm != "EXECUTE YOLO":
+                print("❌ YOLO cancelled at the last second!")
+                return
+            
+            # EXECUTE THE YOLO TRADE
+            success = self.execute_yolo_trade(chosen_token, portfolio['available_to_trade'])
+            
+            if success:
+                print()
+                print("🎉 YOLO TRADE EXECUTED!")
+                print(f"🚀 You are now ALL IN on {chosen_token['symbol']}!")
+                print("🌙 To the moon or to zero - YOLO!")
+                print()
+                print("💎 HODL STRONG! 💎")
+                print("🚀 May the YOLO gods be with you! 🚀")
+            else:
+                print("❌ YOLO trade failed - maybe it wasn't meant to be...")
+                
+        except KeyboardInterrupt:
+            print("\n👋 YOLO cancelled by user")
+        except Exception as e:
+            self.logger.error(f"YOLO session error: {e}")
+
+def main():
+    """Main YOLO function"""
+    yolo_trader = YOLOMaxAllocationTrader()
+    yolo_trader.run_yolo_session()
+
+if __name__ == "__main__":
+    main()

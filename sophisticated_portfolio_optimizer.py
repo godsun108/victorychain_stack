@@ -1,0 +1,933 @@
+#!/usr/bin/env python3
+"""
+📊 SOPHISTICATED PORTFOLIO OPTIMIZATION SYSTEM
+==============================================
+Advanced portfolio construction using modern portfolio theory,
+risk parity, and machine learning-driven optimization.
+"""
+
+import json
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple, NamedTuple
+from dataclasses import dataclass, field
+from enum import Enum
+import asyncio
+import logging
+from scipy.optimize import minimize
+import math
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class OptimizationObjective(Enum):
+    """Portfolio optimization objectives"""
+
+    MAX_SHARPE = "maximize_sharpe_ratio"
+    MIN_VOLATILITY = "minimize_volatility"
+    MAX_RETURN = "maximize_return"
+    RISK_PARITY = "risk_parity"
+    MAX_DIVERSIFICATION = "maximize_diversification"
+
+
+class RebalanceFrequency(Enum):
+    """Portfolio rebalancing frequency"""
+
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+
+
+@dataclass
+class OptimizationConstraints:
+    """Portfolio optimization constraints"""
+
+    max_weight: float = 0.30  # Maximum single asset weight
+    min_weight: float = 0.01  # Minimum single asset weight
+    max_sector_exposure: float = 0.60  # Maximum sector exposure
+    min_assets: int = 3  # Minimum number of assets
+    max_assets: int = 10  # Maximum number of assets
+    max_turnover: float = 0.50  # Maximum portfolio turnover
+    target_volatility: Optional[float] = None  # Target portfolio volatility
+
+
+@dataclass
+class AssetMetrics:
+    """Comprehensive asset metrics for optimization"""
+
+    symbol: str
+    expected_return: float
+    volatility: float
+    beta: float
+    sharpe_ratio: float
+    max_drawdown: float
+    correlation_to_market: float
+    liquidity_score: float
+    momentum_score: float
+    quality_score: float
+    sector: str
+    market_cap: float
+
+
+@dataclass
+class PortfolioMetrics:
+    """Portfolio performance and risk metrics"""
+
+    total_return: float
+    annualized_return: float
+    volatility: float
+    sharpe_ratio: float
+    sortino_ratio: float
+    max_drawdown: float
+    calmar_ratio: float
+    var_95: float
+    cvar_95: float
+    beta: float
+    alpha: float
+    tracking_error: float
+    information_ratio: float
+    win_rate: float
+    profit_factor: float
+
+
+class RiskModelEngine:
+    """Advanced risk modeling for portfolio optimization"""
+
+    def __init__(self):
+        self.lookback_periods = {"short": 30, "medium": 90, "long": 252}
+
+    def calculate_covariance_matrix(
+        self, returns_data: Dict[str, List[float]]
+    ) -> np.ndarray:
+        """Calculate covariance matrix with shrinkage estimation"""
+        symbols = list(returns_data.keys())
+
+        if not symbols:
+            return np.array([])
+
+        # Convert to matrix
+        returns_matrix = []
+        min_length = min(len(returns_data[symbol]) for symbol in symbols)
+
+        for symbol in symbols:
+            returns_matrix.append(returns_data[symbol][-min_length:])
+
+        returns_matrix = np.array(returns_matrix).T
+
+        if returns_matrix.shape[0] < 2:
+            # Default to identity matrix if insufficient data
+            n_assets = len(symbols)
+            return np.eye(n_assets) * 0.04  # 20% annual volatility
+
+        # Sample covariance matrix
+        sample_cov = np.cov(returns_matrix.T)
+
+        # Ledoit-Wolf shrinkage
+        n_assets = sample_cov.shape[0]
+        n_obs = returns_matrix.shape[0]
+
+        # Shrinkage target (diagonal matrix)
+        target = np.eye(n_assets) * np.trace(sample_cov) / n_assets
+
+        # Shrinkage intensity
+        rho = min(1.0, (n_obs - 2) / (n_obs * (n_obs + 2)))
+
+        # Shrunk covariance matrix
+        shrunk_cov = (1 - rho) * sample_cov + rho * target
+
+        return shrunk_cov
+
+    def calculate_expected_returns(
+        self, asset_metrics: List[AssetMetrics]
+    ) -> np.ndarray:
+        """Calculate expected returns using multiple models"""
+        returns = []
+
+        for asset in asset_metrics:
+            # Combine multiple return forecasts
+            momentum_return = asset.momentum_score / 10 * 0.20  # 20% max from momentum
+            quality_return = asset.quality_score / 100 * 0.15  # 15% max from quality
+            mean_reversion = -0.5 * (
+                asset.expected_return - 0.10
+            )  # Mean reversion to 10%
+
+            # Weighted combination
+            expected_return = (
+                0.4 * asset.expected_return
+                + 0.3 * momentum_return
+                + 0.2 * quality_return
+                + 0.1 * mean_reversion
+            )
+
+            returns.append(expected_return)
+
+        return np.array(returns)
+
+    def calculate_factor_exposures(
+        self, asset_metrics: List[AssetMetrics]
+    ) -> Dict[str, np.ndarray]:
+        """Calculate factor exposures for risk modeling"""
+        n_assets = len(asset_metrics)
+
+        exposures = {
+            "momentum": np.array(
+                [asset.momentum_score / 10 for asset in asset_metrics]
+            ),
+            "quality": np.array([asset.quality_score / 100 for asset in asset_metrics]),
+            "volatility": np.array([asset.volatility for asset in asset_metrics]),
+            "size": np.array([np.log(asset.market_cap) for asset in asset_metrics]),
+            "beta": np.array([asset.beta for asset in asset_metrics]),
+        }
+
+        return exposures
+
+    def calculate_portfolio_var(
+        self,
+        weights: np.ndarray,
+        covariance_matrix: np.ndarray,
+        confidence_level: float = 0.95,
+    ) -> float:
+        """Calculate Portfolio Value at Risk"""
+        portfolio_variance = np.dot(weights.T, np.dot(covariance_matrix, weights))
+        portfolio_volatility = np.sqrt(portfolio_variance)
+
+        # Assuming normal distribution
+        from scipy.stats import norm
+
+        z_score = norm.ppf(1 - confidence_level)
+
+        var = abs(z_score) * portfolio_volatility
+        return var
+
+    def calculate_risk_contribution(
+        self, weights: np.ndarray, covariance_matrix: np.ndarray
+    ) -> np.ndarray:
+        """Calculate risk contribution of each asset"""
+        portfolio_variance = np.dot(weights.T, np.dot(covariance_matrix, weights))
+        marginal_contrib = np.dot(covariance_matrix, weights)
+        contrib = weights * marginal_contrib / portfolio_variance
+
+        return contrib
+
+
+class PortfolioOptimizer:
+    """Advanced portfolio optimization engine"""
+
+    def __init__(self, constraints: OptimizationConstraints):
+        self.constraints = constraints
+        self.risk_model = RiskModelEngine()
+
+    def optimize_portfolio(
+        self,
+        asset_metrics: List[AssetMetrics],
+        objective: OptimizationObjective,
+        returns_data: Optional[Dict[str, List[float]]] = None,
+    ) -> Dict:
+        """Main portfolio optimization function"""
+
+        if len(asset_metrics) < self.constraints.min_assets:
+            raise ValueError(
+                f"Insufficient assets: need at least {self.constraints.min_assets}"
+            )
+
+        # Limit number of assets
+        if len(asset_metrics) > self.constraints.max_assets:
+            # Select top assets by Sharpe ratio
+            sorted_assets = sorted(
+                asset_metrics, key=lambda x: x.sharpe_ratio, reverse=True
+            )
+            asset_metrics = sorted_assets[: self.constraints.max_assets]
+
+        n_assets = len(asset_metrics)
+        symbols = [asset.symbol for asset in asset_metrics]
+
+        # Calculate expected returns
+        expected_returns = self.risk_model.calculate_expected_returns(asset_metrics)
+
+        # Calculate covariance matrix
+        if returns_data:
+            covariance_matrix = self.risk_model.calculate_covariance_matrix(
+                returns_data
+            )
+        else:
+            # Use correlation estimates
+            covariance_matrix = self._estimate_covariance_matrix(asset_metrics)
+
+        # Optimize based on objective
+        if objective == OptimizationObjective.MAX_SHARPE:
+            weights = self._optimize_max_sharpe(expected_returns, covariance_matrix)
+        elif objective == OptimizationObjective.MIN_VOLATILITY:
+            weights = self._optimize_min_volatility(covariance_matrix)
+        elif objective == OptimizationObjective.RISK_PARITY:
+            weights = self._optimize_risk_parity(covariance_matrix)
+        elif objective == OptimizationObjective.MAX_DIVERSIFICATION:
+            weights = self._optimize_max_diversification(
+                asset_metrics, covariance_matrix
+            )
+        else:
+            weights = self._optimize_max_return(expected_returns, covariance_matrix)
+
+        # Apply constraints
+        weights = self._apply_constraints(weights, asset_metrics)
+
+        # Calculate portfolio metrics
+        portfolio_metrics = self._calculate_portfolio_metrics(
+            weights, expected_returns, covariance_matrix, asset_metrics
+        )
+
+        # Risk decomposition
+        risk_contributions = self.risk_model.calculate_risk_contribution(
+            weights, covariance_matrix
+        )
+
+        return {
+            "weights": dict(zip(symbols, weights)),
+            "expected_return": np.dot(weights, expected_returns),
+            "expected_volatility": np.sqrt(
+                np.dot(weights.T, np.dot(covariance_matrix, weights))
+            ),
+            "sharpe_ratio": portfolio_metrics.get("sharpe_ratio", 0),
+            "portfolio_metrics": portfolio_metrics,
+            "risk_contributions": dict(zip(symbols, risk_contributions)),
+            "optimization_objective": objective.value,
+            "constraints_applied": True,
+        }
+
+    def _optimize_max_sharpe(
+        self, expected_returns: np.ndarray, covariance_matrix: np.ndarray
+    ) -> np.ndarray:
+        """Optimize for maximum Sharpe ratio"""
+        n_assets = len(expected_returns)
+
+        def negative_sharpe(weights):
+            portfolio_return = np.dot(weights, expected_returns)
+            portfolio_volatility = np.sqrt(
+                np.dot(weights.T, np.dot(covariance_matrix, weights))
+            )
+
+            if portfolio_volatility == 0:
+                return -1000  # Penalty for zero volatility
+
+            return -portfolio_return / portfolio_volatility  # Negative for minimization
+
+        # Constraints
+        constraints = [
+            {"type": "eq", "fun": lambda x: np.sum(x) - 1},  # Weights sum to 1
+        ]
+
+        bounds = [
+            (self.constraints.min_weight, self.constraints.max_weight)
+            for _ in range(n_assets)
+        ]
+
+        # Initial guess (equal weights)
+        x0 = np.array([1.0 / n_assets] * n_assets)
+
+        # Optimize
+        result = minimize(
+            negative_sharpe, x0, method="SLSQP", bounds=bounds, constraints=constraints
+        )
+
+        return result.x if result.success else x0
+
+    def _optimize_min_volatility(self, covariance_matrix: np.ndarray) -> np.ndarray:
+        """Optimize for minimum volatility"""
+        n_assets = covariance_matrix.shape[0]
+
+        def portfolio_volatility(weights):
+            return np.sqrt(np.dot(weights.T, np.dot(covariance_matrix, weights)))
+
+        constraints = [
+            {"type": "eq", "fun": lambda x: np.sum(x) - 1},
+        ]
+
+        bounds = [
+            (self.constraints.min_weight, self.constraints.max_weight)
+            for _ in range(n_assets)
+        ]
+        x0 = np.array([1.0 / n_assets] * n_assets)
+
+        result = minimize(
+            portfolio_volatility,
+            x0,
+            method="SLSQP",
+            bounds=bounds,
+            constraints=constraints,
+        )
+
+        return result.x if result.success else x0
+
+    def _optimize_risk_parity(self, covariance_matrix: np.ndarray) -> np.ndarray:
+        """Optimize for risk parity (equal risk contribution)"""
+        n_assets = covariance_matrix.shape[0]
+
+        def risk_parity_objective(weights):
+            risk_contribs = self.risk_model.calculate_risk_contribution(
+                weights, covariance_matrix
+            )
+            target_contrib = 1.0 / n_assets
+
+            # Sum of squared deviations from equal risk contribution
+            return np.sum((risk_contribs - target_contrib) ** 2)
+
+        constraints = [
+            {"type": "eq", "fun": lambda x: np.sum(x) - 1},
+        ]
+
+        bounds = [
+            (self.constraints.min_weight, self.constraints.max_weight)
+            for _ in range(n_assets)
+        ]
+        x0 = np.array([1.0 / n_assets] * n_assets)
+
+        result = minimize(
+            risk_parity_objective,
+            x0,
+            method="SLSQP",
+            bounds=bounds,
+            constraints=constraints,
+        )
+
+        return result.x if result.success else x0
+
+    def _optimize_max_diversification(
+        self, asset_metrics: List[AssetMetrics], covariance_matrix: np.ndarray
+    ) -> np.ndarray:
+        """Optimize for maximum diversification ratio"""
+        n_assets = len(asset_metrics)
+        volatilities = np.array([asset.volatility for asset in asset_metrics])
+
+        def negative_diversification_ratio(weights):
+            weighted_avg_vol = np.dot(weights, volatilities)
+            portfolio_vol = np.sqrt(
+                np.dot(weights.T, np.dot(covariance_matrix, weights))
+            )
+
+            if portfolio_vol == 0:
+                return -1000
+
+            return -weighted_avg_vol / portfolio_vol
+
+        constraints = [
+            {"type": "eq", "fun": lambda x: np.sum(x) - 1},
+        ]
+
+        bounds = [
+            (self.constraints.min_weight, self.constraints.max_weight)
+            for _ in range(n_assets)
+        ]
+        x0 = np.array([1.0 / n_assets] * n_assets)
+
+        result = minimize(
+            negative_diversification_ratio,
+            x0,
+            method="SLSQP",
+            bounds=bounds,
+            constraints=constraints,
+        )
+
+        return result.x if result.success else x0
+
+    def _optimize_max_return(
+        self, expected_returns: np.ndarray, covariance_matrix: np.ndarray
+    ) -> np.ndarray:
+        """Optimize for maximum return with volatility constraint"""
+        n_assets = len(expected_returns)
+
+        def negative_return(weights):
+            return -np.dot(weights, expected_returns)
+
+        constraints = [
+            {"type": "eq", "fun": lambda x: np.sum(x) - 1},
+        ]
+
+        # Add volatility constraint if specified
+        if self.constraints.target_volatility:
+
+            def vol_constraint(weights):
+                portfolio_vol = np.sqrt(
+                    np.dot(weights.T, np.dot(covariance_matrix, weights))
+                )
+                return self.constraints.target_volatility - portfolio_vol
+
+            constraints.append({"type": "ineq", "fun": vol_constraint})
+
+        bounds = [
+            (self.constraints.min_weight, self.constraints.max_weight)
+            for _ in range(n_assets)
+        ]
+        x0 = np.array([1.0 / n_assets] * n_assets)
+
+        result = minimize(
+            negative_return, x0, method="SLSQP", bounds=bounds, constraints=constraints
+        )
+
+        return result.x if result.success else x0
+
+    def _estimate_covariance_matrix(
+        self, asset_metrics: List[AssetMetrics]
+    ) -> np.ndarray:
+        """Estimate covariance matrix from asset metrics"""
+        n_assets = len(asset_metrics)
+
+        # Create correlation matrix based on sector and market relationships
+        correlation_matrix = np.eye(n_assets)
+
+        for i in range(n_assets):
+            for j in range(i + 1, n_assets):
+                # Higher correlation for same sector
+                if asset_metrics[i].sector == asset_metrics[j].sector:
+                    correlation = 0.6
+                else:
+                    correlation = 0.3
+
+                # Adjust based on beta similarity
+                beta_diff = abs(asset_metrics[i].beta - asset_metrics[j].beta)
+                correlation *= 1 - beta_diff * 0.2
+
+                correlation_matrix[i, j] = correlation
+                correlation_matrix[j, i] = correlation
+
+        # Convert to covariance matrix
+        volatilities = np.array([asset.volatility for asset in asset_metrics])
+        vol_matrix = np.outer(volatilities, volatilities)
+        covariance_matrix = correlation_matrix * vol_matrix
+
+        return covariance_matrix
+
+    def _apply_constraints(
+        self, weights: np.ndarray, asset_metrics: List[AssetMetrics]
+    ) -> np.ndarray:
+        """Apply additional portfolio constraints"""
+
+        # Ensure weights are positive and sum to 1
+        weights = np.maximum(weights, 0)
+        weights = weights / np.sum(weights)
+
+        # Apply min/max weight constraints
+        weights = np.maximum(weights, self.constraints.min_weight)
+        weights = np.minimum(weights, self.constraints.max_weight)
+
+        # Renormalize
+        weights = weights / np.sum(weights)
+
+        # Check sector concentration
+        sector_exposures = {}
+        for i, asset in enumerate(asset_metrics):
+            sector = asset.sector
+            if sector not in sector_exposures:
+                sector_exposures[sector] = 0
+            sector_exposures[sector] += weights[i]
+
+        # Reduce weights for over-concentrated sectors
+        for sector, exposure in sector_exposures.items():
+            if exposure > self.constraints.max_sector_exposure:
+                reduction_factor = self.constraints.max_sector_exposure / exposure
+                for i, asset in enumerate(asset_metrics):
+                    if asset.sector == sector:
+                        weights[i] *= reduction_factor
+
+        # Final normalization
+        weights = weights / np.sum(weights)
+
+        return weights
+
+    def _calculate_portfolio_metrics(
+        self,
+        weights: np.ndarray,
+        expected_returns: np.ndarray,
+        covariance_matrix: np.ndarray,
+        asset_metrics: List[AssetMetrics],
+    ) -> Dict:
+        """Calculate comprehensive portfolio metrics"""
+
+        portfolio_return = np.dot(weights, expected_returns)
+        portfolio_variance = np.dot(weights.T, np.dot(covariance_matrix, weights))
+        portfolio_volatility = np.sqrt(portfolio_variance)
+
+        # Sharpe ratio (assuming 2% risk-free rate)
+        risk_free_rate = 0.02
+        sharpe_ratio = (
+            (portfolio_return - risk_free_rate) / portfolio_volatility
+            if portfolio_volatility > 0
+            else 0
+        )
+
+        # Portfolio beta
+        market_betas = np.array([asset.beta for asset in asset_metrics])
+        portfolio_beta = np.dot(weights, market_betas)
+
+        # Diversification ratio
+        weighted_avg_vol = np.dot(
+            weights, [asset.volatility for asset in asset_metrics]
+        )
+        diversification_ratio = (
+            weighted_avg_vol / portfolio_volatility if portfolio_volatility > 0 else 1
+        )
+
+        # Value at Risk
+        var_95 = self.risk_model.calculate_portfolio_var(
+            weights, covariance_matrix, 0.95
+        )
+
+        return {
+            "expected_return": portfolio_return,
+            "volatility": portfolio_volatility,
+            "sharpe_ratio": sharpe_ratio,
+            "beta": portfolio_beta,
+            "diversification_ratio": diversification_ratio,
+            "var_95": var_95,
+            "number_of_assets": np.sum(weights > self.constraints.min_weight),
+            "max_weight": np.max(weights),
+            "min_weight": np.min(weights[weights > 0]),
+            "weight_concentration": np.sum(weights**2),  # Herfindahl index
+        }
+
+
+class AdvancedPortfolioManager:
+    """Complete portfolio management system"""
+
+    def __init__(self, initial_capital: float = 100000):
+        self.initial_capital = initial_capital
+        self.current_capital = initial_capital
+        self.current_weights = {}
+        self.transaction_costs = 0.001  # 0.1% transaction cost
+
+        # Default constraints
+        self.constraints = OptimizationConstraints(
+            max_weight=0.25,
+            min_weight=0.02,
+            max_sector_exposure=0.50,
+            min_assets=3,
+            max_assets=8,
+        )
+
+        self.optimizer = PortfolioOptimizer(self.constraints)
+        self.portfolio_history = []
+        self.rebalance_history = []
+
+    async def construct_optimal_portfolio(
+        self,
+        asset_metrics: List[AssetMetrics],
+        objective: OptimizationObjective = OptimizationObjective.MAX_SHARPE,
+        returns_data: Optional[Dict[str, List[float]]] = None,
+    ) -> Dict:
+        """Construct optimal portfolio"""
+
+        logger.info(f"Constructing portfolio with {len(asset_metrics)} assets")
+        logger.info(f"Optimization objective: {objective.value}")
+
+        # Optimize portfolio
+        optimization_result = self.optimizer.optimize_portfolio(
+            asset_metrics, objective, returns_data
+        )
+
+        # Calculate transaction costs for rebalancing
+        transaction_cost = self._calculate_transaction_cost(
+            optimization_result["weights"]
+        )
+
+        # Update portfolio
+        self.current_weights = optimization_result["weights"]
+
+        # Record portfolio construction
+        portfolio_record = {
+            "timestamp": datetime.now().isoformat(),
+            "weights": self.current_weights,
+            "optimization_result": optimization_result,
+            "transaction_cost": transaction_cost,
+            "portfolio_value": self.current_capital,
+        }
+
+        self.portfolio_history.append(portfolio_record)
+
+        return optimization_result
+
+    def _calculate_transaction_cost(self, new_weights: Dict[str, float]) -> float:
+        """Calculate transaction costs for rebalancing"""
+        if not self.current_weights:
+            # Initial portfolio construction
+            return sum(new_weights.values()) * self.transaction_costs
+
+        # Calculate turnover
+        turnover = 0
+        all_symbols = set(list(self.current_weights.keys()) + list(new_weights.keys()))
+
+        for symbol in all_symbols:
+            old_weight = self.current_weights.get(symbol, 0)
+            new_weight = new_weights.get(symbol, 0)
+            turnover += abs(new_weight - old_weight)
+
+        return turnover * self.current_capital * self.transaction_costs
+
+    async def evaluate_multiple_strategies(
+        self,
+        asset_metrics: List[AssetMetrics],
+        returns_data: Optional[Dict[str, List[float]]] = None,
+    ) -> Dict:
+        """Evaluate multiple optimization strategies"""
+
+        strategies = [
+            OptimizationObjective.MAX_SHARPE,
+            OptimizationObjective.MIN_VOLATILITY,
+            OptimizationObjective.RISK_PARITY,
+            OptimizationObjective.MAX_DIVERSIFICATION,
+        ]
+
+        results = {}
+
+        for strategy in strategies:
+            try:
+                result = self.optimizer.optimize_portfolio(
+                    asset_metrics, strategy, returns_data
+                )
+                results[strategy.value] = result
+                logger.info(
+                    f"Strategy {strategy.value}: Sharpe {result.get('sharpe_ratio', 0):.3f}"
+                )
+            except Exception as e:
+                logger.error(f"Error evaluating strategy {strategy.value}: {e}")
+
+        # Rank strategies by risk-adjusted performance
+        ranked_strategies = self._rank_strategies(results)
+
+        return {
+            "strategy_results": results,
+            "ranked_strategies": ranked_strategies,
+            "recommendation": ranked_strategies[0] if ranked_strategies else None,
+        }
+
+    def _rank_strategies(self, results: Dict) -> List[Tuple[str, float]]:
+        """Rank strategies by performance score"""
+        scores = []
+
+        for strategy, result in results.items():
+            # Composite score: Sharpe ratio + diversification - volatility
+            sharpe = result.get("sharpe_ratio", 0)
+            volatility = result.get("expected_volatility", 1)
+            diversification = result.get("portfolio_metrics", {}).get(
+                "diversification_ratio", 1
+            )
+
+            score = sharpe + 0.5 * diversification - 0.3 * volatility
+            scores.append((strategy, score))
+
+        return sorted(scores, key=lambda x: x[1], reverse=True)
+
+    def generate_portfolio_report(self) -> Dict:
+        """Generate comprehensive portfolio report"""
+        if not self.portfolio_history:
+            return {"error": "No portfolio history available"}
+
+        latest_portfolio = self.portfolio_history[-1]
+
+        return {
+            "portfolio_summary": {
+                "current_value": self.current_capital,
+                "initial_value": self.initial_capital,
+                "total_return": (self.current_capital - self.initial_capital)
+                / self.initial_capital
+                * 100,
+                "number_of_assets": len(self.current_weights),
+                "largest_position": (
+                    max(self.current_weights.values()) if self.current_weights else 0
+                ),
+                "portfolio_concentration": sum(
+                    w**2 for w in self.current_weights.values()
+                ),
+            },
+            "current_allocation": self.current_weights,
+            "optimization_metrics": latest_portfolio["optimization_result"][
+                "portfolio_metrics"
+            ],
+            "risk_contributions": latest_portfolio["optimization_result"][
+                "risk_contributions"
+            ],
+            "rebalancing_history": len(self.rebalance_history),
+            "total_transaction_costs": sum(
+                r.get("transaction_cost", 0) for r in self.portfolio_history
+            ),
+        }
+
+
+async def main():
+    """Main execution function for portfolio optimization"""
+    print("📊 SOPHISTICATED PORTFOLIO OPTIMIZATION SYSTEM")
+    print("=" * 70)
+    print("🎯 Advanced portfolio construction using modern portfolio theory")
+    print()
+
+    # Sample asset metrics
+    asset_metrics = [
+        AssetMetrics(
+            symbol="SHIBUSDT",
+            expected_return=0.45,  # 45% expected return
+            volatility=0.65,  # 65% volatility
+            beta=1.8,
+            sharpe_ratio=0.6,
+            max_drawdown=0.35,
+            correlation_to_market=0.7,
+            liquidity_score=0.85,
+            momentum_score=8.1,
+            quality_score=65,
+            sector="meme",
+            market_cap=1e9,
+        ),
+        AssetMetrics(
+            symbol="FLOKIUSDT",
+            expected_return=0.38,
+            volatility=0.58,
+            beta=1.6,
+            sharpe_ratio=0.55,
+            max_drawdown=0.32,
+            correlation_to_market=0.65,
+            liquidity_score=0.78,
+            momentum_score=7.8,
+            quality_score=68,
+            sector="meme",
+            market_cap=8e8,
+        ),
+        AssetMetrics(
+            symbol="BONKUSDT",
+            expected_return=0.35,
+            volatility=0.55,
+            beta=1.5,
+            sharpe_ratio=0.52,
+            max_drawdown=0.30,
+            correlation_to_market=0.62,
+            liquidity_score=0.72,
+            momentum_score=7.7,
+            quality_score=66,
+            sector="meme",
+            market_cap=6e8,
+        ),
+        AssetMetrics(
+            symbol="PEPEUSDT",
+            expected_return=0.30,
+            volatility=0.50,
+            beta=1.4,
+            sharpe_ratio=0.48,
+            max_drawdown=0.28,
+            correlation_to_market=0.58,
+            liquidity_score=0.68,
+            momentum_score=6.9,
+            quality_score=62,
+            sector="meme",
+            market_cap=4e8,
+        ),
+        AssetMetrics(
+            symbol="ADAUSDT",
+            expected_return=0.22,
+            volatility=0.35,
+            beta=1.1,
+            sharpe_ratio=0.45,
+            max_drawdown=0.22,
+            correlation_to_market=0.75,
+            liquidity_score=0.92,
+            momentum_score=6.1,
+            quality_score=78,
+            sector="layer1",
+            market_cap=2e10,
+        ),
+    ]
+
+    # Initialize portfolio manager
+    portfolio_manager = AdvancedPortfolioManager(initial_capital=100000)
+
+    print("⚡ Evaluating multiple optimization strategies...")
+    strategy_evaluation = await portfolio_manager.evaluate_multiple_strategies(
+        asset_metrics
+    )
+
+    print(f"\n🏆 STRATEGY EVALUATION RESULTS")
+    print("=" * 50)
+
+    for strategy, score in strategy_evaluation["ranked_strategies"]:
+        result = strategy_evaluation["strategy_results"][strategy]
+        print(f"\n🎯 {strategy.upper()}")
+        print(f"   Score: {score:.3f}")
+        print(f"   Expected Return: {result['expected_return']:.1%}")
+        print(f"   Volatility: {result['expected_volatility']:.1%}")
+        print(f"   Sharpe Ratio: {result['sharpe_ratio']:.3f}")
+
+        top_positions = sorted(
+            result["weights"].items(), key=lambda x: x[1], reverse=True
+        )[:3]
+        print(
+            f"   Top Positions: {', '.join([f'{symbol}({weight:.1%})' for symbol, weight in top_positions])}"
+        )
+
+    # Construct optimal portfolio using best strategy
+    best_strategy = strategy_evaluation["ranked_strategies"][0][0]
+    objective = OptimizationObjective(best_strategy)
+
+    print(f"\n🚀 Constructing optimal portfolio using {best_strategy}...")
+    optimal_portfolio = await portfolio_manager.construct_optimal_portfolio(
+        asset_metrics, objective
+    )
+
+    print(f"\n📊 OPTIMAL PORTFOLIO ALLOCATION")
+    print("=" * 45)
+    print(f"Expected Return: {optimal_portfolio['expected_return']:.1%}")
+    print(f"Expected Volatility: {optimal_portfolio['expected_volatility']:.1%}")
+    print(f"Sharpe Ratio: {optimal_portfolio['sharpe_ratio']:.3f}")
+    print()
+
+    print("💼 Asset Allocation:")
+    sorted_weights = sorted(
+        optimal_portfolio["weights"].items(), key=lambda x: x[1], reverse=True
+    )
+    for symbol, weight in sorted_weights:
+        print(f"   {symbol}: {weight:.1%}")
+
+    print(f"\n⚠️ Risk Analysis:")
+    risk_contribs = optimal_portfolio["risk_contributions"]
+    sorted_risks = sorted(risk_contribs.items(), key=lambda x: x[1], reverse=True)
+    for symbol, risk_contrib in sorted_risks:
+        print(f"   {symbol}: {risk_contrib:.1%} risk contribution")
+
+    # Generate comprehensive report
+    portfolio_report = portfolio_manager.generate_portfolio_report()
+
+    print(f"\n📋 PORTFOLIO SUMMARY")
+    print("=" * 30)
+    summary = portfolio_report["portfolio_summary"]
+    print(f"Portfolio Value: ${summary['current_value']:,.2f}")
+    print(f"Number of Assets: {summary['number_of_assets']}")
+    print(f"Largest Position: {summary['largest_position']:.1%}")
+    print(f"Concentration Index: {summary['portfolio_concentration']:.3f}")
+
+    # Save detailed results
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"portfolio_optimization_report_{timestamp}.json"
+
+    complete_report = {
+        "strategy_evaluation": strategy_evaluation,
+        "optimal_portfolio": optimal_portfolio,
+        "portfolio_report": portfolio_report,
+        "asset_metrics": [
+            {
+                "symbol": asset.symbol,
+                "expected_return": asset.expected_return,
+                "volatility": asset.volatility,
+                "sharpe_ratio": asset.sharpe_ratio,
+                "momentum_score": asset.momentum_score,
+                "sector": asset.sector,
+            }
+            for asset in asset_metrics
+        ],
+    }
+
+    with open(filename, "w") as f:
+        json.dump(complete_report, f, indent=2, default=str)
+
+    print(f"\n💾 Detailed report saved: {filename}")
+    print("\n✅ PORTFOLIO OPTIMIZATION COMPLETE!")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

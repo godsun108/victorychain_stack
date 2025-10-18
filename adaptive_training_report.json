@@ -1,0 +1,69 @@
+{
+  "timestamp": "2025-08-09T08:32:03.830866",
+  "training_summary": {
+    "total_trades_processed": 5,
+    "current_parameters": {
+      "min_profit_threshold": 100.0,
+      "max_gas_ratio": 0.1,
+      "position_size_multiplier": 1.0,
+      "risk_tolerance": 0.75,
+      "urgency_threshold": 0.8,
+      "confidence_threshold": 0.7,
+      "market_volatility_factor": 1.0,
+      "scaling_factor": 1.0,
+      "profit_target_multiplier": 1.2,
+      "stop_loss_percentage": 0.05
+    },
+    "performance_metrics": {
+      "total_trades": 5,
+      "successful_trades": 3,
+      "total_profit": 2179.0,
+      "average_profit_per_trade": 435.8,
+      "win_rate": 0.6,
+      "parameter_adjustments": 0,
+      "learning_iterations": 1
+    },
+    "model_predictions": {
+      "predicted_profit": 560.3,
+      "predicted_risk": 0.12730423562412346,
+      "optimal_scaling": 1.3490078821879385,
+      "confidence": 0.8
+    },
+    "position_optimization_demo": {
+      "base_size": 4000.0,
+      "optimized_size": 4027.6340557464614,
+      "improvement_factor": 1.0069085139366154
+    }
+  },
+  "parameter_analysis": {
+    "total_trades_analyzed": 5,
+    "current_parameters": {
+      "min_profit_threshold": 100.0,
+      "max_gas_ratio": 0.1,
+      "position_size_multiplier": 1.0,
+      "risk_tolerance": 0.75,
+      "urgency_threshold": 0.8,
+      "confidence_threshold": 0.7,
+      "market_volatility_factor": 1.0,
+      "scaling_factor": 1.0,
+      "profit_target_multiplier": 1.2,
+      "stop_loss_percentage": 0.05
+    },
+    "parameter_effectiveness": {},
+    "recommendations": [],
+    "performance_summary": {
+      "total_trades": 5,
+      "successful_trades": 3,
+      "total_profit": 2179.0,
+      "average_profit_per_trade": 435.8,
+      "win_rate": 0.6,
+      "parameter_adjustments": 0,
+      "learning_iterations": 1
+    }
+  },
+  "learning_effectiveness": {
+    "models_trained": true,
+    "parameter_adjustments_made": 0,
+    "win_rate_improvement": 0.6
+  }
+}

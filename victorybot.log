@@ -1,0 +1,240 @@
+2025-10-13 15:55:21,302 INFO Victory Trading Bot started in live mode.
+2025-10-13 15:55:45,006 INFO Top scored symbols: ['BTC/USD', 'USDT/USD', 'BTC/USDT', 'XRP/USDT', 'BNB/USDT', 'BNB/USD', 'XRP/USD', 'SOL/USDT', 'BTC/USDC', 'ETH/USD', 'ETH/USDT', 'DOGE/USDT', 'USDC/USD', 'SOL/USD', 'LINK/USDT', 'ZEC/USDT', 'AVAX/USDT', 'ADA/USDT', 'USDC/USDT', 'VET/USDT', 'SUI/USDT', 'DASH/USDT', 'SNX/USDT', 'DOGE/USD', 'HYPE/USDT', 'HBAR/USDT', 'ONE/USDT', 'ADA/USD', 'LTC/USDT', 'WIF/USDT']
+2025-10-13 15:55:45,007 INFO Full scored universe: [('BTC/USD', 1292416.0637496407, 2584681.4780215, 0.012367029963530377, 502.1401918772885, 0, 0.0), ('USDT/USD', 1268471.3773148276, 2536942.7551, -0.001497753369945139, 0.001427691843501241, 0, 0.0), ('BTC/USDT', 728809.8166302473, 1457474.5681476, 0.01591147347985414, 483.51855336878424, 0, 0.0), ('XRP/USDT', 677736.6748552561, 1355473.31895, 0.03417626932001415, 0.03418250219044829, 0, 0.0), ('BNB/USDT', 661195.7484043273, 1322383.67507, -0.016872472615155766, 26.10620712704164, 0, 0.0), ('BNB/USD', 637604.6391192935, 1275201.6076, -0.017630356619292246, 25.604056003688196, 0, 0.0), ('XRP/USD', 529983.9141209935, 1059967.80053, 0.028873239436619666, 0.0346268113461231, 0, 0.0), ('SOL/USDT', 360206.8732858919, 720412.57546, 0.06175735631597728, 3.780191233257914, 0, 0.0), ('BTC/USDC', 336846.69305320625, 673559.5082214, 0.012557992643162794, 446.23450072337533, 0, 0.0), ('ETH/USD', 308327.4515578201, 616643.170581, 0.02740479222132177, 39.05363921582718, 0, 0.0), ('ETH/USDT', 298473.2410218016, 596934.103514, 0.03458434054810272, 41.192596662992685, 0, 0.0), ('DOGE/USDT', 214201.04172209848, 428402.06347, 0.031944775053558784, 0.0026911063598453345, 0, 0.0), ('USDC/USD', 143013.43623901563, 286026.8728, -0.0010994502748625586, 0.0011256713552365244, 0, 0.0), ('SOL/USD', 131396.0022756063, 262790.84751, 0.05801891589545407, 3.740766210283663, 0, 0.0), ('LINK/USDT', 117936.60160249543, 235873.086, 0.03676851372345939, 0.317146275399854, 0, 0.0), ('ZEC/USDT', 108288.15759208387, 216573.01419, -0.011681788092364004, 11.026677468757304, 0, 0.0), ('AVAX/USDT', 104963.09667175967, 209926.036, 0.03954802259887006, 0.4453823525915682, 0, 0.0), ('ADA/USDT', 96137.43512756228, 192274.84433, 0.038626609442060124, 0.009163862940921808, 0, 0.0), ('USDC/USDT', 86904.07871671389, 173808.1578, -0.0009002700810243192, 0.0005786328715169979, 0, 0.0), ('VET/USDT', 74439.58423760394, 148879.1514, 0.0283067421513125, 0.00030387523755646853, 0, 0.0), ('SUI/USDT', 72149.34243228569, 144298.64606, 0.04061841180604346, 0.04811174758829692, 0, 0.0), ('DASH/USDT', 56424.66309158642, 112848.64653, -0.034587609274040296, 2.334685794705574, 0, 0.0), ('SNX/USDT', 56137.795876422395, 112275.2551, 0.41868716735659367, 0.2848018146009607, 0, 0.0), ('DOGE/USD', 54276.073354564505, 108552.12608, 0.03312491050546514, 0.0025139423700634013, 0, 0.0), ('HYPE/USDT', 53720.5047840598, 107440.6894, 0.04864730702407548, 0.9699324512562711, 0, 0.0), ('HBAR/USDT', 36137.45304680066, 72274.88052, 0.04139562389118856, 0.002454089941302069, 0, 0.0), ('ONE/USDT', 33065.46175555453, 66130.885706, 0.06292749658002741, 0.00016203703280423277, 0, 0.0), ('ADA/USD', 32486.578602659036, 64973.13174, 0.03729104157736821, 0.010302310420483355, 0, 0.0), ('LTC/USDT', 28188.701072871147, 56377.05226, -0.003183762809670753, 1.172653333257531, 0, 0.0), ('WIF/USDT', 27762.743508572, 55525.44833, 0.056939501779359275, 0.015078143121750738, 0, 0.0)]
+2025-10-13 17:23:55,554 INFO Victory Trading Bot started in live mode.
+2025-10-13 17:24:19,494 INFO Top scored symbols: ['BTC/USD', 'USDT/USD', 'BTC/USDT', 'XRP/USDT', 'BNB/USD', 'BNB/USDT', 'XRP/USD', 'SOL/USDT', 'ETH/USD', 'BTC/USDC', 'ETH/USDT', 'DOGE/USDT', 'USDC/USD', 'SOL/USD', 'DOGE/USD', 'LINK/USDT', 'ADA/USDT', 'ZEC/USDT', 'USDC/USDT', 'VET/USDT', 'AVAX/USDT', 'SUI/USDT', 'HYPE/USDT', 'DASH/USDT', 'SNX/USDT', 'ONE/USDT', 'ADA/USD', 'WIF/USDT', 'LTC/USDT', 'HBAR/USDT']
+2025-10-13 17:24:19,496 INFO Full scored universe: [('BTC/USD', 1267677.4536356463, 2535210.0623148, 0.00660518872868715, 482.80331126453575, 0, 0.0), ('USDT/USD', 1265542.9083513736, 2531085.8168, -0.000899011087803539, 0.0014738466677371748, 0, 0.0), ('BTC/USDT', 680813.6327639272, 1361484.4200543, 0.007188319418243949, 476.13720187593066, 0, 0.0), ('XRP/USDT', 665530.0653056393, 1331060.09956, 0.03389563918052781, 0.035712983857415274, 0, 0.0), ('BNB/USD', 638492.3391831275, 1276976.91374, -0.005613206090367199, 25.893313929275283, 0, 0.0), ('BNB/USDT', 577685.7663329747, 1155363.7326, -0.006289210989893897, 26.0127982531676, 0, 0.0), ('XRP/USD', 537515.7535163274, 1075031.4672, 0.04781746031746025, 0.03714059471790939, 0, 0.0), ('SOL/USDT', 352334.2440217603, 704667.05282, 0.06395497569710924, 4.65616845056104, 0, 0.0), ('ETH/USD', 325408.3919428419, 650801.703237, 0.03320442242518377, 50.202420101026995, 0, 0.0), ('BTC/USDC', 314205.31581158366, 628278.7822877, 0.00566342725071057, 439.4864580364673, 0, 0.0), ('ETH/USDT', 290255.58462682215, 580495.266573, 0.0347282661251331, 52.939478948701336, 0, 0.0), ('DOGE/USDT', 216554.43592695356, 433108.84118, 0.049449488120533264, 0.003347380922452658, 0, 0.0), ('USDC/USD', 138030.0847726985, 276060.1705, -0.0021982414068743693, 0.001214472725095146, 0, 0.0), ('SOL/USD', 120879.26181208706, 241757.10149, 0.06466465442267363, 4.611117938201107, 0, 0.0), ('DOGE/USD', 120538.62940913555, 241077.22902, 0.0480173035328046, 0.0032929633098472263, 0, 0.0), ('LINK/USDT', 109285.74511624473, 218571.3429, 0.05993690851735019, 0.37123448115712526, 0, 0.0), ('ADA/USDT', 94060.99252153905, 188121.94938, 0.05439150401836976, 0.010093918961434164, 0, 0.0), ('ZEC/USDT', 92977.70639968818, 185952.1047, -0.006920284374527243, 11.040838489897405, 0, 0.0), ('USDC/USDT', 86928.26529670974, 173856.5309, -0.0008005603922745041, 0.0005791856351809889, 0, 0.0), ('VET/USDT', 73807.20407360145, 147614.365931, 0.07017543859649114, 0.00036979908058295646, 0, 0.0), ('AVAX/USDT', 72848.28177309371, 145696.3689, 0.055114638447971785, 0.5385913478696066, 0, 0.0), ('SUI/USDT', 72572.88702408408, 145145.70662, 0.07991950553399452, 0.06492154945778786, 0, 0.0), ('HYPE/USDT', 57991.9509742306, 115983.49625, 0.07833415964303411, 1.195659884749839, 0, 0.0), ('DASH/USDT', 57966.78054411756, 115932.8882, -0.030014914243102153, 2.302990612225764, 0, 0.0), ('SNX/USDT', 54577.30837548289, 109154.3122, 0.37157833430401854, 0.2720132173259233, 0, 0.0), ('ONE/USDT', 32633.448994443053, 65266.858371, 0.06593406593406599, 0.00019148848529350278, 0, 0.0), ('ADA/USD', 32593.6569644028, 65187.27143, 0.06522684447021314, 0.011208996386831427, 0, 0.0), ('WIF/USDT', 31745.42477443458, 63490.77424, 0.11552346570397101, 0.01998263245921315, 0, 0.0), ('LTC/USDT', 28365.935150696063, 56731.47108, 0.019105077928607255, 1.2925278178824606, 0, 0.0), ('HBAR/USDT', 27153.654257016562, 54307.27553, 0.05339674647354483, 0.00315328415465527, 0, 0.0)]
+2025-10-13 17:59:50,352 INFO Victory Trading Bot started in live mode.
+2025-10-13 18:00:14,201 INFO Top scored symbols: ['BTC/USD', 'USDT/USD', 'XRP/USDT', 'BTC/USDT', 'BNB/USDT', 'XRP/USD', 'BNB/USD', 'SOL/USDT', 'ETH/USD', 'BTC/USDC', 'ETH/USDT', 'DOGE/USDT', 'USDC/USD', 'DOGE/USD', 'SOL/USD', 'LINK/USDT', 'ZEC/USDT', 'ADA/USDT', 'USDC/USDT', 'AVAX/USDT', 'VET/USDT', 'SUI/USDT', 'USELESS/USDT', 'HYPE/USDT', 'DASH/USDT', 'SNX/USDT', 'ADA/USD', 'WIF/USDT', 'ONE/USDT', 'LTC/USDT']
+2025-10-13 18:00:14,202 INFO Full scored universe: [('BTC/USD', 1256006.517007991, 2511866.9347043, 0.001495584415584461, 486.9947144380116, 0, 0.0), ('USDT/USD', 1238370.6958526894, 2476741.3927, -0.0023928215353937765, 0.0014702380759591223, 0, 0.0), ('XRP/USDT', 713302.4508631162, 1426604.87494, 0.0271322401793087, 0.03502296024039092, 0, 0.0), ('BTC/USDT', 671354.5390568967, 1342565.4927085, 0.007547556988715503, 478.60292253081946, 0, 0.0), ('BNB/USDT', 561281.5201579235, 1122555.24521, -0.005454770219736027, 25.9945956967982, 0, 0.0), ('XRP/USD', 542967.603536867, 1085935.17985, 0.028536566165472815, 0.033672647653548125, 0, 0.0), ('BNB/USD', 535658.2931827181, 1071308.73587, -0.006563569095496848, 26.181445258808797, 0, 0.0), ('SOL/USDT', 344919.0881299213, 689836.74958, 0.06236889229982092, 4.630861690873524, 0, 0.0), ('ETH/USD', 314560.43696749443, 629105.484089, 0.02813888868771277, 51.24320885190539, 0, 0.0), ('BTC/USDC', 311950.0129664862, 623766.2852126, 0.007013960267633813, 445.7883733209733, 0, 0.0), ('ETH/USDT', 281730.8479130485, 563446.101693, 0.03165312832414668, 51.91713740028421, 0, 0.0), ('DOGE/USDT', 207642.44959108144, 415284.87432, 0.03983967548773425, 0.003194525316850689, 0, 0.0), ('USDC/USD', 136225.90894559957, 272451.8182, -0.0010987913295376094, 0.0011682465493208355, 0, 0.0), ('DOGE/USD', 120190.42200302718, 240380.82009, 0.03822666730778484, 0.003266846699800894, 0, 0.0), ('SOL/USD', 118102.04924960127, 236202.60182, 0.05188034620640786, 4.885169982712988, 0, 0.0), ('LINK/USDT', 109002.18557237969, 218004.2316, 0.05205047318611998, 0.3610482516229652, 0, 0.0), ('ZEC/USDT', 91035.59424638993, 182067.88485, -0.0116850703373165, 11.035512740240032, 0, 0.0), ('ADA/USDT', 88616.51289192704, 177232.99516, 0.04621125143513204, 0.009657010717608223, 0, 0.0), ('USDC/USDT', 87046.0931548318, 174092.1862, -0.00010007004903431301, 0.0005656854249492448, 0, 0.0), ('AVAX/USDT', 72345.34790744088, 144690.5083, 0.04894179894179892, 0.5271660080088619, 0, 0.0), ('VET/USDT', 71701.54029081992, 143403.037727, 0.07123870281765024, 0.0003713939148666818, 0, 0.0), ('SUI/USDT', 65641.48391065224, 131282.9052, 0.0714722272155313, 0.06579322712863382, 0, 0.0), ('USELESS/USDT', 60215.37025833947, 120430.58022, 0.25098157656297193, 0.032359110000122066, 0, 0.0), ('HYPE/USDT', 57547.59525934719, 115094.79486, 0.051922605927014566, 1.215017102760286, 0, 0.0), ('DASH/USDT', 57130.0647135355, 114259.45384, -0.052777265178077126, 2.357511433694437, 0, 0.0), ('SNX/USDT', 54380.20292548289, 108760.1013, 0.37157833430401854, 0.2720132173259233, 0, 0.0), ('ADA/USD', 32785.65539822572, 65571.28088, 0.04468874928612221, 0.010344006187159785, 0, 0.0), ('WIF/USDT', 31746.858542726688, 63493.65694, 0.0902527075812273, 0.019979429421282252, 0, 0.0), ('ONE/USDT', 30317.731081943053, 60635.422546, 0.06593406593406599, 0.00019148848529350278, 0, 0.0), ('LTC/USDT', 27574.488343883422, 55148.61474, 0.004927099044746052, 1.1966383580681326, 0, 0.0)]
+2025-10-13 22:32:24,987 INFO Victory Trading Bot started in live mode.
+2025-10-13 22:32:49,525 INFO Top scored symbols: ['BTC/USD', 'USDT/USD', 'XRP/USDT', 'BTC/USDT', 'XRP/USD', 'BNB/USD', 'BNB/USDT', 'SOL/USDT', 'ETH/USD', 'BTC/USDC', 'ETH/USDT', 'DOGE/USDT', 'USDC/USD', 'SOL/USD', 'DOGE/USD', 'USDC/USDT', 'ZEC/USDT', 'LINK/USDT', 'ADA/USDT', 'VET/USDT', 'SNX/USDT', 'HYPE/USDT', 'USELESS/USDT', 'DASH/USDT', 'SUI/USDT', 'AVAX/USDT', 'WIF/USDT', 'ONE/USDT', 'ADA/USD', 'HYPE/USD']
+2025-10-13 22:32:49,525 INFO Full scored universe: [('BTC/USD', 1252410.6375902302, 2504667.3276636, -0.013611449722640764, 513.1856124337085, 0, 0.0), ('USDT/USD', 1087505.0812287966, 2175010.1629, -0.001397345044415678, 0.0013199999999999987, 0, 0.0), ('XRP/USDT', 746541.2377353538, 1493082.46395, 0.0056733703732686274, 0.027055617974831057, 0, 0.0), ('BTC/USDT', 635248.5209581297, 1270348.2227145, -0.010839884698057484, 496.0856856332803, 0, 0.0), ('XRP/USD', 566955.1370873207, 1133910.25966, 0.01131097321498719, 0.02576019130363749, 0, 0.0), ('BNB/USD', 535850.7357050516, 1071693.69978, -0.009735145643003736, 25.924903968192467, 0, 0.0), ('BNB/USDT', 441870.6042998321, 883733.57435, -0.002583580765819717, 25.45266604189037, 0, 0.0), ('SOL/USDT', 407885.00090321293, 815768.15503, 0.05432299334924094, 6.047275432787891, 0, 0.0), ('ETH/USD', 306638.5617502314, 613260.851743, 0.006542423791678748, 54.22610669557604, 0, 0.0), ('BTC/USDC', 293369.0838521322, 586582.7241259, -0.013462168962367144, 518.1721855528714, 0, 0.0), ('ETH/USDT', 266599.63793550775, 533182.071734, 0.010345748713098546, 57.32643188756811, 0, 0.0), ('DOGE/USDT', 182668.22527280764, 365336.44275, 0.011420893516963487, 0.003143597277006073, 0, 0.0), ('USDC/USD', 142435.3844910003, 284870.7691, -0.0007988815658080026, 0.0012044318162519653, 0, 0.0), ('SOL/USD', 115170.38651736999, 230338.95024, 0.053874613552278114, 5.968233239410137, 0, 0.0), ('DOGE/USD', 99042.81564918015, 198085.63209, -0.0028445455838430624, 0.0030502921564991106, 0, 0.0), ('USDC/USDT', 94760.85134450842, 189521.7021, 0.0007009813739234157, 0.0005614267539047334, 0, 0.0), ('ZEC/USDT', 94600.05670077945, 189196.55591, -0.10028274519883955, 12.058870686760017, 0, 0.0), ('LINK/USDT', 89852.81424424099, 179705.5184, 0.024581589958158935, 0.31779842667955405, 0, 0.0), ('ADA/USDT', 84268.93510911994, 168537.86279, 0.007879555367947164, 0.009001688730454968, 0, 0.0), ('VET/USDT', 71653.19234236168, 143306.370813, 0.022952529994783488, 0.00033401796358878676, 0, 0.0), ('SNX/USDT', 65729.82953236472, 131459.5001, 0.15648050579557427, 0.2169214198736492, 0, 0.0), ('HYPE/USDT', 61913.76397929015, 123827.08002, 0.06144971156257845, 1.3702291779114906, 0, 0.0), ('USELESS/USDT', 58836.34077288826, 117672.53727, 0.22464851929404728, 0.03162221649410426, 0, 0.0), ('DASH/USDT', 55678.35828881997, 111355.94091, -0.12473002159827212, 2.835018842970889, 0, 0.0), ('SUI/USDT', 55427.95855456221, 110855.87309, 0.04032748203496479, 0.0660754506908579, 0, 0.0), ('AVAX/USDT', 41284.77622678642, 82569.3382, 0.05903560162235235, 0.5961073728784098, 0, 0.0), ('WIF/USDT', 31711.402801892847, 63422.73599, 0.1053604436229204, 0.021325065064379027, 0, 0.0), ('ONE/USDT', 30205.345150488774, 60410.655526, 0.05785123966942152, 0.00021411249379706931, 0, 0.0), ('ADA/USD', 30000.028828618506, 60000.0504, 0.007865168539325913, 0.008460452942957601, 0, 0.0), ('HYPE/USD', 27373.816221301506, 54747.2096, 0.05863192182410432, 1.292211499716668, 0, 0.0)]
+2025-10-14 01:28:16,888 INFO Victory Trading Bot started in live mode.
+2025-10-14 01:28:39,892 INFO Top scored symbols: ['BTC/USD', 'USDT/USD', 'XRP/USDT', 'BTC/USDT', 'XRP/USD', 'SOL/USDT', 'BNB/USDT', 'BNB/USD', 'ETH/USD', 'BTC/USDC', 'ETH/USDT', 'DOGE/USDT', 'ADA/USDT', 'USDC/USD', 'SOL/USD', 'ZEC/USDT', 'USDC/USDT', 'DOGE/USD', 'SUI/USDT', 'SUI/USD', 'LINK/USDT', 'AVAX/USDT', 'HYPE/USDT', 'SNX/USDT', 'USELESS/USDT', 'ETH/USDC', 'ADA/USD', 'DASH/USDT', 'HYPE/USD', 'WIF/USDT']
+2025-10-14 01:28:39,893 INFO Full scored universe: [('BTC/USD', 1468376.5064931638, 2936518.7098457, -0.015740841821323553, 781.041950441485, 0, 0.0), ('USDT/USD', 1285310.9284620571, 2570621.8578, -0.0017974835230677288, 0.000675348798769945, 0, 0.0), ('XRP/USDT', 1142642.2391165064, 2285284.47428, -0.009569377990430613, 0.03231546601861101, 0, 0.0), ('BTC/USDT', 686860.4705271596, 1373497.7948368, -0.007850512988430489, 743.8364260901459, 0, 0.0), ('XRP/USD', 681036.4804671721, 1362072.96342, -0.022283033620015616, 0.036280548176674525, 0, 0.0), ('SOL/USDT', 484771.045309763, 969540.30887, 0.045290601813685036, 5.8485838833002965, 0, 0.0), ('BNB/USDT', 462965.9834262723, 925923.25843, -0.03212434430230651, 29.09232383705362, 0, 0.0), ('BNB/USD', 456025.3150684309, 912041.64709, -0.03839753466872105, 30.020284608910707, 0, 0.0), ('ETH/USD', 321830.8566372768, 643644.208902, -0.01097826323199491, 58.36986503873378, 0, 0.0), ('BTC/USDC', 304052.9054493608, 607887.0344219, -0.01223297500414128, 729.2793886884223, 0, 0.0), ('ETH/USDT', 270162.18544292817, 540306.22699, -0.0056249029352384615, 60.490902660152045, 0, 0.0), ('DOGE/USDT', 190433.685232024, 380867.37218, -0.004577651423890419, 0.003435462961523526, 0, 0.0), ('ADA/USDT', 170870.31379622003, 341740.62204, 0.00471159337521412, 0.009084946670179188, 0, 0.0), ('USDC/USD', 136846.82569160295, 273693.6529, -0.003095666067505595, 0.001135351927817966, 0, 0.0), ('SOL/USD', 125376.25141159447, 250750.75484, 0.03933736793517292, 5.747935893866599, 0, 0.0), ('ZEC/USDT', 121613.72139660471, 243223.97965, -0.17622583306431372, 11.896262364289049, 0, 0.0), ('USDC/USDT', 115502.28972155596, 231004.5798, -0.0009010812975570804, 0.00061253571324455, 0, 0.0), ('DOGE/USD', 103786.18964573309, 207572.38493, -0.011133506094634881, 0.0034718993994642166, 0, 0.0), ('SUI/USDT', 100943.63122860728, 201887.24737, -0.00520427671174693, 0.06069926866116259, 0, 0.0), ('SUI/USD', 100273.3820705983, 200546.74325, 0.002631672534585182, 0.06437397685400519, 0, 0.0), ('LINK/USDT', 80592.71599885807, 161185.3438, 0.0026014568158168948, 0.2887894734923695, 0, 0.0), ('AVAX/USDT', 76630.92753843086, 153261.6766, 0.03257474341811693, 0.5297733855149761, 0, 0.0), ('HYPE/USDT', 61888.09914036815, 123775.8076, 0.06155844155844149, 1.179152237838694, 0, 0.0), ('SNX/USDT', 61696.56623965822, 123393.0064, 0.11917372881355938, 0.1819169304930138, 0, 0.0), ('USELESS/USDT', 58958.992616799136, 117917.8636, 0.18893304799755434, 0.027579231606409915, 0, 0.0), ('ETH/USDC', 55878.45196851769, 111737.893712, -0.006346246973365627, 63.38010927854259, 0, 0.0), ('ADA/USD', 55339.86017571736, 110679.71945, -0.0029719784885366414, 0.008948739352556868, 0, 0.0), ('DASH/USDT', 52200.66891211364, 104400.60178, -0.20277777777777778, 2.859036313165679, 0, 0.0), ('HYPE/USD', 33815.553915949036, 67630.72831, 0.06204569055036327, 1.1409816124723484, 0, 0.0), ('WIF/USDT', 32560.425644994782, 65120.8066, 0.06557377049180313, 0.017819090885900973, 0, 0.0)]
+2025-10-14 15:10:06,063 INFO Victory Trading Bot started in live mode.
+2025-10-14 15:10:29,974 INFO Top scored symbols: ['XRP/USDT', 'USDT/USD', 'BNB/USDT', 'BTC/USD', 'BTC/USDT', 'SOL/USDT', 'ETH/USDT', 'ETH/USD', 'BNB/USD', 'XRP/USD', 'DOGE/USDT', 'BTC/USDC', 'DOGE/USD', 'SOL/USD', 'ADA/USDT', 'ZEC/USDT', 'USDC/USDT', 'USELESS/USDT', 'SUI/USD', 'SUI/USDT', 'AVAX/USDT', 'ETH/USDC', 'PENGU/USDT', 'HYPE/USDT', 'LINK/USDT', 'ADA/USD', 'FET/USDT', 'LTC/USDT', 'HBAR/USDT', 'HYPE/USD']
+2025-10-14 15:10:29,976 INFO Full scored universe: [('XRP/USDT', 1030751.9042339012, 2061503.81545, -0.04565896790913946, 0.068043942742907, 0, 0.0), ('USDT/USD', 961839.9662857864, 1923679.9325, -0.00010002000400078914, 0.00043861600517989754, 0, 0.0), ('BNB/USDT', 769440.2739248476, 1538866.70637, -0.0494080752646021, 46.237081800650024, 0, 0.0), ('BTC/USD', 669935.9706788937, 1339365.7732501, -0.022955882872919203, 1687.272937391032, 0, 0.0), ('BTC/USDT', 634892.3453995626, 1269276.0675452, -0.021684664756787472, 1695.454215747227, 0, 0.0), ('SOL/USDT', 539814.2919576936, 1079626.93591, -0.021109071587286272, 5.535569434123286, 0, 0.0), ('ETH/USDT', 439180.7199201919, 878326.906225, -0.03276686512587314, 115.17758500958413, 0, 0.0), ('ETH/USD', 347932.8454838715, 695831.410714, -0.03075783931173886, 114.32902815575753, 0, 0.0), ('BNB/USD', 306491.75608356314, 612969.70922, -0.045907948476280276, 46.10163965153518, 0, 0.0), ('XRP/USD', 280091.16463787714, 560182.33611, -0.045983590917763724, 0.0691863628181161, 0, 0.0), ('DOGE/USDT', 245703.27532504857, 491406.58001, -0.05225300477980414, 0.006639666786819954, 0, 0.0), ('BTC/USDC', 227727.29746073135, 454960.9937429, -0.024009942848465585, 1645.3852817611305, 0, 0.0), ('DOGE/USD', 196447.01346964212, 392894.05751, -0.054332205275601536, 0.0067620245015823505, 0, 0.0), ('SOL/USD', 154326.52647306368, 308651.41039, -0.025476167456250653, 5.526139426398867, 0, 0.0), ('ADA/USDT', 151051.32642907885, 302102.66388, -0.028860829748855336, 0.020982185205549973, 0, 0.0), ('ZEC/USDT', 142538.42076570916, 285073.05409, -0.051534612505417486, 12.727873952864242, 0, 0.0), ('USDC/USDT', 112460.56121168604, 224921.1222, 0.00020024028834599315, 0.00034409301068170716, 0, 0.0), ('USELESS/USDT', 109682.18893330474, 219364.36349, 0.008578431372549027, 0.03076516887650708, 0, 0.0), ('SUI/USD', 98251.38037406554, 196502.75423, -0.04193515738335424, 0.10559741845329366, 0, 0.0), ('SUI/USDT', 85875.11398615336, 171750.2216, -0.040721231766612506, 0.10268348603353895, 0, 0.0), ('AVAX/USDT', 74461.26827138184, 148922.3816, -0.04602510460251037, 0.6085260881835713, 0, 0.0), ('ETH/USDC', 71373.57154613457, 142711.629935, -0.03662916192589888, 118.45044922092949, 0, 0.0), ('PENGU/USDT', 65760.520866666, 131521.086124, -0.07452858425621062, 0.0010882752931129145, 0, 0.0), ('HYPE/USDT', 54699.72838486253, 109398.95807, -0.05159763313609467, 1.7655276831587776, 0, 0.0), ('LINK/USDT', 50279.2598140576, 100558.3707, -0.04595404595404586, 0.5883351425845643, 0, 0.0), ('ADA/USD', 48604.34532527603, 97208.70338, -0.03219121304227685, 0.02195093291867112, 0, 0.0), ('FET/USDT', 48285.804588693005, 96571.6802, -0.12702702702702698, 0.017312007393713753, 0, 0.0), ('LTC/USDT', 44040.94574373722, 88081.04479, -0.028545763050204606, 2.8794164408782543, 0, 0.0), ('HBAR/USDT', 34624.10258763924, 69248.22367, -0.03363993385696563, 0.005630795950840342, 0, 0.0), ('HYPE/USD', 32104.321497059427, 64208.1556, -0.04478672985781992, 1.7142205225699525, 0, 0.0)]
+2025-10-14 15:59:52,622 INFO Victory Trading Bot started in live mode.
+2025-10-14 16:00:15,584 INFO Top scored symbols: ['XRP/USDT', 'BNB/USDT', 'BTC/USDT', 'SOL/USDT', 'ETH/USDT', 'DOGE/USDT', 'ADA/USDT', 'ZEC/USDT', 'USDC/USDT', 'USELESS/USDT', 'AVAX/USDT', 'SUI/USDT', 'PENGU/USDT', 'LTC/USDT', 'HYPE/USDT', 'LINK/USDT', 'FET/USDT', 'HBAR/USDT']
+2025-10-14 16:00:15,585 INFO Full scored universe: [('XRP/USDT', 1084342.753577734, 2168685.52014, -0.0558731610641056, 0.06846454895783662, 0, 0.0), ('BNB/USDT', 763429.7902253832, 1526845.71273, -0.053500588004704044, 46.33273706398103, 0, 0.0), ('BTC/USDT', 638509.3463775074, 1276509.0904325, -0.029519481389730724, 1698.7334473455696, 0, 0.0), ('SOL/USDT', 515039.1113178367, 1030076.58163, -0.03801565066177183, 5.54605021253865, 0, 0.0), ('ETH/USDT', 446009.02369922225, 891983.544739, -0.03824949603862908, 115.08536380687157, 0, 0.0), ('DOGE/USDT', 261169.03917317814, 522338.11021, -0.05642953269293228, 0.006646919575261912, 0, 0.0), ('ADA/USDT', 151420.59029844153, 302841.19677, -0.03746357707784102, 0.02101676435610392, 0, 0.0), ('ZEC/USDT', 138091.76024328376, 276179.73285, -0.07359836097868487, 12.772651947031205, 0, 0.0), ('USDC/USDT', 117720.96840254204, 235441.9364, 0.0005006007208649829, 0.00034907878766834337, 0, 0.0), ('USELESS/USDT', 109860.08039680574, 219720.14639, 0.008578431372549027, 0.03085517551400413, 0, 0.0), ('AVAX/USDT', 86630.44628856062, 173260.7453, -0.06443514644351461, 0.619794030303616, 0, 0.0), ('SUI/USDT', 85899.66834505253, 171799.34473, -0.06293986191254457, 0.09908007396040835, 0, 0.0), ('PENGU/USDT', 65408.50590751323, 130817.038821, -0.045526733721545795, 0.0010335556693279759, 0, 0.0), ('LTC/USDT', 55289.66429783114, 110578.47311, -0.02036131350434167, 2.892341501275393, 0, 0.0), ('HYPE/USDT', 54267.775662409644, 108535.07438, -0.07247386759581877, 1.7347637994839529, 0, 0.0), ('LINK/USDT', 53815.05299218074, 107629.9616, -0.05444555444555444, 0.5901723138202941, 0, 0.0), ('FET/USDT', 47119.33372130274, 94238.7504, -0.14705882352941174, 0.017592998607400608, 0, 0.0), ('HBAR/USDT', 33326.41209304475, 66652.84916, -0.04434361142621428, 0.005440854550527885, 0, 0.0)]
+2025-10-14 16:45:25,145 INFO Victory Trading Bot started in live mode.
+2025-10-15 15:10:48,506 INFO Victory Trading Bot started in live mode.
+2025-10-15 22:03:11,804 INFO Victory Trading Bot started in live mode.
+2025-10-15 22:40:55,781 INFO Victory Trading Bot started in live mode.
+2025-10-15 23:16:23,330 INFO Victory Trading Bot started in live mode.
+2025-10-15 23:28:22,628 INFO Victory Trading Bot started in live mode.
+2025-10-15 23:36:05,085 INFO Victory Trading Bot started in live mode.
+2025-10-15 23:43:54,049 INFO Received signal 2, shutting down gracefully...
+2025-10-15 23:44:07,525 INFO Shutdown complete.
+2025-10-15 23:44:07,579 ERROR Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<stream_all_usdt_prices_and_candles() done, defined at /Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py:27> exception=TimeoutError()>
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/client.py", line 770, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/client.py", line 725, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        req, traces=traces, timeout=real_timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/connector.py", line 642, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1209, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1532, in _create_direct_connection
+    hosts = await self._resolve_host(host, port, traces=traces)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1148, in _resolve_host
+    return await asyncio.shield(resolved_host_task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py", line 28, in stream_all_usdt_prices_and_candles
+    client = await AsyncClient.create()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 102, in create
+    await self.ping()
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 320, in ping
+    return await self._get("ping")
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 273, in _get
+    return await self._request_api("get", path, signed, version, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 208, in _request_api
+    return await self._request(method, uri, signed, force_params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 170, in _request
+    async with getattr(self.session, method)(
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        yarl.URL(uri, encoded=True),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    ) as response:
+    ^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/client.py", line 1488, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/client.py", line 622, in _request
+    with timer:
+         ^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/helpers.py", line 685, in __exit__
+    raise asyncio.TimeoutError from exc_val
+TimeoutError
+2025-10-15 23:45:28,877 INFO Victory Trading Bot started in live mode.
+2025-10-15 23:47:09,490 ERROR Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<stream_all_usdt_prices_and_candles() done, defined at /Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py:27> exception=TimeoutError()>
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/client.py", line 770, in _request
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/client.py", line 725, in _connect_and_send_request
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/connector.py", line 642, in connect
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1209, in _create_connection
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1532, in _create_direct_connection
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/connector.py", line 1148, in _resolve_host
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py", line 28, in stream_all_usdt_prices_and_candles
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 102, in create
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 320, in ping
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 273, in _get
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 208, in _request_api
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 170, in _request
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/client.py", line 1488, in __aenter__
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/client.py", line 622, in _request
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/aiohttp/helpers.py", line 685, in __exit__
+TimeoutError
+2025-10-16 02:01:22,373 INFO Victory Trading Bot started in live mode.
+2025-10-16 02:19:15,542 INFO Victory Trading Bot started in live mode.
+2025-10-16 02:29:11,940 INFO Victory Trading Bot started in live mode.
+2025-10-16 02:36:31,746 INFO Victory Trading Bot started in live mode.
+2025-10-16 02:45:04,852 INFO Victory Trading Bot started in live mode.
+2025-10-16 02:53:29,719 INFO Victory Trading Bot started in live mode.
+2025-10-16 09:24:37,343 INFO Victory Trading Bot started in live mode.
+2025-10-16 10:42:41,516 INFO Victory Trading Bot started in live mode.
+2025-10-16 11:07:52,842 INFO Victory Trading Bot started in live mode.
+2025-10-16 12:06:38,557 INFO Victory Trading Bot started in live mode.
+2025-10-16 12:08:21,775 INFO Received signal 2, shutting down gracefully...
+2025-10-16 12:08:33,281 INFO Shutdown complete.
+2025-10-16 12:08:33,283 ERROR Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<stream_all_usdt_prices_and_candles() done, defined at /Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py:27> exception=BinanceAPIException(<ClientResponse(https://api.binance.com/api/v3/ping) [451 None]>
+<CIMultiDictProxy('Server': 'CloudFront', 'Date': 'Thu, 16 Oct 2025 16:07:13 GMT', 'Content-Length': '224', 'Connection': 'keep-alive', 'Content-Type': 'application/json', 'X-Cache': 'Error from cloudfront', 'Via': '1.1 d94b2ce686462d2b3be07bc045c3cd74.cloudfront.net (CloudFront)', 'X-Amz-Cf-Pop': 'MIA3-C5', 'X-Amz-Cf-Id': '3sSWTEHhMmZD0nhb9wv3aVC-BKgtmAd5rh6I56F0WhwBY6OqgAx39Q==')>
+, 451, '{\n  "code": 0,\n  "msg": "Service unavailable from a restricted location according to \'b. Eligibility\' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."\n}')>
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py", line 28, in stream_all_usdt_prices_and_candles
+    client = await AsyncClient.create()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 102, in create
+    await self.ping()
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 320, in ping
+    return await self._get("ping")
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 273, in _get
+    return await self._request_api("get", path, signed, version, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 208, in _request_api
+    return await self._request(method, uri, signed, force_params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 178, in _request
+    return await self._handle_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 186, in _handle_response
+    raise BinanceAPIException(response, response.status, await response.text())
+binance.exceptions.BinanceAPIException: APIError(code=0): Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error.
+2025-10-16 12:14:09,198 INFO Victory Trading Bot started in live mode.
+2025-10-16 12:17:38,500 INFO Received signal 2, shutting down gracefully...
+2025-10-16 12:17:44,311 INFO Shutdown complete.
+2025-10-16 12:17:44,313 ERROR Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<stream_all_usdt_prices_and_candles() done, defined at /Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py:27> exception=BinanceAPIException(<ClientResponse(https://api.binance.com/api/v3/ping) [451 None]>
+<CIMultiDictProxy('Server': 'CloudFront', 'Date': 'Thu, 16 Oct 2025 16:14:43 GMT', 'Content-Length': '224', 'Connection': 'keep-alive', 'Content-Type': 'application/json', 'X-Cache': 'Error from cloudfront', 'Via': '1.1 4bc37bed72cc3441acb8099dc21c8698.cloudfront.net (CloudFront)', 'X-Amz-Cf-Pop': 'MIA3-C5', 'X-Amz-Cf-Id': 'g5lxPRXn0WE-QUsX2SPzfQSAZdHmJUJuQWpA2VDPCSVmZxvr73y4yA==')>
+, 451, '{\n  "code": 0,\n  "msg": "Service unavailable from a restricted location according to \'b. Eligibility\' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."\n}')>
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py", line 28, in stream_all_usdt_prices_and_candles
+    client = await AsyncClient.create()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 102, in create
+    await self.ping()
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 320, in ping
+    return await self._get("ping")
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 273, in _get
+    return await self._request_api("get", path, signed, version, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 208, in _request_api
+    return await self._request(method, uri, signed, force_params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 178, in _request
+    return await self._handle_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 186, in _handle_response
+    raise BinanceAPIException(response, response.status, await response.text())
+binance.exceptions.BinanceAPIException: APIError(code=0): Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error.
+2025-10-16 12:23:35,187 INFO Victory Trading Bot started in live mode.
+2025-10-16 12:33:53,368 INFO Received signal 2, shutting down gracefully...
+2025-10-16 12:34:02,885 INFO Shutdown complete.
+2025-10-16 12:34:02,886 ERROR Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<stream_all_usdt_prices_and_candles() done, defined at /Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py:27> exception=BinanceAPIException(<ClientResponse(https://api.binance.com/api/v3/ping) [451 None]>
+<CIMultiDictProxy('Server': 'CloudFront', 'Date': 'Thu, 16 Oct 2025 16:24:09 GMT', 'Content-Length': '224', 'Connection': 'keep-alive', 'Content-Type': 'application/json', 'X-Cache': 'Error from cloudfront', 'Via': '1.1 7b684daf68830c24a645afbee86b35aa.cloudfront.net (CloudFront)', 'X-Amz-Cf-Pop': 'MIA3-C5', 'X-Amz-Cf-Id': 'FtKoeJJj8379tM_mxl7webnTgBZKxLJbwlohPsqjQ9E7dUGwRynkZw==')>
+, 451, '{\n  "code": 0,\n  "msg": "Service unavailable from a restricted location according to \'b. Eligibility\' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."\n}')>
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py", line 28, in stream_all_usdt_prices_and_candles
+    client = await AsyncClient.create()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 102, in create
+    await self.ping()
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 320, in ping
+    return await self._get("ping")
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 273, in _get
+    return await self._request_api("get", path, signed, version, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 208, in _request_api
+    return await self._request(method, uri, signed, force_params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 178, in _request
+    return await self._handle_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 186, in _handle_response
+    raise BinanceAPIException(response, response.status, await response.text())
+binance.exceptions.BinanceAPIException: APIError(code=0): Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error.
+2025-10-16 13:50:55,587 INFO Victory Trading Bot started in live mode.
+2025-10-16 19:38:30,574 INFO Victory Trading Bot started in live mode.
+2025-10-16 19:42:12,152 INFO Received signal 2, shutting down gracefully...
+2025-10-16 19:42:15,744 INFO Shutdown complete.
+2025-10-16 19:42:15,744 ERROR Task exception was never retrieved
+future: <Task finished name='Task-3' coro=<stream_all_usdt_prices_and_candles() done, defined at /Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py:27> exception=BinanceAPIException(<ClientResponse(https://api.binance.com/api/v3/ping) [451 None]>
+<CIMultiDictProxy('Server': 'CloudFront', 'Date': 'Thu, 16 Oct 2025 23:39:05 GMT', 'Content-Length': '224', 'Connection': 'keep-alive', 'Content-Type': 'application/json', 'X-Cache': 'Error from cloudfront', 'Via': '1.1 293f01eb5e44c6051948fdc2f3e7eb06.cloudfront.net (CloudFront)', 'X-Amz-Cf-Pop': 'MIA3-C5', 'X-Amz-Cf-Id': 'ocRHhkg9RaceVUrLVPihpsUPkYg6DALXsK5wmRgcqWUzXrOXLtGNmw==')>
+, 451, '{\n  "code": 0,\n  "msg": "Service unavailable from a restricted location according to \'b. Eligibility\' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error."\n}')>
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/src/victory_bot/utils/binance_ws.py", line 28, in stream_all_usdt_prices_and_candles
+    client = await AsyncClient.create()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 102, in create
+    await self.ping()
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 320, in ping
+    return await self._get("ping")
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 273, in _get
+    return await self._request_api("get", path, signed, version, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 208, in _request_api
+    return await self._request(method, uri, signed, force_params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 178, in _request
+    return await self._handle_response(response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/venv/lib/python3.13/site-packages/binance/async_client.py", line 186, in _handle_response
+    raise BinanceAPIException(response, response.status, await response.text())
+binance.exceptions.BinanceAPIException: APIError(code=0): Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error.

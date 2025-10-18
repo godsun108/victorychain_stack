@@ -1,0 +1,3 @@
+2025-08-04 10:47:14,335 - INFO - 📡 Fetching enhanced market data from Binance US...
+2025-08-04 10:51:18,604 - INFO - Live trading configuration saved: claude_analysis strategy for 8 hours
+2025-08-04 10:51:24,137 - ERROR - Claude API error: 400

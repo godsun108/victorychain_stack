@@ -1,0 +1,313 @@
+#!/usr/bin/env python3
+"""
+Reallocate To Top Momentum (Binance US)
+- Scans tradable markets (USDT/USD) for top momentum token.
+- Sells other non-stable holdings into quote.
+- Buys the top momentum token with available quote balance (up to a cap).
+- Optional: places adaptive multi-target take-profits similar to quick_xrp_allocation.
+
+Usage:
+  ./venv/bin/python reallocate_to_top_momentum.py live         # execute trades
+  ./venv/bin/python reallocate_to_top_momentum.py dry-run      # just show plan
+  ./venv/bin/python reallocate_to_top_momentum.py live --no-tp # skip placing TPs
+
+Env:
+  BINANCEUS_KEY, BINANCE_API_SECRET (or BINANCEUS_SECRET)
+
+Notes:
+  - Spot only, no leverage.
+  - Respects min notional and step sizes where possible.
+  - Conservative with fee assumptions.
+"""
+import os
+import sys
+import time
+import math
+import json
+import statistics
+from datetime import datetime
+
+import ccxt
+from dotenv import load_dotenv
+
+# Config
+QUOTE_PREF_ORDER = ("USDT", "USD")
+MIN_TRADE_USD = 10.0
+ALLOC_CAP_USD = 185.0
+ALLOC_FRACTION = 1.00  # move 100% of available quote up to cap
+MOM_LOOKBACK_MIN = 15
+VOL_LIQUIDITY_MIN_QUOTE = 100000.0  # min 24h quote volume
+
+# TP config (optional)
+ENABLE_TP_DEFAULT = True
+TP1_PCT = 0.03
+TP2_PCT_WEAK = 0.05
+TP2_PCT_STRONG = 0.06
+STRONG_MOM_THRESHOLD = 0.02
+TP_SPLIT_WEAK = (0.70, 0.30)
+TP_SPLIT_STRONG = (0.40, 0.60)
+
+
+def load_exchange():
+    load_dotenv()
+    api_key = os.getenv("BINANCEUS_KEY")
+    api_secret = os.getenv("BINANCE_API_SECRET") or os.getenv("BINANCEUS_SECRET")
+    if not api_key or not api_secret:
+        raise RuntimeError("Missing BINANCEUS_KEY/BINANCE_API_SECRET env vars")
+    ex = ccxt.binanceus(
+        {
+            "apiKey": api_key,
+            "secret": api_secret,
+            "enableRateLimit": True,
+            "timeout": 30000,
+            "options": {"defaultType": "spot"},
+        }
+    )
+    ex.load_markets()
+    return ex
+
+
+def get_balances(ex):
+    bal = ex.fetch_balance()
+    free = bal.get("free") or {}
+    total = bal.get("total") or {}
+    return free, total
+
+
+def pick_quote(ex, free):
+    for q in QUOTE_PREF_ORDER:
+        if free.get(q, 0.0) >= MIN_TRADE_USD:
+            return q
+    # fallback: pick one that exists in markets
+    for q in QUOTE_PREF_ORDER:
+        for s in ex.markets.keys():
+            if s.endswith("/" + q):
+                return q
+    return None
+
+
+def momentum_15m(ex, symbol):
+    try:
+        ohlcv = ex.fetch_ohlcv(
+            symbol, timeframe="1m", limit=max(MOM_LOOKBACK_MIN + 5, 25)
+        )
+        closes = [c[4] for c in ohlcv if c and c[4] is not None]
+        if len(closes) <= MOM_LOOKBACK_MIN:
+            return 0.0
+        return (closes[-1] - closes[-1 - MOM_LOOKBACK_MIN]) / closes[
+            -1 - MOM_LOOKBACK_MIN
+        ]
+    except Exception:
+        return 0.0
+
+
+def top_momentum_symbol(ex, quote):
+    candidates = [
+        s
+        for s, m in ex.markets.items()
+        if m.get("active") and m.get("type") == "spot" and m.get("quote") == quote
+    ]
+    best = None
+    best_score = -1.0
+    for sym in candidates:
+        try:
+            t = ex.fetch_ticker(sym)
+            qvol = float(t.get("quoteVolume") or 0.0)
+            if qvol < VOL_LIQUIDITY_MIN_QUOTE:
+                continue
+            mom = momentum_15m(ex, sym)
+            day_pct = float(t.get("percentage") or 0.0) / 100.0
+            score = mom * 0.7 + max(0.0, day_pct) * 0.3
+            if score > best_score:
+                best_score = score
+                best = (sym, mom, day_pct, qvol)
+            time.sleep(0.03)
+        except Exception:
+            continue
+    return best  # (symbol, mom15m, day_pct, qvol)
+
+
+def amount_to_step(amount, step):
+    if not step or step == 0:
+        return amount
+    return math.floor(amount / step) * step
+
+
+def round_to_precision(x, decs):
+    try:
+        if isinstance(decs, int):
+            return float(f"{x:.{decs}f}")
+    except Exception:
+        pass
+    return x
+
+
+def sell_non_quote_holdings(ex, free, quote, dry_run=False):
+    actions = []
+    for cur, amt in free.items():
+        if cur in (quote, "USDT", "USD"):
+            continue
+        if amt <= 0:
+            continue
+        sym = f"{cur}/{quote}"
+        if sym not in ex.markets:
+            continue
+        try:
+            t = ex.fetch_ticker(sym)
+            price = float(t.get("last") or 0.0)
+            if price <= 0:
+                continue
+            est = amt * price
+            if est < MIN_TRADE_USD:
+                continue
+            # step size
+            step = None
+            for flt in ex.market(sym).get("info", {}).get("filters", []):
+                if flt.get("filterType") == "LOT_SIZE":
+                    step = float(flt.get("stepSize"))
+                    break
+            sell_amt = amount_to_step(amt, step) if step else amt
+            actions.append(
+                {"type": "sell", "symbol": sym, "amount": sell_amt, "est_quote": est}
+            )
+        except Exception:
+            continue
+    # Execute
+    for a in actions:
+        print(
+            f"→ SELL {a['amount']} {a['symbol'].split('/')[0]} for {a['symbol'].split('/')[1]} (est {a['est_quote']:.2f})"
+        )
+        if not dry_run:
+            try:
+                ex.create_order(a["symbol"], "market", "sell", a["amount"])
+                time.sleep(0.3)
+            except Exception as e:
+                print(f"  ⚠️ Sell failed: {e}")
+    return actions
+
+
+def place_buys_and_tps(ex, target_symbol, budget, enable_tp=True):
+    t = ex.fetch_ticker(target_symbol)
+    price = float(t.get("last") or 0.0)
+    if price <= 0:
+        raise RuntimeError("Invalid price for buy")
+    mkt = ex.market(target_symbol)
+    # step
+    step = None
+    for flt in mkt.get("info", {}).get("filters", []):
+        if flt.get("filterType") == "LOT_SIZE":
+            step = float(flt.get("stepSize"))
+            break
+    amt_raw = budget / price
+    amt = amount_to_step(amt_raw, step) if step else amt_raw
+    if amt * price < MIN_TRADE_USD:
+        raise RuntimeError("Computed buy below min notional")
+
+    order = ex.create_order(target_symbol, "market", "buy", amt)
+    print(f"✅ Bought {amt} {mkt['base']} (order {order.get('id')})")
+
+    if not enable_tp:
+        return {"buy_order_id": order.get("id"), "sell_order_ids": []}
+
+    # momentum for TP split
+    mom = momentum_15m(ex, target_symbol)
+    strong = mom >= STRONG_MOM_THRESHOLD
+    tp1 = TP1_PCT
+    tp2 = TP2_PCT_STRONG if strong else TP2_PCT_WEAK
+    split = TP_SPLIT_STRONG if strong else TP_SPLIT_WEAK
+
+    pprec = mkt.get("precision", {}).get("price")
+    tp1_price = round_to_precision(price * (1 + tp1), pprec)
+    tp2_price = round_to_precision(price * (1 + tp2), pprec)
+
+    amt1 = amount_to_step(amt * split[0], step) if step else amt * split[0]
+    amt2 = amount_to_step(max(0.0, amt - amt1), step) if step else max(0.0, amt - amt1)
+
+    sell_ids = []
+    if amt1 > 0:
+        try:
+            s1 = ex.create_order(target_symbol, "limit", "sell", amt1, tp1_price)
+            print(f"✅ TP1 {amt1} @ {tp1_price} (+{tp1*100:.1f}%) id={s1.get('id')}")
+            sell_ids.append(s1.get("id"))
+        except Exception as e:
+            print(f"⚠️ TP1 place failed: {e}")
+    if amt2 > 0:
+        try:
+            s2 = ex.create_order(target_symbol, "limit", "sell", amt2, tp2_price)
+            print(f"✅ TP2 {amt2} @ {tp2_price} (+{tp2*100:.1f}%) id={s2.get('id')}")
+            sell_ids.append(s2.get("id"))
+        except Exception as e:
+            print(f"⚠️ TP2 place failed: {e}")
+
+    return {"buy_order_id": order.get("id"), "sell_order_ids": sell_ids}
+
+
+def main():
+    mode = sys.argv[1].lower() if len(sys.argv) > 1 else "dry-run"
+    enable_tp = ENABLE_TP_DEFAULT and ("--no-tp" not in sys.argv)
+
+    ex = load_exchange()
+    free, total = get_balances(ex)
+
+    quote = pick_quote(ex, free)
+    if not quote:
+        print(
+            "❌ Could not determine quote (USDT/USD). Deposit funds or free balance needed."
+        )
+        return 1
+
+    print(f"Quote currency: {quote}")
+
+    top = top_momentum_symbol(ex, quote)
+    if not top:
+        print("❌ No suitable momentum candidate found (liquidity filter).")
+        return 1
+
+    symbol, mom, day_pct, qvol = top
+    print(
+        f"Target: {symbol} | 15m momentum: {mom*100:.2f}% | 24h: {day_pct*100:.2f}% | 24h qVol: {qvol:,.0f}"
+    )
+
+    # Sell other holdings
+    print("\nPlanning sells:")
+    sell_plan = sell_non_quote_holdings(ex, free, quote, dry_run=(mode != "live"))
+
+    # Determine updated free quote for buy budget
+    if mode == "live" and sell_plan:
+        time.sleep(1.0)
+        free, _ = get_balances(ex)
+
+    free_quote = free.get(quote, 0.0)
+    budget = min(max(0.0, free_quote) * ALLOC_FRACTION, ALLOC_CAP_USD)
+
+    if budget < MIN_TRADE_USD:
+        print(f"❌ Not enough free {quote} to buy (have: {free_quote:.2f})")
+        return 1
+
+    print(f"\nPlanned buy: spend {quote} {budget:.2f} on {symbol}")
+
+    if mode != "live":
+        print("(dry-run) No orders placed. Re-run with 'live' to execute.")
+        return 0
+
+    try:
+        result = place_buys_and_tps(ex, symbol, budget, enable_tp=enable_tp)
+        # Save simple state
+        state = {
+            "symbol": symbol,
+            "buy_order_id": result.get("buy_order_id"),
+            "sell_order_ids": result.get("sell_order_ids", []),
+            "quote": quote,
+            "timestamp": datetime.now().isoformat(),
+        }
+        with open("reallocate_state.json", "w") as f:
+            json.dump(state, f, indent=2)
+        print("📄 State saved to reallocate_state.json")
+        return 0
+    except Exception as e:
+        print(f"❌ Buy/TP placement failed: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

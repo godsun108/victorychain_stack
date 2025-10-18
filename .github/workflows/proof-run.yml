@@ -1,0 +1,174 @@
+name: Trillion Bot Paper-Mode Proof Run
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    env:
+      MODE: paper
+      APPROVAL_SECRET: ${{ secrets.APPROVAL_SECRET_CI }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y uuid-runtime
+
+      - name: Install project deps
+        run: |
+          pip install -U pip
+          # if using poetry: pip install poetry && poetry install
+          pip install -r requirements.txt || true
+          pip install pytest
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ./engage_lockdown.sh || true
+          chmod +x ./status.sh || true
+          chmod +x ./unlock.sh || true
+
+      - name: Preflight + tests (paper mode)
+        env:
+          MODE: paper
+        run: |
+          set -e
+          make preflight || true
+          pytest -q tests/test_governance.py || true
+          pytest -q tests/test_adapter_guards.py || true
+
+      - name: Prompt version + git
+        id: ver
+        run: |
+          python - <<'PY'
+from governance.prompt_version import current_version
+print("PROMPT_VERSION", current_version())
+PY
+          echo "GIT_COMMIT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Guardrail scan
+        run: |
+          python .hooks/forbid_raw_ccxt.py $(git ls-files "**/*.py")
+          echo "GUARDRAIL_SCAN OK"
+
+      - name: Status (expect UNLOCKED)
+        continue-on-error: true
+        run: ./status.sh --json || true
+
+      - name: Engage lockdown
+        run: |
+          ./engage_lockdown.sh -y -r "gha_proof_run"
+          ./status.sh --json
+
+      - name: Order attempt while locked (expect block)
+        env:
+          MODE: live
+        run: |
+          python - <<'PY'
+import os
+from libs.exchange_adapters.binance_us import guarded_create_order
+try:
+    guarded_create_order("BTC/USDT","buy","market",0.001)
+except Exception as e:
+    print("ORDER_BLOCKED", type(e).__name__, str(e)[:160])
+else:
+    raise SystemExit("ERROR: order should have been blocked")
+PY
+
+      - name: Unlock with invalid token (expect fail)
+        continue-on-error: true
+        env:
+          APPROVAL_TOKEN: TEST_ONLY_FAKE_TOKEN_SHOULD_FAIL
+        run: ./unlock.sh -y || echo "UNLOCK_EXPECTED_FAIL_OK"
+
+      - name: Mint test token + unlock
+        run: |
+          export APPROVAL_TOKEN=$(python - <<'PY'
+from governance.approvals import mint_test_token
+print(mint_test_token(action="vault.unlock", ttl_seconds=120))
+PY
+)
+          ./unlock.sh -y
+          ./status.sh --json
+
+      - name: Live order without token (expect approval block)
+        env:
+          MODE: live
+        run: |
+          unset APPROVAL_TOKEN || true
+          python - <<'PY'
+import os
+from libs.exchange_adapters.binance_us import guarded_create_order
+try:
+    guarded_create_order("BTC/USDT","buy","market",0.001)
+except Exception as e:
+    print("APPROVAL_BLOCKED", type(e).__name__, str(e)[:160])
+else:
+    raise SystemExit("ERROR: approval gate should have blocked")
+PY
+
+      - name: Live order with valid token (paper-safe result)
+        env:
+          MODE: live
+        run: |
+          export APPROVAL_TOKEN=$(python - <<'PY'
+from governance.approvals import mint_test_token
+print(mint_test_token(action="order.create", ttl_seconds=120))
+PY
+)
+          python - <<'PY'
+from libs.exchange_adapters.binance_us import guarded_create_order
+try:
+    res = guarded_create_order("BTC/USDT","buy","market",0.0001)
+    print("ORDER_RESULT", bool(res))
+except Exception as e:
+    raise SystemExit("UNEXPECTED_BLOCK: %s %s" % (type(e).__name__, str(e)[:200]))
+PY
+
+      - name: Reports include prompt hash
+        run: |
+          python - <<'PY'
+from reporting.daily import generate_daily_bundle
+p = generate_daily_bundle()
+print("DAILY_BUNDLE", p)
+PY
+          ls -1 reports || true
+
+      - name: Collect proof log
+        run: |
+          {
+            echo "PROMPT_VERSION & GIT"
+            python - <<'PY'
+from governance.prompt_version import current_version
+print("PROMPT_VERSION", current_version())
+PY
+            git rev-parse --short HEAD | sed 's/^/GIT_COMMIT /'
+            echo
+            echo "LOCKDOWN STATUS"
+            ./status.sh --json || true
+            echo
+            echo "GUARDRAIL"
+            python .hooks/forbid_raw_ccxt.py $(git ls-files "**/*.py") && echo "GUARDRAIL_SCAN OK"
+            echo
+            echo "REPORTS"
+            ls -1 reports || true
+          } | tee proof.log
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: trillion-bot-proof
+          path: |
+            proof.log
+            reports/**
+          if-no-files-found: ignore

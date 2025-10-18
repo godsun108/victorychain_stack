@@ -1,0 +1,134 @@
+{
+  "timestamp": "2025-08-05T19:49:29.032366",
+  "strategy": "ULTRA_AGGRESSIVE_MICROCAP_MOMENTUM",
+  "portfolio_size": 10000.0,
+  "available_capital": 3840.0,
+  "positions": [
+    {
+      "symbol": "SHIBUSDT",
+      "entry_price": 1.194e-05,
+      "position_size_usd": 2500.0,
+      "position_percentage": 25.0,
+      "stop_loss_price": 9.552e-06,
+      "target_prices": [
+        1.6715999999999997e-05,
+        2.388e-05,
+        4.776e-05,
+        0.00010745999999999999,
+        0.00025074
+      ],
+      "current_price": 1.2511792642330492e-05,
+      "unrealized_pnl": 119.7220775398855,
+      "risk_rating": "MAXIMUM_RISK_MAXIMUM_REWARD",
+      "catalyst_status": "WAITING",
+      "execution_time": "2025-08-05 19:49:21.960282",
+      "exit_strategy": "STAGED_PROFIT_TAKING"
+    },
+    {
+      "symbol": "FLOKIUSDT",
+      "entry_price": 0.00010212,
+      "position_size_usd": 1500.0,
+      "position_percentage": 20.0,
+      "stop_loss_price": 8.169600000000001e-05,
+      "target_prices": [
+        0.000142968,
+        0.00020424,
+        0.00040848,
+        0.0009190800000000001,
+        0.00214452
+      ],
+      "current_price": 0.00010009279180565203,
+      "unrealized_pnl": -29.77685361850731,
+      "risk_rating": "EXTREME_RISK_EXTREME_REWARD",
+      "catalyst_status": "WAITING",
+      "execution_time": "2025-08-05 19:49:21.960315",
+      "exit_strategy": "STAGED_PROFIT_TAKING"
+    },
+    {
+      "symbol": "BONKUSDT",
+      "entry_price": 2.443e-05,
+      "position_size_usd": 1200.0,
+      "position_percentage": 20.0,
+      "stop_loss_price": 1.9544e-05,
+      "target_prices": [
+        3.4202e-05,
+        4.886e-05,
+        9.772e-05,
+        0.00021987000000000002,
+        0.00051303
+      ],
+      "current_price": 2.4006815540299386e-05,
+      "unrealized_pnl": -20.78679294477032,
+      "risk_rating": "EXTREME_RISK_EXTREME_REWARD",
+      "catalyst_status": "WAITING",
+      "execution_time": "2025-08-05 19:49:21.960334",
+      "exit_strategy": "STAGED_PROFIT_TAKING"
+    },
+    {
+      "symbol": "PEPEUSDT",
+      "entry_price": 1.006e-05,
+      "position_size_usd": 960.0,
+      "position_percentage": 20.0,
+      "stop_loss_price": 8.048e-06,
+      "target_prices": [
+        1.4084e-05,
+        2.012e-05,
+        4.024e-05,
+        9.054e-05,
+        0.00021126
+      ],
+      "current_price": 9.746770859135277e-06,
+      "unrealized_pnl": -29.890653601405003,
+      "risk_rating": "EXTREME_RISK_EXTREME_REWARD",
+      "catalyst_status": "WAITING",
+      "execution_time": "2025-08-05 19:49:21.960350",
+      "exit_strategy": "STAGED_PROFIT_TAKING"
+    }
+  ],
+  "execution_log": [
+    {
+      "action": "OPEN_POSITION",
+      "symbol": "SHIBUSDT",
+      "price": 1.194e-05,
+      "size_usd": 2500.0,
+      "timestamp": "2025-08-05T19:49:21.960302"
+    },
+    {
+      "action": "OPEN_POSITION",
+      "symbol": "FLOKIUSDT",
+      "price": 0.00010212,
+      "size_usd": 1500.0,
+      "timestamp": "2025-08-05T19:49:21.960326"
+    },
+    {
+      "action": "OPEN_POSITION",
+      "symbol": "BONKUSDT",
+      "price": 2.443e-05,
+      "size_usd": 1200.0,
+      "timestamp": "2025-08-05T19:49:21.960344"
+    },
+    {
+      "action": "OPEN_POSITION",
+      "symbol": "PEPEUSDT",
+      "price": 1.006e-05,
+      "size_usd": 960.0,
+      "timestamp": "2025-08-05T19:49:21.960360"
+    }
+  ],
+  "risk_parameters": {
+    "max_position_size": 0.25,
+    "stop_loss_threshold": -0.2,
+    "max_total_allocation": 0.85,
+    "cash_reserve": 0.15,
+    "profit_taking_stages": [
+      0.4,
+      1.0,
+      3.0,
+      8.0,
+      20.0
+    ]
+  },
+  "total_positions": 4,
+  "total_allocated_usd": 6160.0,
+  "allocation_percentage": 61.6
+}

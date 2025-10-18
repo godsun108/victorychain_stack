@@ -1,0 +1,14 @@
+{
+  "scenario": "Focused MCP Validation Demo",
+  "final_value": 1000.0,
+  "total_return_pct": 0.0,
+  "mcp_validations": {
+    "approved": 0,
+    "blocked": 13,
+    "emergency_override": 0
+  },
+  "trade_attempts": 13,
+  "blocked_trades": 13,
+  "timestamp": "2025-08-06T02:56:24.004368",
+  "strategy_version": "Focused MCP Demo V2.1"
+}

@@ -1,0 +1,546 @@
+#!/usr/bin/env python3
+
+"""
+INTELLIGENT BOT COMMUNICATOR & EXECUTION COORDINATOR
+===================================================
+Advanced system that:
+1. Receives real-time opportunity recommendations
+2. Communicates with the trading bot for execution
+3. Monitors execution status and results
+4. Provides feedback for continuous optimization
+5. Ensures maximum opportunity capitalization
+
+FEATURES:
+- Real-time bot communication
+- Execution monitoring and feedback
+- Performance tracking and optimization
+- Risk management integration
+- Automated decision making
+- Comprehensive logging and reporting
+"""
+
+import asyncio
+import aiohttp
+import json
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass, field, asdict
+import logging
+import time
+from enum import Enum
+import websockets
+import threading
+import queue
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+class ExecutionStatus(Enum):
+    PENDING = "PENDING"
+    EXECUTING = "EXECUTING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+    PARTIAL = "PARTIAL"
+
+class OrderType(Enum):
+    MARKET = "MARKET"
+    LIMIT = "LIMIT"
+    STOP_LOSS = "STOP_LOSS"
+    TAKE_PROFIT = "TAKE_PROFIT"
+    TRAILING_STOP = "TRAILING_STOP"
+
+@dataclass
+class ExecutionOrder:
+    """Trading execution order"""
+    order_id: str
+    symbol: str
+    action: str  # BUY, SELL, SCALE_IN, SCALE_OUT
+    order_type: OrderType
+    quantity: float
+    price: Optional[float]
+    stop_price: Optional[float]
+    time_in_force: str  # GTC, IOC, FOK
+    status: ExecutionStatus
+    created_at: datetime
+    executed_at: Optional[datetime]
+    filled_quantity: float
+    avg_fill_price: float
+    fees: float
+    reason: str
+    urgency: str
+    expected_gain: float
+
+@dataclass
+class ExecutionResult:
+    """Execution result feedback"""
+    order_id: str
+    success: bool
+    execution_time: float
+    slippage: float
+    fees_paid: float
+    realized_pnl: float
+    message: str
+    recommendations: List[str]
+
+class IntelligentBotCommunicator:
+    """Intelligent bot communication and execution coordination"""
+    
+    def __init__(self, bot_endpoint: str = "ws://localhost:8765", 
+                 rest_endpoint: str = "http://localhost:8000"):
+        self.bot_endpoint = bot_endpoint
+        self.rest_endpoint = rest_endpoint
+        self.connected = False
+        self.websocket = None
+        
+        # Order management
+        self.pending_orders = {}
+        self.executed_orders = {}
+        self.failed_orders = {}
+        self.order_counter = 0
+        
+        # Performance tracking
+        self.total_orders = 0
+        self.successful_orders = 0
+        self.total_profit = 0.0
+        self.total_fees = 0.0
+        self.avg_execution_time = 0.0
+        self.avg_slippage = 0.0
+        
+        # Communication queues
+        self.incoming_recommendations = queue.Queue()
+        self.outgoing_orders = queue.Queue()
+        self.execution_feedback = queue.Queue()
+        
+        # Risk management
+        self.max_concurrent_orders = 5
+        self.max_daily_loss = 0.05  # 5% max daily loss
+        self.min_liquidity_threshold = 100000  # Minimum liquidity for execution
+        
+    async def connect_to_bot(self):
+        """Establish connection with trading bot"""
+        logger.info(f"🔗 Connecting to trading bot at {self.bot_endpoint}...")
+        
+        try:
+            # In production, this would connect to actual trading bot
+            # For demo, we'll simulate the connection
+            self.connected = True
+            logger.info("✅ Successfully connected to trading bot")
+            
+            # Start communication loops
+            asyncio.create_task(self.listen_for_recommendations())
+            asyncio.create_task(self.process_orders())
+            asyncio.create_task(self.monitor_executions())
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to connect to bot: {e}")
+            self.connected = False
+    
+    async def send_recommendations_to_bot(self, recommendations: Dict):
+        """Send opportunity recommendations to trading bot"""
+        if not self.connected:
+            logger.warning("⚠️ Not connected to bot, queuing recommendations")
+            return
+        
+        logger.info("📤 Sending recommendations to trading bot...")
+        
+        try:
+            # Process each priority action
+            for action in recommendations.get('priority_actions', []):
+                order = await self._create_execution_order(action, recommendations)
+                if order:
+                    self.outgoing_orders.put(order)
+                    logger.info(f"📋 Queued order: {order.action} {order.symbol} ({order.urgency})")
+            
+            # Process allocation recommendations
+            for allocation in recommendations.get('allocation_recommendations', []):
+                order = await self._create_allocation_order(allocation)
+                if order:
+                    self.outgoing_orders.put(order)
+                    logger.info(f"💰 Queued allocation: {allocation['symbol']} {allocation['allocation_percentage']:.1%}")
+            
+            # Process position maximizations
+            for maximization in recommendations.get('position_maximizations', []):
+                order = await self._create_maximization_order(maximization)
+                if order:
+                    self.outgoing_orders.put(order)
+                    logger.info(f"🚀 Queued maximization: {maximization['symbol']} {maximization['recommended_action']}")
+            
+        except Exception as e:
+            logger.error(f"❌ Error sending recommendations: {e}")
+    
+    async def _create_execution_order(self, action: Dict, context: Dict) -> Optional[ExecutionOrder]:
+        """Create execution order from priority action"""
+        
+        self.order_counter += 1
+        order_id = f"ORD_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{self.order_counter:04d}"
+        
+        # Determine order parameters
+        if action['action'] == 'IMMEDIATE_BUY':
+            order_action = "BUY"
+            order_type = OrderType.MARKET
+            urgency = action['urgency']
+            
+        elif action['action'] == 'SCALE_OUT':
+            order_action = "SELL"
+            order_type = OrderType.LIMIT
+            urgency = "HIGH"
+            
+        elif action['action'] == 'ALLOCATE':
+            order_action = "BUY"
+            order_type = OrderType.LIMIT
+            urgency = "MEDIUM"
+            
+        else:
+            logger.warning(f"Unknown action type: {action['action']}")
+            return None
+        
+        # Calculate quantity and price
+        quantity = self._calculate_order_quantity(action, context)
+        price = self._calculate_order_price(action, order_type)
+        
+        return ExecutionOrder(
+            order_id=order_id,
+            symbol=action['symbol'],
+            action=order_action,
+            order_type=order_type,
+            quantity=quantity,
+            price=price,
+            stop_price=None,
+            time_in_force="GTC",
+            status=ExecutionStatus.PENDING,
+            created_at=datetime.now(),
+            executed_at=None,
+            filled_quantity=0.0,
+            avg_fill_price=0.0,
+            fees=0.0,
+            reason=action.get('reason', 'Opportunity execution'),
+            urgency=urgency,
+            expected_gain=action.get('expected_gain', 0.0)
+        )
+    
+    async def _create_allocation_order(self, allocation: Dict) -> Optional[ExecutionOrder]:
+        """Create order from allocation recommendation"""
+        
+        self.order_counter += 1
+        order_id = f"ALLOC_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{self.order_counter:04d}"
+        
+        quantity = allocation['allocation_amount'] / 100  # Assuming $100 per unit for demo
+        price = 100.0  # Simulated price
+        
+        return ExecutionOrder(
+            order_id=order_id,
+            symbol=allocation['symbol'],
+            action="BUY",
+            order_type=OrderType.LIMIT if allocation['entry_strategy'] == 'GRADUAL' else OrderType.MARKET,
+            quantity=quantity,
+            price=price,
+            stop_price=None,
+            time_in_force="GTC",
+            status=ExecutionStatus.PENDING,
+            created_at=datetime.now(),
+            executed_at=None,
+            filled_quantity=0.0,
+            avg_fill_price=0.0,
+            fees=0.0,
+            reason=allocation['reason'],
+            urgency="MEDIUM",
+            expected_gain=allocation['expected_return']
+        )
+    
+    async def _create_maximization_order(self, maximization: Dict) -> Optional[ExecutionOrder]:
+        """Create order from position maximization"""
+        
+        if maximization['recommended_action'] == 'HOLD':
+            return None  # No order needed for hold
+        
+        self.order_counter += 1
+        order_id = f"MAX_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{self.order_counter:04d}"
+        
+        action = "SELL" if "OUT" in maximization['recommended_action'] else "BUY"
+        quantity = abs(maximization['size_adjustment'])
+        
+        return ExecutionOrder(
+            order_id=order_id,
+            symbol=maximization['symbol'],
+            action=action,
+            order_type=OrderType.LIMIT,
+            quantity=quantity,
+            price=None,  # Will be set by bot
+            stop_price=maximization.get('new_stop_loss'),
+            time_in_force="GTC",
+            status=ExecutionStatus.PENDING,
+            created_at=datetime.now(),
+            executed_at=None,
+            filled_quantity=0.0,
+            avg_fill_price=0.0,
+            fees=0.0,
+            reason=f"Position maximization: {maximization['recommended_action']}",
+            urgency="MEDIUM",
+            expected_gain=maximization.get('expected_additional_gain', 0.0)
+        )
+    
+    def _calculate_order_quantity(self, action: Dict, context: Dict) -> float:
+        """Calculate appropriate order quantity"""
+        # Simplified quantity calculation
+        if 'amount' in action:
+            return action['amount'] / 100  # Assuming $100 per unit for demo
+        else:
+            return 1.0  # Default quantity
+    
+    def _calculate_order_price(self, action: Dict, order_type: OrderType) -> Optional[float]:
+        """Calculate order price based on type and market conditions"""
+        if order_type == OrderType.MARKET:
+            return None  # Market orders don't need price
+        else:
+            return 100.0  # Simplified limit price for demo
+    
+    async def process_orders(self):
+        """Process pending orders and send to trading bot"""
+        logger.info("🔄 Starting order processing loop...")
+        
+        while True:
+            try:
+                if not self.outgoing_orders.empty():
+                    order = self.outgoing_orders.get()
+                    
+                    # Check risk limits
+                    if await self._validate_order_risk(order):
+                        # Send to bot for execution
+                        success = await self._execute_order_with_bot(order)
+                        
+                        if success:
+                            self.pending_orders[order.order_id] = order
+                            logger.info(f"✅ Order sent to bot: {order.order_id} ({order.symbol})")
+                        else:
+                            order.status = ExecutionStatus.FAILED
+                            self.failed_orders[order.order_id] = order
+                            logger.warning(f"❌ Failed to send order: {order.order_id}")
+                    else:
+                        order.status = ExecutionStatus.CANCELLED
+                        logger.warning(f"⚠️ Order cancelled due to risk limits: {order.order_id}")
+                
+                await asyncio.sleep(1)  # Process orders every second
+                
+            except Exception as e:
+                logger.error(f"❌ Error processing orders: {e}")
+                await asyncio.sleep(5)
+    
+    async def _validate_order_risk(self, order: ExecutionOrder) -> bool:
+        """Validate order against risk management rules"""
+        
+        # Check concurrent order limit
+        if len(self.pending_orders) >= self.max_concurrent_orders:
+            logger.warning(f"⚠️ Too many concurrent orders ({len(self.pending_orders)})")
+            return False
+        
+        # Check daily loss limit
+        daily_pnl = sum(o.realized_pnl for o in self.executed_orders.values() 
+                       if o.executed_at and o.executed_at.date() == datetime.now().date())
+        
+        if daily_pnl < -self.max_daily_loss * 100000:  # Assuming $100k portfolio
+            logger.warning(f"⚠️ Daily loss limit reached: {daily_pnl:.2f}")
+            return False
+        
+        # Check minimum liquidity (simulated)
+        simulated_liquidity = np.random.uniform(50000, 500000)
+        if simulated_liquidity < self.min_liquidity_threshold:
+            logger.warning(f"⚠️ Insufficient liquidity for {order.symbol}: {simulated_liquidity:.0f}")
+            return False
+        
+        return True
+    
+    async def _execute_order_with_bot(self, order: ExecutionOrder) -> bool:
+        """Send order to trading bot for execution"""
+        try:
+            # Simulate sending order to bot
+            order_data = {
+                "order_id": order.order_id,
+                "symbol": order.symbol,
+                "action": order.action,
+                "type": order.order_type.value,
+                "quantity": order.quantity,
+                "price": order.price,
+                "urgency": order.urgency
+            }
+            
+            # In production, this would be actual API call to trading bot
+            # For demo, we simulate successful submission
+            await asyncio.sleep(0.1)  # Simulate network delay
+            
+            logger.debug(f"📤 Sent order to bot: {json.dumps(order_data, indent=2)}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to execute order {order.order_id}: {e}")
+            return False
+    
+    async def monitor_executions(self):
+        """Monitor order executions and process results"""
+        logger.info("👁️ Starting execution monitoring...")
+        
+        while True:
+            try:
+                # Check pending orders for completion
+                for order_id, order in list(self.pending_orders.items()):
+                    # Simulate order execution with random completion
+                    if np.random.random() < 0.1:  # 10% chance per check
+                        result = await self._simulate_order_completion(order)
+                        await self._process_execution_result(order, result)
+                        
+                        # Move from pending to executed
+                        del self.pending_orders[order_id]
+                        self.executed_orders[order_id] = order
+                
+                await asyncio.sleep(5)  # Check every 5 seconds
+                
+            except Exception as e:
+                logger.error(f"❌ Error monitoring executions: {e}")
+                await asyncio.sleep(10)
+    
+    async def _simulate_order_completion(self, order: ExecutionOrder) -> ExecutionResult:
+        """Simulate order completion for demo purposes"""
+        
+        # Simulate execution parameters
+        execution_time = np.random.uniform(0.1, 2.0)
+        slippage = np.random.uniform(0.0, 0.002)  # 0-0.2% slippage
+        fees = order.quantity * (order.price or 100) * 0.001  # 0.1% fees
+        
+        # Simulate success/failure
+        success = np.random.random() > 0.05  # 95% success rate
+        
+        if success:
+            order.status = ExecutionStatus.COMPLETED
+            order.executed_at = datetime.now()
+            order.filled_quantity = order.quantity
+            order.avg_fill_price = (order.price or 100) * (1 + slippage)
+            order.fees = fees
+            
+            # Simulate realized PnL (simplified)
+            realized_pnl = order.quantity * order.expected_gain * 100
+            
+            message = f"Order executed successfully"
+            recommendations = ["Monitor position", "Set trailing stop"]
+            
+        else:
+            order.status = ExecutionStatus.FAILED
+            realized_pnl = 0
+            message = "Order execution failed - insufficient liquidity"
+            recommendations = ["Retry with smaller size", "Use market order"]
+        
+        return ExecutionResult(
+            order_id=order.order_id,
+            success=success,
+            execution_time=execution_time,
+            slippage=slippage,
+            fees_paid=fees,
+            realized_pnl=realized_pnl,
+            message=message,
+            recommendations=recommendations
+        )
+    
+    async def _process_execution_result(self, order: ExecutionOrder, result: ExecutionResult):
+        """Process execution result and update metrics"""
+        
+        self.total_orders += 1
+        
+        if result.success:
+            self.successful_orders += 1
+            self.total_profit += result.realized_pnl
+            
+            logger.info(f"✅ Order {order.order_id} completed successfully")
+            logger.info(f"   • Symbol: {order.symbol}")
+            logger.info(f"   • Action: {order.action}")
+            logger.info(f"   • Quantity: {order.filled_quantity:.4f}")
+            logger.info(f"   • Price: ${order.avg_fill_price:.2f}")
+            logger.info(f"   • PnL: ${result.realized_pnl:.2f}")
+            logger.info(f"   • Fees: ${result.fees_paid:.2f}")
+            
+        else:
+            logger.warning(f"❌ Order {order.order_id} failed: {result.message}")
+        
+        # Update performance metrics
+        self.total_fees += result.fees_paid
+        self.avg_execution_time = (self.avg_execution_time * (self.total_orders - 1) + result.execution_time) / self.total_orders
+        self.avg_slippage = (self.avg_slippage * (self.total_orders - 1) + result.slippage) / self.total_orders
+        
+        # Store feedback for optimization
+        self.execution_feedback.put({
+            "order_id": order.order_id,
+            "result": asdict(result),
+            "timestamp": datetime.now()
+        })
+    
+    async def listen_for_recommendations(self):
+        """Listen for incoming recommendations from opportunity maximizer"""
+        logger.info("👂 Starting recommendation listener...")
+        
+        while True:
+            try:
+                # In production, this would listen to actual message queue or API
+                # For demo, we simulate receiving recommendations periodically
+                await asyncio.sleep(60)  # Check every minute
+                
+                # Process any queued recommendations
+                while not self.incoming_recommendations.empty():
+                    recommendations = self.incoming_recommendations.get()
+                    await self.send_recommendations_to_bot(recommendations)
+                
+            except Exception as e:
+                logger.error(f"❌ Error listening for recommendations: {e}")
+                await asyncio.sleep(10)
+    
+    def get_performance_summary(self) -> Dict:
+        """Get comprehensive performance summary"""
+        
+        success_rate = (self.successful_orders / max(1, self.total_orders)) * 100
+        net_profit = self.total_profit - self.total_fees
+        
+        return {
+            "total_orders": self.total_orders,
+            "successful_orders": self.successful_orders,
+            "success_rate": success_rate,
+            "total_profit": self.total_profit,
+            "total_fees": self.total_fees,
+            "net_profit": net_profit,
+            "avg_execution_time": self.avg_execution_time,
+            "avg_slippage": self.avg_slippage,
+            "pending_orders": len(self.pending_orders),
+            "failed_orders": len(self.failed_orders),
+            "connection_status": "CONNECTED" if self.connected else "DISCONNECTED"
+        }
+    
+    async def start_communicator(self):
+        """Start the bot communicator system"""
+        logger.info("🚀 Starting Intelligent Bot Communicator...")
+        
+        # Connect to bot
+        await self.connect_to_bot()
+        
+        # Run indefinitely
+        while True:
+            # Log performance summary every 5 minutes
+            summary = self.get_performance_summary()
+            logger.info(f"\n📊 Performance Summary:")
+            logger.info(f"   • Orders: {summary['total_orders']} ({summary['success_rate']:.1f}% success)")
+            logger.info(f"   • Net Profit: ${summary['net_profit']:.2f}")
+            logger.info(f"   • Avg Execution: {summary['avg_execution_time']:.2f}s")
+            logger.info(f"   • Avg Slippage: {summary['avg_slippage']:.3%}")
+            logger.info(f"   • Pending: {summary['pending_orders']} orders")
+            
+            await asyncio.sleep(300)  # 5 minutes
+
+async def main():
+    """Main execution function"""
+    logger.info("🚀 Starting Intelligent Bot Communicator...")
+    
+    # Initialize communicator
+    communicator = IntelligentBotCommunicator()
+    
+    # Start the system
+    await communicator.start_communicator()
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -1,0 +1,523 @@
+#!/usr/bin/env python3
+"""
+Intelligent Momentum Trader - Hold or Find Better Opportunities
+- HOLDS current positions if profitable
+- FINDS tokens with anticipated momentum
+- BUYS and HOLDS the best momentum opportunity
+"""
+
+import os
+import json
+import time
+import logging
+from datetime import datetime
+from typing import Dict, List, Optional
+import pandas as pd
+import numpy as np
+from binance.client import Client
+from binance.exceptions import BinanceAPIException
+from dotenv import load_dotenv
+
+
+class IntelligentMomentumTrader:
+    def __init__(self):
+        load_dotenv()
+
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv("BINANCEUS_KEY"),
+            api_secret=os.getenv("BINANCEUS_SECRET"),
+            tld="us",
+        )
+
+        # Setup logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            handlers=[
+                logging.FileHandler(
+                    f'momentum_trader_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+                ),
+                logging.StreamHandler(),
+            ],
+        )
+        self.logger = logging.getLogger(__name__)
+
+        # Trading parameters
+        self.min_profit_threshold = 5.0  # Hold if above 5% profit
+        self.momentum_threshold = 10.0  # Look for tokens with 10%+ potential
+        self.min_trade_amount = 10.0  # Minimum $10 trades
+        self.max_position_pct = 0.3  # Max 30% in any new position
+
+        self.logger.info("🧠 Intelligent Momentum Trader initialized")
+        self.logger.info("💎 Strategy: HOLD winners, FIND momentum, BUY opportunities")
+
+    def get_current_portfolio(self) -> Dict:
+        """Get current portfolio with performance analysis"""
+        try:
+            account = self.client.get_account()
+            portfolio = {}
+            total_value = 0
+
+            for balance in account["balances"]:
+                free = float(balance["free"])
+                locked = float(balance["locked"])
+                total_amount = free + locked
+
+                if total_amount > 0.01:
+                    if balance["asset"] == "USDT":
+                        portfolio["USDT"] = {
+                            "amount": total_amount,
+                            "free": free,
+                            "price": 1.0,
+                            "usd_value": total_amount,
+                            "daily_change": 0,
+                            "momentum_score": 0,
+                        }
+                        total_value += total_amount
+                    else:
+                        try:
+                            symbol = balance["asset"] + "USDT"
+                            ticker = self.client.get_ticker(symbol=symbol)
+                            price = float(ticker["lastPrice"])
+                            daily_change = float(ticker["priceChangePercent"])
+                            usd_value = total_amount * price
+
+                            if usd_value > 0.1:
+                                portfolio[balance["asset"]] = {
+                                    "amount": total_amount,
+                                    "free": free,
+                                    "price": price,
+                                    "usd_value": usd_value,
+                                    "daily_change": daily_change,
+                                    "momentum_score": self.calculate_momentum_score(
+                                        symbol
+                                    ),
+                                }
+                                total_value += usd_value
+                        except:
+                            continue
+
+            return {"positions": portfolio, "total_value": total_value}
+
+        except Exception as e:
+            self.logger.error(f"Error getting portfolio: {e}")
+            return {"positions": {}, "total_value": 0}
+
+    def calculate_momentum_score(self, symbol: str) -> float:
+        """Calculate momentum score for a token"""
+        try:
+            # Get recent price data
+            klines = self.client.get_klines(symbol=symbol, interval="1h", limit=24)
+            if not klines:
+                return 0
+
+            # Convert to DataFrame
+            df = pd.DataFrame(
+                klines,
+                columns=[
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "close_time",
+                    "quote_volume",
+                    "trades",
+                    "taker_buy_base",
+                    "taker_buy_quote",
+                    "ignored",
+                ],
+            )
+
+            for col in ["open", "high", "low", "close", "volume"]:
+                df[col] = pd.to_numeric(df[col])
+
+            # Calculate momentum indicators
+            current_price = df["close"].iloc[-1]
+
+            # 1. Price momentum (24h change)
+            price_24h_ago = df["open"].iloc[0]
+            price_momentum = ((current_price - price_24h_ago) / price_24h_ago) * 100
+
+            # 2. Volume momentum
+            recent_volume = df["volume"].tail(6).mean()
+            older_volume = df["volume"].head(6).mean()
+            volume_momentum = (
+                ((recent_volume - older_volume) / older_volume) * 100
+                if older_volume > 0
+                else 0
+            )
+
+            # 3. Volatility (opportunity indicator)
+            volatility = df["close"].pct_change().std() * 100
+
+            # 4. Trend strength (simple moving average comparison)
+            sma_short = df["close"].tail(6).mean()
+            sma_long = df["close"].tail(12).mean()
+            trend_strength = (
+                ((sma_short - sma_long) / sma_long) * 100 if sma_long > 0 else 0
+            )
+
+            # Combined momentum score
+            momentum_score = (
+                price_momentum * 0.4
+                + volume_momentum * 0.2
+                + volatility * 0.2
+                + trend_strength * 0.2
+            )
+
+            return momentum_score
+
+        except Exception as e:
+            self.logger.warning(f"Could not calculate momentum for {symbol}: {e}")
+            return 0
+
+    def find_momentum_opportunities(self) -> List[Dict]:
+        """Find tokens with the best anticipated momentum"""
+        try:
+            self.logger.info("🔍 Scanning for momentum opportunities...")
+
+            # Get all USDT pairs
+            exchange_info = self.client.get_exchange_info()
+            usdt_pairs = []
+
+            for symbol_info in exchange_info["symbols"]:
+                if (
+                    symbol_info["status"] == "TRADING"
+                    and symbol_info["quoteAsset"] == "USDT"
+                    and "SPOT" in symbol_info["permissions"]
+                ):
+                    usdt_pairs.append(symbol_info["symbol"])
+
+            # Get 24hr tickers
+            tickers = self.client.get_ticker()
+            ticker_dict = {t["symbol"]: t for t in tickers}
+
+            opportunities = []
+
+            # Analyze top volume tokens for momentum
+            high_volume_pairs = []
+            for symbol in usdt_pairs:
+                if symbol in ticker_dict:
+                    volume = float(ticker_dict[symbol]["quoteVolume"])
+                    if volume > 10000:  # Focus on liquid tokens
+                        high_volume_pairs.append((symbol, volume))
+
+            # Sort by volume and take top 100
+            high_volume_pairs.sort(key=lambda x: x[1], reverse=True)
+            top_pairs = [pair[0] for pair in high_volume_pairs[:100]]
+
+            # Analyze each for momentum
+            for symbol in top_pairs[:50]:  # Limit to prevent rate limiting
+                try:
+                    ticker = ticker_dict[symbol]
+                    daily_change = float(ticker["priceChangePercent"])
+                    volume_24h = float(ticker["quoteVolume"])
+                    price = float(ticker["lastPrice"])
+
+                    # Skip extreme movers (too risky)
+                    if abs(daily_change) > 50:
+                        continue
+
+                    # Calculate comprehensive momentum score
+                    momentum_score = self.calculate_momentum_score(symbol)
+
+                    # Additional factors
+                    volume_score = min(volume_24h / 100000, 5)  # Volume bonus
+
+                    # Look for patterns indicating upcoming momentum
+                    # 1. Consolidation after drop (potential bounce)
+                    consolidation_bonus = 0
+                    if -10 < daily_change < -2:  # Small dip
+                        consolidation_bonus = 2
+
+                    # 2. Breaking out of sideways movement
+                    breakout_bonus = 0
+                    if 2 < daily_change < 8:  # Modest positive movement
+                        breakout_bonus = 3
+
+                    # 3. High volume with modest price movement (accumulation)
+                    accumulation_bonus = 0
+                    if volume_24h > 50000 and abs(daily_change) < 5:
+                        accumulation_bonus = 2
+
+                    total_score = (
+                        momentum_score
+                        + volume_score
+                        + consolidation_bonus
+                        + breakout_bonus
+                        + accumulation_bonus
+                    )
+
+                    if total_score > 5:  # Minimum threshold
+                        opportunities.append(
+                            {
+                                "symbol": symbol,
+                                "token": symbol.replace("USDT", ""),
+                                "price": price,
+                                "daily_change": daily_change,
+                                "volume_24h": volume_24h,
+                                "momentum_score": momentum_score,
+                                "total_score": total_score,
+                                "consolidation_bonus": consolidation_bonus > 0,
+                                "breakout_bonus": breakout_bonus > 0,
+                                "accumulation_bonus": accumulation_bonus > 0,
+                            }
+                        )
+
+                except Exception as e:
+                    continue
+
+                time.sleep(0.1)  # Rate limiting
+
+            # Sort by total score
+            opportunities.sort(key=lambda x: x["total_score"], reverse=True)
+
+            self.logger.info(f"📈 Found {len(opportunities)} momentum opportunities")
+            return opportunities[:20]  # Top 20
+
+        except Exception as e:
+            self.logger.error(f"Error finding opportunities: {e}")
+            return []
+
+    def should_hold_current_positions(self, portfolio: Dict) -> Dict:
+        """Determine if current positions should be held"""
+        hold_decisions = {}
+
+        for asset, data in portfolio["positions"].items():
+            if asset == "USDT":
+                continue
+
+            daily_change = data["daily_change"]
+            usd_value = data["usd_value"]
+            momentum_score = data["momentum_score"]
+
+            # Hold criteria
+            should_hold = False
+            reason = ""
+
+            if daily_change > self.min_profit_threshold:
+                should_hold = True
+                reason = f"Profitable (+{daily_change:.1f}%)"
+            elif momentum_score > 15:
+                should_hold = True
+                reason = f"Strong momentum (score: {momentum_score:.1f})"
+            elif usd_value > portfolio["total_value"] * 0.5:  # Major position
+                should_hold = True
+                reason = "Major position - monitoring"
+            elif daily_change < -20:
+                should_hold = False
+                reason = f"Heavy losses ({daily_change:.1f}%)"
+            else:
+                should_hold = True
+                reason = "Neutral - holding"
+
+            hold_decisions[asset] = {
+                "hold": should_hold,
+                "reason": reason,
+                "current_value": usd_value,
+                "daily_change": daily_change,
+                "momentum_score": momentum_score,
+            }
+
+        return hold_decisions
+
+    def execute_momentum_buy(
+        self, opportunity: Dict, buy_amount: float
+    ) -> Optional[Dict]:
+        """Execute buy order for momentum opportunity"""
+        try:
+            symbol = opportunity["symbol"]
+            token = opportunity["token"]
+
+            if buy_amount < self.min_trade_amount:
+                self.logger.warning(f"Buy amount too small: ${buy_amount:.2f}")
+                return None
+
+            # Round to avoid precision issues
+            buy_amount = round(buy_amount, 2)
+
+            self.logger.info(
+                f"🚀 BUYING {token} - Momentum Score: {opportunity['total_score']:.1f}"
+            )
+            self.logger.info(f"💰 Amount: ${buy_amount:.2f}")
+            self.logger.info(f"📈 Daily Change: {opportunity['daily_change']:+.2f}%")
+            self.logger.info(f"📊 Volume: ${opportunity['volume_24h']:,.0f}")
+
+            # Execute buy order
+            order = self.client.order_market_buy(
+                symbol=symbol, quoteOrderQty=buy_amount
+            )
+
+            self.logger.info(f"✅ BOUGHT {token}! Order ID: {order['orderId']}")
+
+            return {
+                "order": order,
+                "symbol": symbol,
+                "token": token,
+                "amount_usd": buy_amount,
+                "opportunity_data": opportunity,
+            }
+
+        except Exception as e:
+            self.logger.error(f"Error buying {opportunity['token']}: {e}")
+            return None
+
+    def run_intelligent_trading_session(self):
+        """Run the intelligent momentum trading session"""
+        try:
+            print("🧠 INTELLIGENT MOMENTUM TRADER")
+            print("=" * 50)
+            print("Strategy: HOLD winners, FIND momentum, BUY opportunities")
+            print()
+
+            # Get current portfolio
+            portfolio_data = self.get_current_portfolio()
+            portfolio = portfolio_data["positions"]
+            total_value = portfolio_data["total_value"]
+
+            print("📊 CURRENT PORTFOLIO:")
+            print("-" * 40)
+            for asset, data in sorted(
+                portfolio.items(), key=lambda x: x[1]["usd_value"], reverse=True
+            ):
+                if data["usd_value"] > 0.5:
+                    momentum_indicator = (
+                        "🚀"
+                        if data["momentum_score"] > 10
+                        else "📊" if data["momentum_score"] > 0 else "💤"
+                    )
+                    print(
+                        f"{asset:8s} | ${data['usd_value']:8.2f} | {data['daily_change']:+6.2f}% | {momentum_indicator}"
+                    )
+            print(f"TOTAL: ${total_value:.2f}")
+            print()
+
+            # Analyze hold decisions
+            hold_decisions = self.should_hold_current_positions(portfolio_data)
+
+            print("💎 HOLD/SELL ANALYSIS:")
+            print("-" * 40)
+            total_sellable_value = 0
+
+            for asset, decision in hold_decisions.items():
+                status = "🟢 HOLD" if decision["hold"] else "🔴 SELL"
+                print(f"{asset:8s} | {status:8s} | {decision['reason']}")
+
+                if not decision["hold"]:
+                    total_sellable_value += decision["current_value"]
+
+            usdt_available = portfolio.get("USDT", {}).get("amount", 0)
+            total_buying_power = usdt_available + total_sellable_value
+
+            print(f"\n💰 Available USDT: ${usdt_available:.2f}")
+            print(f"🔄 Potential from sells: ${total_sellable_value:.2f}")
+            print(f"🚀 Total buying power: ${total_buying_power:.2f}")
+            print()
+
+            # Find momentum opportunities
+            opportunities = self.find_momentum_opportunities()
+
+            if opportunities:
+                print("🎯 TOP MOMENTUM OPPORTUNITIES:")
+                print("-" * 60)
+                print(
+                    f"{'Token':<8} {'Score':<6} {'24h%':<8} {'Volume':<12} {'Signals'}"
+                )
+                print("-" * 60)
+
+                for i, opp in enumerate(opportunities[:10], 1):
+                    signals = []
+                    if opp["consolidation_bonus"]:
+                        signals.append("📉→📈")
+                    if opp["breakout_bonus"]:
+                        signals.append("🚀")
+                    if opp["accumulation_bonus"]:
+                        signals.append("🔄")
+
+                    signal_str = " ".join(signals) if signals else "📊"
+
+                    print(
+                        f"{opp['token']:<8} {opp['total_score']:<6.1f} "
+                        f"{opp['daily_change']:+6.2f}% ${opp['volume_24h']:<11,.0f} {signal_str}"
+                    )
+                print()
+
+                # Trading decision
+                if total_buying_power >= self.min_trade_amount:
+                    best_opportunity = opportunities[0]
+
+                    # Determine buy amount (max 30% of portfolio or available funds)
+                    max_position_size = total_value * self.max_position_pct
+                    buy_amount = min(
+                        total_buying_power * 0.8, max_position_size
+                    )  # Use 80% of available
+                    buy_amount = max(buy_amount, self.min_trade_amount)
+
+                    print(f"🎯 SELECTED OPPORTUNITY: {best_opportunity['token']}")
+                    print(f"📊 Total Score: {best_opportunity['total_score']:.1f}")
+                    print(f"💰 Planned Buy: ${buy_amount:.2f}")
+                    print()
+
+                    # Auto-execute or ask for confirmation
+                    if buy_amount <= 50:  # Auto-execute small amounts
+                        print("🤖 AUTO-EXECUTING (small amount)...")
+                        result = self.execute_momentum_buy(best_opportunity, buy_amount)
+
+                        if result:
+                            print("✅ MOMENTUM BUY EXECUTED!")
+
+                            # Save trade record
+                            trade_record = {
+                                "timestamp": datetime.now().isoformat(),
+                                "action": "momentum_buy",
+                                "result": result,
+                                "strategy": "intelligent_momentum_trading",
+                            }
+
+                            filename = f"momentum_trade_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                            with open(filename, "w") as f:
+                                json.dump(trade_record, f, indent=2, default=str)
+
+                            print(f"📄 Trade record: {filename}")
+                        else:
+                            print("❌ Trade execution failed")
+                    else:
+                        confirm = input(
+                            f"🤔 Execute momentum buy of {best_opportunity['token']} for ${buy_amount:.2f}? (yes/no): "
+                        )
+                        if confirm.lower() in ["yes", "y"]:
+                            result = self.execute_momentum_buy(
+                                best_opportunity, buy_amount
+                            )
+                            if result:
+                                print("✅ MOMENTUM BUY EXECUTED!")
+                            else:
+                                print("❌ Trade execution failed")
+                        else:
+                            print("💎 Holding current positions")
+                else:
+                    print("💰 Insufficient funds for new momentum trades")
+                    print("💎 HOLDING all current positions")
+            else:
+                print("📊 No significant momentum opportunities found")
+                print("💎 HOLDING all current positions")
+
+            print(f"\n🕐 Session completed at {datetime.now().strftime('%H:%M:%S')}")
+
+        except KeyboardInterrupt:
+            print("\n👋 Trading session interrupted")
+        except Exception as e:
+            self.logger.error(f"Trading session error: {e}")
+
+
+def main():
+    """Main momentum trading function"""
+    trader = IntelligentMomentumTrader()
+    trader.run_intelligent_trading_session()
+
+
+if __name__ == "__main__":
+    main()

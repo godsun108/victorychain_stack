@@ -1,0 +1,98 @@
+version: '3.9'
+services:
+  fastapi-agent:
+    build:
+      context: .
+      dockerfile: fastapi_agent/Dockerfile
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-dev-insecure-change-me}
+    expose:
+      - "8080"
+    restart: unless-stopped
+    networks:
+      - vc-stack
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.0
+    volumes:
+      - qdrant-data:/qdrant/storage
+    expose:
+      - "6333"
+    restart: unless-stopped
+    networks:
+      - vc-stack
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prom-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    expose:
+      - "9090"
+    restart: unless-stopped
+    networks:
+      - vc-stack
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    expose:
+      - "9093"
+    restart: unless-stopped
+    networks:
+      - vc-stack
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana:/var/lib/grafana/dashboards:ro
+    expose:
+      - "3000"
+    restart: unless-stopped
+    networks:
+      - vc-stack
+    depends_on:
+      - prometheus
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    depends_on:
+      - fastapi-agent
+      - grafana
+      - prometheus
+      - qdrant
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./proxy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    networks:
+      - vc-stack
+
+volumes:
+  qdrant-data:
+  prom-data:
+  grafana-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  vc-stack:
+    driver: bridge

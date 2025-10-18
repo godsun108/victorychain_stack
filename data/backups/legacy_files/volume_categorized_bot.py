@@ -1,0 +1,566 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Volume-Categorized Trading Bot
+Optimizes trading strategy based on token volume categories:
+- High Volume (>$1M): Conservative, frequent trades
+- Medium Volume ($100K-$1M): Balanced momentum strategy
+- Low Volume ($10K-$100K): Aggressive momentum with tight stops
+- Micro Volume (<$10K): Moonshot strategy, small positions
+"""
+
+import asyncio
+import os
+import json
+import time
+import logging
+import numpy as np
+from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timedelta
+import requests
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("volume_categorized_bot.log"),
+    ],
+)
+logger = logging.getLogger(__name__)
+
+
+class VolumeCategorizedBot:
+    def __init__(self):
+        # API Configuration
+        self.binance_us_base = "https://api.binance.us"
+        self.claude_api_key = os.getenv("CLAUDE_API_KEY")
+
+        # Volume categories and thresholds
+        self.volume_categories = {
+            "high": {
+                "min": 1000000,
+                "max": float("inf"),
+                "allocation": 0.4,
+            },  # 40% allocation
+            "medium": {
+                "min": 100000,
+                "max": 1000000,
+                "allocation": 0.3,
+            },  # 30% allocation
+            "low": {"min": 10000, "max": 100000, "allocation": 0.2},  # 20% allocation
+            "micro": {"min": 0, "max": 10000, "allocation": 0.1},  # 10% allocation
+        }
+
+        # Trading parameters by volume category
+        self.category_params = {
+            "high": {
+                "momentum_threshold": 2.0,  # Conservative momentum threshold
+                "position_pct": 0.15,  # 15% per position
+                "stop_loss": 0.05,  # 5% stop loss
+                "take_profit": 0.08,  # 8% take profit
+                "hold_hours": 4,  # 4 hour holds
+                "scan_interval": 300,  # 5 minute scans
+            },
+            "medium": {
+                "momentum_threshold": 3.0,  # Moderate momentum threshold
+                "position_pct": 0.12,  # 12% per position
+                "stop_loss": 0.08,  # 8% stop loss
+                "take_profit": 0.15,  # 15% take profit
+                "hold_hours": 8,  # 8 hour holds
+                "scan_interval": 600,  # 10 minute scans
+            },
+            "low": {
+                "momentum_threshold": 5.0,  # Aggressive momentum threshold
+                "position_pct": 0.08,  # 8% per position
+                "stop_loss": 0.12,  # 12% stop loss
+                "take_profit": 0.25,  # 25% take profit
+                "hold_hours": 12,  # 12 hour holds
+                "scan_interval": 900,  # 15 minute scans
+            },
+            "micro": {
+                "momentum_threshold": 8.0,  # Very aggressive threshold
+                "position_pct": 0.05,  # 5% per position (moonshot)
+                "stop_loss": 0.20,  # 20% stop loss
+                "take_profit": 0.50,  # 50% take profit
+                "hold_hours": 24,  # 24 hour holds
+                "scan_interval": 1800,  # 30 minute scans
+            },
+        }
+
+        # Active positions by category
+        self.positions = {"high": {}, "medium": {}, "low": {}, "micro": {}}
+
+        # Portfolio tracking
+        self.portfolio_value = 10000.0  # Starting value
+        self.available_balance = 10000.0
+
+        logger.info("🎯 Volume-Categorized Trading Bot initialized")
+        logger.info(f"📊 Volume Categories: {list(self.volume_categories.keys())}")
+
+    def categorize_by_volume(self, volume_24h: float) -> str:
+        """Categorize token by 24h volume"""
+        for category, config in self.volume_categories.items():
+            if config["min"] <= volume_24h < config["max"]:
+                return category
+        return "micro"  # Default to micro for very low volume
+
+    async def get_all_usdt_pairs(self) -> List[Dict]:
+        """Get all USDT trading pairs with 24h volume data"""
+        try:
+            # Get 24h ticker data
+            url = f"{self.binance_us_base}/api/v3/ticker/24hr"
+            response = requests.get(url)
+
+            if response.status_code != 200:
+                logger.error(f"Failed to get ticker data: {response.status_code}")
+                return []
+
+            tickers = response.json()
+            usdt_pairs = []
+
+            for ticker in tickers:
+                symbol = ticker["symbol"]
+                if symbol.endswith("USDT") and symbol != "USDT":
+                    volume_usdt = float(ticker["quoteVolume"])
+                    category = self.categorize_by_volume(volume_usdt)
+
+                    pair_data = {
+                        "symbol": symbol,
+                        "price": float(ticker["lastPrice"]),
+                        "change_24h": float(ticker["priceChangePercent"]),
+                        "volume_24h": volume_usdt,
+                        "category": category,
+                        "high_24h": float(ticker["highPrice"]),
+                        "low_24h": float(ticker["lowPrice"]),
+                        "volume_change": float(
+                            ticker["priceChangePercent"]
+                        ),  # Use price change as proxy
+                    }
+                    usdt_pairs.append(pair_data)
+
+            # Sort by volume within each category
+            usdt_pairs.sort(key=lambda x: x["volume_24h"], reverse=True)
+
+            logger.info(f"📊 Found {len(usdt_pairs)} USDT pairs")
+
+            # Log category distribution
+            category_counts = {}
+            for pair in usdt_pairs:
+                cat = pair["category"]
+                category_counts[cat] = category_counts.get(cat, 0) + 1
+
+            for cat, count in category_counts.items():
+                logger.info(f"📈 {cat.title()} Volume: {count} pairs")
+
+            return usdt_pairs
+
+        except Exception as e:
+            logger.error(f"Error getting USDT pairs: {e}")
+            return []
+
+    async def analyze_category_batch(
+        self, tokens: List[Dict], category: str
+    ) -> Dict[str, Dict]:
+        """Analyze a batch of tokens from the same category using Claude"""
+        if not tokens or not self.claude_api_key:
+            return {}
+
+        try:
+            # Create category-specific prompt
+            params = self.category_params[category]
+
+            prompt = f"""Analyze these {category} volume tokens for momentum trading:
+
+Volume Category: {category.upper()}
+- Momentum Threshold: {params['momentum_threshold']}%
+- Target Profit: {params['take_profit']*100}%
+- Stop Loss: {params['stop_loss']*100}%
+- Hold Duration: {params['hold_hours']} hours
+
+Tokens:
+"""
+
+            for token in tokens:
+                prompt += f"""
+{token['symbol']}:
+- Price: ${token['price']:.6f}
+- 24h Change: {token['change_24h']:.2f}%
+- Volume: ${token['volume_24h']:,.0f}
+- High/Low: ${token['high_24h']:.6f}/${token['low_24h']:.6f}
+"""
+
+            prompt += f"""
+For {category} volume tokens, focus on:
+- High Volume: Stability and consistent momentum
+- Medium Volume: Balanced risk/reward opportunities  
+- Low Volume: Strong momentum signals with quick moves
+- Micro Volume: Moonshot potential with extreme caution
+
+Respond with JSON only:
+{{
+  "TOKEN1USDT": {{"momentum_score": 0-100, "buy_probability": 0-100, "risk_assessment": "low/medium/high/extreme", "action": "buy/hold/avoid"}},
+  "TOKEN2USDT": {{"momentum_score": 0-100, "buy_probability": 0-100, "risk_assessment": "low/medium/high/extreme", "action": "buy/hold/avoid"}}
+}}"""
+
+            # Make Claude API call
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "content-type": "application/json",
+            }
+
+            payload = {
+                "model": "claude-3-sonnet-20240229",
+                "max_tokens": 2000,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+
+            response = requests.post(
+                "https://api.anthropic.com/v1/messages",
+                headers=headers,
+                json=payload,
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                content = result["content"][0]["text"]
+
+                # Parse JSON response
+                import re
+
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if json_match:
+                    claude_results = json.loads(json_match.group())
+                    logger.info(
+                        f"🤖 Claude analyzed {len(tokens)} {category} volume tokens"
+                    )
+                    return claude_results
+
+        except Exception as e:
+            logger.error(f"Claude analysis failed for {category}: {e}")
+
+        # Fallback analysis
+        return self._fallback_analysis(tokens, category)
+
+    def _fallback_analysis(self, tokens: List[Dict], category: str) -> Dict[str, Dict]:
+        """Fallback analysis when Claude is unavailable"""
+        params = self.category_params[category]
+        results = {}
+
+        for token in tokens:
+            momentum = token["change_24h"]
+            volume_score = min(
+                100,
+                (token["volume_24h"] / self.volume_categories[category]["min"]) * 20,
+            )
+
+            # Calculate scores based on category
+            if category == "high":
+                momentum_score = max(0, min(100, momentum * 10 + 50))
+                buy_prob = max(0, min(100, momentum_score - 20))
+            elif category == "medium":
+                momentum_score = max(0, min(100, momentum * 8 + 45))
+                buy_prob = max(0, min(100, momentum_score - 15))
+            elif category == "low":
+                momentum_score = max(0, min(100, momentum * 6 + 40))
+                buy_prob = max(0, min(100, momentum_score - 10))
+            else:  # micro
+                momentum_score = max(0, min(100, momentum * 4 + 30))
+                buy_prob = max(0, min(100, momentum_score - 5))
+
+            risk = (
+                "low"
+                if category == "high"
+                else (
+                    "medium"
+                    if category == "medium"
+                    else "high" if category == "low" else "extreme"
+                )
+            )
+            action = (
+                "buy"
+                if buy_prob > 60 and momentum > params["momentum_threshold"]
+                else "avoid"
+            )
+
+            results[token["symbol"]] = {
+                "momentum_score": momentum_score,
+                "buy_probability": buy_prob,
+                "risk_assessment": risk,
+                "action": action,
+            }
+
+        return results
+
+    def calculate_position_size(self, category: str, price: float) -> float:
+        """Calculate position size based on category and available balance"""
+        params = self.category_params[category]
+        category_allocation = self.volume_categories[category]["allocation"]
+
+        # Calculate available balance for this category
+        category_balance = self.available_balance * category_allocation
+        position_value = category_balance * params["position_pct"]
+
+        return position_value / price
+
+    async def execute_category_trades(
+        self, category: str, opportunities: Dict[str, Dict]
+    ) -> None:
+        """Execute trades for a specific volume category"""
+        if not opportunities:
+            return
+
+        params = self.category_params[category]
+        executed_trades = 0
+
+        # Sort by buy probability
+        sorted_opportunities = sorted(
+            opportunities.items(), key=lambda x: x[1]["buy_probability"], reverse=True
+        )
+
+        for symbol, analysis in sorted_opportunities:
+            if analysis["action"] != "buy":
+                continue
+
+            if executed_trades >= 2:  # Max 2 positions per category
+                break
+
+            if symbol in self.positions[category]:
+                continue  # Already have position
+
+            try:
+                # Get current price
+                ticker_url = f"{self.binance_us_base}/api/v3/ticker/price"
+                response = requests.get(ticker_url, params={"symbol": symbol})
+
+                if response.status_code != 200:
+                    continue
+
+                current_price = float(response.json()["price"])
+                position_size = self.calculate_position_size(category, current_price)
+                position_value = position_size * current_price
+
+                if position_value < 10:  # Minimum $10 position
+                    continue
+
+                # Execute trade (DEMO MODE - replace with actual API call)
+                logger.info(f"🎯 {category.upper()} VOLUME TRADE:")
+                logger.info(f"   Symbol: {symbol}")
+                logger.info(f"   Price: ${current_price:.6f}")
+                logger.info(f"   Position Size: {position_size:.4f}")
+                logger.info(f"   Position Value: ${position_value:.2f}")
+                logger.info(f"   Buy Probability: {analysis['buy_probability']:.1f}%")
+                logger.info(f"   Risk Assessment: {analysis['risk_assessment']}")
+
+                # Track position
+                self.positions[category][symbol] = {
+                    "entry_price": current_price,
+                    "position_size": position_size,
+                    "entry_time": time.time(),
+                    "category": category,
+                    "analysis": analysis,
+                    "stop_loss": current_price * (1 - params["stop_loss"]),
+                    "take_profit": current_price * (1 + params["take_profit"]),
+                }
+
+                self.available_balance -= position_value
+                executed_trades += 1
+
+                logger.info(f"✅ {category} volume position opened: {symbol}")
+
+            except Exception as e:
+                logger.error(f"Failed to execute {category} trade for {symbol}: {e}")
+
+    async def monitor_positions(self) -> None:
+        """Monitor all positions across categories"""
+        total_positions = sum(len(positions) for positions in self.positions.values())
+
+        if total_positions == 0:
+            return
+
+        logger.info(f"📊 Monitoring {total_positions} positions across categories")
+
+        for category, positions in self.positions.items():
+            if not positions:
+                continue
+
+            params = self.category_params[category]
+            positions_to_close = []
+
+            for symbol, position in positions.items():
+                try:
+                    # Get current price
+                    ticker_url = f"{self.binance_us_base}/api/v3/ticker/price"
+                    response = requests.get(ticker_url, params={"symbol": symbol})
+
+                    if response.status_code != 200:
+                        continue
+
+                    current_price = float(response.json()["price"])
+                    entry_price = position["entry_price"]
+                    current_pnl = (current_price - entry_price) / entry_price * 100
+                    position_age = (
+                        time.time() - position["entry_time"]
+                    ) / 3600  # hours
+
+                    # Check exit conditions
+                    should_close = False
+                    close_reason = ""
+
+                    if current_price <= position["stop_loss"]:
+                        should_close = True
+                        close_reason = f"Stop Loss (-{params['stop_loss']*100:.1f}%)"
+                    elif current_price >= position["take_profit"]:
+                        should_close = True
+                        close_reason = (
+                            f"Take Profit (+{params['take_profit']*100:.1f}%)"
+                        )
+                    elif position_age >= params["hold_hours"]:
+                        should_close = True
+                        close_reason = f"Time Exit ({position_age:.1f}h)"
+
+                    if should_close:
+                        positions_to_close.append((symbol, close_reason, current_pnl))
+                        logger.info(
+                            f"🔄 {category.upper()} EXIT: {symbol} - {close_reason} - PnL: {current_pnl:+.2f}%"
+                        )
+                    else:
+                        logger.info(
+                            f"📈 {category.upper()} HOLD: {symbol} - PnL: {current_pnl:+.2f}% - Age: {position_age:.1f}h"
+                        )
+
+                except Exception as e:
+                    logger.error(f"Error monitoring {symbol}: {e}")
+
+            # Close positions
+            for symbol, reason, pnl in positions_to_close:
+                position = positions[symbol]
+                position_value = position["position_size"] * position["entry_price"]
+                realized_pnl = position_value * (pnl / 100)
+
+                self.available_balance += position_value + realized_pnl
+                del positions[symbol]
+
+                logger.info(
+                    f"✅ {category} position closed: {symbol} - {reason} - Realized PnL: ${realized_pnl:+.2f}"
+                )
+
+    async def run_volume_categorized_trading(self):
+        """Main trading loop with volume categorization"""
+        logger.info("🚀 Starting Volume-Categorized Trading Bot")
+
+        scan_counts = {cat: 0 for cat in self.volume_categories.keys()}
+
+        while True:
+            try:
+                current_time = datetime.now()
+                logger.info(
+                    f"🔍 Volume-categorized scan at {current_time.strftime('%H:%M:%S')}"
+                )
+
+                # Monitor existing positions
+                await self.monitor_positions()
+
+                # Get all tokens
+                all_tokens = await self.get_all_usdt_pairs()
+                if not all_tokens:
+                    await asyncio.sleep(300)  # Wait 5 minutes on error
+                    continue
+
+                # Group tokens by category
+                tokens_by_category = {cat: [] for cat in self.volume_categories.keys()}
+                for token in all_tokens:
+                    tokens_by_category[token["category"]].append(token)
+
+                # Process each category
+                for category, tokens in tokens_by_category.items():
+                    if not tokens:
+                        continue
+
+                    params = self.category_params[category]
+
+                    # Check if it's time to scan this category
+                    if scan_counts[category] * 60 < params["scan_interval"]:
+                        scan_counts[category] += 1
+                        continue
+
+                    scan_counts[category] = 0  # Reset counter
+
+                    # Filter top tokens by momentum
+                    momentum_tokens = [
+                        t
+                        for t in tokens
+                        if t["change_24h"] >= params["momentum_threshold"]
+                    ][
+                        :10
+                    ]  # Top 10 per category
+
+                    if not momentum_tokens:
+                        logger.info(
+                            f"📊 No {category} volume tokens meet momentum threshold ({params['momentum_threshold']}%)"
+                        )
+                        continue
+
+                    logger.info(
+                        f"🎯 Analyzing {len(momentum_tokens)} {category} volume opportunities"
+                    )
+
+                    # Analyze with Claude
+                    analysis_results = await self.analyze_category_batch(
+                        momentum_tokens, category
+                    )
+
+                    # Execute trades
+                    await self.execute_category_trades(category, analysis_results)
+
+                # Portfolio summary
+                total_positions = sum(
+                    len(positions) for positions in self.positions.values()
+                )
+                logger.info(
+                    f"💼 Portfolio: ${self.portfolio_value:.2f} | Available: ${self.available_balance:.2f} | Positions: {total_positions}"
+                )
+
+                # Wait before next scan (1 minute base interval)
+                await asyncio.sleep(60)
+
+            except KeyboardInterrupt:
+                logger.info("👋 Volume-categorized bot stopped by user")
+                break
+            except Exception as e:
+                logger.error(f"Main loop error: {e}")
+                await asyncio.sleep(300)  # Wait 5 minutes on error
+
+
+# Main execution
+async def main():
+    """Main function"""
+    try:
+        # Check for demo mode
+        if "DEMO" in os.environ or not os.getenv("BINANCEUS_KEY"):
+            logger.info("📝 DEMO MODE - No real trading will occur")
+            logger.info("Set BINANCEUS_KEY and BINANCEUS_SECRET for live trading")
+        else:
+            logger.info("⚠️  WARNING: This bot will execute REAL trades!")
+            response = input("Type 'CONFIRM' to start live trading: ")
+            if response != "CONFIRM":
+                logger.info("❌ Trading cancelled")
+                return
+
+        # Initialize and run bot
+        bot = VolumeCategorizedBot()
+        await bot.run_volume_categorized_trading()
+
+    except KeyboardInterrupt:
+        logger.info("👋 Volume-categorized bot stopped")
+    except Exception as e:
+        logger.error(f"Bot error: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

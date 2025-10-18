@@ -1,0 +1,11 @@
+route:
+  receiver: 'noop'
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 2h
+
+receivers:
+  - name: 'noop'
+    webhook_configs: []
+# TODO: Add real receiver (Slack/email/webhook) here.

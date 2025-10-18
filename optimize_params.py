@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+import itertools, json, subprocess, csv, sys
+from pathlib import Path
+
+
+def run_bt(csv_path, lookback, max_notional):
+    cmd = [
+        sys.executable,
+        "backtest_breakout.py",
+        "--csv",
+        str(csv_path),
+        "--lookback",
+        str(lookback),
+        "--fee_bps",
+        "10",
+        "--slip_bps",
+        "5",
+        "--max_notional",
+        str(max_notional),
+    ]
+    out = subprocess.check_output(cmd, text=True)
+    return json.loads(out)
+
+
+if __name__ == "__main__":
+    csv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("data/XRPUSDT_5m.csv")
+    looks = [8, 12, 16, 20, 24, 30]
+    notionals = [10, 20, 30, 40]
+    rows = []
+    for L, N in itertools.product(looks, notionals):
+        try:
+            res = run_bt(csv_path, L, N)
+        except Exception as e:
+            print(f"error {L} {N}: {e}", file=sys.stderr)
+            continue
+        rows.append(
+            {
+                "lookback": L,
+                "max_notional": N,
+                "ret_pct": res["return_pct"],
+                "sharpe": res["sharpe_like"],
+                "max_dd_pct": res["max_drawdown_pct"],
+                "num_trades": res["num_trades"],
+            }
+        )
+    if not rows:
+        print("No results")
+        sys.exit(1)
+    rows.sort(key=lambda r: (r["sharpe"], r["ret_pct"], -r["max_dd_pct"]), reverse=True)
+    with open("opt_results.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=rows[0].keys())
+        w.writeheader()
+        w.writerows(rows)
+    best = next(
+        (r for r in rows if r["max_dd_pct"] <= 15 and r["num_trades"] >= 10), rows[0]
+    )
+    print("BEST:", best)

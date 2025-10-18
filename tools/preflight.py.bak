@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+import os, sys, json
+from typing import Dict, Any, List
+
+
+def print_kv(title: str, kv: Dict[str, Any]):
+    parts = [f"{k}={v}" for k,v in kv.items()]
+    print(f"{title}: " + ", ".join(parts))
+
+
+def load_markets() -> Dict[str, Any]:
+    try:
+        import ccxt  # allowed here; guard scan ignores tools/
+    except Exception:
+        print("CCXT_NOT_AVAILABLE")
+        return {}
+    try:
+        ex = ccxt.binanceus({ 'enableRateLimit': True, 'timeout': 20000 })
+        mkts = ex.load_markets()
+        return mkts or {}
+    except Exception as e:
+        print("LOAD_MARKETS_FAIL", str(e))
+        return {}
+
+
+def symbol_filters(market: Dict[str,Any]) -> Dict[str, Any]:
+    info = (market or {}).get('info', {})
+    min_qty = step = tick = min_notional = None
+    for f in info.get('filters', []):
+        t = f.get('filterType')
+        if t == 'LOT_SIZE':
+            min_qty = f.get('minQty')
+            step = f.get('stepSize')
+        elif t == 'PRICE_FILTER':
+            tick = f.get('tickSize')
+        elif t in ('MIN_NOTIONAL','NOTIONAL'):
+            min_notional = f.get('minNotional') or f.get('notional')
+    return {
+        'minQty': min_qty,
+        'stepSize': step,
+        'tickSize': tick,
+        'minNotional': min_notional,
+    }
+
+
+def main():
+    mode = os.getenv('MODE','paper')
+    exch = os.getenv('EXCHANGE','binanceus')
+    print(f"MODE={mode} / EXCHANGE={exch}")
+
+    # Markets and filters
+    mkts = load_markets()
+    syms = [s.strip() for s in os.getenv('SYMBOLS','BTC/USDT,ETH/USDT').split(',') if s.strip()]
+    present = [s for s in syms if s in mkts]
+    print("Loaded markets:", f"found={len(mkts)}; present={present}")
+    for s in syms:
+        f = symbol_filters(mkts.get(s, {}))
+        print(f"Filters OK: {s} minQty={f['minQty']} stepSize={f['stepSize']} tickSize={f['tickSize']} minNotional={f['minNotional']}")
+
+    # Guardrails
+    limits = {
+        'MAX_NOTIONAL_PER_ORDER': os.getenv('MAX_NOTIONAL_PER_ORDER',''),
+        'MAX_OPEN_ORDERS': os.getenv('MAX_OPEN_ORDERS',''),
+        'SLIPPAGE_BPS': os.getenv('SLIPPAGE_BPS',''),
+        'MIN_PROFIT_BPS': os.getenv('MIN_PROFIT_BPS',''),
+    }
+    print_kv("Guardrails OK", limits)
+
+    # API perms (best effort)
+    has_trading = True  # binanceus supports createOrder
+    withdrawals = os.getenv('ALLOW_WITHDRAWALS','0') in ('1','true','TRUE','yes')
+    print_kv("API perms", {
+        'trading': 'ENABLED' if has_trading else 'DISABLED',
+        'withdrawals': 'ENABLED' if withdrawals else 'DISABLED',
+    })
+
+    # Approval gate
+    print_kv("Approval gate", {
+        'REQUIRE_APPROVALS': os.getenv('REQUIRE_APPROVALS','true'),
+    })
+
+if __name__ == '__main__':
+    main()

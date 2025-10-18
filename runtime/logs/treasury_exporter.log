@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/scripts/treasury_exporter.py", line 85, in <module>
+    main()
+    ~~~~^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/scripts/treasury_exporter.py", line 57, in main
+    start_http_server(port)
+    ~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/nicholaskramer/Downloads/victorychain_stack/.venv/lib/python3.13/site-packages/prometheus_client/exposition.py", line 241, in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/wsgiref/simple_server.py", line 150, in make_server
+    server = server_class((host, port), handler_class)
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socketserver.py", line 457, in __init__
+    self.server_bind()
+    ~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/wsgiref/simple_server.py", line 50, in server_bind
+    HTTPServer.server_bind(self)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/server.py", line 136, in server_bind
+    socketserver.TCPServer.server_bind(self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socketserver.py", line 478, in server_bind
+    self.socket.bind(self.server_address)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 48] Address already in use

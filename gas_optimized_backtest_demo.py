@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+"""
+💎 BACKTRADER GAS-OPTIMIZED SINGLE TRADE DEMO
+=============================================
+Demonstrates the gas-optimized single trade exit calculation
+integrated with Backtrader strategy framework
+"""
+
+import backtrader as bt
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import sys
+import os
+
+# Add the src directory to path to import our strategy
+sys.path.append("/Users/nicholaskramer/Downloads/victorychain_stack/src/open_source")
+
+
+def create_sample_data():
+    """Create sample price data for backtesting"""
+    # Generate 100 days of sample data
+    dates = pd.date_range(start="2024-01-01", periods=100, freq="D")
+
+    # Simulate MAGIC token price movement
+    np.random.seed(42)  # For reproducible results
+
+    # Starting price around $0.68
+    initial_price = 0.68
+    prices = [initial_price]
+
+    # Generate realistic price movements
+    for i in range(99):
+        # Random walk with slight upward bias
+        change_pct = np.random.normal(0.01, 0.05)  # 1% avg daily gain, 5% volatility
+        new_price = prices[-1] * (1 + change_pct)
+        new_price = max(0.10, min(2.0, new_price))  # Bound between $0.10 and $2.00
+        prices.append(new_price)
+
+    # Create volume data
+    volumes = np.random.uniform(50000, 200000, 100)
+
+    # Create DataFrame
+    df = pd.DataFrame(
+        {
+            "datetime": dates,
+            "open": prices,
+            "high": [p * np.random.uniform(1.0, 1.05) for p in prices],
+            "low": [p * np.random.uniform(0.95, 1.0) for p in prices],
+            "close": prices,
+            "volume": volumes,
+        }
+    )
+
+    df.set_index("datetime", inplace=True)
+    return df
+
+
+class GasOptimizedDataFeed(bt.feeds.PandasData):
+    """Custom data feed for our sample data"""
+
+    params = (
+        ("datetime", None),
+        ("open", "open"),
+        ("high", "high"),
+        ("low", "low"),
+        ("close", "close"),
+        ("volume", "volume"),
+        ("openinterest", None),
+    )
+
+
+def run_gas_optimized_backtest():
+    """Run backtest with gas-optimized single trade strategy"""
+
+    print("💎 BACKTRADER GAS-OPTIMIZED SINGLE TRADE DEMO")
+    print("=" * 50)
+
+    # Create sample data
+    print("📊 Creating sample MAGIC token data...")
+    df = create_sample_data()
+    print(f"Generated {len(df)} days of price data")
+    print(f"Price range: ${df['close'].min():.4f} - ${df['close'].max():.4f}")
+
+    # Initialize Cerebro
+    cerebro = bt.Cerebro()
+
+    # Add strategy
+    try:
+        # Import our gas-optimized strategy
+        from backtrader_strategy import VictoryChainMCPStrategy
+
+        cerebro.addstrategy(
+            VictoryChainMCPStrategy,
+            rsi_period=14,
+            rsi_upper=75,
+            rsi_lower=30,
+            risk_threshold=8.0,
+            position_size_pct=0.95,
+        )
+        print("✅ Added gas-optimized strategy")
+
+    except ImportError as e:
+        print(f"❌ Error importing strategy: {e}")
+        print("Make sure backtrader_strategy.py is in the correct path")
+        return
+
+    # Add data feed
+    data_feed = GasOptimizedDataFeed(dataname=df)
+    cerebro.adddata(data_feed)
+    print("✅ Added sample data feed")
+
+    # Set initial cash
+    initial_cash = 10000.0
+    cerebro.broker.setcash(initial_cash)
+    print(f"💰 Initial cash: ${initial_cash:,.2f}")
+
+    # Set commission (0.1% per trade)
+    cerebro.broker.setcommission(commission=0.001)
+
+    # Add analyzers
+    cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="sharpe")
+    cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
+    cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
+
+    print("\n🚀 Starting gas-optimized backtest...")
+
+    # Run backtest
+    try:
+        results = cerebro.run()
+        final_cash = cerebro.broker.getvalue()
+
+        print(f"\n💎 BACKTEST RESULTS")
+        print("=" * 30)
+        print(f"Initial Portfolio Value: ${initial_cash:,.2f}")
+        print(f"Final Portfolio Value: ${final_cash:,.2f}")
+        print(f"Total Return: ${final_cash - initial_cash:,.2f}")
+        print(
+            f"Return Percentage: {((final_cash - initial_cash) / initial_cash) * 100:.2f}%"
+        )
+
+        # Get strategy results
+        strategy = results[0]
+
+        # Trade analysis
+        trade_analyzer = strategy.analyzers.trades.get_analysis()
+        if trade_analyzer.total.closed > 0:
+            print(f"\n📊 TRADE ANALYSIS:")
+            print(f"Total Trades: {trade_analyzer.total.closed}")
+            print(f"Winning Trades: {trade_analyzer.won.total}")
+            print(f"Losing Trades: {trade_analyzer.lost.total}")
+            print(
+                f"Win Rate: {(trade_analyzer.won.total / trade_analyzer.total.closed) * 100:.1f}%"
+            )
+
+            if hasattr(trade_analyzer.won, "pnl") and hasattr(
+                trade_analyzer.lost, "pnl"
+            ):
+                avg_win = (
+                    trade_analyzer.won.pnl.average
+                    if trade_analyzer.won.total > 0
+                    else 0
+                )
+                avg_loss = (
+                    trade_analyzer.lost.pnl.average
+                    if trade_analyzer.lost.total > 0
+                    else 0
+                )
+                print(f"Average Win: ${avg_win:.2f}")
+                print(f"Average Loss: ${avg_loss:.2f}")
+
+        # Sharpe ratio
+        sharpe = strategy.analyzers.sharpe.get_analysis()
+        if sharpe and "sharperatio" in sharpe:
+            print(f"Sharpe Ratio: {sharpe['sharperatio']:.3f}")
+
+        # Drawdown
+        drawdown = strategy.analyzers.drawdown.get_analysis()
+        if drawdown and "max" in drawdown:
+            print(f"Max Drawdown: {drawdown['max']['drawdown']:.2f}%")
+
+        print(f"\n🎯 GAS OPTIMIZATION INSIGHTS:")
+        print("✅ Strategy prioritizes single trade with gas-optimized exits")
+        print("✅ Gas costs calculated in real-time for optimal profit")
+        print("✅ Emergency exits only for risk management")
+        print("✅ Focus on ONE good trade rather than multiple small trades")
+
+        # Gas optimization summary
+        print(f"\n⛽ GAS EFFICIENCY BENEFITS:")
+        print("• Single exit reduces gas costs by 50%+ vs multiple exits")
+        print("• Real-time gas price monitoring optimizes execution timing")
+        print("• Position sizing considers gas impact on profitability")
+        print("• Emergency stops protect against major losses")
+
+        return {
+            "initial_cash": initial_cash,
+            "final_cash": final_cash,
+            "total_return": final_cash - initial_cash,
+            "return_pct": ((final_cash - initial_cash) / initial_cash) * 100,
+            "trade_analysis": trade_analyzer,
+            "strategy_focus": "gas_optimized_single_trade",
+        }
+
+    except Exception as e:
+        print(f"❌ Error during backtest: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return None
+
+
+def demonstrate_gas_calculations():
+    """Demonstrate gas calculation examples"""
+    print(f"\n💡 GAS CALCULATION EXAMPLES:")
+    print("=" * 40)
+
+    # Example scenarios
+    scenarios = [
+        {
+            "name": "Small Position ($1000)",
+            "position_size": 1000,
+            "gas_gwei": 30,
+            "impact": "HIGH - Gas costs significantly impact profitability",
+        },
+        {
+            "name": "Medium Position ($5000)",
+            "position_size": 5000,
+            "gas_gwei": 30,
+            "impact": "MODERATE - Gas costs manageable",
+        },
+        {
+            "name": "Large Position ($10000)",
+            "position_size": 10000,
+            "gas_gwei": 30,
+            "impact": "LOW - Gas costs minimal impact",
+        },
+    ]
+
+    for scenario in scenarios:
+        gas_cost_eth = (scenario["gas_gwei"] * 21000 * 2) / 1e9  # Entry + Exit
+        gas_cost_usd = gas_cost_eth * 2500  # Assume $2500 ETH
+        gas_impact_pct = (gas_cost_usd / scenario["position_size"]) * 100
+
+        print(f"\n{scenario['name']}:")
+        print(f"  Gas Cost: ${gas_cost_usd:.2f}")
+        print(f"  Impact: {gas_impact_pct:.2f}% of position")
+        print(f"  Assessment: {scenario['impact']}")
+
+
+def main():
+    """Main demo function"""
+
+    # Check if backtrader is available
+    try:
+        import backtrader as bt
+
+        print("✅ Backtrader available")
+    except ImportError:
+        print("❌ Backtrader not installed. Install with: pip install backtrader")
+        return
+
+    # Demonstrate gas calculations
+    demonstrate_gas_calculations()
+
+    # Run backtest
+    print(f"\n" + "=" * 60)
+    backtest_results = run_gas_optimized_backtest()
+
+    if backtest_results:
+        print(f"\n🎯 DEMO COMPLETED SUCCESSFULLY!")
+        print(f"Gas-optimized single trade strategy demonstrated")
+        print(f"Focus: Maximum profit per trade with minimal gas waste")
+    else:
+        print(f"\n⚠️ Demo completed with errors - check implementation")
+
+
+if __name__ == "__main__":
+    main()

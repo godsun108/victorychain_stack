@@ -1,0 +1,706 @@
+#!/usr/bin/env python3
+"""
+Advanced Market Microstructure Analyzer
+Real-time order flow, liquidity, and market impact analysis
+"""
+
+import os
+import json
+import time
+import asyncio
+import threading
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional, Deque
+from collections import deque, defaultdict
+import pandas as pd
+import numpy as np
+from scipy import stats
+from binance.client import Client
+from dotenv import load_dotenv
+
+
+class MarketMicrostructureAnalyzer:
+    def __init__(self):
+        load_dotenv()
+
+        # Initialize Binance client
+        self.client = Client(
+            api_key=os.getenv("BINANCEUS_KEY"),
+            api_secret=os.getenv("BINANCEUS_SECRET"),
+            tld="us",
+        )
+
+        # Market microstructure data storage
+        self.order_books = {}
+        self.trade_streams = defaultdict(lambda: deque(maxlen=1000))
+        self.liquidity_metrics = {}
+        self.flow_metrics = {}
+        self.market_impact_data = defaultdict(list)
+
+        # Analysis state
+        self.running = False
+
+        print("🔬 Market Microstructure Analyzer initialized")
+        print("📡 Real-time order flow and liquidity analysis ready")
+
+    def get_order_book_snapshot(self, symbol: str, limit: int = 100) -> Dict:
+        """Get order book snapshot"""
+
+        try:
+            depth = self.client.get_order_book(symbol=symbol, limit=limit)
+
+            # Process bids and asks
+            bids = [[float(price), float(qty)] for price, qty in depth["bids"]]
+            asks = [[float(price), float(qty)] for price, qty in depth["asks"]]
+
+            return {
+                "symbol": symbol,
+                "timestamp": datetime.now(),
+                "bids": bids,
+                "asks": asks,
+                "lastUpdateId": depth["lastUpdateId"],
+            }
+
+        except Exception as e:
+            print(f"❌ Failed to get order book for {symbol}: {str(e)}")
+            return {}
+
+    def analyze_order_book_liquidity(self, order_book: Dict) -> Dict:
+        """Analyze order book liquidity metrics"""
+
+        if not order_book or not order_book.get("bids") or not order_book.get("asks"):
+            return {}
+
+        bids = np.array(order_book["bids"])
+        asks = np.array(order_book["asks"])
+
+        # Best bid/ask
+        best_bid = bids[0][0] if len(bids) > 0 else 0
+        best_ask = asks[0][0] if len(asks) > 0 else 0
+
+        # Spread metrics
+        spread = best_ask - best_bid
+        mid_price = (best_bid + best_ask) / 2
+        spread_bps = (spread / mid_price) * 10000 if mid_price > 0 else 0
+
+        # Depth metrics
+        def calculate_depth(orders, levels=5):
+            if len(orders) < levels:
+                return 0
+            return sum(orders[:levels, 1])  # Sum of quantities
+
+        def calculate_weighted_price(orders, levels=5):
+            if len(orders) < levels:
+                return 0
+            total_qty = sum(orders[:levels, 1])
+            if total_qty == 0:
+                return orders[0][0]
+            weighted_price = sum(
+                orders[i][0] * orders[i][1] for i in range(min(levels, len(orders)))
+            )
+            return weighted_price / total_qty
+
+        bid_depth_5 = calculate_depth(bids, 5)
+        ask_depth_5 = calculate_depth(asks, 5)
+        total_depth_5 = bid_depth_5 + ask_depth_5
+
+        bid_depth_10 = calculate_depth(bids, 10)
+        ask_depth_10 = calculate_depth(asks, 10)
+        total_depth_10 = bid_depth_10 + ask_depth_10
+
+        # Imbalance metrics
+        order_imbalance = (
+            (bid_depth_5 - ask_depth_5) / (bid_depth_5 + ask_depth_5)
+            if total_depth_5 > 0
+            else 0
+        )
+
+        # Price impact estimation
+        def estimate_market_impact(orders, trade_size):
+            cumulative_qty = 0
+            total_cost = 0
+
+            for price, qty in orders:
+                if cumulative_qty >= trade_size:
+                    break
+
+                qty_to_use = min(qty, trade_size - cumulative_qty)
+                total_cost += price * qty_to_use
+                cumulative_qty += qty_to_use
+
+            if cumulative_qty == 0:
+                return 0
+
+            avg_price = total_cost / cumulative_qty
+            return avg_price
+
+        # Estimate market impact for different trade sizes
+        trade_sizes = [1000, 5000, 10000]  # USDT
+
+        market_impact = {}
+        for size in trade_sizes:
+            # Convert USDT to quantity
+            qty_size = size / mid_price if mid_price > 0 else 0
+
+            buy_impact_price = estimate_market_impact(asks, qty_size)
+            sell_impact_price = estimate_market_impact(
+                bids[::-1], qty_size
+            )  # Reverse for selling
+
+            buy_impact = (
+                (buy_impact_price - mid_price) / mid_price if mid_price > 0 else 0
+            )
+            sell_impact = (
+                (mid_price - sell_impact_price) / mid_price if mid_price > 0 else 0
+            )
+
+            market_impact[f"{size}USDT"] = {
+                "buy_impact": buy_impact,
+                "sell_impact": sell_impact,
+                "avg_impact": (abs(buy_impact) + abs(sell_impact)) / 2,
+            }
+
+        return {
+            "symbol": order_book["symbol"],
+            "timestamp": order_book["timestamp"],
+            "spread": {
+                "absolute": spread,
+                "bps": spread_bps,
+                "relative": spread / mid_price if mid_price > 0 else 0,
+            },
+            "prices": {
+                "best_bid": best_bid,
+                "best_ask": best_ask,
+                "mid_price": mid_price,
+            },
+            "depth": {
+                "bid_depth_5": bid_depth_5,
+                "ask_depth_5": ask_depth_5,
+                "total_depth_5": total_depth_5,
+                "bid_depth_10": bid_depth_10,
+                "ask_depth_10": ask_depth_10,
+                "total_depth_10": total_depth_10,
+            },
+            "imbalance": {
+                "order_imbalance": order_imbalance,
+                "depth_ratio": (
+                    bid_depth_5 / ask_depth_5 if ask_depth_5 > 0 else float("inf")
+                ),
+            },
+            "market_impact": market_impact,
+            "liquidity_score": self.calculate_liquidity_score(
+                spread_bps, total_depth_5, order_imbalance
+            ),
+        }
+
+    def calculate_liquidity_score(
+        self, spread_bps: float, depth: float, imbalance: float
+    ) -> float:
+        """Calculate overall liquidity score (0-100)"""
+
+        # Spread component (lower is better)
+        spread_score = max(0, 100 - spread_bps * 2)  # Penalize wide spreads
+
+        # Depth component (higher is better)
+        depth_score = min(100, depth / 1000 * 100)  # Normalize depth
+
+        # Imbalance component (closer to 0 is better)
+        imbalance_score = max(0, 100 - abs(imbalance) * 200)
+
+        # Combined score
+        liquidity_score = spread_score * 0.4 + depth_score * 0.4 + imbalance_score * 0.2
+
+        return max(0, min(100, liquidity_score))
+
+    def analyze_trade_flow(self, trades: List[Dict]) -> Dict:
+        """Analyze trade flow and order flow imbalance"""
+
+        if not trades:
+            return {}
+
+        # Convert to DataFrame
+        df = pd.DataFrame(trades)
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        df["price"] = df["price"].astype(float)
+        df["quantity"] = df["quantity"].astype(float)
+        df["quoteQty"] = df["quoteQty"].astype(float)
+
+        # Time-based analysis
+        now = datetime.now()
+        df_1m = df[df["timestamp"] >= now - timedelta(minutes=1)]
+        df_5m = df[df["timestamp"] >= now - timedelta(minutes=5)]
+        df_15m = df[df["timestamp"] >= now - timedelta(minutes=15)]
+
+        def analyze_period(period_df, period_name):
+            if period_df.empty:
+                return {}
+
+            # Buy/Sell classification (based on maker vs taker)
+            buy_trades = period_df[
+                period_df["isBuyerMaker"] == False
+            ]  # Taker buy = market buy
+            sell_trades = period_df[
+                period_df["isBuyerMaker"] == True
+            ]  # Taker sell = market sell
+
+            buy_volume = buy_trades["quoteQty"].sum()
+            sell_volume = sell_trades["quoteQty"].sum()
+            total_volume = buy_volume + sell_volume
+
+            # Order flow imbalance
+            ofi = (buy_volume - sell_volume) / total_volume if total_volume > 0 else 0
+
+            # Trade size analysis
+            avg_trade_size = period_df["quoteQty"].mean()
+            large_trades = period_df[period_df["quoteQty"] > avg_trade_size * 3]
+
+            # Price impact
+            if len(period_df) > 1:
+                price_change = (
+                    period_df["price"].iloc[-1] - period_df["price"].iloc[0]
+                ) / period_df["price"].iloc[0]
+            else:
+                price_change = 0
+
+            # Trade frequency
+            trade_count = len(period_df)
+            time_span = (
+                period_df["timestamp"].max() - period_df["timestamp"].min()
+            ).total_seconds()
+            trade_frequency = trade_count / max(time_span / 60, 1)  # trades per minute
+
+            return {
+                "total_trades": trade_count,
+                "total_volume": total_volume,
+                "buy_volume": buy_volume,
+                "sell_volume": sell_volume,
+                "buy_ratio": buy_volume / total_volume if total_volume > 0 else 0,
+                "order_flow_imbalance": ofi,
+                "avg_trade_size": avg_trade_size,
+                "large_trades_count": len(large_trades),
+                "large_trades_volume": large_trades["quoteQty"].sum(),
+                "price_change": price_change,
+                "trade_frequency": trade_frequency,
+                "vwap": (
+                    (period_df["price"] * period_df["quantity"]).sum()
+                    / period_df["quantity"].sum()
+                    if period_df["quantity"].sum() > 0
+                    else 0
+                ),
+            }
+
+        return {
+            "1m": analyze_period(df_1m, "1m"),
+            "5m": analyze_period(df_5m, "5m"),
+            "15m": analyze_period(df_15m, "15m"),
+            "overall_flow_direction": self.determine_flow_direction(df_1m, df_5m),
+        }
+
+    def determine_flow_direction(self, df_1m: pd.DataFrame, df_5m: pd.DataFrame) -> str:
+        """Determine overall order flow direction"""
+
+        if df_1m.empty or df_5m.empty:
+            return "UNKNOWN"
+
+        # Recent flow (1m)
+        buy_1m = df_1m[df_1m["isBuyerMaker"] == False]["quoteQty"].sum()
+        sell_1m = df_1m[df_1m["isBuyerMaker"] == True]["quoteQty"].sum()
+        recent_ofi = (
+            (buy_1m - sell_1m) / (buy_1m + sell_1m) if (buy_1m + sell_1m) > 0 else 0
+        )
+
+        # Medium-term flow (5m)
+        buy_5m = df_5m[df_5m["isBuyerMaker"] == False]["quoteQty"].sum()
+        sell_5m = df_5m[df_5m["isBuyerMaker"] == True]["quoteQty"].sum()
+        medium_ofi = (
+            (buy_5m - sell_5m) / (buy_5m + sell_5m) if (buy_5m + sell_5m) > 0 else 0
+        )
+
+        # Determine direction
+        if recent_ofi > 0.3 and medium_ofi > 0.1:
+            return "STRONG_BULLISH"
+        elif recent_ofi > 0.1 and medium_ofi > 0.05:
+            return "BULLISH"
+        elif recent_ofi < -0.3 and medium_ofi < -0.1:
+            return "STRONG_BEARISH"
+        elif recent_ofi < -0.1 and medium_ofi < -0.05:
+            return "BEARISH"
+        else:
+            return "NEUTRAL"
+
+    def get_recent_trades(self, symbol: str, limit: int = 500) -> List[Dict]:
+        """Get recent trades for analysis"""
+
+        try:
+            trades = self.client.get_recent_trades(symbol=symbol, limit=limit)
+            return trades
+        except Exception as e:
+            print(f"❌ Failed to get recent trades for {symbol}: {str(e)}")
+            return []
+
+    def analyze_market_microstructure(self, symbols: List[str]) -> Dict:
+        """Analyze market microstructure for multiple symbols"""
+
+        print(f"🔬 Analyzing market microstructure for {len(symbols)} symbols...")
+
+        results = {}
+
+        for i, symbol in enumerate(symbols):
+            try:
+                print(f"📊 Processing {symbol} ({i+1}/{len(symbols)})...")
+
+                # Get order book
+                order_book = self.get_order_book_snapshot(symbol)
+
+                if not order_book:
+                    continue
+
+                # Analyze liquidity
+                liquidity_analysis = self.analyze_order_book_liquidity(order_book)
+
+                # Get recent trades
+                trades = self.get_recent_trades(symbol)
+
+                # Analyze trade flow
+                flow_analysis = self.analyze_trade_flow(trades)
+
+                # Get 24hr ticker
+                ticker = self.client.get_ticker(symbol=symbol)
+
+                results[symbol] = {
+                    "liquidity_analysis": liquidity_analysis,
+                    "trade_flow_analysis": flow_analysis,
+                    "ticker_data": {
+                        "price_change": float(ticker["priceChange"]),
+                        "price_change_percent": float(ticker["priceChangePercent"]),
+                        "volume": float(ticker["volume"]),
+                        "quote_volume": float(ticker["quoteVolume"]),
+                        "count": int(ticker["count"]),
+                    },
+                    "microstructure_score": self.calculate_microstructure_score(
+                        liquidity_analysis, flow_analysis
+                    ),
+                }
+
+                time.sleep(0.2)  # Rate limiting
+
+            except Exception as e:
+                print(f"❌ Failed to analyze {symbol}: {str(e)}")
+                continue
+
+        print(f"✅ Microstructure analysis completed for {len(results)} symbols")
+
+        return results
+
+    def calculate_microstructure_score(self, liquidity: Dict, flow: Dict) -> Dict:
+        """Calculate overall microstructure health score"""
+
+        if not liquidity or not flow:
+            return {"overall_score": 0, "components": {}}
+
+        # Liquidity score (from liquidity analysis)
+        liquidity_score = liquidity.get("liquidity_score", 0)
+
+        # Flow quality score
+        flow_1m = flow.get("1m", {})
+        flow_5m = flow.get("5m", {})
+
+        # Trade frequency score
+        freq_score = min(100, flow_1m.get("trade_frequency", 0) * 10)
+
+        # Volume balance score
+        buy_ratio = flow_1m.get("buy_ratio", 0.5)
+        balance_score = 100 - abs(buy_ratio - 0.5) * 200
+
+        # Stability score (consistent with 5m data)
+        if flow_5m:
+            ofi_1m = abs(flow_1m.get("order_flow_imbalance", 0))
+            ofi_5m = abs(flow_5m.get("order_flow_imbalance", 0))
+            stability_score = max(0, 100 - abs(ofi_1m - ofi_5m) * 500)
+        else:
+            stability_score = 50
+
+        # Combined score
+        overall_score = (
+            liquidity_score * 0.4
+            + freq_score * 0.2
+            + balance_score * 0.2
+            + stability_score * 0.2
+        )
+
+        return {
+            "overall_score": max(0, min(100, overall_score)),
+            "components": {
+                "liquidity_score": liquidity_score,
+                "frequency_score": freq_score,
+                "balance_score": balance_score,
+                "stability_score": stability_score,
+            },
+        }
+
+    def rank_symbols_by_microstructure(self, analysis_results: Dict) -> List[Dict]:
+        """Rank symbols by microstructure quality"""
+
+        rankings = []
+
+        for symbol, data in analysis_results.items():
+            try:
+                microstructure_score = data.get("microstructure_score", {}).get(
+                    "overall_score", 0
+                )
+                liquidity_score = data.get("liquidity_analysis", {}).get(
+                    "liquidity_score", 0
+                )
+
+                flow_1m = data.get("trade_flow_analysis", {}).get("1m", {})
+                volume_24h = data.get("ticker_data", {}).get("quote_volume", 0)
+
+                rankings.append(
+                    {
+                        "symbol": symbol,
+                        "microstructure_score": microstructure_score,
+                        "liquidity_score": liquidity_score,
+                        "trade_frequency": flow_1m.get("trade_frequency", 0),
+                        "order_flow_imbalance": flow_1m.get("order_flow_imbalance", 0),
+                        "volume_24h": volume_24h,
+                        "spread_bps": data.get("liquidity_analysis", {})
+                        .get("spread", {})
+                        .get("bps", 0),
+                        "flow_direction": data.get("trade_flow_analysis", {}).get(
+                            "overall_flow_direction", "UNKNOWN"
+                        ),
+                    }
+                )
+
+            except Exception as e:
+                continue
+
+        # Sort by microstructure score
+        rankings.sort(key=lambda x: x["microstructure_score"], reverse=True)
+
+        return rankings
+
+    def generate_microstructure_signals(self, analysis_results: Dict) -> List[Dict]:
+        """Generate trading signals based on microstructure analysis"""
+
+        signals = []
+
+        for symbol, data in analysis_results.items():
+            try:
+                liquidity = data.get("liquidity_analysis", {})
+                flow = data.get("trade_flow_analysis", {})
+                ticker = data.get("ticker_data", {})
+
+                signal_strength = 0
+                signal_type = "HOLD"
+                reasons = []
+
+                # Liquidity-based signals
+                spread_bps = liquidity.get("spread", {}).get("bps", 0)
+                liquidity_score = liquidity.get("liquidity_score", 0)
+
+                if spread_bps < 10 and liquidity_score > 70:
+                    signal_strength += 0.2
+                    reasons.append("High liquidity, tight spreads")
+
+                # Flow-based signals
+                flow_1m = flow.get("1m", {})
+                flow_direction = flow.get("overall_flow_direction", "UNKNOWN")
+
+                ofi = flow_1m.get("order_flow_imbalance", 0)
+
+                if flow_direction in ["STRONG_BULLISH", "BULLISH"] and ofi > 0.2:
+                    signal_strength += 0.4
+                    signal_type = "BUY"
+                    reasons.append(f"Strong bullish flow (OFI: {ofi:.2f})")
+                elif flow_direction in ["STRONG_BEARISH", "BEARISH"] and ofi < -0.2:
+                    signal_strength -= 0.4
+                    signal_type = "SELL"
+                    reasons.append(f"Strong bearish flow (OFI: {ofi:.2f})")
+
+                # Volume and market impact
+                large_trades_ratio = flow_1m.get("large_trades_volume", 0) / max(
+                    flow_1m.get("total_volume", 1), 1
+                )
+
+                if large_trades_ratio > 0.3:
+                    signal_strength += 0.2
+                    reasons.append("High institutional activity")
+
+                # Price momentum
+                price_change = ticker.get("price_change_percent", 0)
+                if abs(price_change) > 5:
+                    momentum_strength = min(abs(price_change) / 10, 0.3)
+                    if price_change > 0:
+                        signal_strength += momentum_strength
+                        reasons.append(
+                            f"Strong positive momentum ({price_change:.1f}%)"
+                        )
+                    else:
+                        signal_strength -= momentum_strength
+                        reasons.append(
+                            f"Strong negative momentum ({price_change:.1f}%)"
+                        )
+
+                # Determine final signal
+                if signal_strength > 0.5:
+                    signal_type = "STRONG_BUY"
+                elif signal_strength > 0.2:
+                    signal_type = "BUY"
+                elif signal_strength < -0.5:
+                    signal_type = "STRONG_SELL"
+                elif signal_strength < -0.2:
+                    signal_type = "SELL"
+
+                if signal_type != "HOLD":
+                    signals.append(
+                        {
+                            "symbol": symbol,
+                            "signal": signal_type,
+                            "strength": signal_strength,
+                            "reasons": reasons,
+                            "microstructure_score": data.get(
+                                "microstructure_score", {}
+                            ).get("overall_score", 0),
+                            "flow_direction": flow_direction,
+                            "order_flow_imbalance": ofi,
+                            "spread_bps": spread_bps,
+                            "price_change_24h": price_change,
+                        }
+                    )
+
+            except Exception as e:
+                continue
+
+        # Sort by signal strength
+        signals.sort(key=lambda x: abs(x["strength"]), reverse=True)
+
+        return signals
+
+    def run_complete_microstructure_analysis(self, symbols: List[str] = None) -> Dict:
+        """Run complete market microstructure analysis"""
+
+        print("🔬 Starting Market Microstructure Analysis...")
+
+        if symbols is None:
+            # Get top volume USDT symbols
+            tickers = self.client.get_ticker()
+            usdt_tickers = [t for t in tickers if t["symbol"].endswith("USDT")]
+            usdt_tickers.sort(key=lambda x: float(x["quoteVolume"]), reverse=True)
+            symbols = [t["symbol"] for t in usdt_tickers[:25]]  # Top 25 by volume
+
+        print(f"📊 Analyzing market microstructure for {len(symbols)} symbols...")
+
+        # Perform microstructure analysis
+        analysis_results = self.analyze_market_microstructure(symbols)
+
+        if not analysis_results:
+            print("❌ No analysis results available")
+            return {}
+
+        # Rank symbols
+        rankings = self.rank_symbols_by_microstructure(analysis_results)
+
+        # Generate signals
+        signals = self.generate_microstructure_signals(analysis_results)
+
+        # Compile final results
+        results = {
+            "analysis_timestamp": datetime.now().isoformat(),
+            "symbols_analyzed": list(analysis_results.keys()),
+            "detailed_analysis": analysis_results,
+            "microstructure_rankings": rankings,
+            "trading_signals": signals,
+            "summary": {
+                "total_symbols": len(analysis_results),
+                "high_quality_symbols": len(
+                    [r for r in rankings if r["microstructure_score"] > 70]
+                ),
+                "active_signals": len(signals),
+                "bullish_signals": len([s for s in signals if "BUY" in s["signal"]]),
+                "bearish_signals": len([s for s in signals if "SELL" in s["signal"]]),
+            },
+        }
+
+        # Save results
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"market_microstructure_analysis_{timestamp}.json"
+
+        with open(filename, "w") as f:
+            json.dump(results, f, indent=2, default=str)
+
+        print(f"✅ Market Microstructure Analysis completed!")
+        print(f"📁 Results saved to: {filename}")
+        print(f"📊 Analyzed {len(analysis_results)} symbols")
+        print(f"🏆 High-quality symbols: {results['summary']['high_quality_symbols']}")
+        print(f"🚨 Trading signals: {len(signals)}")
+        print(f"📈 Bullish signals: {results['summary']['bullish_signals']}")
+        print(f"📉 Bearish signals: {results['summary']['bearish_signals']}")
+
+        return results
+
+    def print_top_results(self, results: Dict):
+        """Print top microstructure analysis results"""
+
+        print("\n" + "=" * 80)
+        print("🔬 MARKET MICROSTRUCTURE ANALYSIS RESULTS")
+        print("=" * 80)
+
+        # Top quality symbols
+        rankings = results.get("microstructure_rankings", [])
+        if rankings:
+            print("\n🏆 TOP MICROSTRUCTURE QUALITY SYMBOLS:")
+            for i, ranking in enumerate(rankings[:10], 1):
+                print(
+                    f"  {i:2d}. {ranking['symbol']:12} - Score: {ranking['microstructure_score']:5.1f}"
+                )
+                print(
+                    f"      Liquidity: {ranking['liquidity_score']:5.1f}, "
+                    f"Spread: {ranking['spread_bps']:5.1f}bps, "
+                    f"Flow: {ranking['flow_direction']}"
+                )
+                print()
+
+        # Top signals
+        signals = results.get("trading_signals", [])
+        if signals:
+            print("\n🚨 TOP MICROSTRUCTURE TRADING SIGNALS:")
+            for i, signal in enumerate(signals[:10], 1):
+                print(f"  {i:2d}. {signal['symbol']:12} - {signal['signal']}")
+                print(
+                    f"      Strength: {signal['strength']:5.2f}, "
+                    f"Flow: {signal['flow_direction']}, "
+                    f"OFI: {signal['order_flow_imbalance']:+5.2f}"
+                )
+                print(f"      Reasons: {', '.join(signal['reasons'][:2])}")
+                print()
+
+        # Summary statistics
+        summary = results.get("summary", {})
+        print(f"\n📊 ANALYSIS SUMMARY:")
+        print(f"   Total Symbols: {summary.get('total_symbols', 0)}")
+        print(f"   High Quality: {summary.get('high_quality_symbols', 0)}")
+        print(f"   Active Signals: {summary.get('active_signals', 0)}")
+        print(f"   Bullish: {summary.get('bullish_signals', 0)}")
+        print(f"   Bearish: {summary.get('bearish_signals', 0)}")
+
+
+def main():
+    """Main execution function"""
+
+    print("🔬 ADVANCED MARKET MICROSTRUCTURE ANALYZER 🔬")
+    print("=" * 70)
+
+    analyzer = MarketMicrostructureAnalyzer()
+
+    # Run complete analysis
+    results = analyzer.run_complete_microstructure_analysis()
+
+    if results:
+        analyzer.print_top_results(results)
+
+    print("\n🎉 Market microstructure analysis complete!")
+
+
+if __name__ == "__main__":
+    main()

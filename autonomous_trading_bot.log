@@ -1,0 +1,236 @@
+2025-08-09 10:18:19,347 - INFO - 🚀 24/7 Autonomous Trading Bot Initialized
+2025-08-09 10:18:19,347 - INFO - 💰 Portfolio Value: $100,000.00
+2025-08-09 10:18:19,347 - INFO - 🏦 Cash Reserve: 15.0%
+2025-08-09 10:18:19,347 - INFO - 🌍 ISO 20022 Tokens: 7
+2025-08-09 10:18:20,645 - INFO - 📊 Loaded 0 tradable USD pairs
+2025-08-09 10:18:20,646 - INFO - 🔄 Starting Cycle 1
+2025-08-09 10:18:20,646 - INFO - 🔄 Trading Cycle 10:18:20
+2025-08-09 10:18:20,646 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:18:20,646 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:18:20,646 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:18:20,646 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 10:23:20,655 - INFO - 🔄 Starting Cycle 2
+2025-08-09 10:23:20,657 - INFO - 🔄 Trading Cycle 10:23:20
+2025-08-09 10:23:20,657 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:23:20,657 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:23:20,658 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:23:20,659 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 10:28:20,666 - INFO - 🔄 Starting Cycle 3
+2025-08-09 10:28:20,668 - INFO - 🔄 Trading Cycle 10:28:20
+2025-08-09 10:28:20,668 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:28:20,668 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:28:20,668 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:28:20,670 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 10:33:20,677 - INFO - 🔄 Starting Cycle 4
+2025-08-09 10:33:20,680 - INFO - 🔄 Trading Cycle 10:33:20
+2025-08-09 10:33:20,680 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:33:20,681 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:33:20,681 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:33:20,683 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 10:38:20,688 - INFO - 🔄 Starting Cycle 5
+2025-08-09 10:38:20,689 - INFO - 🔄 Trading Cycle 10:38:20
+2025-08-09 10:38:20,690 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:38:20,690 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:38:20,690 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:38:20,691 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 10:43:20,700 - INFO - 🔄 Starting Cycle 6
+2025-08-09 10:43:20,702 - INFO - 🔄 Trading Cycle 10:43:20
+2025-08-09 10:43:20,703 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:43:20,703 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:43:20,703 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:43:20,705 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 10:48:20,680 - INFO - 🔄 Starting Cycle 7
+2025-08-09 10:48:20,684 - INFO - 🔄 Trading Cycle 10:48:20
+2025-08-09 10:48:20,685 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:48:20,685 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:48:20,685 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:48:20,687 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 10:53:20,691 - INFO - 🔄 Starting Cycle 8
+2025-08-09 10:53:20,696 - INFO - 🔄 Trading Cycle 10:53:20
+2025-08-09 10:53:20,696 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:53:20,696 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:53:20,697 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:53:20,699 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 10:58:20,703 - INFO - 🔄 Starting Cycle 9
+2025-08-09 10:58:20,710 - INFO - 🔄 Trading Cycle 10:58:20
+2025-08-09 10:58:20,710 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 10:58:20,711 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 10:58:20,711 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 10:58:20,713 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:03:20,718 - INFO - 🔄 Starting Cycle 10
+2025-08-09 11:03:20,720 - INFO - 🔄 Trading Cycle 11:03:20
+2025-08-09 11:03:20,720 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:03:20,720 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:03:20,721 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:03:20,724 - INFO - 📊 PERFORMANCE REPORT
+2025-08-09 11:03:20,725 - INFO - 💰 Portfolio Value: $100,000.00
+2025-08-09 11:03:20,725 - INFO - 📈 Total P&L: $+0.00 (+0.00%)
+2025-08-09 11:03:20,725 - INFO - 🏦 ISO Holdings: $0.00
+2025-08-09 11:03:20,725 - INFO - 📊 Total Trades: 0
+2025-08-09 11:03:20,725 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:08:20,729 - INFO - 🔄 Starting Cycle 11
+2025-08-09 11:08:20,734 - INFO - 🔄 Trading Cycle 11:08:20
+2025-08-09 11:08:20,734 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:08:20,735 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:08:20,735 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:08:20,737 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:13:20,739 - INFO - 🔄 Starting Cycle 12
+2025-08-09 11:13:20,741 - INFO - 🔄 Trading Cycle 11:13:20
+2025-08-09 11:13:20,741 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:13:20,741 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:13:20,741 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:13:20,742 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:18:20,751 - INFO - 🔄 Starting Cycle 13
+2025-08-09 11:18:20,752 - INFO - 🔄 Trading Cycle 11:18:20
+2025-08-09 11:18:20,752 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:18:20,752 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:18:20,752 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:18:20,754 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:23:20,756 - INFO - 🔄 Starting Cycle 14
+2025-08-09 11:23:20,757 - INFO - 🔄 Trading Cycle 11:23:20
+2025-08-09 11:23:20,757 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:23:20,757 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:23:20,757 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:23:20,758 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:28:20,762 - INFO - 🔄 Starting Cycle 15
+2025-08-09 11:28:20,762 - INFO - 🔄 Trading Cycle 11:28:20
+2025-08-09 11:28:20,762 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:28:20,763 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:28:20,763 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:28:20,764 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:33:20,766 - INFO - 🔄 Starting Cycle 16
+2025-08-09 11:33:20,768 - INFO - 🔄 Trading Cycle 11:33:20
+2025-08-09 11:33:20,768 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:33:20,768 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:33:20,768 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:33:20,769 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:38:20,772 - INFO - 🔄 Starting Cycle 17
+2025-08-09 11:38:20,774 - INFO - 🔄 Trading Cycle 11:38:20
+2025-08-09 11:38:20,774 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:38:20,774 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:38:20,774 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:38:20,776 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:43:20,778 - INFO - 🔄 Starting Cycle 18
+2025-08-09 11:43:20,780 - INFO - 🔄 Trading Cycle 11:43:20
+2025-08-09 11:43:20,780 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:43:20,780 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:43:20,780 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:43:20,781 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:48:20,797 - INFO - 🔄 Starting Cycle 19
+2025-08-09 11:48:20,799 - INFO - 🔄 Trading Cycle 11:48:20
+2025-08-09 11:48:20,799 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:48:20,799 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:48:20,799 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:48:20,800 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:53:20,805 - INFO - 🔄 Starting Cycle 20
+2025-08-09 11:53:20,807 - INFO - 🔄 Trading Cycle 11:53:20
+2025-08-09 11:53:20,807 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:53:20,807 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:53:20,807 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:53:20,810 - INFO - 📊 PERFORMANCE REPORT
+2025-08-09 11:53:20,810 - INFO - 💰 Portfolio Value: $100,000.00
+2025-08-09 11:53:20,810 - INFO - 📈 Total P&L: $+0.00 (+0.00%)
+2025-08-09 11:53:20,811 - INFO - 🏦 ISO Holdings: $0.00
+2025-08-09 11:53:20,811 - INFO - 📊 Total Trades: 0
+2025-08-09 11:53:20,811 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 11:58:20,815 - INFO - 🔄 Starting Cycle 21
+2025-08-09 11:58:20,816 - INFO - 🔄 Trading Cycle 11:58:20
+2025-08-09 11:58:20,816 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 11:58:20,816 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 11:58:20,816 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 11:58:20,817 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:03:20,821 - INFO - 🔄 Starting Cycle 22
+2025-08-09 12:03:20,823 - INFO - 🔄 Trading Cycle 12:03:20
+2025-08-09 12:03:20,823 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:03:20,823 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:03:20,823 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:03:20,823 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:08:20,829 - INFO - 🔄 Starting Cycle 23
+2025-08-09 12:08:20,830 - INFO - 🔄 Trading Cycle 12:08:20
+2025-08-09 12:08:20,830 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:08:20,831 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:08:20,831 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:08:20,832 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:13:20,836 - INFO - 🔄 Starting Cycle 24
+2025-08-09 12:13:20,837 - INFO - 🔄 Trading Cycle 12:13:20
+2025-08-09 12:13:20,837 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:13:20,838 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:13:20,838 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:13:20,838 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:18:20,797 - INFO - 🔄 Starting Cycle 25
+2025-08-09 12:18:20,799 - INFO - 🔄 Trading Cycle 12:18:20
+2025-08-09 12:18:20,799 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:18:20,799 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:18:20,799 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:18:20,800 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:23:20,800 - INFO - 🔄 Starting Cycle 26
+2025-08-09 12:23:20,802 - INFO - 🔄 Trading Cycle 12:23:20
+2025-08-09 12:23:20,802 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:23:20,802 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:23:20,802 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:23:20,803 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:28:20,803 - INFO - 🔄 Starting Cycle 27
+2025-08-09 12:28:20,805 - INFO - 🔄 Trading Cycle 12:28:20
+2025-08-09 12:28:20,805 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:28:20,805 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:28:20,805 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:28:20,806 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:33:20,806 - INFO - 🔄 Starting Cycle 28
+2025-08-09 12:33:20,808 - INFO - 🔄 Trading Cycle 12:33:20
+2025-08-09 12:33:20,808 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:33:20,808 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:33:20,808 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:33:20,809 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:38:20,810 - INFO - 🔄 Starting Cycle 29
+2025-08-09 12:38:20,812 - INFO - 🔄 Trading Cycle 12:38:20
+2025-08-09 12:38:20,812 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:38:20,812 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:38:20,812 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:38:20,813 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:43:20,813 - INFO - 🔄 Starting Cycle 30
+2025-08-09 12:43:20,816 - INFO - 🔄 Trading Cycle 12:43:20
+2025-08-09 12:43:20,816 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:43:20,816 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:43:20,816 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:43:20,818 - INFO - 📊 PERFORMANCE REPORT
+2025-08-09 12:43:20,818 - INFO - 💰 Portfolio Value: $100,000.00
+2025-08-09 12:43:20,818 - INFO - 📈 Total P&L: $+0.00 (+0.00%)
+2025-08-09 12:43:20,818 - INFO - 🏦 ISO Holdings: $0.00
+2025-08-09 12:43:20,818 - INFO - 📊 Total Trades: 0
+2025-08-09 12:43:20,818 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:48:20,843 - INFO - 🔄 Starting Cycle 31
+2025-08-09 12:48:20,845 - INFO - 🔄 Trading Cycle 12:48:20
+2025-08-09 12:48:20,845 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:48:20,845 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:48:20,845 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:48:20,847 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:53:20,850 - INFO - 🔄 Starting Cycle 32
+2025-08-09 12:53:20,852 - INFO - 🔄 Trading Cycle 12:53:20
+2025-08-09 12:53:20,852 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:53:20,852 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:53:20,856 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:53:20,857 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 12:58:20,860 - INFO - 🔄 Starting Cycle 33
+2025-08-09 12:58:20,862 - INFO - 🔄 Trading Cycle 12:58:20
+2025-08-09 12:58:20,863 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 12:58:20,863 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 12:58:20,863 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 12:58:20,864 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 13:03:20,867 - INFO - 🔄 Starting Cycle 34
+2025-08-09 13:03:20,868 - INFO - 🔄 Trading Cycle 13:03:20
+2025-08-09 13:03:20,868 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 13:03:20,868 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 13:03:20,870 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 13:03:20,872 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 13:08:20,875 - INFO - 🔄 Starting Cycle 35
+2025-08-09 13:08:20,877 - INFO - 🔄 Trading Cycle 13:08:20
+2025-08-09 13:08:20,877 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 13:08:20,877 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 13:08:20,877 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 13:08:20,879 - INFO - ⏸️ Waiting 5 minutes until next cycle...
+2025-08-09 13:13:20,906 - INFO - 🔄 Starting Cycle 36
+2025-08-09 13:13:20,908 - INFO - 🔄 Trading Cycle 13:13:20
+2025-08-09 13:13:20,908 - INFO - 🏦 Banking Reserves: $25000.00 (25.0%)
+2025-08-09 13:13:20,908 - INFO - 📊 Cycle Complete: 0 trades, $+0.00 profit
+2025-08-09 13:13:20,908 - INFO - 💰 Portfolio: $100000.00, P&L: $+0.00
+2025-08-09 13:13:20,909 - INFO - ⏸️ Waiting 5 minutes until next cycle...

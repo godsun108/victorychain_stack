@@ -1,0 +1,3241 @@
+{
+  "timestamp": "2025-08-06T22:51:14.818879",
+  "summary": {
+    "total_predictions": 172,
+    "buy_signals": 126,
+    "sell_signals": 41,
+    "hold_signals": 5,
+    "high_confidence_predictions": 168,
+    "average_confidence": 0.9790697674418605,
+    "average_predicted_return": 27098.93543426401
+  },
+  "top_buy_signals": [
+    {
+      "symbol": "FLOKIUSDT",
+      "current_price": 0.00010212,
+      "predicted_price": 1.323598122838078,
+      "expected_return": 1296020.3709734408,
+      "confidence": 1.0,
+      "recommendation": "strong_buy",
+      "risk_score": 64801.018548672044
+    },
+    {
+      "symbol": "JAMUSDT",
+      "current_price": 0.000101,
+      "predicted_price": 1.082167586880369,
+      "expected_return": 1071353.0563171972,
+      "confidence": 1.0,
+      "recommendation": "strong_buy",
+      "risk_score": 53567.65281585986
+    },
+    {
+      "symbol": "STMXUSDT",
+      "current_price": 0.000121,
+      "predicted_price": 1.1722169452474798,
+      "expected_return": 968674.3349152724,
+      "confidence": 1.0,
+      "recommendation": "strong_buy",
+      "risk_score": 48433.716745763624
+    },
+    {
+      "symbol": "NEIROUSDT",
+      "current_price": 0.00038072,
+      "predicted_price": 1.1265484019016299,
+      "expected_return": 295799.4541662193,
+      "confidence": 1.0,
+      "recommendation": "strong_buy",
+      "risk_score": 14789.972708310965
+    },
+    {
+      "symbol": "REEFUSDT",
+      "current_price": 0.000409,
+      "predicted_price": 1.1556880039250121,
+      "expected_return": 282464.30413814477,
+      "confidence": 1.0,
+      "recommendation": "strong_buy",
+      "risk_score": 14123.215206907236
+    }
+  ],
+  "top_sell_signals": [
+    {
+      "symbol": "BTCUSDT",
+      "current_price": 113591.37,
+      "predicted_price": 33817.29393605064,
+      "expected_return": -70.22899368495104,
+      "confidence": 1.0,
+      "recommendation": "strong_sell",
+      "risk_score": 3.511449684247551
+    },
+    {
+      "symbol": "ETHUSDT",
+      "current_price": 3577.85,
+      "predicted_price": 1331.0923133906958,
+      "expected_return": -62.79630746423981,
+      "confidence": 1.0,
+      "recommendation": "strong_sell",
+      "risk_score": 3.1398153732119907
+    },
+    {
+      "symbol": "XRPUSDT",
+      "current_price": 2.9487,
+      "predicted_price": 2.2107035697669253,
+      "expected_return": -25.02785736877522,
+      "confidence": 1.0,
+      "recommendation": "strong_sell",
+      "risk_score": 1.2513928684387605
+    },
+    {
+      "symbol": "LTCUSDT",
+      "current_price": 119.76,
+      "predicted_price": 94.73564630091937,
+      "expected_return": -20.895418920408016,
+      "confidence": 1.0,
+      "recommendation": "strong_sell",
+      "risk_score": 1.0447709460204004
+    },
+    {
+      "symbol": "SOLUSDT",
+      "current_price": 163.02,
+      "predicted_price": 128.80021850018665,
+      "expected_return": -20.99115537959353,
+      "confidence": 1.0,
+      "recommendation": "strong_sell",
+      "risk_score": 1.049557768979676
+    }
+  ],
+  "breakout_candidates": [
+    {
+      "symbol": "ADAUSDT",
+      "current_price": 0.7193,
+      "breakout_probability": 1.0,
+      "confidence": 1.0,
+      "expected_return": 111.53741773238738
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "current_price": 0.19767,
+      "breakout_probability": 1.0,
+      "confidence": 1.0,
+      "expected_return": 3423.4787102924706
+    },
+    {
+      "symbol": "USDCUSDT",
+      "current_price": 1.0002,
+      "breakout_probability": 1.0,
+      "confidence": 1.0,
+      "expected_return": 136.98542525355037
+    },
+    {
+      "symbol": "PENGUUSDT",
+      "current_price": 0.033382,
+      "breakout_probability": 1.0,
+      "confidence": 1.0,
+      "expected_return": 4464.22618482373
+    },
+    {
+      "symbol": "XLMUSDT",
+      "current_price": 0.3957,
+      "breakout_probability": 1.0,
+      "confidence": 1.0,
+      "expected_return": 354.60962047654306
+    }
+  ],
+  "detailed_predictions": {
+    "BTCUSDT": {
+      "current_price": 113591.37,
+      "predicted_prices": {
+        "1h": 33817.29393605064
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 3.511449684247551,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 45.93267413653355,
+        "price_vs_sma20": -0.011453037901537923,
+        "volume_ratio": 0.7414938171404941,
+        "volatility": 2043.5990034233596,
+        "momentum_5d": 0.002293694776166033
+      },
+      "signals_count": 3
+    },
+    "ETHUSDT": {
+      "current_price": 3577.85,
+      "predicted_prices": {
+        "1h": 1331.0923133906958
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 3.1398153732119907,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 30.624309435591563,
+        "price_vs_sma20": -0.01904572019936884,
+        "volume_ratio": 1.1653262015160082,
+        "volatility": 76.3565467918889,
+        "momentum_5d": -0.012188942373061007
+      },
+      "signals_count": 3
+    },
+    "XRPUSDT": {
+      "current_price": 2.9487,
+      "predicted_prices": {
+        "1h": 2.2107035697669253
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.2513928684387605,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 29.734944880931817,
+        "price_vs_sma20": -0.014830979406166562,
+        "volume_ratio": 1.1084072431389813,
+        "volatility": 0.07909795939142658,
+        "momentum_5d": 0.0030099109901369214
+      },
+      "signals_count": 3
+    },
+    "ADAUSDT": {
+      "current_price": 0.7193,
+      "predicted_prices": {
+        "1h": 1.5215886457490626
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 5.5768708866193695,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 55.55263306191696,
+        "price_vs_sma20": 0.015415496867797605,
+        "volume_ratio": 0.6862317515120174,
+        "volatility": 0.01402539460975141,
+        "momentum_5d": 0.01253818808654783
+      },
+      "signals_count": 3
+    },
+    "DOGEUSDT": {
+      "current_price": 0.19767,
+      "predicted_prices": {
+        "1h": 6.9648603666351265
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 171.17393551462354,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 40.69010954174897,
+        "price_vs_sma20": -0.02920275116977869,
+        "volume_ratio": 0.2744017447161323,
+        "volatility": 0.003938328087416361,
+        "momentum_5d": -0.01899976234777878
+      },
+      "signals_count": 3
+    },
+    "LTCUSDT": {
+      "current_price": 119.76,
+      "predicted_prices": {
+        "1h": 94.73564630091937
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.0447709460204004,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 32.78214710699709,
+        "price_vs_sma20": -0.017827623851242317,
+        "volume_ratio": 0.6472604088785378,
+        "volatility": 1.8727023264412577,
+        "momentum_5d": -0.00788984526104286
+      },
+      "signals_count": 3
+    },
+    "SOLUSDT": {
+      "current_price": 163.02,
+      "predicted_prices": {
+        "1h": 128.80021850018665
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.049557768979676,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 62.85797622626309,
+        "price_vs_sma20": -0.008198021858551887,
+        "volume_ratio": 0.37538492912203425,
+        "volatility": 2.0122929091609594,
+        "momentum_5d": -0.014622373743058747
+      },
+      "signals_count": 3
+    },
+    "USDCUSDT": {
+      "current_price": 1.0002,
+      "predicted_prices": {
+        "1h": 2.370328223386011
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 6.849271262677519,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 54.151996490949514,
+        "price_vs_sma20": 0.005248536845124607,
+        "volume_ratio": 0.8232958149080419,
+        "volatility": 0.007384409147157792,
+        "momentum_5d": 0.005274110978007895
+      },
+      "signals_count": 3
+    },
+    "PENGUUSDT": {
+      "current_price": 0.033382,
+      "predicted_prices": {
+        "1h": 1.5236299850178578
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 223.2113092411865,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 69.11506597919683,
+        "price_vs_sma20": 0.005881445690136937,
+        "volume_ratio": 1.1305329532097335,
+        "volatility": 0.0006781089869685571,
+        "momentum_5d": -0.0028903543200322623
+      },
+      "signals_count": 3
+    },
+    "BNBUSDT": {
+      "current_price": 748.55,
+      "predicted_prices": {
+        "1h": 457.2720232882923
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.945614699831058,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 67.9153388290425,
+        "price_vs_sma20": 0.005862716933362914,
+        "volume_ratio": 0.5049400120524322,
+        "volatility": 11.393987629449896,
+        "momentum_5d": -0.0029169450624884075
+      },
+      "signals_count": 3
+    },
+    "HYPEUSDT": {
+      "current_price": 38.46,
+      "predicted_prices": {
+        "1h": 31.41648750628753
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.9156932519126976,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 29.972019183772314,
+        "price_vs_sma20": -0.03735091819046929,
+        "volume_ratio": 1.3267967251542645,
+        "volatility": 0.9966669893882353,
+        "momentum_5d": -0.023003966673490583
+      },
+      "signals_count": 3
+    },
+    "XLMUSDT": {
+      "current_price": 0.3957,
+      "predicted_prices": {
+        "1h": 1.798890268225681
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 17.730481023827156,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 40.47052296025184,
+        "price_vs_sma20": 0.010803797360226996,
+        "volume_ratio": 0.4027150032757253,
+        "volatility": 0.003989748492499475,
+        "momentum_5d": 0.009135325891060031
+      },
+      "signals_count": 3
+    },
+    "ILVUSDT": {
+      "current_price": 18.93,
+      "predicted_prices": {
+        "1h": 15.600369253530445
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8794587285973468,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 57.690798544455845,
+        "price_vs_sma20": 0.01825319484405559,
+        "volume_ratio": 1.6191012406524792,
+        "volatility": 0.3355504610089015,
+        "momentum_5d": 0.002050161763885283
+      },
+      "signals_count": 3
+    },
+    "HBARUSDT": {
+      "current_price": 0.23829,
+      "predicted_prices": {
+        "1h": 1.5475292679349337
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 27.47155289636438,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 47.17737126446613,
+        "price_vs_sma20": -0.01876650823550085,
+        "volume_ratio": 1.029716972711052,
+        "volatility": 0.004732907177527099,
+        "momentum_5d": -0.001842428442213162
+      },
+      "signals_count": 3
+    },
+    "VETUSDT": {
+      "current_price": 0.02262,
+      "predicted_prices": {
+        "1h": 1.470688109588887
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 320.08578903379464,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 48.67048013257083,
+        "price_vs_sma20": -0.01706243240300622,
+        "volume_ratio": 0.9894257466962514,
+        "volatility": 0.0003671074292397875,
+        "momentum_5d": -0.0030941522102252428
+      },
+      "signals_count": 3
+    },
+    "SHIBUSDT": {
+      "current_price": 1.194e-05,
+      "predicted_prices": {
+        "1h": 1.194e-05
+      },
+      "recommendation": "hold",
+      "confidence_score": 0.1,
+      "risk_score": 0.0,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 44.199076468473535,
+        "price_vs_sma20": -0.0025787260091489584,
+        "volume_ratio": 2.1363781645899804,
+        "volatility": 1.304442319268866e-07,
+        "momentum_5d": 0.001294635075542061
+      },
+      "signals_count": 0
+    },
+    "FLOKIUSDT": {
+      "current_price": 0.00010212,
+      "predicted_prices": {
+        "1h": 1.323598122838078
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 64801.018548672044,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 51.31533089645235,
+        "price_vs_sma20": 0.00367475844564032,
+        "volume_ratio": 1.8898288255663176,
+        "volatility": 1.238139435397415e-06,
+        "momentum_5d": 0.02329526602111498
+      },
+      "signals_count": 3
+    },
+    "BONKUSDT": {
+      "current_price": 2.443e-05,
+      "predicted_prices": {
+        "1h": 2.443e-05
+      },
+      "recommendation": "hold",
+      "confidence_score": 0.1,
+      "risk_score": 0.0,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 68.34951173544056,
+        "price_vs_sma20": 0.015794383280673646,
+        "volume_ratio": 1.4276895160923184,
+        "volatility": 5.202624530274864e-07,
+        "momentum_5d": -0.007518936795352205
+      },
+      "signals_count": 0
+    },
+    "ROSEUSDT": {
+      "current_price": 0.02501,
+      "predicted_prices": {
+        "1h": 1.2273054971255608
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 240.36295424341478,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 26.984074949725745,
+        "price_vs_sma20": -0.018324712724744965,
+        "volume_ratio": 1.2462983032376647,
+        "volatility": 0.0006214637376795538,
+        "momentum_5d": -0.005632885176696134
+      },
+      "signals_count": 3
+    },
+    "APTUSDT": {
+      "current_price": 4.305,
+      "predicted_prices": {
+        "1h": 3.7420179936402835
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.6538699260856169,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 36.00638040578355,
+        "price_vs_sma20": 0.0077158046947227105,
+        "volume_ratio": 0.9112722725257797,
+        "volatility": 0.08154686423110416,
+        "momentum_5d": -0.005712779808350499
+      },
+      "signals_count": 3
+    },
+    "DGBUSDT": {
+      "current_price": 0.00814,
+      "predicted_prices": {
+        "1h": 1.2489125721270113
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 762.1453145743312,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 46.84515748799082,
+        "price_vs_sma20": 0.004849299676670332,
+        "volume_ratio": 1.6431531060788058,
+        "volatility": 0.00012597831563410615,
+        "momentum_5d": 0.0028050309019305164
+      },
+      "signals_count": 3
+    },
+    "1000REKTUSDT": {
+      "current_price": 0.00118277,
+      "predicted_prices": {
+        "1h": 1.2438065437609775
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 5253.023722959568,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 52.43063815506295,
+        "price_vs_sma20": 0.006552123838436443,
+        "volume_ratio": 2.430389016448714,
+        "volatility": 1.4259933455628857e-05,
+        "momentum_5d": -0.004086009888430997
+      },
+      "signals_count": 3
+    },
+    "DOTUSDT": {
+      "current_price": 3.558,
+      "predicted_prices": {
+        "1h": 3.0463451345470483
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.7190203280676667,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 51.789291187345235,
+        "price_vs_sma20": -0.018257943322677515,
+        "volume_ratio": 2.8155610957199357,
+        "volatility": 0.0674733331866004,
+        "momentum_5d": 0.0043865223338601655
+      },
+      "signals_count": 3
+    },
+    "XDCUSDT": {
+      "current_price": 0.092936,
+      "predicted_prices": {
+        "1h": 1.2710274524838354
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 63.381867762967815,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 40.16911920663059,
+        "price_vs_sma20": -0.003511334537738182,
+        "volume_ratio": 0.900971574473207,
+        "volatility": 0.0019184274614028076,
+        "momentum_5d": -0.010227323892600393
+      },
+      "signals_count": 3
+    },
+    "SNXUSDT": {
+      "current_price": 0.573,
+      "predicted_prices": {
+        "1h": 1.5813196236292413
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 8.798600555228983,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 69.31712537138868,
+        "price_vs_sma20": 0.010641817465093807,
+        "volume_ratio": 0.4438105337482678,
+        "volatility": 0.005051727515291814,
+        "momentum_5d": 0.011940183040834107
+      },
+      "signals_count": 3
+    },
+    "RVNUSDT": {
+      "current_price": 0.01322,
+      "predicted_prices": {
+        "1h": 1.1749863504754785
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 439.3972581223444,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 45.04695234536483,
+        "price_vs_sma20": -0.007260249325072851,
+        "volume_ratio": 2.4377970704753307,
+        "volatility": 0.0001243809222502451,
+        "momentum_5d": -0.01201322905712987
+      },
+      "signals_count": 3
+    },
+    "PEPEUSDT": {
+      "current_price": 1.006e-05,
+      "predicted_prices": {
+        "1h": 1.006e-05
+      },
+      "recommendation": "hold",
+      "confidence_score": 0.1,
+      "risk_score": 0.0,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 47.47377510076789,
+        "price_vs_sma20": 0.026215132978744702,
+        "volume_ratio": 1.0835990634200923,
+        "volatility": 2.0774556961184386e-07,
+        "momentum_5d": 0.007841305366485862
+      },
+      "signals_count": 0
+    },
+    "LINKUSDT": {
+      "current_price": 16.26,
+      "predicted_prices": {
+        "1h": 13.331467263841331
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.9005328216970081,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 41.070113454997184,
+        "price_vs_sma20": 0.0010869014237209916,
+        "volume_ratio": 1.3777147564094288,
+        "volatility": 0.19527352555639477,
+        "momentum_5d": -0.010181478742602446
+      },
+      "signals_count": 3
+    },
+    "SUIUSDT": {
+      "current_price": 3.3757,
+      "predicted_prices": {
+        "1h": 2.893493654083613
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.7142316347963196,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 34.51157860350345,
+        "price_vs_sma20": -0.0007144172986038714,
+        "volume_ratio": 1.65388140948499,
+        "volatility": 0.02600791137604952,
+        "momentum_5d": 0.00029992501615860867
+      },
+      "signals_count": 3
+    },
+    "THETAUSDT": {
+      "current_price": 0.746,
+      "predicted_prices": {
+        "1h": 1.4709626658557131
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4.858999100909605,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 60.177327196452964,
+        "price_vs_sma20": 0.005783163853024086,
+        "volume_ratio": 0.9224793111755596,
+        "volatility": 0.010433176985503733,
+        "momentum_5d": 0.0003204772971998615
+      },
+      "signals_count": 3
+    },
+    "OPUSDT": {
+      "current_price": 0.658,
+      "predicted_prices": {
+        "1h": 1.3765199164828583
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 5.459877784824151,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 49.40370887032832,
+        "price_vs_sma20": 0.012043697597238064,
+        "volume_ratio": 0.9285951274294144,
+        "volatility": 0.009356549241574804,
+        "momentum_5d": 0.004625635621983815
+      },
+      "signals_count": 3
+    },
+    "BCHUSDT": {
+      "current_price": 543.4,
+      "predicted_prices": {
+        "1h": 366.07727693799563
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.631604003146893,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 60.125811788174666,
+        "price_vs_sma20": 0.007307345403454483,
+        "volume_ratio": 0.8876137653066613,
+        "volatility": 8.069579804853667,
+        "momentum_5d": 0.012242712284157076
+      },
+      "signals_count": 3
+    },
+    "SPXUSDT": {
+      "current_price": 1.615,
+      "predicted_prices": {
+        "1h": 1.6081470471362895
+      },
+      "recommendation": "hold",
+      "confidence_score": 1.0,
+      "risk_score": 0.021216572333468915,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 61.817595445376675,
+        "price_vs_sma20": -0.002318171089079772,
+        "volume_ratio": 1.5502213480553337,
+        "volatility": 0.022366465332059927,
+        "momentum_5d": -0.0019131170218806837
+      },
+      "signals_count": 3
+    },
+    "WIFUSDT": {
+      "current_price": 0.865,
+      "predicted_prices": {
+        "1h": 1.6230165751920254
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4.381598700531939,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 66.43432433764946,
+        "price_vs_sma20": 0.025028893206913566,
+        "volume_ratio": 0.382140885586614,
+        "volatility": 0.02021459034499645,
+        "momentum_5d": 0.0051030944903252
+      },
+      "signals_count": 3
+    },
+    "FETUSDT": {
+      "current_price": 0.643,
+      "predicted_prices": {
+        "1h": 1.3582755703193168
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 5.56201843172097,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 53.25404297622103,
+        "price_vs_sma20": -0.0015998782173497568,
+        "volume_ratio": 1.5042100764331268,
+        "volatility": 0.00661320561203349,
+        "momentum_5d": -0.002696166429186908
+      },
+      "signals_count": 3
+    },
+    "AVAXUSDT": {
+      "current_price": 21.66,
+      "predicted_prices": {
+        "1h": 17.82832459388381
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8845049413933956,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 45.424263414431735,
+        "price_vs_sma20": 0.014296662545134176,
+        "volume_ratio": 0.18809611691257114,
+        "volatility": 0.3823107790129804,
+        "momentum_5d": -0.0014363984892576953
+      },
+      "signals_count": 3
+    },
+    "ONEUSDT": {
+      "current_price": 0.01014,
+      "predicted_prices": {
+        "1h": 1.1762695821870086
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 575.0145868772231,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 46.42080233490282,
+        "price_vs_sma20": -0.020656005569899914,
+        "volume_ratio": 2.8784314207903585,
+        "volatility": 0.00019597509495023692,
+        "momentum_5d": -0.0004687308587340011
+      },
+      "signals_count": 3
+    },
+    "IOTAUSDT": {
+      "current_price": 0.1828,
+      "predicted_prices": {
+        "1h": 1.2375945198261462
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 28.851053605747985,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 40.86514373632324,
+        "price_vs_sma20": -0.0325323602193704,
+        "volume_ratio": 0.5974026760121807,
+        "volatility": 0.0069397545536001234,
+        "momentum_5d": -0.007143823939345095
+      },
+      "signals_count": 3
+    },
+    "CRVUSDT": {
+      "current_price": 0.8877,
+      "predicted_prices": {
+        "1h": 1.4214374095411653
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 3.006293846689001,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 44.16454682124659,
+        "price_vs_sma20": -0.021654884109068018,
+        "volume_ratio": 1.030178219518615,
+        "volatility": 0.01909239446900907,
+        "momentum_5d": -0.005788132559855663
+      },
+      "signals_count": 3
+    },
+    "TRUMPUSDT": {
+      "current_price": 8.6,
+      "predicted_prices": {
+        "1h": 7.288690260909423
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.7623893831921958,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 33.43633088463062,
+        "price_vs_sma20": -0.007521595130538107,
+        "volume_ratio": 1.3081517599604247,
+        "volatility": 0.21357833002277554,
+        "momentum_5d": 0.006014686152677751
+      },
+      "signals_count": 3
+    },
+    "ATOMUSDT": {
+      "current_price": 4.165,
+      "predicted_prices": {
+        "1h": 3.5958999190428877
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.6831933744983341,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 44.149689927656794,
+        "price_vs_sma20": 0.021350113514789885,
+        "volume_ratio": 0.31481364535338013,
+        "volatility": 0.06557969917820558,
+        "momentum_5d": 0.009078405188934102
+      },
+      "signals_count": 3
+    },
+    "POLUSDT": {
+      "current_price": 0.2104,
+      "predicted_prices": {
+        "1h": 1.2844196612015064
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 25.523280922089036,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 76.83654513946865,
+        "price_vs_sma20": 0.01770221063579759,
+        "volume_ratio": 1.5758223741015414,
+        "volatility": 0.0064773625133758735,
+        "momentum_5d": 0.0032826199523390276
+      },
+      "signals_count": 3
+    },
+    "GRTUSDT": {
+      "current_price": 0.0879,
+      "predicted_prices": {
+        "1h": 1.2269195800128283
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 64.7906473272371,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 20.874655149723033,
+        "price_vs_sma20": -0.013254279148055895,
+        "volume_ratio": 0.4962112688655676,
+        "volatility": 0.0009697403202976279,
+        "momentum_5d": -0.005620413725063833
+      },
+      "signals_count": 3
+    },
+    "ENAUSDT": {
+      "current_price": 0.5725,
+      "predicted_prices": {
+        "1h": 1.2940427620991575
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 6.301683511783034,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 56.35992890022163,
+        "price_vs_sma20": 0.0057327311143580235,
+        "volume_ratio": 1.8839060681808442,
+        "volatility": 0.009862302570107936,
+        "momentum_5d": 0.0014449759594254985
+      },
+      "signals_count": 3
+    },
+    "NEOUSDT": {
+      "current_price": 5.92,
+      "predicted_prices": {
+        "1h": 4.970243919883012
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8021588514501584,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 63.64401726018981,
+        "price_vs_sma20": 0.02009273726628958,
+        "volume_ratio": 4.66991650159227,
+        "volatility": 0.14077796514994378,
+        "momentum_5d": -0.0021227640776525503
+      },
+      "signals_count": 3
+    },
+    "ZILUSDT": {
+      "current_price": 0.01086,
+      "predicted_prices": {
+        "1h": 1.1963274431247253
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 545.7953237222492,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 62.67784448356504,
+        "price_vs_sma20": -0.004263213012893301,
+        "volume_ratio": 2.297790787691124,
+        "volatility": 0.0001244313534155912,
+        "momentum_5d": -0.0032665652270409407
+      },
+      "signals_count": 3
+    },
+    "ALGOUSDT": {
+      "current_price": 0.234,
+      "predicted_prices": {
+        "1h": 1.1975309692296225
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 20.58826857328253,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 42.208611500535866,
+        "price_vs_sma20": -0.0054059917870444285,
+        "volume_ratio": 0.915927365395586,
+        "volatility": 0.002567843166469485,
+        "momentum_5d": 0.002578708348368597
+      },
+      "signals_count": 3
+    },
+    "MAGICUSDT": {
+      "current_price": 0.238,
+      "predicted_prices": {
+        "1h": 1.2231711434174315
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 20.696872760870413,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 34.42057086195188,
+        "price_vs_sma20": -0.01752088031051551,
+        "volume_ratio": 1.9107019415230304,
+        "volatility": 0.004911744494314703,
+        "momentum_5d": 0.0029563981651439253
+      },
+      "signals_count": 3
+    },
+    "QNTUSDT": {
+      "current_price": 104.01,
+      "predicted_prices": {
+        "1h": 81.29527005850603
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.0919493289825002,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 67.56806022364154,
+        "price_vs_sma20": 0.02730317921292151,
+        "volume_ratio": 4.686981593726902,
+        "volatility": 3.4899435731137225,
+        "momentum_5d": -0.0011399188619839462
+      },
+      "signals_count": 3
+    },
+    "RENDERUSDT": {
+      "current_price": 3.5,
+      "predicted_prices": {
+        "1h": 2.948135514463459
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.7883778364807726,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 67.36527467552708,
+        "price_vs_sma20": 0.005114407097583286,
+        "volume_ratio": 3.851571515010084,
+        "volatility": 0.04013416748951093,
+        "momentum_5d": 0.0006357823697287213
+      },
+      "signals_count": 3
+    },
+    "AAVEUSDT": {
+      "current_price": 252.31,
+      "predicted_prices": {
+        "1h": 184.83022120473552
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.3372394830816154,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 49.63533462887993,
+        "price_vs_sma20": -0.011841326213973945,
+        "volume_ratio": 0.8960016986672172,
+        "volatility": 4.430808921563098,
+        "momentum_5d": 0.00031093718615804455
+      },
+      "signals_count": 3
+    },
+    "MKRUSDT": {
+      "current_price": 1845.5,
+      "predicted_prices": {
+        "1h": 662.3050815355656
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 3.205621561810985,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 41.13104011788214,
+        "price_vs_sma20": -0.003562007066117137,
+        "volume_ratio": 0.6649851666163228,
+        "volatility": 20.257090152403528,
+        "momentum_5d": -0.004459662885706206
+      },
+      "signals_count": 3
+    },
+    "LPTUSDT": {
+      "current_price": 6.141,
+      "predicted_prices": {
+        "1h": 5.108444697435781
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8407061574370781,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 36.667435321299564,
+        "price_vs_sma20": -0.030994394181494987,
+        "volume_ratio": 0.594444156621708,
+        "volatility": 0.1643504027099598,
+        "momentum_5d": -0.011482152672622647
+      },
+      "signals_count": 3
+    },
+    "BRETTUSDT": {
+      "current_price": 0.052213,
+      "predicted_prices": {
+        "1h": 1.2381184089966457
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 113.56418985661097,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 74.12768207003793,
+        "price_vs_sma20": 0.036396192983582695,
+        "volume_ratio": 4.921213983447425,
+        "volatility": 0.0014343143649786713,
+        "momentum_5d": 0.015119506807496075
+      },
+      "signals_count": 3
+    },
+    "UNIUSDT": {
+      "current_price": 9.4,
+      "predicted_prices": {
+        "1h": 8.034371823120688
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.726397966425166,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 67.44016829228975,
+        "price_vs_sma20": 0.012727248853044885,
+        "volume_ratio": 0.47640572432018075,
+        "volatility": 0.13669290638706874,
+        "momentum_5d": -0.002245058647221132
+      },
+      "signals_count": 3
+    },
+    "ONTUSDT": {
+      "current_price": 0.1315,
+      "predicted_prices": {
+        "1h": 1.2193681320107288
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 41.36380730078817,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 63.88047985394921,
+        "price_vs_sma20": 0.01707358360492032,
+        "volume_ratio": 1.6019176516571658,
+        "volatility": 0.0018445857330755349,
+        "momentum_5d": 0.01401847122417621
+      },
+      "signals_count": 3
+    },
+    "NEARUSDT": {
+      "current_price": 2.419,
+      "predicted_prices": {
+        "1h": 2.0197862813859944
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8251627089995983,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 48.49888729831788,
+        "price_vs_sma20": -0.006774718787701939,
+        "volume_ratio": 0.9794920648658398,
+        "volatility": 0.03713767405861856,
+        "momentum_5d": 0.0004801349657390652
+      },
+      "signals_count": 3
+    },
+    "GALAUSDT": {
+      "current_price": 0.01513,
+      "predicted_prices": {
+        "1h": 1.0460469885299186
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 340.6863808757166,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 23.876932316015086,
+        "price_vs_sma20": -0.020743655541549857,
+        "volume_ratio": 3.21375153339926,
+        "volatility": 0.0002324533895629777,
+        "momentum_5d": -0.018602901726893162
+      },
+      "signals_count": 3
+    },
+    "VTHOUSDT": {
+      "current_price": 0.001808,
+      "predicted_prices": {
+        "1h": 1.2473972751357014
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 3444.6606060168733,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 50.18220058203431,
+        "price_vs_sma20": -0.007579190423343183,
+        "volume_ratio": 0.13723361886636035,
+        "volatility": 2.4344101104019843e-05,
+        "momentum_5d": -0.010334320592782609
+      },
+      "signals_count": 3
+    },
+    "LDOUSDT": {
+      "current_price": 0.922,
+      "predicted_prices": {
+        "1h": 1.3595643571484999
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 2.372908661325921,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 35.36753436932196,
+        "price_vs_sma20": -0.011251835930049353,
+        "volume_ratio": 1.363777201955868,
+        "volatility": 0.010708424679748306,
+        "momentum_5d": -0.0063267602848958715
+      },
+      "signals_count": 3
+    },
+    "RENUSDT": {
+      "current_price": 0.01154,
+      "predicted_prices": {
+        "1h": 1.1323233784361122
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 485.60804958237094,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 43.7389417951675,
+        "price_vs_sma20": -0.005219736854283762,
+        "volume_ratio": 0.9210113337752438,
+        "volatility": 9.754307084625956e-05,
+        "momentum_5d": -0.0046868019708989905
+      },
+      "signals_count": 3
+    },
+    "JAMUSDT": {
+      "current_price": 0.000101,
+      "predicted_prices": {
+        "1h": 1.082167586880369
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 53567.65281585986,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 48.334750674169555,
+        "price_vs_sma20": 0.0009112365059578766,
+        "volume_ratio": 1.872231090146411,
+        "volatility": 1.3240413269895866e-06,
+        "momentum_5d": -0.007636861085928426
+      },
+      "signals_count": 3
+    },
+    "TURBOUSDT": {
+      "current_price": 0.004138,
+      "predicted_prices": {
+        "1h": 1.1541555775669252
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 1389.5814132031478,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 62.80183710791243,
+        "price_vs_sma20": 0.021978354664287988,
+        "volume_ratio": 2.142314337661339,
+        "volatility": 7.944280021492448e-05,
+        "momentum_5d": 0.005325514057629599
+      },
+      "signals_count": 3
+    },
+    "ONDOUSDT": {
+      "current_price": 0.9663,
+      "predicted_prices": {
+        "1h": 1.3268653084946795
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 1.8657006545310952,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 50.39091573038304,
+        "price_vs_sma20": 0.008927554082918383,
+        "volume_ratio": 2.573999732047677,
+        "volatility": 0.020989519583762318,
+        "momentum_5d": -0.008338939607240414
+      },
+      "signals_count": 3
+    },
+    "LRCUSDT": {
+      "current_price": 0.0834,
+      "predicted_prices": {
+        "1h": 1.2363536156708648
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 69.12191940472812,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 84.2013913253981,
+        "price_vs_sma20": 0.02538648074553337,
+        "volume_ratio": 2.072230234307998,
+        "volatility": 0.0022043086580377895,
+        "momentum_5d": -0.0009876125701371308
+      },
+      "signals_count": 3
+    },
+    "XTZUSDT": {
+      "current_price": 0.7707,
+      "predicted_prices": {
+        "1h": 1.3071399705145599
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 3.4802126022742947,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 46.31530763979234,
+        "price_vs_sma20": 0.00800402463708983,
+        "volume_ratio": 0.9820642429455455,
+        "volatility": 0.017055542097030692,
+        "momentum_5d": -0.00766277392121173
+      },
+      "signals_count": 3
+    },
+    "ETCUSDT": {
+      "current_price": 19.99,
+      "predicted_prices": {
+        "1h": 16.382771741218214
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.9022581937923423,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 70.93388589134403,
+        "price_vs_sma20": 0.02405467272943728,
+        "volume_ratio": 1.1360640240277833,
+        "volatility": 0.5171166184037946,
+        "momentum_5d": 0.014121354740961323
+      },
+      "signals_count": 3
+    },
+    "NEIROUSDT": {
+      "current_price": 0.00038072,
+      "predicted_prices": {
+        "1h": 1.1265484019016299
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 14789.972708310965,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 37.559362040335984,
+        "price_vs_sma20": -0.007712038620422287,
+        "volume_ratio": 1.8898274038597667,
+        "volatility": 5.804847959248518e-06,
+        "momentum_5d": 0.0040583420437916295
+      },
+      "signals_count": 3
+    },
+    "FILUSDT": {
+      "current_price": 2.312,
+      "predicted_prices": {
+        "1h": 1.9809409803711113
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.7159580874327174,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 62.56989193138087,
+        "price_vs_sma20": 0.026050412015688543,
+        "volume_ratio": 0.572572686755491,
+        "volatility": 0.07882695878664633,
+        "momentum_5d": 0.006763964576147696
+      },
+      "signals_count": 3
+    },
+    "WAXPUSDT": {
+      "current_price": 0.02027,
+      "predicted_prices": {
+        "1h": 1.2154064788288725
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 294.8042621679508,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 70.80664072710412,
+        "price_vs_sma20": 0.025767593596132978,
+        "volume_ratio": 1.7792539572329722,
+        "volatility": 0.0005331338932028355,
+        "momentum_5d": -0.0005378240229328979
+      },
+      "signals_count": 3
+    },
+    "DASHUSDT": {
+      "current_price": 20.91,
+      "predicted_prices": {
+        "1h": 17.19805744603649
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8875998455197298,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 31.60961213799015,
+        "price_vs_sma20": -0.011518966891020076,
+        "volume_ratio": 0.938065199623174,
+        "volatility": 0.38318680254395326,
+        "momentum_5d": -0.013511400765683135
+      },
+      "signals_count": 3
+    },
+    "REEFUSDT": {
+      "current_price": 0.000409,
+      "predicted_prices": {
+        "1h": 1.1556880039250121
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 14123.215206907236,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 43.98391586734888,
+        "price_vs_sma20": -0.0006970072764332721,
+        "volume_ratio": 0.4797504227251934,
+        "volatility": 3.0249042493722474e-06,
+        "momentum_5d": -0.0009561047008967982
+      },
+      "signals_count": 3
+    },
+    "IMXUSDT": {
+      "current_price": 0.495,
+      "predicted_prices": {
+        "1h": 1.3351633083848071
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 8.486498064493002,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 50.52207297108511,
+        "price_vs_sma20": -0.016675266392102803,
+        "volume_ratio": 0.3482933387402681,
+        "volatility": 0.010453030924877586,
+        "momentum_5d": 0.005756587253769263
+      },
+      "signals_count": 3
+    },
+    "STMXUSDT": {
+      "current_price": 0.000121,
+      "predicted_prices": {
+        "1h": 1.1722169452474798
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 48433.716745763624,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 61.71436029063556,
+        "price_vs_sma20": 0.004237850403809946,
+        "volume_ratio": 0.9193177327594788,
+        "volatility": 1.2404252969531157e-06,
+        "momentum_5d": 0.0057759158864805205
+      },
+      "signals_count": 3
+    },
+    "DAIUSDT": {
+      "current_price": 0.9806,
+      "predicted_prices": {
+        "1h": 1.3902819936919808
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 2.0889353135426307,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 31.780348828952892,
+        "price_vs_sma20": -0.018617226881609387,
+        "volume_ratio": 1.8584757944357524,
+        "volatility": 0.025032565346144467,
+        "momentum_5d": 0.00940486491508885
+      },
+      "signals_count": 3
+    },
+    "FARTCOINUSDT": {
+      "current_price": 0.9329,
+      "predicted_prices": {
+        "1h": 1.4737844360303047
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 2.898941129972692,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 67.60080294615682,
+        "price_vs_sma20": 0.00147943654843529,
+        "volume_ratio": 0.47933863483177896,
+        "volatility": 0.008420817526910977,
+        "momentum_5d": -0.000865360134082116
+      },
+      "signals_count": 3
+    },
+    "SUSDT": {
+      "current_price": 0.2771,
+      "predicted_prices": {
+        "1h": 1.1993581860313043
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 16.6412520034519,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 45.797669738485446,
+        "price_vs_sma20": -0.0020841936209538376,
+        "volume_ratio": 1.892120147049907,
+        "volatility": 0.005654609394466809,
+        "momentum_5d": -0.003270359323990335
+      },
+      "signals_count": 3
+    },
+    "FTMUSDT": {
+      "current_price": 0.4806,
+      "predicted_prices": {
+        "1h": 1.2524326265566021
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 8.029885836002935,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 46.88530046614094,
+        "price_vs_sma20": -0.014018683161819225,
+        "volume_ratio": 1.2168047909475965,
+        "volatility": 0.0069373516186009955,
+        "momentum_5d": 0.00741440245678171
+      },
+      "signals_count": 3
+    },
+    "JTOUSDT": {
+      "current_price": 1.643,
+      "predicted_prices": {
+        "1h": 1.5275890985592895
+      },
+      "recommendation": "sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.351220028730099,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 51.075912486425366,
+        "price_vs_sma20": -0.010138521797429809,
+        "volume_ratio": 1.2875745251000756,
+        "volatility": 0.016811364048477752,
+        "momentum_5d": -0.010935081397944302
+      },
+      "signals_count": 3
+    },
+    "DIAUSDT": {
+      "current_price": 0.74,
+      "predicted_prices": {
+        "1h": 1.3763268704482765
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4.299505881407274,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 65.74525251636382,
+        "price_vs_sma20": 0.008405131822501147,
+        "volume_ratio": 1.3157491599105389,
+        "volatility": 0.02105897998933231,
+        "momentum_5d": -0.001369704997272736
+      },
+      "signals_count": 3
+    },
+    "COMPUSDT": {
+      "current_price": 44.77,
+      "predicted_prices": {
+        "1h": 35.80111407576282
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.0016624887466143,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 52.081261782059705,
+        "price_vs_sma20": -0.0179920295005203,
+        "volume_ratio": 1.6072963785070193,
+        "volatility": 0.6677088943022111,
+        "momentum_5d": -0.018244251174891923
+      },
+      "signals_count": 3
+    },
+    "RAREUSDT": {
+      "current_price": 0.0631,
+      "predicted_prices": {
+        "1h": 1.1085613912943917
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 82.84163163980917,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 38.448137306148695,
+        "price_vs_sma20": -0.005165850275942808,
+        "volume_ratio": 1.87135934249999,
+        "volatility": 0.0008080005898981907,
+        "momentum_5d": -0.013330140895827847
+      },
+      "signals_count": 3
+    },
+    "FLUXUSDT": {
+      "current_price": 0.2128,
+      "predicted_prices": {
+        "1h": 1.2013823649970494
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 23.22796910237428,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 54.933559199421225,
+        "price_vs_sma20": -0.0009334814044334953,
+        "volume_ratio": 1.2738850294699011,
+        "volatility": 0.0017474078273634066,
+        "momentum_5d": -0.003403338948694712
+      },
+      "signals_count": 3
+    },
+    "ALICEUSDT": {
+      "current_price": 0.3806,
+      "predicted_prices": {
+        "1h": 1.2323207202462971
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 11.189184448847833,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 47.86311351261633,
+        "price_vs_sma20": -0.0007211991193270634,
+        "volume_ratio": 1.4918403994087863,
+        "volatility": 0.0036499426993899216,
+        "momentum_5d": 0.005749207644151877
+      },
+      "signals_count": 3
+    },
+    "COTIUSDT": {
+      "current_price": 0.04975,
+      "predicted_prices": {
+        "1h": 1.1498916448053744
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 110.56699947792708,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 33.722562576027485,
+        "price_vs_sma20": 0.004222393315791839,
+        "volume_ratio": 0.5175776232487104,
+        "volatility": 0.0005960071524068412,
+        "momentum_5d": -0.001875857691262639
+      },
+      "signals_count": 3
+    },
+    "KSMUSDT": {
+      "current_price": 13.17,
+      "predicted_prices": {
+        "1h": 10.937212432594468
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8476794105563904,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 66.60280242326631,
+        "price_vs_sma20": 0.02682370846313845,
+        "volume_ratio": 2.6275374833127554,
+        "volatility": 0.27611933544060274,
+        "momentum_5d": 0.014055044278786344
+      },
+      "signals_count": 3
+    },
+    "RLCUSDT": {
+      "current_price": 0.916,
+      "predicted_prices": {
+        "1h": 1.4131857089317303
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 2.7138957911120647,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 65.11901870354261,
+        "price_vs_sma20": 0.005905379796967944,
+        "volume_ratio": 0.6295578859683204,
+        "volatility": 0.010060637313072577,
+        "momentum_5d": -0.003548967527235214
+      },
+      "signals_count": 3
+    },
+    "KNCUSDT": {
+      "current_price": 0.414,
+      "predicted_prices": {
+        "1h": 1.33285623671415
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 11.097297544856888,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 80.35943970546356,
+        "price_vs_sma20": 0.026370897042728554,
+        "volume_ratio": 3.565737594961759,
+        "volatility": 0.012372270877591041,
+        "momentum_5d": 0.006739747022125098
+      },
+      "signals_count": 3
+    },
+    "VIRTUALUSDT": {
+      "current_price": 1.2135,
+      "predicted_prices": {
+        "1h": 1.5368790046268923
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 1.3324227631927987,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 75.49990034137481,
+        "price_vs_sma20": 0.032708875991610015,
+        "volume_ratio": 1.0138237151940714,
+        "volatility": 0.03344288217919815,
+        "momentum_5d": -0.0013028480190881986
+      },
+      "signals_count": 3
+    },
+    "AXSUSDT": {
+      "current_price": 2.278,
+      "predicted_prices": {
+        "1h": 1.9609253614869333
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.6959496016529121,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 53.92487030241397,
+        "price_vs_sma20": 0.010063839866784156,
+        "volume_ratio": 2.0280099377880183,
+        "volatility": 0.03737084690255241,
+        "momentum_5d": 0.010191402679266881
+      },
+      "signals_count": 3
+    },
+    "LTOUSDT": {
+      "current_price": 0.0127,
+      "predicted_prices": {
+        "1h": 1.2024921605192418
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 468.4221104406464,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 42.16642972161989,
+        "price_vs_sma20": 0.0004554164773724649,
+        "volume_ratio": 0.7161483119403338,
+        "volatility": 0.00018461853953854408,
+        "momentum_5d": 0.008553311266315866
+      },
+      "signals_count": 3
+    },
+    "ARBUSDT": {
+      "current_price": 0.3817,
+      "predicted_prices": {
+        "1h": 1.272282139697315
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 11.66599606624725,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 55.85315599491083,
+        "price_vs_sma20": -0.001176680114077895,
+        "volume_ratio": 3.9494269270386524,
+        "volatility": 0.005302428892542076,
+        "momentum_5d": 0.0037157302095076616
+      },
+      "signals_count": 3
+    },
+    "PAXGUSDT": {
+      "current_price": 3397.99,
+      "predicted_prices": {
+        "1h": 957.4117896547015
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 3.5912086414987963,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 63.960229244794654,
+        "price_vs_sma20": 0.022610259280701078,
+        "volume_ratio": 3.773289140370343,
+        "volatility": 84.24148965910283,
+        "momentum_5d": -0.003372786385143378
+      },
+      "signals_count": 3
+    },
+    "ICPUSDT": {
+      "current_price": 5.034,
+      "predicted_prices": {
+        "1h": 4.2178610121836275
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.810626726079035,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 71.246187441604,
+        "price_vs_sma20": 9.804212683108094e-05,
+        "volume_ratio": 3.8038286924264373,
+        "volatility": 0.046158129271196516,
+        "momentum_5d": -0.00340461037835349
+      },
+      "signals_count": 3
+    },
+    "SYSUSDT": {
+      "current_price": 0.04378,
+      "predicted_prices": {
+        "1h": 1.2367117936595282
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 136.2416392941444,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 59.94696411293724,
+        "price_vs_sma20": 0.0033627862729243975,
+        "volume_ratio": 1.9159118214560644,
+        "volatility": 0.0008339818715628109,
+        "momentum_5d": 0.018081458744853895
+      },
+      "signals_count": 3
+    },
+    "MXCUSDT": {
+      "current_price": 0.00211,
+      "predicted_prices": {
+        "1h": 1.2170364821431672
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 2878.9727065003963,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 71.47869526373374,
+        "price_vs_sma20": 0.03710302951374258,
+        "volume_ratio": 3.113268304915399,
+        "volatility": 0.00010452582165741513,
+        "momentum_5d": -0.0002938427540638555
+      },
+      "signals_count": 3
+    },
+    "SLPUSDT": {
+      "current_price": 0.001703,
+      "predicted_prices": {
+        "1h": 1.0843911217947095
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 3178.7672395616837,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 31.48062702295413,
+        "price_vs_sma20": -0.013968083286667219,
+        "volume_ratio": 3.171539162053335,
+        "volatility": 2.1059423531070515e-05,
+        "momentum_5d": 0.0038012265125968447
+      },
+      "signals_count": 3
+    },
+    "ALPINEUSDT": {
+      "current_price": 0.925,
+      "predicted_prices": {
+        "1h": 1.391290157921001
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 2.5204873401135193,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 80.54310604349416,
+        "price_vs_sma20": 0.021953914673885765,
+        "volume_ratio": 2.9262566485194146,
+        "volatility": 0.03343154891521133,
+        "momentum_5d": -0.007259330275185105
+      },
+      "signals_count": 3
+    },
+    "KDAUSDT": {
+      "current_price": 0.3973,
+      "predicted_prices": {
+        "1h": 1.2222792381001473
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 10.382321143973662,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 40.33770848367727,
+        "price_vs_sma20": 0.00832567451764784,
+        "volume_ratio": 0.9402427066403867,
+        "volatility": 0.006135633655477375,
+        "momentum_5d": 0.005089754997203766
+      },
+      "signals_count": 3
+    },
+    "JUPUSDT": {
+      "current_price": 0.4641,
+      "predicted_prices": {
+        "1h": 1.3975005618707048
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 10.056028462300203,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 73.77514342148064,
+        "price_vs_sma20": 0.007947287222175007,
+        "volume_ratio": 1.5697957505130262,
+        "volatility": 0.0120615166042975,
+        "momentum_5d": -0.004876208093588463
+      },
+      "signals_count": 3
+    },
+    "ICXUSDT": {
+      "current_price": 0.1259,
+      "predicted_prices": {
+        "1h": 1.1535754732259325
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 40.813164147177616,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 48.16173887199924,
+        "price_vs_sma20": -0.013404707508650922,
+        "volume_ratio": 2.1796318979969587,
+        "volatility": 0.003924907717901805,
+        "momentum_5d": 0.009520847555597234
+      },
+      "signals_count": 3
+    },
+    "BATUSDT": {
+      "current_price": 0.1512,
+      "predicted_prices": {
+        "1h": 1.1172186360752931
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 31.945060716775565,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 43.482418280735864,
+        "price_vs_sma20": -0.020303438728263377,
+        "volume_ratio": 2.6411516768978105,
+        "volatility": 0.0023092990082554813,
+        "momentum_5d": -0.012277163291834592
+      },
+      "signals_count": 3
+    },
+    "MANAUSDT": {
+      "current_price": 0.2719,
+      "predicted_prices": {
+        "1h": 1.197020132880913
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 17.012139258567725,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 48.4943588145568,
+        "price_vs_sma20": -0.002593549672754337,
+        "volume_ratio": 2.7989982914360976,
+        "volatility": 0.004030314014058675,
+        "momentum_5d": 0.007157204414602436
+      },
+      "signals_count": 3
+    },
+    "GLMUSDT": {
+      "current_price": 0.2387,
+      "predicted_prices": {
+        "1h": 1.1690741799140199
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 19.488357350524087,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 47.3853934425178,
+        "price_vs_sma20": -0.02103861963309719,
+        "volume_ratio": 0.505632958578795,
+        "volatility": 0.006797117915379647,
+        "momentum_5d": -0.011499813594006203
+      },
+      "signals_count": 3
+    },
+    "ZRXUSDT": {
+      "current_price": 0.2445,
+      "predicted_prices": {
+        "1h": 1.3250911698256072
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 22.097978933039002,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 68.58605861193432,
+        "price_vs_sma20": 0.012353622497307091,
+        "volume_ratio": 0.5107091441851032,
+        "volatility": 0.004819118079291183,
+        "momentum_5d": 0.008847524135631613
+      },
+      "signals_count": 3
+    },
+    "TLMUSDT": {
+      "current_price": 0.00404,
+      "predicted_prices": {
+        "1h": 1.166194549740382
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 1438.310086312354,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 66.81626579644275,
+        "price_vs_sma20": 0.0028430882033248406,
+        "volume_ratio": 2.5681027676242913,
+        "volatility": 5.542959595282126e-05,
+        "momentum_5d": 0.010230989784979494
+      },
+      "signals_count": 3
+    },
+    "OCEANUSDT": {
+      "current_price": 0.3019,
+      "predicted_prices": {
+        "1h": 1.2178909639896414
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 15.170436634475674,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 50.79745785995623,
+        "price_vs_sma20": -0.017961152437922887,
+        "volume_ratio": 1.2501129792945496,
+        "volatility": 0.0097605514358616,
+        "momentum_5d": 0.0048629324106725935
+      },
+      "signals_count": 3
+    },
+    "APEUSDT": {
+      "current_price": 0.5701,
+      "predicted_prices": {
+        "1h": 1.3100857961310766
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 6.489964884503389,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 41.63506467041976,
+        "price_vs_sma20": 0.0036847074275366378,
+        "volume_ratio": 0.20369952730884341,
+        "volatility": 0.0038843579013707287,
+        "momentum_5d": 0.0015424106450270259
+      },
+      "signals_count": 3
+    },
+    "CLVUSDT": {
+      "current_price": 0.01869,
+      "predicted_prices": {
+        "1h": 1.142386201776323
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 300.61428618949253,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 51.19122653361692,
+        "price_vs_sma20": 0.01793782445976571,
+        "volume_ratio": 1.739229997539229,
+        "volatility": 0.00039012236980868564,
+        "momentum_5d": 0.005684494475617807
+      },
+      "signals_count": 3
+    },
+    "AXLUSDT": {
+      "current_price": 0.338,
+      "predicted_prices": {
+        "1h": 1.2760709542136037
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 13.876789263514846,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 40.401103077200695,
+        "price_vs_sma20": -0.016680135009623853,
+        "volume_ratio": 0.2690779276372381,
+        "volatility": 0.006961518833963506,
+        "momentum_5d": 0.002049306153254049
+      },
+      "signals_count": 3
+    },
+    "ZECUSDT": {
+      "current_price": 36.47,
+      "predicted_prices": {
+        "1h": 28.808646698437148
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 1.0503637649524062,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 35.048527570508156,
+        "price_vs_sma20": -0.006642659084722908,
+        "volume_ratio": 2.957886685899342,
+        "volatility": 0.5322689610061392,
+        "momentum_5d": -0.005330920425730246
+      },
+      "signals_count": 3
+    },
+    "LOKAUSDT": {
+      "current_price": 0.1907,
+      "predicted_prices": {
+        "1h": 1.1625221755259787
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 25.480392646197657,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 50.15861582489214,
+        "price_vs_sma20": 0.005896741002488475,
+        "volume_ratio": 1.1795850928040714,
+        "volatility": 0.002140425261060785,
+        "momentum_5d": -0.0028863892438421024
+      },
+      "signals_count": 3
+    },
+    "YFIUSDT": {
+      "current_price": 5287.0,
+      "predicted_prices": {
+        "1h": 1328.8220754368053
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 3.743311825764323,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 33.78139883721413,
+        "price_vs_sma20": -0.03602939586676935,
+        "volume_ratio": 1.6589255340959044,
+        "volatility": 196.23118071694674,
+        "momentum_5d": -0.0024190085918254223
+      },
+      "signals_count": 3
+    },
+    "ASTRUSDT": {
+      "current_price": 0.02322,
+      "predicted_prices": {
+        "1h": 1.095186446530505
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 230.82826152680983,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 50.53225602047063,
+        "price_vs_sma20": -0.0009159818633279352,
+        "volume_ratio": 3.3422810828619807,
+        "volatility": 0.00043664741169884306,
+        "momentum_5d": -0.01503652189161453
+      },
+      "signals_count": 3
+    },
+    "ENSUSDT": {
+      "current_price": 25.65,
+      "predicted_prices": {
+        "1h": 20.906117328790973
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.9247334641732993,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 25.019064491257264,
+        "price_vs_sma20": -0.04617760279931453,
+        "volume_ratio": 0.28733325940418136,
+        "volatility": 1.6046269356902303,
+        "momentum_5d": 0.004108441698108978
+      },
+      "signals_count": 3
+    },
+    "AUDIOUSDT": {
+      "current_price": 0.0616,
+      "predicted_prices": {
+        "1h": 1.1695631308182186
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 89.93207230667358,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 64.5997147857483,
+        "price_vs_sma20": 0.0255506875494085,
+        "volume_ratio": 2.3882236424349954,
+        "volatility": 0.0013667684588143058,
+        "momentum_5d": 0.0024306756725112066
+      },
+      "signals_count": 3
+    },
+    "1000MOGUSDT": {
+      "current_price": 0.00119913,
+      "predicted_prices": {
+        "1h": 1.1061371180049708
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4607.24853854449,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 52.78088392837175,
+        "price_vs_sma20": 0.0058921649761567,
+        "volume_ratio": 2.102440954978826,
+        "volatility": 1.1062481586873548e-05,
+        "momentum_5d": -0.002013356559828927
+      },
+      "signals_count": 3
+    },
+    "CELRUSDT": {
+      "current_price": 0.00709,
+      "predicted_prices": {
+        "1h": 1.1499114953885556
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 805.9389953374863,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 47.25942309118126,
+        "price_vs_sma20": 0.0068422139964396025,
+        "volume_ratio": 0.9279265850744851,
+        "volatility": 7.593446438989927e-05,
+        "momentum_5d": -0.003045773727495482
+      },
+      "signals_count": 3
+    },
+    "NMRUSDT": {
+      "current_price": 8.07,
+      "predicted_prices": {
+        "1h": 6.746788693828094
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8198335230309208,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 52.614939297631636,
+        "price_vs_sma20": 0.007117965256714842,
+        "volume_ratio": 0.3630970910840395,
+        "volatility": 0.1562212825116223,
+        "momentum_5d": -0.008826656572396452
+      },
+      "signals_count": 3
+    },
+    "VOXELUSDT": {
+      "current_price": 0.0561,
+      "predicted_prices": {
+        "1h": 1.1421638154549498
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 96.79713150222369,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 27.352694755199696,
+        "price_vs_sma20": -0.04290697330198704,
+        "volume_ratio": 0.7951686315820661,
+        "volatility": 0.00270434794481735,
+        "momentum_5d": -0.0035959992637887295
+      },
+      "signals_count": 3
+    },
+    "BICOUSDT": {
+      "current_price": 0.1088,
+      "predicted_prices": {
+        "1h": 1.1819283759891022
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 49.316561396558015,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 33.944820784547986,
+        "price_vs_sma20": -0.0024072362116765718,
+        "volume_ratio": 1.7190696321680081,
+        "volatility": 0.001175534011941265,
+        "momentum_5d": 0.01104429496633541
+      },
+      "signals_count": 3
+    },
+    "BLURUSDT": {
+      "current_price": 0.08,
+      "predicted_prices": {
+        "1h": 1.211490674959677
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 70.7181671849798,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 62.70439286469733,
+        "price_vs_sma20": 0.025237887802176454,
+        "volume_ratio": 1.366154822188205,
+        "volatility": 0.001658975183304065,
+        "momentum_5d": 0.014466770866626844
+      },
+      "signals_count": 3
+    },
+    "SUSHIUSDT": {
+      "current_price": 0.753,
+      "predicted_prices": {
+        "1h": 1.3287875362467172
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 3.8232904133248153,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 49.58743553366119,
+        "price_vs_sma20": 0.013604699010198201,
+        "volume_ratio": 4.510548122972251,
+        "volatility": 0.01233981879216201,
+        "momentum_5d": 0.012702269156035673
+      },
+      "signals_count": 3
+    },
+    "EOSUSDT": {
+      "current_price": 0.508,
+      "predicted_prices": {
+        "1h": 1.3400533329529811
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 8.189501308592334,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 74.76048199757535,
+        "price_vs_sma20": 0.025112913053825296,
+        "volume_ratio": 1.1821318560595877,
+        "volatility": 0.01476909624731377,
+        "momentum_5d": -0.0049053306001966
+      },
+      "signals_count": 3
+    },
+    "XNOUSDT": {
+      "current_price": 0.913,
+      "predicted_prices": {
+        "1h": 1.437955680893462
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 2.874894199854665,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 61.583683104091016,
+        "price_vs_sma20": 0.010065843620485565,
+        "volume_ratio": 0.47113221697562924,
+        "volatility": 0.025755247004688977,
+        "momentum_5d": 0.005184847488879152
+      },
+      "signals_count": 3
+    },
+    "TFUELUSDT": {
+      "current_price": 0.0362,
+      "predicted_prices": {
+        "1h": 1.1324128013639931
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 151.41060792320346,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 50.61120836069524,
+        "price_vs_sma20": 0.0012486153473263207,
+        "volume_ratio": 0.7910449817320814,
+        "volatility": 0.00039632587015424965,
+        "momentum_5d": -0.0017810309242618505
+      },
+      "signals_count": 3
+    },
+    "ENJUSDT": {
+      "current_price": 0.0838,
+      "predicted_prices": {
+        "1h": 1.0934127451169264
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 60.239423932990825,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 26.167146277245756,
+        "price_vs_sma20": -0.011665373635071289,
+        "volume_ratio": 1.3009247189518416,
+        "volatility": 0.0015047618420190177,
+        "momentum_5d": -0.009657113979079202
+      },
+      "signals_count": 3
+    },
+    "CELOUSDT": {
+      "current_price": 0.3123,
+      "predicted_prices": {
+        "1h": 1.2406246529266791
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 14.862706579037447,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 53.639220877036934,
+        "price_vs_sma20": 0.02021212469731012,
+        "volume_ratio": 0.9551929456886745,
+        "volatility": 0.0062689761093503455,
+        "momentum_5d": 0.0006827323326255019
+      },
+      "signals_count": 3
+    },
+    "SANDUSDT": {
+      "current_price": 0.2703,
+      "predicted_prices": {
+        "1h": 1.2206378707885175
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 17.579316884730254,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 71.29156927404607,
+        "price_vs_sma20": -0.0006251600155392975,
+        "volume_ratio": 1.635587290473214,
+        "volatility": 0.005108843299909346,
+        "momentum_5d": -0.009536733228168615
+      },
+      "signals_count": 3
+    },
+    "QTUMUSDT": {
+      "current_price": 2.13,
+      "predicted_prices": {
+        "1h": 1.764866184930085
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8571216316195184,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 44.72452687235034,
+        "price_vs_sma20": 0.004398229597443797,
+        "volume_ratio": 3.0836066167262834,
+        "volatility": 0.024328289697912456,
+        "momentum_5d": -0.005903501648282905
+      },
+      "signals_count": 3
+    },
+    "IOTXUSDT": {
+      "current_price": 0.03208,
+      "predicted_prices": {
+        "1h": 1.127463565692229
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 170.7268649769684,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 41.05492908207433,
+        "price_vs_sma20": -0.014850779751487114,
+        "volume_ratio": 3.5518634877483337,
+        "volatility": 0.00044614385825383446,
+        "momentum_5d": -0.006894627975649548
+      },
+      "signals_count": 3
+    },
+    "KAVAUSDT": {
+      "current_price": 0.3705,
+      "predicted_prices": {
+        "1h": 1.2625208284628353
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 12.038067860497101,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 28.408032126676737,
+        "price_vs_sma20": -0.020525988575322403,
+        "volume_ratio": 1.9067054137696045,
+        "volatility": 0.013389691663578299,
+        "momentum_5d": 0.00953376758578628
+      },
+      "signals_count": 3
+    },
+    "PNUTUSDT": {
+      "current_price": 0.2212,
+      "predicted_prices": {
+        "1h": 1.2251606861387974
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 22.693505563716034,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 48.955684052011435,
+        "price_vs_sma20": -0.00935829224836278,
+        "volume_ratio": 1.1443916442720081,
+        "volatility": 0.0033373485160837907,
+        "momentum_5d": -0.0094306358287648
+      },
+      "signals_count": 3
+    },
+    "ANKRUSDT": {
+      "current_price": 0.01481,
+      "predicted_prices": {
+        "1h": 1.1033863636346457
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 367.51396476524167,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 48.85509054558319,
+        "price_vs_sma20": -0.00900412122484546,
+        "volume_ratio": 1.2382219846010458,
+        "volatility": 0.00025414005018563026,
+        "momentum_5d": -0.013816301080651794
+      },
+      "signals_count": 3
+    },
+    "ANIMEUSDT": {
+      "current_price": 0.01595,
+      "predicted_prices": {
+        "1h": 1.1754530903596911
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 363.48059258924496,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 37.99384461931464,
+        "price_vs_sma20": 0.004048078066000349,
+        "volume_ratio": 1.1224284825222501,
+        "volatility": 0.00022562178364590656,
+        "momentum_5d": 0.006290164264401543
+      },
+      "signals_count": 3
+    },
+    "LAYERUSDT": {
+      "current_price": 0.5884,
+      "predicted_prices": {
+        "1h": 1.2534521244439343
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 5.65136067678394,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 44.17955775589495,
+        "price_vs_sma20": -0.010886515945937994,
+        "volume_ratio": 1.0694101712965962,
+        "volatility": 0.010284330007220939,
+        "momentum_5d": 0.006063704452504037
+      },
+      "signals_count": 3
+    },
+    "DARUSDT": {
+      "current_price": 0.12629,
+      "predicted_prices": {
+        "1h": 1.2092193340251403
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 42.87470639104997,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 37.75144171472864,
+        "price_vs_sma20": -0.004311035023757343,
+        "volume_ratio": 1.164098927313124,
+        "volatility": 0.002279680443343612,
+        "momentum_5d": 0.004859958343498505
+      },
+      "signals_count": 3
+    },
+    "VITEUSDT": {
+      "current_price": 0.00246,
+      "predicted_prices": {
+        "1h": 1.19557433888851
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 2425.0291440823376,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 50.90500671702439,
+        "price_vs_sma20": 0.019497793488519672,
+        "volume_ratio": 0.6772466269360167,
+        "volatility": 4.7066179561002304e-05,
+        "momentum_5d": 0.016937315281692733
+      },
+      "signals_count": 3
+    },
+    "XECUSDT": {
+      "current_price": 2.013e-05,
+      "predicted_prices": {
+        "1h": 2.013e-05
+      },
+      "recommendation": "hold",
+      "confidence_score": 0.1,
+      "risk_score": 0.0,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 49.29857254338622,
+        "price_vs_sma20": 0.0036262892929476986,
+        "volume_ratio": 0.948671727179962,
+        "volatility": 4.5635032807888455e-07,
+        "momentum_5d": 0.0044278507974384596
+      },
+      "signals_count": 0
+    },
+    "ONGUSDT": {
+      "current_price": 0.1647,
+      "predicted_prices": {
+        "1h": 1.2341158877022689
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 32.46557036133178,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 57.37906349393278,
+        "price_vs_sma20": 0.002432404096164371,
+        "volume_ratio": 2.358792562653312,
+        "volatility": 0.0030101914273270246,
+        "momentum_5d": -0.0029687518051688677
+      },
+      "signals_count": 3
+    },
+    "BANDUSDT": {
+      "current_price": 0.65,
+      "predicted_prices": {
+        "1h": 1.288956488039645
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4.915049907997268,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 41.63178676508659,
+        "price_vs_sma20": -0.005853447083492242,
+        "volume_ratio": 0.4414676821314661,
+        "volatility": 0.016910622410572045,
+        "momentum_5d": 0.0021597034032143636
+      },
+      "signals_count": 3
+    },
+    "1INCHUSDT": {
+      "current_price": 0.2472,
+      "predicted_prices": {
+        "1h": 1.1966002296661646
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 19.203079079008184,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 30.0722924957528,
+        "price_vs_sma20": -0.02722717872780879,
+        "volume_ratio": 1.1909445523152558,
+        "volatility": 0.008685845846078677,
+        "momentum_5d": -0.0036989302276656533
+      },
+      "signals_count": 3
+    },
+    "ZENUSDT": {
+      "current_price": 8.49,
+      "predicted_prices": {
+        "1h": 7.176814981264204
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.7733716246971707,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 37.26250725742153,
+        "price_vs_sma20": -0.014989049434267796,
+        "volume_ratio": 1.5035233568789925,
+        "volatility": 0.14641329764080555,
+        "momentum_5d": -0.0018252237400032678
+      },
+      "signals_count": 3
+    },
+    "CTSIUSDT": {
+      "current_price": 0.0648,
+      "predicted_prices": {
+        "1h": 1.1543631504781426
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 84.07123074677028,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 40.77517702675198,
+        "price_vs_sma20": -0.02392673634380237,
+        "volume_ratio": 1.0895926811643961,
+        "volatility": 0.0017945438843385473,
+        "momentum_5d": 0.0005639801745846995
+      },
+      "signals_count": 3
+    },
+    "ADXUSDT": {
+      "current_price": 0.1195,
+      "predicted_prices": {
+        "1h": 1.1433426684895902
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 42.838605376133486,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 41.04459609547373,
+        "price_vs_sma20": -0.004393874615802043,
+        "volume_ratio": 0.8658386891294139,
+        "volatility": 0.0010866948749566488,
+        "momentum_5d": -0.004998597717339015
+      },
+      "signals_count": 3
+    },
+    "POLYXUSDT": {
+      "current_price": 0.138,
+      "predicted_prices": {
+        "1h": 1.2080420548257724
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 38.769639667600444,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 21.78523860152343,
+        "price_vs_sma20": -0.028255655837085634,
+        "volume_ratio": 1.9299966964124904,
+        "volatility": 0.003902233996895901,
+        "momentum_5d": 0.010144399053683806
+      },
+      "signals_count": 3
+    },
+    "TRACUSDT": {
+      "current_price": 0.4335,
+      "predicted_prices": {
+        "1h": 1.2529337746055518
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 9.451369949314323,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 48.45632544677283,
+        "price_vs_sma20": 0.011465099725983334,
+        "volume_ratio": 1.2008727352245891,
+        "volatility": 0.005310550457781702,
+        "momentum_5d": 0.009684760737500131
+      },
+      "signals_count": 3
+    },
+    "ACHUSDT": {
+      "current_price": 0.02018,
+      "predicted_prices": {
+        "1h": 1.0952136374099741
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 266.3611589221938,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 32.89065612506127,
+        "price_vs_sma20": 0.001346604617186671,
+        "volume_ratio": 0.7454080896693207,
+        "volatility": 0.0003023601442925501,
+        "momentum_5d": -0.011796571527526
+      },
+      "signals_count": 3
+    },
+    "TUSDT": {
+      "current_price": 0.0162,
+      "predicted_prices": {
+        "1h": 1.0897484490147018
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 331.34211389342653,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 59.40982015589616,
+        "price_vs_sma20": 0.010638349915685493,
+        "volume_ratio": 1.840193167049443,
+        "volatility": 0.00021737899440913574,
+        "momentum_5d": 0.0008318000808642534
+      },
+      "signals_count": 3
+    },
+    "STORJUSDT": {
+      "current_price": 0.265,
+      "predicted_prices": {
+        "1h": 1.251580980751721
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 18.61473548588153,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 31.77050625307861,
+        "price_vs_sma20": 0.006063201903961536,
+        "volume_ratio": 0.9128275398043625,
+        "volatility": 0.002774902760205525,
+        "momentum_5d": 0.0032592720313711077
+      },
+      "signals_count": 3
+    },
+    "KAITOUSDT": {
+      "current_price": 1.1616,
+      "predicted_prices": {
+        "1h": 1.3638561124175699
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 0.8705927703924325,
+      "breakout_probability": 0.8705927703924325,
+      "features_analyzed": {
+        "rsi": 34.38924625704012,
+        "price_vs_sma20": -0.009737401667995516,
+        "volume_ratio": 3.2519634955512653,
+        "volatility": 0.024736385900565407,
+        "momentum_5d": 0.0017378987800429346
+      },
+      "signals_count": 3
+    },
+    "POPCATUSDT": {
+      "current_price": 0.2922,
+      "predicted_prices": {
+        "1h": 1.2128693635865773
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 15.754095886149505,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 44.185002791917164,
+        "price_vs_sma20": -0.001316396931669702,
+        "volume_ratio": 2.3727965793131296,
+        "volatility": 0.004690585077277868,
+        "momentum_5d": 0.010686108690523888
+      },
+      "signals_count": 3
+    },
+    "MOODENGUSDT": {
+      "current_price": 0.1595,
+      "predicted_prices": {
+        "1h": 1.1961793035440376
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 32.49778381015792,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 36.80401476832157,
+        "price_vs_sma20": -0.02654792448957138,
+        "volume_ratio": 1.547906092203805,
+        "volatility": 0.0054146344666235425,
+        "momentum_5d": 0.0022411859995230543
+      },
+      "signals_count": 3
+    },
+    "PROMUSDT": {
+      "current_price": 8.892,
+      "predicted_prices": {
+        "1h": 7.342729312742211
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8711598556330346,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 27.541055519778023,
+        "price_vs_sma20": -0.010846042172151385,
+        "volume_ratio": 1.6495105646693358,
+        "volatility": 0.17471893448496797,
+        "momentum_5d": -0.01078488553984902
+      },
+      "signals_count": 3
+    },
+    "DUSDT": {
+      "current_price": 0.03427,
+      "predicted_prices": {
+        "1h": 1.1548918562649817
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 163.49895772760163,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 66.50381127380841,
+        "price_vs_sma20": 0.02682814295630809,
+        "volume_ratio": 1.6135953754888601,
+        "volatility": 0.0008983323225017949,
+        "momentum_5d": 0.00012040758844933386
+      },
+      "signals_count": 3
+    },
+    "EGLDUSDT": {
+      "current_price": 14.04,
+      "predicted_prices": {
+        "1h": 11.599675986819339
+      },
+      "recommendation": "strong_sell",
+      "confidence_score": 1.0,
+      "risk_score": 0.8690612582552211,
+      "breakout_probability": 0.0,
+      "features_analyzed": {
+        "rsi": 59.29038938046227,
+        "price_vs_sma20": 0.007171885470443814,
+        "volume_ratio": 1.5350806410808555,
+        "volatility": 0.21582069686219377,
+        "momentum_5d": -0.001545593157112557
+      },
+      "signals_count": 3
+    },
+    "MASKUSDT": {
+      "current_price": 1.218,
+      "predicted_prices": {
+        "1h": 1.5396501696492304
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 1.320402995275987,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 63.776615103855846,
+        "price_vs_sma20": 0.014487852511907155,
+        "volume_ratio": 0.4176860636053886,
+        "volatility": 0.014195621196217902,
+        "momentum_5d": 0.015018488015588582
+      },
+      "signals_count": 3
+    },
+    "SKLUSDT": {
+      "current_price": 0.01864,
+      "predicted_prices": {
+        "1h": 1.0798023015742046
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 284.646540121836,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 37.02413015515161,
+        "price_vs_sma20": -0.04726642656880446,
+        "volume_ratio": 1.630110117065226,
+        "volatility": 0.0009530006110173453,
+        "momentum_5d": -0.013052692862795756
+      },
+      "signals_count": 3
+    },
+    "LAZIOUSDT": {
+      "current_price": 0.854,
+      "predicted_prices": {
+        "1h": 1.3851904466818799
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 3.1100143248353627,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 54.62356015542069,
+        "price_vs_sma20": 0.009153070239737755,
+        "volume_ratio": 0.20469538979967697,
+        "volatility": 0.016485301256570085,
+        "momentum_5d": -0.0011442841262664372
+      },
+      "signals_count": 3
+    },
+    "ORBSUSDT": {
+      "current_price": 0.01929,
+      "predicted_prices": {
+        "1h": 1.1027197950649992
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 280.82680017236885,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 53.52979756395566,
+        "price_vs_sma20": 0.007710636805464872,
+        "volume_ratio": 3.0011046270448736,
+        "volatility": 0.00026127818016205464,
+        "momentum_5d": -0.0036364739193998075
+      },
+      "signals_count": 3
+    },
+    "PORTOUSDT": {
+      "current_price": 0.739,
+      "predicted_prices": {
+        "1h": 1.3388489229253082
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4.058517746449988,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 36.97954509056719,
+        "price_vs_sma20": -0.015021771736873376,
+        "volume_ratio": 0.8296166293169089,
+        "volatility": 0.014486547529953018,
+        "momentum_5d": 0.003982967249965386
+      },
+      "signals_count": 3
+    },
+    "GTCUSDT": {
+      "current_price": 0.275,
+      "predicted_prices": {
+        "1h": 1.2330311556141804
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 17.41874828389419,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 52.89414486592526,
+        "price_vs_sma20": -0.013320436496771743,
+        "volume_ratio": 0.29143267532800315,
+        "volatility": 0.004042152468970695,
+        "momentum_5d": -0.010068360019555467
+      },
+      "signals_count": 3
+    },
+    "IOSTUSDT": {
+      "current_price": 0.003631,
+      "predicted_prices": {
+        "1h": 1.1520929856548652
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 1581.467895421186,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 57.766330556149335,
+        "price_vs_sma20": -0.007230656811790577,
+        "volume_ratio": 1.379062995558873,
+        "volatility": 4.724094072405216e-05,
+        "momentum_5d": 0.0017122625020193905
+      },
+      "signals_count": 3
+    },
+    "API3USDT": {
+      "current_price": 0.72,
+      "predicted_prices": {
+        "1h": 1.3236831756693828
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4.1922442754818245,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 53.49414690896215,
+        "price_vs_sma20": 0.007968500098061857,
+        "volume_ratio": 0.4488021815811312,
+        "volatility": 0.009890077997506783,
+        "momentum_5d": -0.0019183629813382952
+      },
+      "signals_count": 3
+    },
+    "BNTUSDT": {
+      "current_price": 0.664,
+      "predicted_prices": {
+        "1h": 1.3068294475982423
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4.840583189745799,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 66.65181629053308,
+        "price_vs_sma20": -0.007796924049664613,
+        "volume_ratio": 1.6429503484012982,
+        "volatility": 0.013187586292222005,
+        "momentum_5d": 0.005166534040702553
+      },
+      "signals_count": 3
+    },
+    "OXTUSDT": {
+      "current_price": 0.0532,
+      "predicted_prices": {
+        "1h": 1.2128123080761146
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 108.98611918008598,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 59.42876860176122,
+        "price_vs_sma20": 0.0223874996726757,
+        "volume_ratio": 1.0319324666806666,
+        "volatility": 0.0015415297949336036,
+        "momentum_5d": -0.0038990748465480563
+      },
+      "signals_count": 3
+    },
+    "AIXBTUSDT": {
+      "current_price": 0.1145,
+      "predicted_prices": {
+        "1h": 1.172189377982889
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 46.18730908222222,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 45.29468248628867,
+        "price_vs_sma20": 0.007681313226077774,
+        "volume_ratio": 2.893984600856131,
+        "volatility": 0.0013950072392958307,
+        "momentum_5d": 0.007833636038739877
+      },
+      "signals_count": 3
+    },
+    "RADUSDT": {
+      "current_price": 0.611,
+      "predicted_prices": {
+        "1h": 1.3621004770563114
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 6.146485082293874,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 66.84994701282324,
+        "price_vs_sma20": 0.02833133752300529,
+        "volume_ratio": 4.740265314689454,
+        "volatility": 0.013323324245659086,
+        "momentum_5d": 0.01407036058578437
+      },
+      "signals_count": 3
+    },
+    "FLOWUSDT": {
+      "current_price": 0.354,
+      "predicted_prices": {
+        "1h": 1.265806920197709
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 12.878628816351824,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 52.75136726992115,
+        "price_vs_sma20": 0.018287571922853667,
+        "volume_ratio": 1.016929314072333,
+        "volatility": 0.005669803588701544,
+        "momentum_5d": 0.008030415584180828
+      },
+      "signals_count": 3
+    },
+    "MEUSDT": {
+      "current_price": 0.733,
+      "predicted_prices": {
+        "1h": 1.357000835912899
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 4.256485920278985,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 59.55549098393932,
+        "price_vs_sma20": 0.01805324537175383,
+        "volume_ratio": 0.46086840936992435,
+        "volatility": 0.013703765245905533,
+        "momentum_5d": 0.0014329520192424283
+      },
+      "signals_count": 3
+    },
+    "BOSONUSDT": {
+      "current_price": 0.0906,
+      "predicted_prices": {
+        "1h": 1.194845232208318
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 60.94068610421181,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 62.442040271054736,
+        "price_vs_sma20": -0.0005036120192981091,
+        "volume_ratio": 2.1467833181563365,
+        "volatility": 0.001468965999747849,
+        "momentum_5d": -0.002216059426529915
+      },
+      "signals_count": 3
+    },
+    "DATAUSDT": {
+      "current_price": 0.01751,
+      "predicted_prices": {
+        "1h": 1.1826889661021152
+      },
+      "recommendation": "strong_buy",
+      "confidence_score": 1.0,
+      "risk_score": 332.7181513712493,
+      "breakout_probability": 1.0,
+      "features_analyzed": {
+        "rsi": 55.82727365441268,
+        "price_vs_sma20": 0.0004399350215282696,
+        "volume_ratio": 0.5926281105461977,
+        "volatility": 0.00020254439104097356,
+        "momentum_5d": 0.00562482427442168
+      },
+      "signals_count": 3
+    }
+  }
+}

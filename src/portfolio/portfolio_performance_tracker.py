@@ -1,0 +1,363 @@
+#!/usr/bin/env python3
+"""
+Portfolio Performance Tracker - Monitor Asset Gains
+Track real-time performance of your consolidated LOKA position
+"""
+
+import os
+import json
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List
+import pandas as pd
+from binance.client import Client
+from dotenv import load_dotenv
+
+
+class PortfolioPerformanceTracker:
+    def __init__(self):
+        load_dotenv()
+
+        self.client = Client(
+            api_key=os.getenv("BINANCEUS_KEY"),
+            api_secret=os.getenv("BINANCEUS_SECRET"),
+            tld="us",
+        )
+
+    def get_current_portfolio_value(self) -> Dict:
+        """Get current portfolio value with breakdown"""
+        try:
+            account = self.client.get_account()
+            portfolio = {}
+            total_value = 0
+
+            for balance in account["balances"]:
+                free = float(balance["free"])
+                locked = float(balance["locked"])
+                total_amount = free + locked
+
+                if total_amount > 0.01:
+                    if balance["asset"] == "USDT":
+                        usd_value = total_amount
+                        portfolio[balance["asset"]] = {
+                            "amount": total_amount,
+                            "price": 1.0,
+                            "usd_value": usd_value,
+                            "percentage": 0,  # Will calculate later
+                        }
+                        total_value += usd_value
+                    else:
+                        try:
+                            ticker = self.client.get_symbol_ticker(
+                                symbol=balance["asset"] + "USDT"
+                            )
+                            price = float(ticker["price"])
+                            usd_value = total_amount * price
+
+                            if usd_value > 0.01:
+                                portfolio[balance["asset"]] = {
+                                    "amount": total_amount,
+                                    "price": price,
+                                    "usd_value": usd_value,
+                                    "percentage": 0,  # Will calculate later
+                                }
+                                total_value += usd_value
+                        except:
+                            continue
+
+            # Calculate percentages
+            for asset in portfolio:
+                portfolio[asset]["percentage"] = (
+                    portfolio[asset]["usd_value"] / total_value
+                ) * 100
+
+            return {"portfolio": portfolio, "total_value": total_value}
+
+        except Exception as e:
+            print(f"Error getting portfolio: {e}")
+            return {"portfolio": {}, "total_value": 0}
+
+    def get_loka_performance(self) -> Dict:
+        """Get detailed LOKA performance analysis"""
+        try:
+            symbol = "LOKAUSDT"
+
+            # Current price
+            current_ticker = self.client.get_ticker(symbol=symbol)
+            current_price = float(current_ticker["lastPrice"])
+            daily_change = float(current_ticker["priceChangePercent"])
+
+            # Get historical data for different timeframes
+            performance = {
+                "current_price": current_price,
+                "daily_change": daily_change,
+                "daily_volume": float(current_ticker["quoteVolume"]),
+            }
+
+            # Get kline data for multiple timeframes
+            timeframes = {
+                "1h": {"interval": "1h", "limit": 24, "name": "24 Hours"},
+                "1d": {"interval": "1d", "limit": 7, "name": "7 Days"},
+                "1w": {"interval": "1w", "limit": 4, "name": "4 Weeks"},
+            }
+
+            for period, config in timeframes.items():
+                try:
+                    klines = self.client.get_klines(
+                        symbol=symbol,
+                        interval=config["interval"],
+                        limit=config["limit"],
+                    )
+
+                    if klines:
+                        start_price = float(klines[0][1])  # Open price of first candle
+                        end_price = float(klines[-1][4])  # Close price of last candle
+
+                        change_pct = ((end_price - start_price) / start_price) * 100
+                        performance[f"{period}_change"] = change_pct
+                        performance[f"{period}_start_price"] = start_price
+                        performance[f"{period}_end_price"] = end_price
+
+                except Exception as e:
+                    print(f"Could not get {period} data: {e}")
+                    performance[f"{period}_change"] = 0
+
+            return performance
+
+        except Exception as e:
+            print(f"Error getting LOKA performance: {e}")
+            return {}
+
+    def calculate_gains_since_consolidation(self) -> Dict:
+        """Calculate gains since the consolidation trades"""
+        try:
+            # Estimate based on consolidation records
+            consolidation_files = [
+                "portfolio_consolidation_20250802_224230.json",
+                "final_loka_buy_20250802_231702.json",
+            ]
+
+            total_invested_in_loka = 0
+            consolidation_times = []
+
+            for filename in consolidation_files:
+                try:
+                    if os.path.exists(filename):
+                        with open(filename, "r") as f:
+                            data = json.load(f)
+                            if "estimated_final_value" in data:
+                                total_invested_in_loka += data["estimated_final_value"]
+                            elif "amount_usdt" in data:
+                                total_invested_in_loka += data["amount_usdt"]
+
+                            if "timestamp" in data:
+                                consolidation_times.append(data["timestamp"])
+                except:
+                    continue
+
+            # If no records found, estimate from current LOKA position
+            current_portfolio = self.get_current_portfolio_value()
+            loka_data = current_portfolio["portfolio"].get("LOKA", {})
+
+            if not loka_data:
+                return {"error": "No LOKA position found"}
+
+            current_loka_value = loka_data["usd_value"]
+            current_loka_amount = loka_data["amount"]
+            current_price = loka_data["price"]
+
+            # Estimate original investment (if no records)
+            if total_invested_in_loka == 0:
+                # Assume average price of $0.25 for estimation
+                estimated_avg_buy_price = 0.25
+                total_invested_in_loka = current_loka_amount * estimated_avg_buy_price
+
+            # Calculate gains
+            unrealized_gain = current_loka_value - total_invested_in_loka
+            gain_percentage = (
+                (unrealized_gain / total_invested_in_loka) * 100
+                if total_invested_in_loka > 0
+                else 0
+            )
+
+            return {
+                "invested_amount": total_invested_in_loka,
+                "current_value": current_loka_value,
+                "unrealized_gain": unrealized_gain,
+                "gain_percentage": gain_percentage,
+                "current_price": current_price,
+                "loka_amount": current_loka_amount,
+                "consolidation_times": consolidation_times,
+            }
+
+        except Exception as e:
+            print(f"Error calculating gains: {e}")
+            return {"error": str(e)}
+
+    def display_performance_dashboard(self):
+        """Display comprehensive performance dashboard"""
+        try:
+            print("📊 PORTFOLIO PERFORMANCE DASHBOARD")
+            print("=" * 60)
+            print(f"🕐 Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            print()
+
+            # Current portfolio
+            portfolio_data = self.get_current_portfolio_value()
+            portfolio = portfolio_data["portfolio"]
+            total_value = portfolio_data["total_value"]
+
+            print("💼 CURRENT PORTFOLIO:")
+            print("-" * 50)
+
+            # Sort by value (largest first)
+            sorted_positions = sorted(
+                portfolio.items(), key=lambda x: x[1]["usd_value"], reverse=True
+            )
+
+            for asset, data in sorted_positions:
+                if data["usd_value"] > 0.5:  # Only show significant positions
+                    print(
+                        f"{asset:8s} | {data['amount']:12.2f} | "
+                        f"${data['price']:8.6f} | ${data['usd_value']:8.2f} ({data['percentage']:5.1f}%)"
+                    )
+
+            print("-" * 50)
+            print(f"TOTAL VALUE: ${total_value:.2f}")
+            print()
+
+            # LOKA Performance Analysis
+            if "LOKA" in portfolio:
+                print("🚀 LOKA PERFORMANCE ANALYSIS:")
+                print("-" * 50)
+
+                loka_perf = self.get_loka_performance()
+                loka_position = portfolio["LOKA"]
+
+                print(f"💎 LOKA Holdings: {loka_position['amount']:.2f} tokens")
+                print(
+                    f"💰 Current Value: ${loka_position['usd_value']:.2f} ({loka_position['percentage']:.1f}% of portfolio)"
+                )
+                print(f"📈 Current Price: ${loka_perf.get('current_price', 0):.6f}")
+                print(f"📊 24h Volume: ${loka_perf.get('daily_volume', 0):,.0f}")
+                print()
+
+                print("⏰ PERFORMANCE TIMEFRAMES:")
+                print(f"  24 Hours: {loka_perf.get('daily_change', 0):+6.2f}%")
+                print(f"  7 Days:   {loka_perf.get('1d_change', 0):+6.2f}%")
+                print(f"  4 Weeks:  {loka_perf.get('1w_change', 0):+6.2f}%")
+                print()
+
+                # Consolidation gains
+                gains_data = self.calculate_gains_since_consolidation()
+                if "error" not in gains_data:
+                    print("💹 GAINS SINCE CONSOLIDATION:")
+                    print(f"  Invested:     ${gains_data['invested_amount']:.2f}")
+                    print(f"  Current:      ${gains_data['current_value']:.2f}")
+                    print(f"  Unrealized:   ${gains_data['unrealized_gain']:+.2f}")
+                    print(f"  Gain %:       {gains_data['gain_percentage']:+.2f}%")
+
+                    if gains_data["gain_percentage"] > 0:
+                        print("  Status:       🟢 PROFITABLE!")
+                    elif gains_data["gain_percentage"] < -5:
+                        print("  Status:       🔴 LOSING")
+                    else:
+                        print("  Status:       🟡 FLAT")
+                    print()
+
+                # Performance verdict
+                daily_change = loka_perf.get("daily_change", 0)
+                weekly_change = loka_perf.get("1d_change", 0)
+
+                print("🎯 PERFORMANCE VERDICT:")
+                if daily_change > 5 and weekly_change > 20:
+                    print("  🚀 ROCKETING - Massive gains!")
+                elif daily_change > 2 and weekly_change > 10:
+                    print("  📈 STRONG - Good performance")
+                elif daily_change > 0 and weekly_change > 0:
+                    print("  🟢 POSITIVE - Gaining ground")
+                elif daily_change > -2 and weekly_change > -5:
+                    print("  🟡 STABLE - Holding steady")
+                elif daily_change > -5 and weekly_change > -15:
+                    print("  🟠 DECLINING - Some losses")
+                else:
+                    print("  🔴 FALLING - Significant losses")
+
+                print()
+
+                # Recommendations
+                print("💡 RECOMMENDATIONS:")
+                if weekly_change > 20:
+                    print("  • HODL STRONG - Great momentum!")
+                    print("  • Consider taking some profits if gains exceed 50%")
+                elif weekly_change > 0:
+                    print("  • Continue holding - positive trend")
+                elif weekly_change < -20:
+                    print("  • Consider risk management")
+                    print("  • Review stop-loss strategy")
+                else:
+                    print("  • Monitor closely for trend changes")
+
+            else:
+                print("❌ No LOKA position found in portfolio")
+
+            print()
+            print("🔄 Dashboard updates every time you run this script")
+
+        except Exception as e:
+            print(f"Error displaying dashboard: {e}")
+
+    def save_performance_snapshot(self):
+        """Save current performance data to file"""
+        try:
+            portfolio_data = self.get_current_portfolio_value()
+            loka_perf = self.get_loka_performance()
+            gains_data = self.calculate_gains_since_consolidation()
+
+            snapshot = {
+                "timestamp": datetime.now().isoformat(),
+                "portfolio": portfolio_data,
+                "loka_performance": loka_perf,
+                "gains_analysis": gains_data,
+            }
+
+            filename = (
+                f"performance_snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
+            with open(filename, "w") as f:
+                json.dump(snapshot, f, indent=2, default=str)
+
+            print(f"📄 Performance snapshot saved: {filename}")
+
+        except Exception as e:
+            print(f"Error saving snapshot: {e}")
+
+
+def main():
+    """Main performance tracking function"""
+    tracker = PortfolioPerformanceTracker()
+
+    while True:
+        print("\n" + "=" * 60)
+        tracker.display_performance_dashboard()
+
+        print("\n🔧 OPTIONS:")
+        print("1. Refresh dashboard (Enter)")
+        print("2. Save performance snapshot (s)")
+        print("3. Exit (q)")
+
+        choice = input("\nChoice: ").strip().lower()
+
+        if choice == "q":
+            print("👋 Goodbye!")
+            break
+        elif choice == "s":
+            tracker.save_performance_snapshot()
+        elif choice == "" or choice == "1":
+            continue
+        else:
+            print("Invalid choice")
+
+
+if __name__ == "__main__":
+    main()

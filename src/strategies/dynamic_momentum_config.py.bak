@@ -1,0 +1,58 @@
+"""
+Dynamic Momentum Trading Configuration
+=====================================
+
+Configurable parameters for the dynamic momentum trading strategy.
+Adjust these values to fine-tune the trading behavior.
+"""
+
+# STOP LOSS CONFIGURATION
+INITIAL_STOP_LOSS_PCT = 0.22        # 22% initial stop loss (your example: stop at 22% when trading at 28%)
+TIGHT_STOP_LOSS_PCT = 0.05          # 5% tight stop when profitable
+PROFIT_TARGET_PCT = 0.15             # 15% profit target to reset and tighten stops
+
+# POSITION SIZING
+INITIAL_ALLOCATION_PCT = 0.10        # Start with 10% of portfolio
+MAX_ALLOCATION_PCT = 0.50            # Maximum 50% allocation
+ALLOCATION_INCREASE_STEP = 0.05      # Increase 5% per consecutive gain
+
+# MOMENTUM THRESHOLDS
+MIN_MOMENTUM_THRESHOLD = 10.0        # Minimum momentum score to enter trade
+MOMENTUM_CHECK_INTERVAL = 300        # Check momentum every 5 minutes (300 seconds)
+
+# RISK MANAGEMENT
+MAX_CONSECUTIVE_LOSSES = 3           # Stop after 3 consecutive losses
+DAILY_LOSS_LIMIT_PCT = 0.10          # Stop trading if daily loss exceeds 10%
+MAX_POSITION_DURATION_HOURS = 24     # Close position after 24 hours regardless
+
+# ADVANCED FEATURES
+ENABLE_TRAILING_STOP = True          # Enable trailing stop loss
+ENABLE_MOMENTUM_FILTERING = True     # Only trade highest momentum token
+ENABLE_DYNAMIC_SIZING = True         # Adjust position size based on performance
+ENABLE_PROFIT_TAKING = True          # Take partial profits at targets
+
+# DEBUGGING
+LOG_LEVEL = "INFO"                   # Logging level: DEBUG, INFO, WARNING, ERROR
+SAVE_TRADE_HISTORY = True            # Save all trades to file
+PRINT_STATUS_INTERVAL = 60           # Print status every 60 seconds
+
+# EXAMPLE SCENARIOS
+"""
+Scenario 1: Conservative Trading
+- INITIAL_STOP_LOSS_PCT = 0.15 (15%)
+- TIGHT_STOP_LOSS_PCT = 0.03 (3%)
+- INITIAL_ALLOCATION_PCT = 0.05 (5%)
+- MAX_ALLOCATION_PCT = 0.25 (25%)
+
+Scenario 2: Aggressive Trading  
+- INITIAL_STOP_LOSS_PCT = 0.25 (25%)
+- TIGHT_STOP_LOSS_PCT = 0.08 (8%)
+- INITIAL_ALLOCATION_PCT = 0.15 (15%)
+- MAX_ALLOCATION_PCT = 0.75 (75%)
+
+Scenario 3: Your Example (22% stop at 28% price)
+- Entry at $1.00, current price $1.28 (+28%)
+- Stop loss at $0.78 (22% below entry)
+- This means: 28% gain with 22% risk buffer
+- Risk/Reward ratio: 22% risk for 28% gain = 1.27:1
+"""

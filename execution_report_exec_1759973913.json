@@ -1,0 +1,100 @@
+{
+  "execution_id": "exec_1759973913",
+  "start_time": "2025-10-08T21:38:33.030576",
+  "execution_time_seconds": 2.650105,
+  "target_completion_minutes": 5,
+  "portfolio_summary": {
+    "total_positions": 1,
+    "long_positions": 1,
+    "hedge_positions": 0,
+    "total_target_usd": 15,
+    "total_filled_usd": 0.0,
+    "portfolio_fill_rate": 0.0
+  },
+  "position_results": [
+    {
+      "symbol": "IOTA/USD",
+      "target_size_usd": 15,
+      "filled_size_usd": 0.0,
+      "fill_percentage": 0.0,
+      "legs": [
+        {
+          "leg_id": 1,
+          "order_type": "passive_maker",
+          "symbol": "IOTA/USD",
+          "side": "buy",
+          "size_usd": 4.5,
+          "price": 0.18523575,
+          "participation_limit": 0.05,
+          "slice_size_pct": 0.005,
+          "target_pct": 30,
+          "status": "failed",
+          "filled_amount": 0.0,
+          "avg_fill_price": 0.0,
+          "start_time": null,
+          "end_time": null
+        },
+        {
+          "leg_id": 2,
+          "order_type": "hidden_iceberg",
+          "symbol": "IOTA/USD",
+          "side": "buy",
+          "size_usd": 3.0,
+          "price": 0.189414,
+          "participation_limit": 0.08,
+          "slice_size_pct": 0.01,
+          "target_pct": 20,
+          "status": "failed",
+          "filled_amount": 0.0,
+          "avg_fill_price": 0.0,
+          "start_time": null,
+          "end_time": null
+        },
+        {
+          "leg_id": 3,
+          "order_type": "smart_limit",
+          "symbol": "IOTA/USD",
+          "side": "buy",
+          "size_usd": 4.5,
+          "price": 0.18533214285714286,
+          "participation_limit": 0.08,
+          "slice_size_pct": 0.01,
+          "target_pct": 30,
+          "status": "failed",
+          "filled_amount": 0.0,
+          "avg_fill_price": 0.0,
+          "start_time": null,
+          "end_time": null
+        },
+        {
+          "leg_id": 4,
+          "order_type": "pov_twap",
+          "symbol": "IOTA/USD",
+          "side": "buy",
+          "size_usd": 3.0,
+          "price": 0.1857,
+          "participation_limit": 0.1,
+          "slice_size_pct": 0.02,
+          "target_pct": 20,
+          "status": "failed",
+          "filled_amount": 0.0,
+          "avg_fill_price": 0.0,
+          "start_time": null,
+          "end_time": null
+        }
+      ],
+      "execution_results": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    }
+  ],
+  "execution_efficiency": {
+    "time_vs_target": 0.008833683333333333,
+    "fill_rate_vs_target": 0.0,
+    "parallel_execution": true,
+    "portfolio_flat_achieved": true
+  }
+}

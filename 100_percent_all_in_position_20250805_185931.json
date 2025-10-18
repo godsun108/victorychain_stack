@@ -1,0 +1,78 @@
+{
+  "timestamp": "2025-08-05T18:59:31.527699",
+  "strategy": "100% All-In Microcap",
+  "position": {
+    "symbol": "FLOKIUSDT",
+    "current_price": 0.00010212,
+    "entry_price": 0.00010201788,
+    "stop_loss_price": 9.6916986e-05,
+    "take_profit_levels": [
+      0.00015302682,
+      0.00020403576,
+      0.00030605364
+    ],
+    "allocation_percentage": 1.0,
+    "position_value": 10000.0,
+    "shares_to_buy": 98022033.00048971,
+    "magic_similarity_score": 55,
+    "gain_potential": 1.76376,
+    "confidence_score": 0.8113432050917001,
+    "risk_assessment": {
+      "liquidity_risk": "LOW",
+      "volatility_risk": "MODERATE",
+      "concentration_risk": "VERY_HIGH",
+      "stop_loss_risk": "MANAGED",
+      "max_loss": "$500",
+      "recommended_monitoring": "HOURLY"
+    },
+    "execution_plan": {
+      "execution_method": "LIMIT_ORDER",
+      "order_type": "BUY_LIMIT",
+      "entry_price": 0.00010201788,
+      "quantity": 98022033.00048971,
+      "estimated_cost": 10000.0,
+      "slippage_tolerance": 0.5,
+      "execution_timeframe": "IMMEDIATE",
+      "backup_plan": "MARKET_ORDER if limit not filled in 30 minutes"
+    },
+    "monitoring_alerts": [
+      "STOP LOSS: Alert if price drops to $0.000097",
+      "TAKE PROFIT 1: Alert at $0.000153 (+50%)",
+      "TAKE PROFIT 2: Alert at $0.000204 (+100%)",
+      "TAKE PROFIT 3: Alert at $0.000306 (+200%)",
+      "VOLUME SPIKE: Alert if volume exceeds 134621",
+      "MOMENTUM CHANGE: Alert if momentum score changes by >1.0",
+      "SECTOR NEWS: Monitor gaming/meme sector developments"
+    ],
+    "exit_strategy": {
+      "stop_loss_strategy": "HARD_STOP at -5%",
+      "profit_taking_strategy": "SCALED_EXIT",
+      "scaling_plan": {
+        "25% at +50% gain": 0.00015302682,
+        "35% at +100% gain": 0.00020403576,
+        "40% at +200% gain": 0.00030605364
+      },
+      "trailing_stop": "ACTIVATE at +50% gain with 10% trail",
+      "time_based_exit": "REVIEW position after 90 days",
+      "emergency_exit": "MARKET_SELL if stop loss triggered"
+    },
+    "reasoning": "FLOKIUSDT selected for 100% allocation based on: \u2022 MAGIC Pattern Similarity: 55.0/100 \u2022 Overall Confidence: 81.1% \u2022 Current dip of -7.3% creates entry opportunity \u2022 Strong volume support at $67,310 \u2022 Meme sector positioning \u2022 Proven MAGIC-like gain patterns identified \u2022 Risk managed with strict 5% stop loss"
+  },
+  "portfolio_value": 10000,
+  "risk_parameters": {
+    "stop_loss_percentage": 0.05,
+    "position_size": 1.0,
+    "profit_scaling": [
+      0.25,
+      0.35,
+      0.4
+    ],
+    "profit_targets": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "trailing_stop": 0.1,
+    "max_holding_period": 90
+  }
+}

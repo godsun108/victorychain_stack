@@ -1,0 +1,512 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Statistical Momentum Analyzer (Simplified)
+Uses standard deviation and probability analysis without external dependencies
+"""
+
+import requests
+import json
+import os
+import time
+import math
+from datetime import datetime, timedelta
+from typing import List, Dict, Tuple, Optional
+
+class SimpleStatisticalAnalyzer:
+    def __init__(self):
+        self.claude_api_key = os.getenv('CLAUDE_API_KEY', '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')
+        self.binance_us_base = "https://api.binance.us"
+        
+    def calculate_mean(self, values: List[float]) -> float:
+        """Calculate arithmetic mean"""
+        if not values:
+            return 0.0
+        return sum(values) / len(values)
+    
+    def calculate_std_dev(self, values: List[float]) -> float:
+        """Calculate standard deviation"""
+        if len(values) < 2:
+            return 0.0
+        
+        mean = self.calculate_mean(values)
+        variance = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
+        return math.sqrt(variance)
+    
+    def calculate_correlation(self, x: List[float], y: List[float]) -> float:
+        """Calculate correlation coefficient"""
+        if len(x) != len(y) or len(x) < 2:
+            return 0.0
+        
+        n = len(x)
+        mean_x = self.calculate_mean(x)
+        mean_y = self.calculate_mean(y)
+        
+        numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+        
+        sum_sq_x = sum((x[i] - mean_x) ** 2 for i in range(n))
+        sum_sq_y = sum((y[i] - mean_y) ** 2 for i in range(n))
+        
+        denominator = math.sqrt(sum_sq_x * sum_sq_y)
+        
+        if denominator == 0:
+            return 0.0
+        
+        return numerator / denominator
+    
+    def normal_cdf(self, x: float) -> float:
+        """Approximate normal cumulative distribution function"""
+        # Using Abramowitz and Stegun approximation
+        a1 = 0.254829592
+        a2 = -0.284496736
+        a3 = 1.421413741
+        a4 = -1.453152027
+        a5 = 1.061405429
+        p = 0.3275911
+        
+        sign = 1 if x >= 0 else -1
+        x = abs(x) / math.sqrt(2.0)
+        
+        t = 1.0 / (1.0 + p * x)
+        y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * math.exp(-x * x)
+        
+        return 0.5 * (1.0 + sign * y)
+    
+    def get_24h_ticker_data(self) -> Dict[str, Dict]:
+        """Get 24h ticker data for all symbols"""
+        try:
+            response = requests.get(f"{self.binance_us_base}/api/v3/ticker/24hr")
+            if response.status_code == 200:
+                tickers = response.json()
+                
+                ticker_data = {}
+                for ticker in tickers:
+                    if ticker['symbol'].endswith('USDT'):
+                        ticker_data[ticker['symbol']] = {
+                            'symbol': ticker['symbol'],
+                            'price': float(ticker['lastPrice']),
+                            'change_24h': float(ticker['priceChangePercent']),
+                            'volume': float(ticker['volume']),
+                            'volume_usdt': float(ticker['quoteVolume']),
+                            'high_24h': float(ticker['highPrice']),
+                            'low_24h': float(ticker['lowPrice']),
+                            'count': int(ticker['count'])
+                        }
+                return ticker_data
+            else:
+                print(f"Failed to get ticker data: {response.status_code}")
+                return {}
+        except Exception as e:
+            print(f"Error getting ticker data: {e}")
+            return {}
+    
+    def get_kline_data(self, symbol: str, interval: str = '1h', limit: int = 168) -> List[Dict]:
+        """Get historical kline data"""
+        try:
+            url = f"{self.binance_us_base}/api/v3/klines"
+            params = {
+                'symbol': symbol,
+                'interval': interval,
+                'limit': limit
+            }
+            
+            response = requests.get(url, params=params)
+            if response.status_code == 200:
+                klines = response.json()
+                processed_data = []
+                
+                for i, kline in enumerate(klines):
+                    processed_data.append({
+                        'timestamp': int(kline[0]),
+                        'open': float(kline[1]),
+                        'high': float(kline[2]),
+                        'low': float(kline[3]),
+                        'close': float(kline[4]),
+                        'volume': float(kline[5]),
+                        'returns': 0.0 if i == 0 else ((float(kline[4]) - float(klines[i-1][4])) / float(klines[i-1][4])) * 100
+                    })
+                
+                return processed_data[1:]  # Remove first entry
+            else:
+                return []
+        except Exception as e:
+            print(f"Error getting kline data for {symbol}: {e}")
+            return []
+    
+    def analyze_token_statistics(self, symbol: str, ticker_data: Dict, kline_data: List[Dict]) -> Dict:
+        """Analyze token with statistical methods"""
+        if len(kline_data) < 20:
+            return {}
+        
+        # Basic data
+        returns = [d['returns'] for d in kline_data]
+        prices = [d['close'] for d in kline_data]
+        volumes = [d['volume'] for d in kline_data]
+        
+        # Statistical metrics
+        mean_return = self.calculate_mean(returns)
+        std_dev = self.calculate_std_dev(returns)
+        
+        # Sharpe ratio (simplified)
+        sharpe_ratio = mean_return / std_dev if std_dev > 0 else 0
+        
+        # Win rate
+        positive_returns = [r for r in returns if r > 0]
+        win_rate = len(positive_returns) / len(returns)
+        
+        # Z-score for current momentum
+        recent_returns = returns[-6:]  # Last 6 hours
+        recent_mean = self.calculate_mean(recent_returns)
+        current_z_score = (recent_mean - mean_return) / std_dev if std_dev > 0 else 0
+        
+        # Price momentum
+        price_momentum_1h = (prices[-1] - prices[-2]) / prices[-2] * 100 if len(prices) > 1 else 0
+        price_momentum_6h = (prices[-1] - prices[-7]) / prices[-7] * 100 if len(prices) > 6 else 0
+        price_momentum_24h = ticker_data.get('change_24h', 0)
+        
+        # Volume analysis
+        avg_volume = self.calculate_mean(volumes)
+        recent_volume = self.calculate_mean(volumes[-6:]) if len(volumes) > 6 else avg_volume
+        volume_surge = recent_volume / avg_volume if avg_volume > 0 else 1
+        
+        # Trend strength (correlation with time)
+        time_series = list(range(len(prices)))
+        trend_strength = self.calculate_correlation(time_series, prices)
+        
+        # Bollinger bands
+        sma_20 = self.calculate_mean(prices[-20:])
+        bb_std = self.calculate_std_dev(prices[-20:])
+        bb_upper = sma_20 + (2 * bb_std)
+        bb_lower = sma_20 - (2 * bb_std)
+        current_price = prices[-1]
+        bb_position = (current_price - bb_lower) / (bb_upper - bb_lower) if bb_upper != bb_lower else 0.5
+        
+        return {
+            'symbol': symbol,
+            'current_price': current_price,
+            'mean_return': mean_return,
+            'std_dev': std_dev,
+            'sharpe_ratio': sharpe_ratio,
+            'win_rate': win_rate,
+            'current_z_score': current_z_score,
+            'price_momentum_1h': price_momentum_1h,
+            'price_momentum_6h': price_momentum_6h,
+            'price_momentum_24h': price_momentum_24h,
+            'volume_surge': volume_surge,
+            'trend_strength': trend_strength,
+            'bb_position': bb_position,
+            'volume_usdt': ticker_data.get('volume_usdt', 0),
+            'trade_count': ticker_data.get('count', 0)
+        }
+    
+    def calculate_probability_score(self, metrics: Dict) -> Dict:
+        """Calculate probability-based score"""
+        score = 0
+        confidence_factors = []
+        
+        # Sharpe ratio (0-20 points)
+        if metrics['sharpe_ratio'] > 1.5:
+            score += 20
+            confidence_factors.append("Excellent risk-adjusted returns")
+        elif metrics['sharpe_ratio'] > 0.8:
+            score += 15
+            confidence_factors.append("Good risk-adjusted returns")
+        elif metrics['sharpe_ratio'] > 0.3:
+            score += 8
+            confidence_factors.append("Moderate risk-adjusted returns")
+        
+        # Win rate (0-25 points)
+        if metrics['win_rate'] > 0.65:
+            score += 25
+            confidence_factors.append(f"High win rate ({metrics['win_rate']:.1%})")
+        elif metrics['win_rate'] > 0.55:
+            score += 20
+            confidence_factors.append(f"Good win rate ({metrics['win_rate']:.1%})")
+        elif metrics['win_rate'] > 0.45:
+            score += 10
+            confidence_factors.append(f"Average win rate ({metrics['win_rate']:.1%})")
+        
+        # Current momentum Z-score (0-20 points)
+        z_score = metrics['current_z_score']
+        if z_score > 2.0:
+            score += 20
+            confidence_factors.append("Very strong current momentum")
+        elif z_score > 1.5:
+            score += 15
+            confidence_factors.append("Strong current momentum")
+        elif z_score > 1.0:
+            score += 10
+            confidence_factors.append("Good current momentum")
+        elif z_score > 0.5:
+            score += 5
+            confidence_factors.append("Moderate momentum")
+        
+        # Volume surge (0-15 points)
+        if metrics['volume_surge'] > 2.5:
+            score += 15
+            confidence_factors.append("High volume surge")
+        elif metrics['volume_surge'] > 1.8:
+            score += 12
+            confidence_factors.append("Significant volume increase")
+        elif metrics['volume_surge'] > 1.3:
+            score += 8
+            confidence_factors.append("Volume above average")
+        
+        # Trend strength (0-15 points)
+        if metrics['trend_strength'] > 0.7:
+            score += 15
+            confidence_factors.append("Strong uptrend")
+        elif metrics['trend_strength'] > 0.4:
+            score += 10
+            confidence_factors.append("Moderate uptrend")
+        elif metrics['trend_strength'] > 0.1:
+            score += 5
+            confidence_factors.append("Weak uptrend")
+        
+        # Bollinger position (0-10 points)
+        if 0.2 <= metrics['bb_position'] <= 0.4:
+            score += 10
+            confidence_factors.append("Oversold - potential bounce")
+        elif 0.6 <= metrics['bb_position'] <= 0.8:
+            score += 5
+            confidence_factors.append("Upper range - momentum")
+        
+        # Price momentum consistency (0-15 points)
+        momentum_consistency = 0
+        if metrics['price_momentum_1h'] > 0:
+            momentum_consistency += 1
+        if metrics['price_momentum_6h'] > 0:
+            momentum_consistency += 1
+        if metrics['price_momentum_24h'] > 0:
+            momentum_consistency += 1
+        
+        if momentum_consistency == 3:
+            score += 15
+            confidence_factors.append("Consistent positive momentum")
+        elif momentum_consistency == 2:
+            score += 10
+            confidence_factors.append("Good momentum consistency")
+        elif momentum_consistency == 1:
+            score += 5
+            confidence_factors.append("Some positive momentum")
+        
+        # Estimate probability of 20% gain
+        prob_20_gain = self.estimate_gain_probability(metrics, 20)
+        prob_30_gain = self.estimate_gain_probability(metrics, 30)
+        
+        # Risk score
+        risk_score = self.calculate_risk_score(metrics)
+        
+        return {
+            'total_score': min(score, 100),
+            'probability_20_gain': prob_20_gain,
+            'probability_30_gain': prob_30_gain,
+            'confidence_factors': confidence_factors,
+            'risk_score': risk_score,
+            'risk_adjusted_score': (score * prob_20_gain) / 100 if prob_20_gain > 0 else 0
+        }
+    
+    def estimate_gain_probability(self, metrics: Dict, target_gain: float) -> float:
+        """Estimate probability of target gain using normal distribution"""
+        mean_return = metrics['mean_return']
+        std_dev = metrics['std_dev']
+        
+        if std_dev <= 0:
+            return 0
+        
+        # For 24-hour target
+        target_hourly_return = target_gain / 24
+        z_score = (target_hourly_return - mean_return) / std_dev
+        
+        # Probability of exceeding target
+        prob = (1 - self.normal_cdf(z_score)) * 100
+        
+        # Adjust for momentum
+        if metrics['current_z_score'] > 1.0:
+            prob *= 1.3
+        elif metrics['current_z_score'] > 0.5:
+            prob *= 1.15
+        
+        # Adjust for volume
+        if metrics['volume_surge'] > 1.5:
+            prob *= min(1.2, 1 + (metrics['volume_surge'] - 1.5) * 0.1)
+        
+        return min(max(prob, 0), 95)
+    
+    def calculate_risk_score(self, metrics: Dict) -> float:
+        """Calculate risk score (0-100)"""
+        risk = 0
+        
+        # Volatility risk
+        if metrics['std_dev'] > 8:
+            risk += 35
+        elif metrics['std_dev'] > 5:
+            risk += 25
+        elif metrics['std_dev'] > 3:
+            risk += 15
+        
+        # Low win rate
+        if metrics['win_rate'] < 0.4:
+            risk += 25
+        elif metrics['win_rate'] < 0.5:
+            risk += 15
+        
+        # Negative trend
+        if metrics['trend_strength'] < -0.3:
+            risk += 25
+        elif metrics['trend_strength'] < 0:
+            risk += 15
+        
+        # Recent decline
+        if metrics['price_momentum_24h'] < -10:
+            risk += 20
+        elif metrics['price_momentum_24h'] < -5:
+            risk += 10
+        
+        return min(risk, 100)
+    
+    def run_complete_analysis(self) -> List[Dict]:
+        """Run complete statistical analysis on all tokens"""
+        print("📊 VictoryChain Statistical Analysis")
+        print("Using Standard Deviation & Probability Calculations")
+        print("=" * 60)
+        
+        # Get market data
+        ticker_data = self.get_24h_ticker_data()
+        if not ticker_data:
+            print("Failed to get market data")
+            return []
+        
+        # Filter for active tokens with good volume
+        active_symbols = [
+            symbol for symbol, data in ticker_data.items()
+            if data['volume_usdt'] > 50000  # Min $50k daily volume
+        ]
+        
+        print(f"🔍 Analyzing {len(active_symbols)} high-volume USDT pairs...")
+        
+        results = []
+        
+        for i, symbol in enumerate(active_symbols):
+            try:
+                print(f"   [{i+1}/{len(active_symbols)}] {symbol}...", end=" ")
+                
+                # Get historical data
+                kline_data = self.get_kline_data(symbol, '1h', 168)  # 7 days
+                
+                if len(kline_data) < 50:
+                    print("❌ Insufficient data")
+                    continue
+                
+                # Statistical analysis
+                stats = self.analyze_token_statistics(symbol, ticker_data[symbol], kline_data)
+                if not stats:
+                    print("❌ Analysis failed")
+                    continue
+                
+                # Probability scoring
+                prob_analysis = self.calculate_probability_score(stats)
+                
+                # Combine results
+                full_result = {**stats, **prob_analysis}
+                
+                # Filter criteria
+                if (full_result['total_score'] >= 50 and 
+                    full_result['probability_20_gain'] >= 10 and
+                    full_result['risk_score'] <= 75):
+                    
+                    results.append(full_result)
+                    print(f"✅ Score: {full_result['total_score']}, P(20%): {full_result['probability_20_gain']:.1f}%")
+                else:
+                    print("❌ Below threshold")
+                
+                time.sleep(0.1)  # Rate limiting
+                
+            except Exception as e:
+                print(f"❌ Error: {e}")
+                continue
+        
+        # Sort by risk-adjusted score
+        results.sort(key=lambda x: x['risk_adjusted_score'], reverse=True)
+        return results
+    
+    def display_results(self, results: List[Dict]):
+        """Display analysis results"""
+        print("\n" + "=" * 80)
+        print("🎯 STATISTICAL MOMENTUM ANALYSIS RESULTS")
+        print("=" * 80)
+        
+        if not results:
+            print("❌ No tokens meet the statistical criteria")
+            print("\nCriteria:")
+            print("   • Score ≥50/100")
+            print("   • P(20% gain) ≥10%")
+            print("   • Risk score ≤75/100")
+            print("   • Volume >$50k/day")
+            return
+        
+        print(f"📈 Found {len(results)} statistically favorable opportunities:\n")
+        
+        for i, token in enumerate(results, 1):
+            risk_emoji = "🟢" if token['risk_score'] <= 40 else "🟡" if token['risk_score'] <= 60 else "🔴"
+            
+            print(f"{i}. {token['symbol']} 📊")
+            print(f"   Price:                ${token['current_price']:.6f}")
+            print(f"   Total Score:          {token['total_score']}/100")
+            print(f"   Risk-Adj Score:       {token['risk_adjusted_score']:.1f}")
+            print(f"   ")
+            print(f"   📈 PROBABILITY ANALYSIS:")
+            print(f"   20% Gain Probability: {token['probability_20_gain']:.1f}%")
+            print(f"   30% Gain Probability: {token['probability_30_gain']:.1f}%")
+            print(f"   ")
+            print(f"   📊 STATISTICAL METRICS:")
+            print(f"   Standard Deviation:   {token['std_dev']:.3f}")
+            print(f"   Sharpe Ratio:         {token['sharpe_ratio']:.3f}")
+            print(f"   Win Rate:             {token['win_rate']:.1%}")
+            print(f"   Current Z-Score:      {token['current_z_score']:.2f}")
+            print(f"   ")
+            print(f"   ⚡ MOMENTUM INDICATORS:")
+            print(f"   1h Change:            {token['price_momentum_1h']:+.2f}%")
+            print(f"   6h Change:            {token['price_momentum_6h']:+.2f}%")
+            print(f"   24h Change:           {token['price_momentum_24h']:+.2f}%")
+            print(f"   Volume Surge:         {token['volume_surge']:.2f}x")
+            print(f"   Trend Strength:       {token['trend_strength']:+.3f}")
+            print(f"   ")
+            print(f"   🛡️ RISK ASSESSMENT:")
+            print(f"   Risk Score:           {token['risk_score']}/100 {risk_emoji}")
+            print(f"   Bollinger Position:   {token['bb_position']:.2f}")
+            print(f"   Daily Volume:         ${token['volume_usdt']:,.0f}")
+            print(f"   ")
+            print(f"   ✅ CONFIDENCE FACTORS:")
+            for factor in token['confidence_factors']:
+                print(f"      • {factor}")
+            print("-" * 80)
+        
+        # Trading recommendations
+        if results:
+            top = results[0]
+            print(f"\n🏆 TOP STATISTICAL PICK: {top['symbol']}")
+            print(f"   Risk-Adjusted Score: {top['risk_adjusted_score']:.1f}")
+            print(f"   Probability Analysis: {top['probability_20_gain']:.1f}% chance of 20% gain")
+            print(f"   Recommended Entry: ${top['current_price']:.6f}")
+            print(f"   Target (20%): ${top['current_price'] * 1.20:.6f}")
+            print(f"   Stop Loss (8%): ${top['current_price'] * 0.92:.6f}")
+            
+            print(f"\n📊 POSITION SIZING RECOMMENDATION:")
+            print(f"   Conservative: $50 (21% of available funds)")
+            print(f"   Moderate: $75 (32% of available funds)")
+            print(f"   Aggressive: $100 (42% of available funds)")
+
+def main():
+    analyzer = SimpleStatisticalAnalyzer()
+    results = analyzer.run_complete_analysis()
+    analyzer.display_results(results)
+    
+    print(f"\n⚠️ IMPORTANT NOTES:")
+    print(f"   • This uses simplified statistical models")
+    print(f"   • Probabilities are estimates based on historical patterns")
+    print(f"   • Crypto markets are highly volatile and unpredictable")
+    print(f"   • Always use proper risk management")
+    print(f"   • Only invest what you can afford to lose")
+
+if __name__ == "__main__":
+    main()

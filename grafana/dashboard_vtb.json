@@ -1,0 +1,44 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {"type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.x"},
+    {"type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "2.x"}
+  ],
+  "title": "VictoryChain Trillion Bot Overview",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Weekly PnL (USD)",
+      "id": 1,
+      "datasource": {"type": "prometheus", "uid": "PROM_DS"},
+      "targets": [
+        {"expr": "vc_weekly_pnl_usd", "refId": "A"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "currencyUSD", "decimals": 2}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Trades by Symbol",
+      "id": 2,
+      "datasource": {"type": "prometheus", "uid": "PROM_DS"},
+      "targets": [
+        {"expr": "sum by (symbol,side) (rate(vc_trades_total[5m]))", "refId": "A"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "ops"}}
+    },
+    {
+      "type": "bargauge",
+      "title": "Open Positions",
+      "id": 3,
+      "datasource": {"type": "prometheus", "uid": "PROM_DS"},
+      "targets": [
+        {"expr": "vc_open_positions", "refId": "A"}
+      ],
+      "options": {"displayMode": "gradient"}
+    }
+  ]
+}

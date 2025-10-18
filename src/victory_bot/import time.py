@@ -1,0 +1,144 @@
+import time
+import asyncio
+from typing import Any, Dict, List, Optional
+
+
+def safe_market_buy(
+    exchange: Optional[Any],
+    symbol: str,
+    amount: float,
+    max_retries: int = 5,
+    poll_interval: float = 0.1,
+) -> Dict[str, Any]:
+    """Place a market buy and poll until filled/closed. Simulate if exchange is None."""
+    if exchange is None:
+        return {
+            "id": "sim",
+            "status": "closed",
+            "average": 0.0,
+            "filled": amount,
+            "symbol": symbol,
+        }
+    order = exchange.create_market_buy_order(symbol, amount)
+    order_id = order.get("id") if isinstance(order, dict) else order
+    last = order
+    for _ in range(max_retries + 1):
+        try:
+            last = exchange.fetch_order(order_id, symbol)
+        except Exception:
+            pass
+        status = (last or {}).get("status") or (last or {}).get("state")
+        if status in ("closed", "filled", "canceled"):
+            return last
+        time.sleep(poll_interval)
+    return last
+
+
+def safe_market_sell(
+    exchange: Optional[Any],
+    symbol: str,
+    amount: float,
+    max_retries: int = 5,
+    poll_interval: float = 0.1,
+) -> Dict[str, Any]:
+    """Place a market sell and poll until filled/closed. Simulate if exchange is None."""
+    if exchange is None:
+        return {
+            "id": "sim",
+            "status": "closed",
+            "average": 0.0,
+            "filled": amount,
+            "symbol": symbol,
+        }
+    order = exchange.create_market_sell_order(symbol, amount)
+    order_id = order.get("id") if isinstance(order, dict) else order
+    last = order
+    for _ in range(max_retries + 1):
+        try:
+            last = exchange.fetch_order(order_id, symbol)
+        except Exception:
+            pass
+        status = (last or {}).get("status") or (last or {}).get("state")
+        if status in ("closed", "filled", "canceled"):
+            return last
+        time.sleep(poll_interval)
+    return last
+
+
+def place_limit_ioc(
+    exchange: Optional[Any],
+    symbol: str,
+    amount: float,
+    price: float,
+    side: str = "buy",
+    max_retries: int = 5,
+    poll_interval: float = 0.1,
+) -> Dict[str, Any]:
+    """Place a limit IOC and poll until closed/filled. Simulate if exchange is None."""
+    if exchange is None:
+        return {
+            "id": "sim",
+            "status": "closed",
+            "price": price,
+            "filled": amount,
+            "symbol": symbol,
+        }
+    side = (side or "buy").lower()
+    if side == "buy":
+        order = exchange.create_limit_buy_order(symbol, amount, price)
+    else:
+        order = exchange.create_limit_sell_order(symbol, amount, price)
+    order_id = order.get("id") if isinstance(order, dict) else order
+    last = order
+    for _ in range(max_retries + 1):
+        try:
+            last = exchange.fetch_order(order_id, symbol)
+        except Exception:
+            pass
+        status = (last or {}).get("status") or (last or {}).get("state")
+        if status in ("closed", "filled"):
+            return last
+        time.sleep(poll_interval)
+    return last
+
+
+async def place_twap(
+    exchange: Optional[Any],
+    symbol: str,
+    total_amount: float,
+    duration_seconds: float = 60.0,
+    slices: int = 5,
+    side: str = "buy",
+    slice_delay: Optional[float] = None,
+) -> List[Dict[str, Any]]:
+    """Async TWAP: split total_amount into slices and place sequentially. Simulate if exchange is None."""
+    if slices <= 0:
+        slices = 1
+    per_slice = float(total_amount) / slices
+    slice_delay = (
+        slice_delay if slice_delay is not None else (duration_seconds / max(slices, 1))
+    )
+    results: List[Dict[str, Any]] = []
+    for i in range(slices):
+        if exchange is None:
+            results.append(
+                {
+                    "id": f"sim-{i}",
+                    "status": "closed",
+                    "filled": per_slice,
+                    "symbol": symbol,
+                    "price": None,
+                }
+            )
+        else:
+            if side.lower() == "buy":
+                res = safe_market_buy(exchange, symbol, per_slice)
+            else:
+                res = safe_market_sell(exchange, symbol, per_slice)
+            results.append(res)
+        if i + 1 < slices:
+            await asyncio.sleep(slice_delay)
+    return results
+
+
+__all__ = ["safe_market_buy", "safe_market_sell", "place_limit_ioc", "place_twap"]

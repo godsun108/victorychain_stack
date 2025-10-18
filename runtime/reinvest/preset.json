@@ -1,0 +1,7 @@
+{
+  "name": "xrp-hbar-preset",
+  "weights": {
+    "XRP/USDT": 0.6,
+    "HBAR/USDT": 0.4
+  }
+}

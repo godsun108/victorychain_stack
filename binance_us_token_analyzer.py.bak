@@ -1,0 +1,341 @@
+#!/usr/bin/env python3
+
+"""
+BINANCE US TOKEN ANALYZER
+========================
+Analyze all available Binance US tokens for BTC-free framework
+- Use existing token data
+- Identify micro-cap candidates
+- Build hedge and long baskets
+- Generate comprehensive token list
+"""
+
+import json
+import pandas as pd
+import numpy as np
+from datetime import datetime
+from typing import Dict, List, Optional
+
+class BinanceUSTokenAnalyzer:
+    """Analyze all Binance US tokens for micro-cap framework"""
+    
+    def __init__(self):
+        self.all_tokens = []
+        self.microcap_candidates = []
+        self.hedge_basket = []
+        self.quality_longs = []
+        
+    def load_binance_tokens(self) -> List[Dict]:
+        """Load all Binance US tokens from existing data"""
+        try:
+            with open('all_binance_us_tokens.json', 'r') as f:
+                tokens = json.load(f)
+            
+            print(f"📊 Loaded {len(tokens)} Binance US tokens")
+            self.all_tokens = tokens
+            return tokens
+            
+        except FileNotFoundError:
+            print("❌ Token file not found. Please run binance scanner first.")
+            return []
+        except Exception as e:
+            print(f"❌ Error loading tokens: {e}")
+            return []
+    
+    def estimate_market_cap(self, token: Dict) -> float:
+        """Estimate market cap based on volume and price patterns"""
+        price = token.get('price', 0)
+        volume_24h = token.get('volume_24h_usdt', 0)
+        
+        # Rough market cap estimation based on volume patterns
+        # High volume = higher market cap, low volume = lower market cap
+        if volume_24h > 10_000_000:  # >$10M volume
+            estimated_cap = volume_24h * 20  # Large cap
+        elif volume_24h > 1_000_000:  # >$1M volume
+            estimated_cap = volume_24h * 15  # Mid cap
+        elif volume_24h > 100_000:  # >$100k volume
+            estimated_cap = volume_24h * 10  # Small/micro cap
+        else:
+            estimated_cap = volume_24h * 5   # Very small cap
+        
+        return estimated_cap
+    
+    def classify_token_quality(self, token: Dict) -> Dict:
+        """Classify token quality for long vs hedge decisions"""
+        symbol = token.get('symbol', '')
+        base_asset = token.get('base_asset', '')
+        price = token.get('price', 0)
+        volume_24h = token.get('volume_24h_usdt', 0)
+        price_change_24h = token.get('price_change_24h', 0)
+        
+        quality_score = 0
+        factors = []
+        
+        # Volume quality (higher = better)
+        if volume_24h > 5_000_000:
+            quality_score += 20
+            factors.append("High volume (>$5M)")
+        elif volume_24h > 1_000_000:
+            quality_score += 10
+            factors.append("Good volume (>$1M)")
+        elif volume_24h < 100_000:
+            quality_score -= 15
+            factors.append("Low volume (<$100k)")
+        
+        # Price stability and momentum
+        if -2 <= price_change_24h <= 5:  # Stable to moderate growth
+            quality_score += 10
+            factors.append("Stable momentum")
+        elif price_change_24h > 10:  # High volatility up
+            quality_score += 5
+            factors.append("High momentum")
+        elif price_change_24h < -10:  # High volatility down
+            quality_score -= 20
+            factors.append("Declining trend")
+        
+        # Asset type classification
+        base_lower = base_asset.lower()
+        
+        # Major crypto names (higher quality)
+        major_names = ['btc', 'eth', 'sol', 'ada', 'dot', 'link', 'uni', 'avax', 'matic', 'atom']
+        if any(name in base_lower for name in major_names):
+            quality_score += 15
+            factors.append("Major crypto asset")
+        
+        # Meme/risky tokens (lower quality, good for hedge)
+        meme_names = ['doge', 'shib', 'pepe', 'floki', 'bonk', 'baby', 'safe', 'moon', 'inu']
+        if any(name in base_lower for name in meme_names):
+            quality_score -= 20
+            factors.append("Meme/speculative token")
+        
+        # DeFi tokens (moderate quality)
+        defi_names = ['uni', 'cake', 'sushi', 'comp', 'aave', 'snx', 'crv', 'bal']
+        if any(name in base_lower for name in defi_names):
+            quality_score += 5
+            factors.append("DeFi protocol token")
+        
+        # Price level (very low prices often = higher risk)
+        if price < 0.001:
+            quality_score -= 10
+            factors.append("Very low price (<$0.001)")
+        elif price > 100:
+            quality_score += 5
+            factors.append("Substantial price (>$100)")
+        
+        return {
+            'quality_score': quality_score,
+            'factors': factors,
+            'classification': 'quality_long' if quality_score > 0 else 'hedge_candidate',
+            'risk_level': 'high' if quality_score < -10 else 'medium' if quality_score < 10 else 'low'
+        }
+    
+    def build_token_categories(self):
+        """Build categorized token lists for BTC-free framework"""
+        print("🏗️ Building token categories...")
+        
+        if not self.all_tokens:
+            print("❌ No tokens to analyze")
+            return
+        
+        # Exclude BTC and ETH pairs (BTC-free framework)
+        btc_free_tokens = []
+        for token in self.all_tokens:
+            symbol = token.get('symbol', '')
+            base_asset = token.get('base_asset', '')
+            
+            if base_asset.upper() not in ['BTC', 'ETH', 'WBTC', 'WETH']:
+                btc_free_tokens.append(token)
+        
+        print(f"📊 {len(btc_free_tokens)} tokens after excluding BTC/ETH")
+        
+        # Analyze each token
+        analyzed_tokens = []
+        for token in btc_free_tokens:
+            analysis = self.classify_token_quality(token)
+            estimated_cap = self.estimate_market_cap(token)
+            
+            analyzed_token = {
+                **token,
+                'estimated_market_cap': estimated_cap,
+                'quality_analysis': analysis
+            }
+            analyzed_tokens.append(analyzed_token)
+        
+        # Sort by different criteria
+        
+        # 1. Hedge basket - lowest quality, highest risk
+        hedge_candidates = [t for t in analyzed_tokens 
+                          if t['quality_analysis']['classification'] == 'hedge_candidate']
+        hedge_candidates.sort(key=lambda x: x['quality_analysis']['quality_score'])
+        self.hedge_basket = hedge_candidates[:30]  # Top 30 worst for hedge
+        
+        # 2. Quality longs - highest quality, lower risk
+        long_candidates = [t for t in analyzed_tokens 
+                         if t['quality_analysis']['classification'] == 'quality_long']
+        long_candidates.sort(key=lambda x: x['quality_analysis']['quality_score'], reverse=True)
+        self.quality_longs = long_candidates[:20]  # Top 20 best for longs
+        
+        # 3. Micro-cap candidates (estimated <$100M market cap)
+        self.microcap_candidates = [t for t in analyzed_tokens 
+                                  if t['estimated_market_cap'] < 100_000_000]
+        
+        print(f"✅ Token categories built:")
+        print(f"  - Hedge basket: {len(self.hedge_basket)} tokens")
+        print(f"  - Quality longs: {len(self.quality_longs)} tokens")
+        print(f"  - Micro-cap candidates: {len(self.microcap_candidates)} tokens")
+    
+    def generate_token_report(self):
+        """Generate comprehensive token analysis report"""
+        if not self.all_tokens:
+            return
+        
+        # Calculate summary statistics
+        total_tokens = len(self.all_tokens)
+        total_volume = sum(t.get('volume_24h_usdt', 0) for t in self.all_tokens)
+        avg_price_change = np.mean([t.get('price_change_24h', 0) for t in self.all_tokens])
+        
+        # Volume distribution
+        volumes = [t.get('volume_24h_usdt', 0) for t in self.all_tokens]
+        high_volume_tokens = len([v for v in volumes if v > 1_000_000])
+        
+        # Price change distribution
+        price_changes = [t.get('price_change_24h', 0) for t in self.all_tokens]
+        positive_momentum = len([p for p in price_changes if p > 0])
+        strong_momentum = len([p for p in price_changes if p > 5])
+        
+        report = {
+            'analysis_timestamp': datetime.now().isoformat(),
+            'summary_statistics': {
+                'total_tokens_analyzed': total_tokens,
+                'btc_free_tokens': total_tokens - 2,  # Excluding BTC/ETH
+                'total_24h_volume_usd': total_volume,
+                'average_price_change_24h': avg_price_change,
+                'high_volume_tokens': high_volume_tokens,
+                'positive_momentum_tokens': positive_momentum,
+                'strong_momentum_tokens': strong_momentum
+            },
+            'framework_categories': {
+                'hedge_basket': {
+                    'count': len(self.hedge_basket),
+                    'symbols': [t['symbol'] for t in self.hedge_basket[:10]],
+                    'avg_quality_score': np.mean([t['quality_analysis']['quality_score'] for t in self.hedge_basket]),
+                    'total_volume_24h': sum(t.get('volume_24h_usdt', 0) for t in self.hedge_basket)
+                },
+                'quality_longs': {
+                    'count': len(self.quality_longs),
+                    'symbols': [t['symbol'] for t in self.quality_longs[:10]],
+                    'avg_quality_score': np.mean([t['quality_analysis']['quality_score'] for t in self.quality_longs]),
+                    'total_volume_24h': sum(t.get('volume_24h_usdt', 0) for t in self.quality_longs)
+                },
+                'microcap_candidates': {
+                    'count': len(self.microcap_candidates),
+                    'estimated_total_market_cap': sum(t['estimated_market_cap'] for t in self.microcap_candidates),
+                    'avg_estimated_cap': np.mean([t['estimated_market_cap'] for t in self.microcap_candidates]) if self.microcap_candidates else 0
+                }
+            },
+            'detailed_analysis': {
+                'all_tokens': self.all_tokens,
+                'hedge_basket_detailed': self.hedge_basket,
+                'quality_longs_detailed': self.quality_longs,
+                'microcap_candidates_detailed': self.microcap_candidates
+            }
+        }
+        
+        return report
+    
+    def print_analysis_summary(self):
+        """Print detailed analysis summary"""
+        print("\n📊 BINANCE US TOKEN ANALYSIS")
+        print("=" * 40)
+        
+        print(f"Total tokens: {len(self.all_tokens)}")
+        print(f"BTC-free tokens: {len(self.all_tokens) - 2}")
+        
+        if self.hedge_basket:
+            print(f"\n🛡️ HEDGE BASKET (Top 10 of {len(self.hedge_basket)}):")
+            for i, token in enumerate(self.hedge_basket[:10]):
+                symbol = token['symbol']
+                score = token['quality_analysis']['quality_score']
+                volume = token.get('volume_24h_usdt', 0)
+                change = token.get('price_change_24h', 0)
+                print(f"  {i+1:2d}. {symbol:12s} | Score: {score:6.1f} | Vol: ${volume/1e6:6.1f}M | Change: {change:6.1f}%")
+        
+        if self.quality_longs:
+            print(f"\n🎯 QUALITY LONGS (Top 10 of {len(self.quality_longs)}):")
+            for i, token in enumerate(self.quality_longs[:10]):
+                symbol = token['symbol']
+                score = token['quality_analysis']['quality_score']
+                volume = token.get('volume_24h_usdt', 0)
+                change = token.get('price_change_24h', 0)
+                print(f"  {i+1:2d}. {symbol:12s} | Score: {score:6.1f} | Vol: ${volume/1e6:6.1f}M | Change: {change:6.1f}%")
+        
+        print(f"\n💎 MICRO-CAP CANDIDATES: {len(self.microcap_candidates)} tokens")
+        if self.microcap_candidates:
+            total_microcap_volume = sum(t.get('volume_24h_usdt', 0) for t in self.microcap_candidates)
+            print(f"Total micro-cap volume: ${total_microcap_volume/1e6:.1f}M")
+        
+        # Market breadth analysis
+        if self.all_tokens:
+            positive_tokens = len([t for t in self.all_tokens if t.get('price_change_24h', 0) > 0])
+            breadth_pct = (positive_tokens / len(self.all_tokens)) * 100
+            print(f"\n📈 MARKET BREADTH")
+            print(f"Positive momentum: {positive_tokens}/{len(self.all_tokens)} ({breadth_pct:.1f}%)")
+            
+            total_volume = sum(t.get('volume_24h_usdt', 0) for t in self.all_tokens)
+            print(f"Total 24h volume: ${total_volume/1e9:.2f}B")
+    
+    def run_complete_analysis(self):
+        """Run complete token analysis"""
+        print("🚀 Starting Binance US Token Analysis")
+        print("=" * 50)
+        
+        # Load tokens
+        self.load_binance_tokens()
+        
+        if not self.all_tokens:
+            return
+        
+        # Build categories
+        self.build_token_categories()
+        
+        # Generate report
+        report = self.generate_token_report()
+        
+        # Print summary
+        self.print_analysis_summary()
+        
+        # Save detailed report
+        with open('binance_us_token_analysis.json', 'w') as f:
+            json.dump(report, f, indent=2, default=str)
+        
+        # Save simplified lists
+        simplified_report = {
+            'timestamp': datetime.now().isoformat(),
+            'all_available_tokens': [t['symbol'] for t in self.all_tokens],
+            'hedge_basket_symbols': [t['symbol'] for t in self.hedge_basket],
+            'quality_long_symbols': [t['symbol'] for t in self.quality_longs],
+            'microcap_symbols': [t['symbol'] for t in self.microcap_candidates],
+            'token_counts': {
+                'total': len(self.all_tokens),
+                'hedge_candidates': len(self.hedge_basket),
+                'quality_longs': len(self.quality_longs),
+                'microcaps': len(self.microcap_candidates)
+            }
+        }
+        
+        with open('binance_us_all_tokens_summary.json', 'w') as f:
+            json.dump(simplified_report, f, indent=2)
+        
+        print(f"\n💾 Analysis saved:")
+        print(f"  - Detailed: binance_us_token_analysis.json")
+        print(f"  - Summary: binance_us_all_tokens_summary.json")
+        
+        return report
+
+def main():
+    """Run the complete Binance US token analysis"""
+    analyzer = BinanceUSTokenAnalyzer()
+    analyzer.run_complete_analysis()
+
+if __name__ == "__main__":
+    main()

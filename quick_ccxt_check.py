@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+import os, ccxt
+
+ex = ccxt.binanceus(
+    {
+        "apiKey": os.getenv("BINANCEUS_KEY") or os.getenv("BINANCEUS_API_KEY"),
+        "secret": os.getenv("BINANCEUS_SECRET") or os.getenv("BINANCEUS_API_SECRET"),
+        "enableRateLimit": True,
+        "options": {
+            "defaultType": "spot",
+            "adjustForTimeDifference": True,
+            "recvWindow": 5000,
+        },
+    }
+)
+# Public
+mkts = ex.load_markets()
+print("public ok, markets:", "XRP/USDT" in mkts, "HBAR/USDT" in mkts)
+# Private
+ex.check_required_credentials()
+bal = ex.fetch_balance()
+free_usdt = 0
+try:
+    free_usdt = float((bal.get("free") or {}).get("USDT", 0) or 0)
+except Exception:
+    free_usdt = 0
+print("account ok, free USDT:", free_usdt)

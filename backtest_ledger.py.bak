@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""
+Replay PnL from runtime/{ledger,audit}/*.jsonl.
+
+- Realized PnL comes from FILL events (BUY/SELL with qty, price, fee).
+- Mark-to-market (MTM) equity curve is built at HEARTBEAT timestamps if the
+  heartbeat includes an unrealized snapshot (best-effort parsing).
+
+Outputs:
+- Summary JSON to stdout (and optionally to --summary path)
+- CSV: reports/trades_ledger.csv (fills/round trips)
+- CSV: reports/equity_curve.csv (time, realized, equity_mtm)
+
+Run:
+  python3 backtest_ledger.py --root . --out reports/trades_ledger.csv
+"""
+from __future__ import annotations
+import json, csv, argparse, time, sys
+from pathlib import Path
+from datetime import datetime, timezone
+from typing import Optional
+
+def iso(ts: float) -> str:
+    return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+
+def _try_ts(x):
+    if x is None: return None
+    if isinstance(x, (int, float)): return float(x)
+    if isinstance(x, str):
+        try: return float(int(x))
+        except Exception: pass
+        try: return datetime.fromisoformat(x.replace("Z","+00:00")).timestamp()
+        except Exception: return None
+    return None
+
+def _ijsonl(paths):
+    for p in paths:
+        if not p.exists(): continue
+        with p.open() as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"): continue
+                try: yield json.loads(line)
+                except Exception: continue
+
+def load_events(root: Path):
+    led = sorted(root.glob("runtime/ledger/*.jsonl"))
+    aud = sorted(root.glob("runtime/audit/*.jsonl"))
+    return list(_ijsonl(led + aud))
+
+def load_fills(events):
+    fills = []
+    for e in events:
+        if str(e.get("event","")) .upper()!= "FILL": continue
+        ts = _try_ts(e.get("ts"))
+        if ts is None: continue
+        try:
+            sym = e["symbol"]; side = str(e.get("side","")) .upper()
+            qty = float(e.get("qty") or e.get("amount") or e.get("size"))
+            price = float(e.get("price"))
+            fee = float(e.get("fee", 0.0))
+        except Exception: continue
+        fills.append({"ts":ts,"symbol":sym,"side":side,"qty":qty,"price":price,"fee":fee})
+    fills.sort(key=lambda x: x["ts"])
+    return fills
+
+def infer_unrealized_from_heartbeat(e) -> Optional[float]:
+    for k in ("unrealized_usd","unrealized_total_usd","unrealized"):
+        v = e.get(k)
+        try:
+            if v is not None: return float(v)
+        except Exception: pass
+    for key in ("positions","position_snap","exposures","snapshot","unrealized_map"):
+        m = e.get(key)
+        if isinstance(m, dict):
+            tot = 0.0; anyv=False
+            for _, obj in m.items():
+                if isinstance(obj, dict):
+                    for kk in ("unrealized_usd","unrealized","pnl_unreal_usd"):
+                        if kk in obj:
+                            try: tot += float(obj[kk]); anyv=True; break
+                            except Exception: pass
+            if anyv: return tot
+    return None
+
+def replay(fills, events):
+    pos = {}; realized = 0.0; trades = []
+    for f in fills:
+        sym, side, q, px, fee = f["symbol"], f["side"], f["qty"], f["price"], f["fee"]
+        side = "BUY" if side.startswith("B") else "SELL"
+        book = pos.get(sym, {"qty":0.0, "avg":0.0})
+        if side == "BUY":
+            new_qty = book["qty"] + q
+            if new_qty > 0: book["avg"] = (book["avg"]*book["qty"] + px*q)/new_qty
+            book["qty"] = new_qty; pos[sym]=book
+            trades.append({"ts":f["ts"],"iso":iso(f["ts"]),"symbol":sym,"action":"BUY","qty":q,"px":px,"fee":fee,"realized_pnl":""})
+        else:
+            close_qty = min(q, book["qty"])
+            pnl = (px - book["avg"]) * close_qty - fee
+            realized += pnl
+            book["qty"] = max(0.0, book["qty"] - close_qty); pos[sym]=book
+            trades.append({"ts":f["ts"],"iso":iso(f["ts"]),"symbol":sym,"action":"SELL","qty":q,"px":px,"fee":fee,"realized_pnl":round(pnl,8)})
+    heartbeats=[]
+    for e in events:
+        if str(e.get("event","")) .upper()!="HEARTBEAT": continue
+        ts=_try_ts(e.get("ts"));
+        if ts is None: continue
+        unreal=infer_unrealized_from_heartbeat(e)
+        heartbeats.append({"ts":ts,"unreal":unreal})
+    heartbeats.sort(key=lambda x: x["ts"])
+    eq_points=[]; realized_curve=0.0; fi=0
+    for hb in heartbeats:
+        t=hb["ts"]
+        while fi < len(trades) and trades[fi]["ts"] <= t:
+            rp=trades[fi].get("realized_pnl")
+            if isinstance(rp,(int,float)): realized_curve += float(rp)
+            fi+=1
+        eq_mtm = realized_curve + (hb["unreal"] or 0.0)
+        eq_points.append({"ts":t,"iso":iso(t),"realized":round(realized_curve,8),"equity_mtm":round(eq_mtm,8)})
+    if not eq_points:
+        eq=0.0
+        for t in trades:
+            rp=t.get("realized_pnl")
+            if isinstance(rp,(int,float)): eq += float(rp)
+            eq_points.append({"ts":t["ts"],"iso":t["iso"],"realized":round(eq,8),"equity_mtm":round(eq,8)})
+    max_eq=-1e18; max_dd=0.0
+    for p in eq_points:
+        e=p["equity_mtm"]
+        if e>max_eq: max_eq=e
+        if max_eq>0:
+            dd=(max_eq - e)/max_eq
+            if dd>max_dd: max_dd=dd
+    open_positions={k:v for k,v in pos.items() if v["qty"]>0}
+    summary={
+        "num_fills": len(trades),
+        "num_roundtrips": sum(1 for t in trades if t["action"]=="SELL"),
+        "realized_pnl_usd": round(sum(float(t["realized_pnl"]) for t in trades if isinstance(t.get("realized_pnl"),(int,float))),8),
+        "equity_mtm_usd": round(eq_points[-1]["equity_mtm"],8) if eq_points else 0.0,
+        "max_drawdown_pct": round(max_dd*100,4),
+        "open_positions": open_positions,
+    }
+    return summary, trades, eq_points
+
+def write_csv(path: Path, rows, fieldnames):
+    # Always create file with header even if rows empty
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+
+def main():
+    ap=argparse.ArgumentParser()
+    ap.add_argument("--root", default=".", help="Repo root with runtime/ledger and runtime/audit")
+    ap.add_argument("--out", default="reports/trades_ledger.csv", help="CSV of fills/round trips")
+    ap.add_argument("--equity", default="reports/equity_curve.csv", help="CSV equity curve (realized & MTM)")
+    ap.add_argument("--summary", default="reports/ledger_summary.json", help="Write summary JSON here too")
+    args=ap.parse_args()
+    root=Path(args.root)
+    events=load_events(root)
+    fills=load_fills(events)
+    print(f"[backtest_ledger] events={len(events)} fills={len(fills)}", file=sys.stderr)
+    summary, trades, eq = replay(fills, events)
+    if not eq:
+        ts=time.time(); eq=[{"ts":ts,"iso":iso(ts),"realized":0.0,"equity_mtm":0.0}]
+    write_csv(Path(args.out), trades, ["ts","iso","symbol","action","qty","px","fee","realized_pnl"])
+    write_csv(Path(args.equity), eq, ["ts","iso","realized","equity_mtm"])
+    # Write summary to file explicitly
+    try:
+        Path(args.summary).parent.mkdir(parents=True, exist_ok=True)
+        with open(args.summary,'w') as f: json.dump(summary, f, indent=2)
+        print(f"[backtest_ledger] wrote summary -> {args.summary}", file=sys.stderr)
+    except Exception as e:
+        print(f"[backtest_ledger] summary write failed: {e}", file=sys.stderr)
+    # stdout (may be suppressed in user shell?)
+    try:
+        print(json.dumps(summary, indent=2))
+    except Exception:
+        pass
+
+if __name__=="__main__":
+    main()

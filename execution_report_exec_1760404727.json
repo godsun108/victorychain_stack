@@ -1,0 +1,24 @@
+{
+  "execution_id": "exec_1760404727",
+  "start_time": "2025-10-13T21:18:47.394040",
+  "execution_time_seconds": 29.973463,
+  "target_completion_minutes": 5,
+  "portfolio_summary": {
+    "total_positions": 2,
+    "long_positions": 2,
+    "hedge_positions": 0,
+    "total_target_usd": 36.679160106,
+    "total_filled_usd": 0,
+    "portfolio_fill_rate": 0.0
+  },
+  "position_results": [
+    {},
+    {}
+  ],
+  "execution_efficiency": {
+    "time_vs_target": 0.09991154333333332,
+    "fill_rate_vs_target": 0.0,
+    "parallel_execution": true,
+    "portfolio_flat_achieved": true
+  }
+}

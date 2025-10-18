@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-08-09T08:37:01.636698",
+  "adaptive_parameters": {
+    "current_parameters": {
+      "min_profit_threshold": 100.0,
+      "max_gas_ratio": 0.1,
+      "position_size_multiplier": 1.0,
+      "risk_tolerance": 0.75,
+      "urgency_threshold": 0.8,
+      "confidence_threshold": 0.7,
+      "market_volatility_factor": 1.0,
+      "scaling_factor": 1.0,
+      "profit_target_multiplier": 1.2,
+      "stop_loss_percentage": 0.05
+    },
+    "gas_optimization_config": {
+      "min_profit_threshold": 100.0,
+      "max_gas_ratio": 0.1,
+      "safety_margin": 1.5,
+      "dynamic_threshold_adjustment": true,
+      "learning_rate": 0.1,
+      "performance_window": 10
+    },
+    "performance_metrics": {
+      "total_trades": 0,
+      "successful_trades": 0,
+      "total_profit": 0.0,
+      "average_profit_per_trade": 0.0,
+      "win_rate": 0.0,
+      "parameter_adjustments": 0,
+      "learning_iterations": 0
+    }
+  },
+  "learning_status": {
+    "total_trades_learned_from": 0,
+    "models_trained": false,
+    "parameter_adjustments_made": 0,
+    "current_win_rate": 0.0
+  },
+  "optimization_capabilities": {
+    "adaptive_thresholds": true,
+    "ml_predictions": true,
+    "position_size_optimization": true,
+    "symbol_specific_learning": true,
+    "market_condition_adjustment": true
+  }
+}

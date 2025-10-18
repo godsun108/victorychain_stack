@@ -1,0 +1,118 @@
+version: '3.9'
+
+# Composite stack: Caddy reverse proxy + FastAPI Agent + Prometheus + Grafana + Qdrant
+# Usage:
+#   docker compose -f docker-compose.stack.yml up -d --build
+#   (ensure you set JWT_SECRET before if you want a persistent value)
+# Environment overrides:
+#   export JWT_SECRET=$(openssl rand -hex 32)
+#   export PROM_TARGET_HOST=fastapi-agent:8080
+#   export METRICS_EXTRA_TARGET=""  # add additional host:port if needed
+services:
+  fastapi-agent:
+    build:
+      context: .
+      dockerfile: fastapi_agent/Dockerfile
+    container_name: fastapi-agent
+    environment:
+      - PYTHONUNBUFFERED=1
+      - JWT_SECRET=${JWT_SECRET:-dev-insecure-change-me}
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    networks:
+      - vc-stack
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.0
+    container_name: vc-qdrant
+    ports:
+      - "6333:6333"   # bind for local dev; restrict with firewall in prod
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - vc-stack
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    container_name: vc-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - vc-stack
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: vc-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/%%(path)s
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - vc-stack
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    container_name: vc-caddy
+    ports:
+      - "8088:80"      # public HTTP (adjust / add 443 with certs later)
+    environment:
+      - CADDY_ADMIN=off
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - fastapi-agent
+      - grafana
+      - qdrant
+    networks:
+      - vc-stack
+    restart: unless-stopped
+
+  stack-smoke:
+    image: curlimages/curl:8.8.0
+    container_name: vc-stack-smoke
+    depends_on:
+      - fastapi-agent
+      - prometheus
+      - grafana
+    entrypoint: ["/bin/sh","-c"]
+    command: >
+      "echo '--- STACK SMOKE ---'; \
+       sleep 5; \
+       echo '# Health'; curl -sf fastapi-agent:8080/health || exit 1; \
+       echo '\n# Metrics head'; curl -sf fastapi-agent:8080/metrics | head -n5; \
+       echo '\n# Prometheus targets'; curl -sf prometheus:9090/api/v1/targets | grep 'activeTargets' || true; \
+       echo '# Done';"
+    networks:
+      - vc-stack
+    restart: "no"
+
+volumes:
+  qdrant-data:
+  prom-data:
+  grafana-data:
+
+networks:
+  vc-stack:
+    driver: bridge

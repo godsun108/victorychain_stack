@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-08-09T13:13:20.908023",
+  "duration_seconds": 0.00022,
+  "opportunities_analyzed": 0,
+  "trades_executed": 0,
+  "cycle_profit": 0,
+  "daily_pnl": 0.0,
+  "total_pnl": 0.0,
+  "portfolio_value": 100000.0,
+  "active_positions": 0,
+  "iso_holdings_value": 0,
+  "compounded_amount": 0.0,
+  "reserve_status": {
+    "cash_reserve": 15000.0,
+    "emergency_reserve": 10000.0,
+    "total_reserves": 25000.0,
+    "reserve_percentage": 25.0
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "timestamp": "20250805_165503",
+  "engine_type": "comprehensive_magic_learning",
+  "magic_intelligence": {
+    "successful_patterns": {
+      "double_bottom_recovery": {
+        "occurrences": 5,
+        "success_rate": 0.8,
+        "avg_gain": 0.157,
+        "avg_duration_hours": 48,
+        "optimal_entry": "within_2%_of_support",
+        "best_timeframe": "correction_phase"
+      },
+      "volume_breakout_surge": {
+        "occurrences": 8,
+        "success_rate": 0.75,
+        "avg_gain": 0.124,
+        "avg_duration_hours": 6,
+        "volume_threshold": 2.2,
+        "price_confirmation": "above_resistance"
+      },
+      "gaming_sector_momentum": {
+        "occurrences": 12,
+        "success_rate": 0.7,
+        "avg_gain": 0.089,
+        "correlation_strength": 0.78,
+        "leading_indicators": [
+          "ILV_surge",
+          "gaming_news",
+          "arbitrum_growth"
+        ]
+      }
+    }
+  },
+  "signals_generated": [
+    {
+      "id": "a6a5df94-88e1-4f8c-87e2-659cce2dd506",
+      "timestamp": "2025-08-05 16:55:01.264739",
+      "symbol": "MAGICUSDT",
+      "signal_type": "BUY",
+      "confidence": 0.8,
+      "price": 0.238,
+      "target": 0.275366,
+      "stop_loss": 0.20944,
+      "reasoning": "Double bottom recovery pattern detected with high confidence",
+      "pattern": "double_bottom_recovery",
+      "urgency": "HIGH"
+    }
+  ],
+  "demo_execution": true,
+  "capabilities": [
+    "real_time_monitoring",
+    "pattern_learning",
+    "signal_generation",
+    "risk_management",
+    "automated_execution",
+    "continuous_adaptation"
+  ]
+}

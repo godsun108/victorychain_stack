@@ -1,0 +1,63 @@
+{
+  "symbol": "ENJ",
+  "acquisition_date": "2025-08-05T21:49:38.721934",
+  "initial_price": 0.28,
+  "current_price": 0.34944640530913285,
+  "price_performance": {
+    "1d": 0.0,
+    "7d": 0.0,
+    "30d": 0.0,
+    "90d": 0.0,
+    "total": 24.802287610404576,
+    "last_update": "2025-08-05T21:56:53.117407"
+  },
+  "volume_patterns": {
+    "avg_daily": 45000000,
+    "volatility": 65,
+    "liquidity_score": 7.2,
+    "current": 45000000
+  },
+  "volatility_evolution": [
+    65,
+    64.82403140728843,
+    68.13143620987803,
+    70.5749237572561,
+    65.05099161866981,
+    68.8161800867172,
+    45.04893083826374,
+    76.35323967393143,
+    48.191883628449474,
+    63.624220878593974,
+    65
+  ],
+  "correlation_matrix": {},
+  "optimal_entry_points": [
+    0.32649821064058887
+  ],
+  "optimal_exit_points": [
+    0.3787796932931687
+  ],
+  "successful_allocation_sizes": [],
+  "gas_cost_history": [],
+  "sector_influence": {
+    "nft": 1.0
+  },
+  "whale_behavior_patterns": [],
+  "social_sentiment_correlation": {},
+  "news_impact_scores": [],
+  "success_prediction_accuracy": 0.5,
+  "allocation_optimization_score": 0.5,
+  "gas_savings_achieved": 0.0,
+  "learning_confidence": 0.3,
+  "fibonacci_retracement_accuracy": {},
+  "support_resistance_reliability": {},
+  "breakout_pattern_success": {},
+  "mean_reversion_tendency": 0.5,
+  "correlation_insights": {},
+  "sector_spillover_effects": {},
+  "market_cycle_behavior": {},
+  "optimal_transaction_times": [],
+  "gas_price_sensitivity": 0.5,
+  "batch_efficiency_scores": {},
+  "layer2_migration_benefits": {}
+}

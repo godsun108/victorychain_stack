@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+import argparse, os, sys
+from libs.exchange_adapters.binance_us import guarded_create_order
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--locked", dest="locked", action="store_true")
+parser.add_argument("--no-token", dest="no_token", action="store_true")
+parser.add_argument("--with-token", dest="with_token", action="store_true")
+args = parser.parse_args()
+
+os.environ.setdefault("MODE", "paper")
+
+def attempt():
+    return guarded_create_order("BTC/USDT", "buy", "market", 0.0001)
+
+try:
+    res = attempt()
+    print("ORDER_RESULT", bool(res))
+except Exception as e:
+    name, msg = type(e).__name__, str(e)
+    if args.locked:
+        print("ORDER_BLOCKED", name, msg[:160]); sys.exit(0)
+    if args.no_token:
+        print("APPROVAL_BLOCKED", name, msg[:160]); sys.exit(0)
+    print("UNEXPECTED_BLOCK", name, msg[:200]); sys.exit(1)

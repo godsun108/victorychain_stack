@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""
+Execute MAGICUSDT Momentum Strategy - Live Trading
+"""
+
+import os
+from binance.client import Client
+from dotenv import load_dotenv
+
+def execute_momentum_strategy():
+    load_dotenv()
+    
+    client = Client(
+        api_key=os.getenv('BINANCEUS_KEY'),
+        api_secret=os.getenv('BINANCEUS_SECRET'),
+        tld='us'
+    )
+    
+    print("🚀 MAGICUSDT MOMENTUM STRATEGY - LIVE EXECUTION")
+    print("=" * 55)
+    
+    # Check current portfolio
+    account = client.get_account()
+    usdt_balance = 0
+    current_holdings = []
+    
+    for balance in account['balances']:
+        free = float(balance['free'])
+        locked = float(balance['locked'])
+        total = free + locked
+        
+        if total > 0.01:
+            if balance['asset'] == 'USDT':
+                usdt_balance = total
+                print(f"💵 USDT Available: ${usdt_balance:.2f}")
+            else:
+                current_holdings.append({
+                    'asset': balance['asset'],
+                    'amount': total,
+                    'free': free,
+                    'locked': locked
+                })
+    
+    print(f"📊 Current Holdings: {len(current_holdings)} positions")
+    for holding in current_holdings:
+        print(f"   {holding['asset']}: {holding['amount']:.6f}")
+    
+    # Scan for momentum opportunities
+    print("\n🔍 Scanning Top Gainers for MAGICUSDT-style momentum...")
+    
+    tickers = client.get_ticker()
+    usdt_tickers = [t for t in tickers if t['symbol'].endswith('USDT') and t['symbol'] != 'USDCUSDT']
+    
+    # Sort by price change
+    usdt_tickers.sort(key=lambda x: float(x['priceChangePercent']), reverse=True)
+    
+    momentum_opportunities = []
+    
+    for ticker in usdt_tickers[:20]:  # Check top 20 gainers
+        symbol = ticker['symbol']
+        price_change = float(ticker['priceChangePercent'])
+        current_price = float(ticker['lastPrice'])
+        high_24h = float(ticker['highPrice'])
+        low_24h = float(ticker['lowPrice'])
+        volume = float(ticker['quoteVolume'])
+        
+        if price_change < 5.0:  # Skip if less than 5% gain
+            continue
+            
+        # Calculate range position (MAGICUSDT was at 97%)
+        range_position = (current_price - low_24h) / (high_24h - low_24h) if high_24h != low_24h else 0.5
+        
+        # MAGICUSDT criteria: >5% gain, >80% range position, decent volume
+        if range_position >= 0.8 and volume >= 1000:
+            momentum_opportunities.append({
+                'symbol': symbol,
+                'price_change': price_change,
+                'current_price': current_price,
+                'range_position': range_position,
+                'volume': volume,
+                'score': (price_change / 20) + range_position  # Combined score
+            })
+    
+    if not momentum_opportunities:
+        print("❌ No momentum opportunities found matching MAGICUSDT criteria")
+        return
+    
+    # Sort by combined score
+    momentum_opportunities.sort(key=lambda x: x['score'], reverse=True)
+    
+    print(f"\n🏆 MOMENTUM OPPORTUNITIES FOUND: {len(momentum_opportunities)}")
+    print("-" * 50)
+    
+    for i, opp in enumerate(momentum_opportunities[:5], 1):
+        print(f"{i}. {opp['symbol']}")
+        print(f"   📈 Change: {opp['price_change']:+.2f}%")
+        print(f"   💰 Price: ${opp['current_price']:.6f}")
+        print(f"   📊 Range: {opp['range_position']:.1%}")
+        print(f"   💸 Volume: ${opp['volume']:,.0f}")
+        print(f"   ⭐ Score: {opp['score']:.3f}")
+        print()
+    
+    # Execute on best opportunity
+    if momentum_opportunities:
+        best_opp = momentum_opportunities[0]
+        
+        print(f"🎯 BEST OPPORTUNITY: {best_opp['symbol']}")
+        print(f"   Performance: {best_opp['price_change']:+.2f}%")
+        print(f"   MAGICUSDT Similarity Score: {best_opp['score']:.3f}")
+        
+        if usdt_balance >= 20:  # Minimum $20 for trade
+            position_size = min(usdt_balance * 0.05, 50)  # 5% or $50 max
+            
+            print(f"\n🚨 READY TO EXECUTE MOMENTUM TRADE")
+            print(f"   Symbol: {best_opp['symbol']}")
+            print(f"   Position Size: ${position_size:.2f}")
+            print(f"   Strategy: MAGICUSDT Momentum Surge")
+            
+            print("\n⚡ Execute this trade manually in Binance:")
+            print(f"   1. Go to {best_opp['symbol']} market")
+            print(f"   2. Market buy ${position_size:.2f} worth")
+            print(f"   3. Set take profit at +15%")
+            print(f"   4. Set stop loss at -8%")
+            print("   5. Monitor for 1-3 days max")
+            
+        else:
+            print(f"❌ Insufficient balance for trade (${usdt_balance:.2f} < $20 minimum)")
+    
+    print("\n🎉 MOMENTUM SCAN COMPLETE!")
+    print("💡 Based on MAGICUSDT's winning traits: EXCEPTIONAL_PERFORMANCE_WITH_MOMENTUM")
+
+if __name__ == "__main__":
+    execute_momentum_strategy()

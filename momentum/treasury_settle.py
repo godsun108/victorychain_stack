@@ -1,0 +1,177 @@
+from __future__ import annotations
+import json
+import os
+import time
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import Dict, List, Any
+
+from loguru import logger
+
+CHECKPOINT = Path("runtime/reinvest/checkpoint.json")
+PLANS_DIR = Path("runtime/reinvest/plans")
+WITHDRAW_DIR = Path("runtime/reinvest/withdraw_staged")
+WITHDRAW_DIR.mkdir(parents=True, exist_ok=True)
+PLANS_DIR.mkdir(parents=True, exist_ok=True)
+CHECKPOINT.parent.mkdir(parents=True, exist_ok=True)
+
+
+@dataclass
+class TreasuryPlan:
+    timestamp: float
+    realized_pnl_usd: float
+    bank_treasury_pct: float
+    plan_treasury_usd: float
+    plan_reinvest_usd: float
+    min_transfer_usd: float = 10.0
+
+
+def load_checkpoint() -> Dict:
+    if CHECKPOINT.exists():
+        try:
+            return json.loads(CHECKPOINT.read_text())
+        except Exception:
+            return {}
+    return {}
+
+
+def save_checkpoint(data: Dict):
+    CHECKPOINT.write_text(json.dumps(data, indent=2))
+
+
+def stage_withdrawal(plan: TreasuryPlan):
+    ts = int(plan.timestamp)
+    out = WITHDRAW_DIR / f"withdraw_{ts}.json"
+    out.write_text(json.dumps(asdict(plan), indent=2))
+    logger.info(f"Staged withdrawal JSON: {out}")
+
+
+def settle_once(
+    realized_pnl_usd: float, bank_treasury_pct: float, min_transfer_usd: float = 10.0
+):
+    plan_treasury = max(0.0, realized_pnl_usd) * max(0.0, min(1.0, bank_treasury_pct))
+    plan_reinvest = max(0.0, realized_pnl_usd) - plan_treasury
+    plan = TreasuryPlan(
+        timestamp=time.time(),
+        realized_pnl_usd=realized_pnl_usd,
+        bank_treasury_pct=bank_treasury_pct,
+        plan_treasury_usd=plan_treasury,
+        plan_reinvest_usd=plan_reinvest,
+        min_transfer_usd=min_transfer_usd,
+    )
+    # Update checkpoint
+    cp = load_checkpoint()
+    cp.update(asdict(plan))
+    save_checkpoint(cp)
+    # Stage withdrawal JSON (still dry)
+    stage_withdrawal(plan)
+    return plan
+
+
+# --- Banking conversion planning (XRP/HBAR preset) ---
+
+
+def _convert_usd_to_bank_assets(usdt_amount: float) -> List[Dict[str, Any]]:
+    """Plan market-buys for BANK_ASSETS using BANK_SPLITS weights. Returns a list of planned orders.
+    This function does not execute real trades unless explicitly enabled via env.
+    """
+    if usdt_amount <= 0:
+        return []
+    assets = [
+        a.strip().upper()
+        for a in os.getenv("BANK_ASSETS", "XRP,HBAR").split(",")
+        if a.strip()
+    ]
+    splits_raw = [
+        x.strip() for x in os.getenv("BANK_SPLITS", "0.5,0.5").split(",") if x.strip()
+    ]
+    try:
+        splits = [float(x) for x in splits_raw]
+    except Exception:
+        splits = [1.0 for _ in assets]
+    if not assets or not splits or len(splits) < len(assets):
+        # pad or normalize
+        while len(splits) < len(assets):
+            splits.append(0.0)
+    ssum = sum(splits) or 1.0
+    splits = [x / ssum for x in splits]
+
+    # Lazy import ccxt (only public endpoints needed for price)
+    try:
+        import ccxt  # type: ignore
+    except Exception:
+        logger.warning("ccxt not available; cannot compute BANK plan")
+        return []
+
+    ex = ccxt.binanceus(
+        {
+            "apiKey": os.getenv("BINANCEUS_API_KEY") or os.getenv("BINANCEUS_KEY"),
+            "secret": os.getenv("BINANCEUS_API_SECRET")
+            or os.getenv("BINANCEUS_SECRET"),
+            "enableRateLimit": True,
+            "options": {
+                "defaultType": "spot",
+                "recvWindow": 5000,
+                "adjustForTimeDifference": True,
+            },
+        }
+    )
+    try:
+        ex.load_markets()
+    except Exception:
+        pass
+
+    plans: List[Dict[str, Any]] = []
+    for asset, w in zip(assets, splits):
+        alloc = usdt_amount * max(0.0, w)
+        if alloc <= 0:
+            continue
+        # Prefer USDT, fallback to USD
+        sym = (
+            f"{asset}/USDT"
+            if f"{asset}/USDT" in getattr(ex, "markets", {})
+            else f"{asset}/USD"
+        )
+        if not getattr(ex, "markets", {}).get(sym):
+            logger.info(f"[treasury] skip: no market for {asset}")
+            continue
+        px = 0.0
+        try:
+            tk = ex.fetch_ticker(sym) or {}
+            px = float(tk.get("last") or tk.get("close") or 0.0)
+        except Exception:
+            px = 0.0
+        qty = alloc / max(1e-9, px)
+        item = {
+            "symbol": sym,
+            "side": "buy",
+            "notional_usd": round(alloc, 8),
+            "qty_est": round(qty, 8),
+            "dry_run": True,
+        }
+        plans.append(item)
+    return plans
+
+
+def plan_bank_conversions(usdt_amount: float) -> List[Dict[str, Any]]:
+    """Create and persist a banking conversion plan file, return the planned legs."""
+    if usdt_amount <= 0:
+        return []
+    legs = _convert_usd_to_bank_assets(usdt_amount)
+    ts = int(time.time())
+    out = PLANS_DIR / f"bank_plan_{ts}.json"
+    try:
+        out.write_text(json.dumps({"alloc_usd": usdt_amount, "legs": legs}, indent=2))
+        logger.info(f"[treasury] banking plan staged: {out}")
+    except Exception as e:
+        logger.warning(f"bank plan write failed: {e}")
+    return legs
+
+
+if __name__ == "__main__":
+    # Example manual run: read realized pnl from env
+    pnl = float(os.environ.get("REALIZED_PNL_USD", "0"))
+    bank = float(os.environ.get("BANK_TREASURY_PCT", "0.25"))
+    mt = float(os.environ.get("TREASURY_MIN_TRANSFER_USD", "10"))
+    p = settle_once(pnl, bank, mt)
+    print(json.dumps(asdict(p), indent=2))

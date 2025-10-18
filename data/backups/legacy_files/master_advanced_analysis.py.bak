@@ -1,0 +1,461 @@
+#!/usr/bin/env python3
+"""
+Master Advanced Data Analysis System
+Comprehensive quantitative trading analysis with all advanced models
+"""
+
+import os
+import sys
+import json
+import time
+import subprocess
+from datetime import datetime
+from typing import Dict, List, Optional
+import pandas as pd
+import numpy as np
+
+# Import all analysis modules
+try:
+    from quantum_data_analyst import QuantumDataAnalyst
+    from statistical_arbitrage_system import StatisticalArbitrageSystem
+    from market_microstructure_analyzer import MarketMicrostructureAnalyzer
+    from advanced_data_analyst_simplified import AdvancedDataAnalyst
+except ImportError as e:
+    print(f"⚠️  Import warning: {e}")
+    print("🔧 Some analysis modules may not be available")
+
+class MasterAdvancedAnalysis:
+    def __init__(self):
+        print("🚀 Master Advanced Data Analysis System initialized")
+        print("⚛️  Loading all quantum-level analysis modules...")
+        
+        # Initialize analyzers
+        self.analyzers = {}
+        
+        try:
+            self.analyzers['quantum'] = QuantumDataAnalyst()
+            print("✅ Quantum Data Analyst loaded")
+        except Exception as e:
+            print(f"❌ Failed to load Quantum Analyst: {e}")
+        
+        try:
+            self.analyzers['statistical_arbitrage'] = StatisticalArbitrageSystem()
+            print("✅ Statistical Arbitrage System loaded")
+        except Exception as e:
+            print(f"❌ Failed to load Statistical Arbitrage: {e}")
+        
+        try:
+            self.analyzers['microstructure'] = MarketMicrostructureAnalyzer()
+            print("✅ Market Microstructure Analyzer loaded")
+        except Exception as e:
+            print(f"❌ Failed to load Microstructure Analyzer: {e}")
+        
+        try:
+            self.analyzers['advanced_data'] = AdvancedDataAnalyst()
+            print("✅ Advanced Data Analyst loaded")
+        except Exception as e:
+            print(f"❌ Failed to load Advanced Data Analyst: {e}")
+        
+        print(f"🎯 {len(self.analyzers)} analysis modules ready")
+    
+    def run_quantum_analysis(self, symbols: List[str] = None) -> Dict:
+        """Run quantum data analysis"""
+        
+        print("\n" + "="*80)
+        print("⚛️  QUANTUM DATA ANALYSIS")
+        print("="*80)
+        
+        if 'quantum' not in self.analyzers:
+            print("❌ Quantum analyzer not available")
+            return {}
+        
+        try:
+            return self.analyzers['quantum'].run_complete_analysis(symbols)
+        except Exception as e:
+            print(f"❌ Quantum analysis failed: {e}")
+            return {}
+    
+    def run_statistical_arbitrage(self, symbols: List[str] = None) -> Dict:
+        """Run statistical arbitrage analysis"""
+        
+        print("\n" + "="*80)
+        print("📊 STATISTICAL ARBITRAGE ANALYSIS")
+        print("="*80)
+        
+        if 'statistical_arbitrage' not in self.analyzers:
+            print("❌ Statistical arbitrage analyzer not available")
+            return {}
+        
+        try:
+            return self.analyzers['statistical_arbitrage'].run_complete_statistical_arbitrage(symbols)
+        except Exception as e:
+            print(f"❌ Statistical arbitrage analysis failed: {e}")
+            return {}
+    
+    def run_microstructure_analysis(self, symbols: List[str] = None) -> Dict:
+        """Run market microstructure analysis"""
+        
+        print("\n" + "="*80)
+        print("🔬 MARKET MICROSTRUCTURE ANALYSIS")
+        print("="*80)
+        
+        if 'microstructure' not in self.analyzers:
+            print("❌ Microstructure analyzer not available")
+            return {}
+        
+        try:
+            return self.analyzers['microstructure'].run_complete_microstructure_analysis(symbols)
+        except Exception as e:
+            print(f"❌ Microstructure analysis failed: {e}")
+            return {}
+    
+    def run_advanced_data_analysis(self, symbols: List[str] = None) -> Dict:
+        """Run advanced data analysis"""
+        
+        print("\n" + "="*80)
+        print("📈 ADVANCED DATA ANALYSIS")
+        print("="*80)
+        
+        if 'advanced_data' not in self.analyzers:
+            print("❌ Advanced data analyzer not available")
+            return {}
+        
+        try:
+            # Run the simplified advanced analysis
+            return self.analyzers['advanced_data'].run_complete_analysis(symbols)
+        except Exception as e:
+            print(f"❌ Advanced data analysis failed: {e}")
+            return {}
+    
+    def synthesize_all_analyses(self, results: Dict) -> Dict:
+        """Synthesize results from all analyses"""
+        
+        print("\n" + "="*80)
+        print("🧠 SYNTHESIZING ALL ANALYSES")
+        print("="*80)
+        
+        synthesis = {
+            'analysis_timestamp': datetime.now().isoformat(),
+            'modules_run': list(results.keys()),
+            'consolidated_opportunities': [],
+            'unified_signals': [],
+            'risk_assessment': {},
+            'market_regime': {},
+            'top_recommendations': [],
+        }
+        
+        # Extract opportunities from each analysis
+        opportunities = {}
+        signals = {}
+        
+        # Quantum analysis
+        if 'quantum' in results and results['quantum']:
+            quantum_data = results['quantum']
+            quantum_opportunities = quantum_data.get('quantum_insights', {}).get('opportunity_ranking', [])
+            quantum_signals = quantum_data.get('quantum_insights', {}).get('trading_signals', [])
+            
+            for opp in quantum_opportunities[:10]:
+                symbol = opp['symbol']
+                if symbol not in opportunities:
+                    opportunities[symbol] = {}
+                opportunities[symbol]['quantum_score'] = opp['opportunity_score']
+                opportunities[symbol]['quantum_momentum'] = opp['momentum_score']
+            
+            for signal in quantum_signals[:10]:
+                symbol = signal['symbol']
+                if symbol not in signals:
+                    signals[symbol] = {}
+                signals[symbol]['quantum_signal'] = signal['signal']
+                signals[symbol]['quantum_strength'] = signal['strength']
+        
+        # Statistical arbitrage
+        if 'statistical_arbitrage' in results and results['statistical_arbitrage']:
+            arb_data = results['statistical_arbitrage']
+            pairs_signals = arb_data.get('pairs_trading_signals', [])
+            anomalies = arb_data.get('statistical_anomalies', [])
+            
+            for signal in pairs_signals[:5]:
+                pair = signal['pair']
+                signals[pair] = signals.get(pair, {})
+                signals[pair]['arbitrage_signal'] = signal['signal']
+                signals[pair]['arbitrage_confidence'] = signal['confidence']
+            
+            for anomaly in anomalies[:10]:
+                symbol = anomaly['symbol']
+                if symbol not in opportunities:
+                    opportunities[symbol] = {}
+                opportunities[symbol]['anomaly_score'] = anomaly['anomaly_score']
+        
+        # Microstructure
+        if 'microstructure' in results and results['microstructure']:
+            micro_data = results['microstructure']
+            micro_signals = micro_data.get('trading_signals', [])
+            rankings = micro_data.get('microstructure_rankings', [])
+            
+            for signal in micro_signals[:10]:
+                symbol = signal['symbol']
+                if symbol not in signals:
+                    signals[symbol] = {}
+                signals[symbol]['microstructure_signal'] = signal['signal']
+                signals[symbol]['microstructure_strength'] = signal['strength']
+            
+            for ranking in rankings[:15]:
+                symbol = ranking['symbol']
+                if symbol not in opportunities:
+                    opportunities[symbol] = {}
+                opportunities[symbol]['microstructure_score'] = ranking['microstructure_score']
+                opportunities[symbol]['liquidity_score'] = ranking['liquidity_score']
+        
+        # Create consolidated opportunities
+        for symbol, data in opportunities.items():
+            try:
+                # Calculate combined score
+                scores = []
+                if 'quantum_score' in data:
+                    scores.append(data['quantum_score'])
+                if 'anomaly_score' in data:
+                    scores.append(data['anomaly_score'] * 10)  # Scale up
+                if 'microstructure_score' in data:
+                    scores.append(data['microstructure_score'] / 10)  # Scale down
+                
+                combined_score = np.mean(scores) if scores else 0
+                
+                # Get signal consensus
+                symbol_signals = signals.get(symbol, {})
+                signal_count = len([s for s in symbol_signals.values() if 'BUY' in str(s).upper()])
+                total_signals = len(symbol_signals)
+                
+                consensus = 'HOLD'
+                if signal_count > total_signals / 2:
+                    consensus = 'BUY'
+                elif signal_count < total_signals / 3:
+                    consensus = 'SELL'
+                
+                synthesis['consolidated_opportunities'].append({
+                    'symbol': symbol,
+                    'combined_score': float(combined_score),
+                    'consensus_signal': consensus,
+                    'signal_confidence': signal_count / max(total_signals, 1),
+                    'analysis_coverage': len(scores),
+                    'individual_scores': data,
+                    'individual_signals': symbol_signals,
+                })
+                
+            except Exception as e:
+                continue
+        
+        # Sort opportunities by combined score
+        synthesis['consolidated_opportunities'].sort(
+            key=lambda x: x['combined_score'], reverse=True
+        )
+        
+        # Create unified signals
+        all_signals = []
+        for symbol, symbol_signals in signals.items():
+            try:
+                buy_signals = sum(1 for s in symbol_signals.values() if 'BUY' in str(s).upper())
+                sell_signals = sum(1 for s in symbol_signals.values() if 'SELL' in str(s).upper())
+                total = len(symbol_signals)
+                
+                if buy_signals > sell_signals and buy_signals >= total * 0.6:
+                    unified_signal = 'STRONG_BUY' if buy_signals >= total * 0.8 else 'BUY'
+                    confidence = buy_signals / total
+                elif sell_signals > buy_signals and sell_signals >= total * 0.6:
+                    unified_signal = 'STRONG_SELL' if sell_signals >= total * 0.8 else 'SELL'
+                    confidence = sell_signals / total
+                else:
+                    unified_signal = 'HOLD'
+                    confidence = 0.5
+                
+                if unified_signal != 'HOLD':
+                    all_signals.append({
+                        'symbol': symbol,
+                        'unified_signal': unified_signal,
+                        'confidence': float(confidence),
+                        'supporting_signals': buy_signals if 'BUY' in unified_signal else sell_signals,
+                        'total_signals': total,
+                        'individual_signals': symbol_signals,
+                    })
+                    
+            except Exception as e:
+                continue
+        
+        # Sort by confidence
+        all_signals.sort(key=lambda x: x['confidence'], reverse=True)
+        synthesis['unified_signals'] = all_signals[:20]
+        
+        # Market regime assessment
+        regime_votes = {}
+        
+        if 'quantum' in results and results['quantum']:
+            quantum_regime = results['quantum'].get('quantum_insights', {}).get('market_regime_analysis', {})
+            regime = quantum_regime.get('regime', 'UNKNOWN')
+            regime_votes[regime] = regime_votes.get(regime, 0) + 1
+        
+        # Determine overall regime
+        if regime_votes:
+            dominant_regime = max(regime_votes.keys(), key=lambda k: regime_votes[k])
+            synthesis['market_regime'] = {
+                'dominant_regime': dominant_regime,
+                'regime_votes': regime_votes,
+                'confidence': regime_votes[dominant_regime] / sum(regime_votes.values())
+            }
+        
+        # Top recommendations
+        top_opportunities = synthesis['consolidated_opportunities'][:5]
+        top_signals = synthesis['unified_signals'][:5]
+        
+        recommendations = []
+        
+        for opp in top_opportunities:
+            recommendations.append(
+                f"🎯 {opp['symbol']}: Combined score {opp['combined_score']:.2f}, "
+                f"Consensus: {opp['consensus_signal']}"
+            )
+        
+        for signal in top_signals:
+            recommendations.append(
+                f"🚨 {signal['symbol']}: {signal['unified_signal']} "
+                f"(Confidence: {signal['confidence']:.1%})"
+            )
+        
+        synthesis['top_recommendations'] = recommendations[:10]
+        
+        return synthesis
+    
+    def run_complete_master_analysis(self, symbols: List[str] = None) -> Dict:
+        """Run complete master analysis with all modules"""
+        
+        print("🚀 MASTER ADVANCED DATA ANALYSIS SYSTEM")
+        print("⚛️  Quantum-Level Trading Intelligence")
+        print("="*80)
+        
+        start_time = time.time()
+        
+        # Run all analyses
+        results = {}
+        
+        # 1. Quantum Analysis
+        if 'quantum' in self.analyzers:
+            print("\n🔄 Running Quantum Data Analysis...")
+            results['quantum'] = self.run_quantum_analysis(symbols)
+        
+        # 2. Statistical Arbitrage
+        if 'statistical_arbitrage' in self.analyzers:
+            print("\n🔄 Running Statistical Arbitrage Analysis...")
+            results['statistical_arbitrage'] = self.run_statistical_arbitrage(symbols)
+        
+        # 3. Market Microstructure
+        if 'microstructure' in self.analyzers:
+            print("\n🔄 Running Market Microstructure Analysis...")
+            results['microstructure'] = self.run_microstructure_analysis(symbols)
+        
+        # 4. Advanced Data Analysis
+        if 'advanced_data' in self.analyzers:
+            print("\n🔄 Running Advanced Data Analysis...")
+            results['advanced_data'] = self.run_advanced_data_analysis(symbols)
+        
+        # 5. Synthesize all results
+        print("\n🔄 Synthesizing all analyses...")
+        synthesis = self.synthesize_all_analyses(results)
+        
+        # Create final master results
+        master_results = {
+            'master_analysis_timestamp': datetime.now().isoformat(),
+            'analysis_duration_seconds': time.time() - start_time,
+            'modules_executed': len(results),
+            'individual_results': results,
+            'synthesis': synthesis,
+        }
+        
+        # Save master results
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'master_advanced_analysis_{timestamp}.json'
+        
+        with open(filename, 'w') as f:
+            json.dump(master_results, f, indent=2, default=str)
+        
+        # Print summary
+        self.print_master_summary(master_results)
+        
+        print(f"\n✅ Master Advanced Analysis completed!")
+        print(f"📁 Results saved to: {filename}")
+        print(f"⏱️  Total duration: {time.time() - start_time:.1f} seconds")
+        
+        return master_results
+    
+    def print_master_summary(self, results: Dict):
+        """Print master analysis summary"""
+        
+        synthesis = results.get('synthesis', {})
+        
+        print("\n" + "="*80)
+        print("🧠 MASTER ANALYSIS SYNTHESIS")
+        print("="*80)
+        
+        # Market regime
+        regime = synthesis.get('market_regime', {})
+        if regime:
+            print(f"\n📊 MARKET REGIME: {regime.get('dominant_regime', 'UNKNOWN')}")
+            print(f"    Confidence: {regime.get('confidence', 0):.1%}")
+        
+        # Top opportunities
+        opportunities = synthesis.get('consolidated_opportunities', [])[:5]
+        if opportunities:
+            print(f"\n🎯 TOP CONSOLIDATED OPPORTUNITIES:")
+            for i, opp in enumerate(opportunities, 1):
+                print(f"  {i}. {opp['symbol']:12} - Score: {opp['combined_score']:6.2f}")
+                print(f"      Consensus: {opp['consensus_signal']:10} "
+                      f"(Confidence: {opp['signal_confidence']:.1%})")
+                print(f"      Coverage: {opp['analysis_coverage']} modules")
+        
+        # Unified signals
+        signals = synthesis.get('unified_signals', [])[:5]
+        if signals:
+            print(f"\n🚨 TOP UNIFIED SIGNALS:")
+            for i, signal in enumerate(signals, 1):
+                print(f"  {i}. {signal['symbol']:12} - {signal['unified_signal']}")
+                print(f"      Confidence: {signal['confidence']:.1%} "
+                      f"({signal['supporting_signals']}/{signal['total_signals']} modules)")
+        
+        # Top recommendations
+        recommendations = synthesis.get('top_recommendations', [])
+        if recommendations:
+            print(f"\n💡 KEY RECOMMENDATIONS:")
+            for i, rec in enumerate(recommendations[:5], 1):
+                print(f"  {i}. {rec}")
+        
+        # Execution summary
+        print(f"\n📈 EXECUTION SUMMARY:")
+        print(f"   Modules executed: {results.get('modules_executed', 0)}")
+        print(f"   Analysis duration: {results.get('analysis_duration_seconds', 0):.1f}s")
+        print(f"   Opportunities found: {len(opportunities)}")
+        print(f"   Unified signals: {len(signals)}")
+
+def main():
+    """Main execution function"""
+    
+    # Check for command line arguments
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '--quantum':
+            symbols = sys.argv[2:] if len(sys.argv) > 2 else None
+            analyzer = MasterAdvancedAnalysis()
+            analyzer.run_quantum_analysis(symbols)
+        elif sys.argv[1] == '--arbitrage':
+            symbols = sys.argv[2:] if len(sys.argv) > 2 else None
+            analyzer = MasterAdvancedAnalysis()
+            analyzer.run_statistical_arbitrage(symbols)
+        elif sys.argv[1] == '--microstructure':
+            symbols = sys.argv[2:] if len(sys.argv) > 2 else None
+            analyzer = MasterAdvancedAnalysis()
+            analyzer.run_microstructure_analysis(symbols)
+        else:
+            print("Usage: python master_advanced_analysis.py [--quantum|--arbitrage|--microstructure] [symbols...]")
+            return
+    else:
+        # Run complete master analysis
+        analyzer = MasterAdvancedAnalysis()
+        analyzer.run_complete_master_analysis()
+
+if __name__ == "__main__":
+    main()

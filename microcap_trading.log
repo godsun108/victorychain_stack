@@ -1,0 +1,42 @@
+2025-08-05 20:38:57,609 - __main__ - INFO - MicrocapTradingService initialized
+2025-08-05 20:38:57,609 - __main__ - INFO - MicrocapTradingApplication initialized
+2025-08-05 20:38:57,609 - __main__ - INFO - Starting complete trading analysis
+2025-08-05 20:38:57,609 - __main__ - INFO - Analyzing 3 opportunities
+2025-08-05 20:38:57,609 - __main__ - INFO - Retrieved metrics for SHIBUSDT
+2025-08-05 20:38:57,609 - __main__ - INFO - Retrieved metrics for FLOKIUSDT
+2025-08-05 20:38:57,609 - __main__ - INFO - Retrieved metrics for BONKUSDT
+2025-08-05 20:38:57,609 - __main__ - INFO - Starting AI analysis for SHIBUSDT
+2025-08-05 20:38:57,610 - __main__ - INFO - AI analysis complete for SHIBUSDT: 79.3% confidence
+2025-08-05 20:38:57,610 - __main__ - INFO - Starting AI analysis for FLOKIUSDT
+2025-08-05 20:38:57,610 - __main__ - INFO - AI analysis complete for FLOKIUSDT: 55.2% confidence
+2025-08-05 20:38:57,610 - __main__ - INFO - Starting AI analysis for BONKUSDT
+2025-08-05 20:38:57,610 - __main__ - INFO - AI analysis complete for BONKUSDT: 49.0% confidence
+2025-08-05 20:38:57,610 - __main__ - INFO - Analysis complete for 3 tokens
+2025-08-05 20:38:57,610 - __main__ - INFO - Creating optimal portfolio
+2025-08-05 20:38:57,610 - __main__ - INFO - Calculated position size: $3965.52950000 (39.66%)
+2025-08-05 20:38:57,610 - __main__ - INFO - Retrieved metrics for SHIBUSDT
+2025-08-05 20:38:57,610 - __main__ - INFO - Created position for SHIBUSDT: 39.66% allocation
+2025-08-05 20:38:57,610 - __main__ - INFO - Calculated position size: $4139.4750000 (41.39%)
+2025-08-05 20:38:57,610 - __main__ - INFO - Retrieved metrics for FLOKIUSDT
+2025-08-05 20:38:57,610 - __main__ - INFO - Created position for FLOKIUSDT: 41.39% allocation
+2025-08-05 20:38:57,610 - __main__ - INFO - Calculated position size: $1394.99550000 (13.95%)
+2025-08-05 20:38:57,610 - __main__ - INFO - Retrieved metrics for BONKUSDT
+2025-08-05 20:38:57,610 - __main__ - INFO - Created position for BONKUSDT: 13.95% allocation
+2025-08-05 20:38:57,610 - __main__ - INFO - Portfolio created with 3 positions, 95.0% allocated
+2025-08-05 20:38:57,610 - __main__ - INFO - Executing portfolio with 3 positions
+2025-08-05 20:38:57,611 - __main__ - INFO - Saved position 0f0ed90d-be04-472d-b7db-08ae896af0d5 for SHIBUSDT
+2025-08-05 20:38:57,611 - __main__ - INFO - Executed position for SHIBUSDT
+2025-08-05 20:38:57,611 - __main__ - INFO - Saved position 1f8d6837-c09f-4613-8042-62b36ff6b762 for FLOKIUSDT
+2025-08-05 20:38:57,611 - __main__ - INFO - Executed position for FLOKIUSDT
+2025-08-05 20:38:57,612 - __main__ - INFO - Saved position b873439c-fc64-481a-990c-bd0d3c32a60b for BONKUSDT
+2025-08-05 20:38:57,612 - __main__ - INFO - Executed position for BONKUSDT
+2025-08-05 20:38:57,613 - __main__ - INFO - Portfolio execution complete: 3/3 successful
+2025-08-05 20:40:57,957 - senior_dev_microcap_system - INFO - Retrieved metrics for SHIBUSDT
+2025-08-05 20:40:57,958 - senior_dev_microcap_system - INFO - Retrieved metrics for FLOKIUSDT
+2025-08-05 20:40:57,958 - senior_dev_microcap_system - INFO - Retrieved metrics for BONKUSDT
+2025-08-05 20:40:57,958 - senior_dev_microcap_system - INFO - Starting AI analysis for SHIBUSDT
+2025-08-05 20:40:57,958 - senior_dev_microcap_system - INFO - AI analysis complete for SHIBUSDT: 79.3% confidence
+2025-08-05 20:40:57,958 - senior_dev_microcap_system - INFO - Starting AI analysis for FLOKIUSDT
+2025-08-05 20:40:57,958 - senior_dev_microcap_system - INFO - AI analysis complete for FLOKIUSDT: 55.2% confidence
+2025-08-05 20:40:57,958 - senior_dev_microcap_system - INFO - Starting AI analysis for BONKUSDT
+2025-08-05 20:40:57,958 - senior_dev_microcap_system - INFO - AI analysis complete for BONKUSDT: 49.0% confidence

@@ -1,0 +1,262 @@
+{
+  "timestamp": "2025-08-05T19:35:30.342784",
+  "analysis_type": "MICROCAP_MOMENTUM_SURGE",
+  "total_tokens_scanned": 172,
+  "microcaps_identified": 62,
+  "surge_signals_detected": 0,
+  "opportunities_generated": 27,
+  "top_opportunities": [
+    {
+      "symbol": "PENGUUSDT",
+      "price": 0.033382,
+      "market_cap_estimate": 33382000.000000004,
+      "volume_24h": 157331.335538,
+      "price_change_24h": -2.954,
+      "momentum_score": 5.492215229272491,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: PENGUUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.033382 in general sector\n\u2022 Moderate momentum: 5.5\n\u2022 Volume: $157,331\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 56.0,
+      "expected_multiplier": 3.2667902038419814,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "XLMUSDT",
+      "price": 0.3957,
+      "market_cap_estimate": 395700000.0,
+      "volume_24h": 111213.4635,
+      "price_change_24h": -4.328,
+      "momentum_score": 5.4789573661112945,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: XLMUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.395700 in general sector\n\u2022 Moderate momentum: 5.5\n\u2022 Volume: $111,213\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 51.0,
+      "expected_multiplier": 4.953231094318106,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "FLOKIUSDT",
+      "price": 0.00010212,
+      "market_cap_estimate": 102120.0,
+      "volume_24h": 67310.46068148,
+      "price_change_24h": -7.349,
+      "momentum_score": 5.562982562934402,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: FLOKIUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.000102 in meme sector\n\u2022 Moderate momentum: 5.6\n\u2022 Volume: $67,310\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 50.193138204444004,
+      "expected_multiplier": 4.336416177693773,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "price": 0.19767,
+      "market_cap_estimate": 197670000.0,
+      "volume_24h": 249995.2257,
+      "price_change_24h": -3.293,
+      "momentum_score": 5.7272317147842635,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: DOGEUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.197670 in meme sector\n\u2022 Moderate momentum: 5.7\n\u2022 Volume: $249,995\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 50.0,
+      "expected_multiplier": 3.964837393918887,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "VETUSDT",
+      "price": 0.02262,
+      "market_cap_estimate": 22620000.0,
+      "volume_24h": 77232.30294000001,
+      "price_change_24h": -3.867,
+      "momentum_score": 5.27449898497721,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: VETUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.022620 in general sector\n\u2022 Moderate momentum: 5.3\n\u2022 Volume: $77,232\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 49.169690882,
+      "expected_multiplier": 4.618797537010687,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "ADAUSDT",
+      "price": 0.7193,
+      "market_cap_estimate": 719300000.0,
+      "volume_24h": 255467.01958,
+      "price_change_24h": -3.255,
+      "momentum_score": 5.732834841304665,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: ADAUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.719300 in layer1 sector\n\u2022 Moderate momentum: 5.7\n\u2022 Volume: $255,467\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 47.5,
+      "expected_multiplier": 3.052119159272537,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "1000REKTUSDT",
+      "price": 0.00118277,
+      "market_cap_estimate": 1182770.0,
+      "volume_24h": 43984.99978902,
+      "price_change_24h": 5.682,
+      "momentum_score": 5.211504594223648,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: 1000REKTUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.001183 in general sector\n\u2022 Moderate momentum: 5.2\n\u2022 Volume: $43,985\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 46.94240085555073,
+      "expected_multiplier": 2.841741376515317,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "HBARUSDT",
+      "price": 0.23829,
+      "market_cap_estimate": 238290000.0,
+      "volume_24h": 82661.13297,
+      "price_change_24h": -4.474,
+      "momentum_score": 5.364701353513402,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: HBARUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.238290 in general sector\n\u2022 Moderate momentum: 5.4\n\u2022 Volume: $82,661\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 45.798339891,
+      "expected_multiplier": 4.234924913829818,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "DGBUSDT",
+      "price": 0.00814,
+      "market_cap_estimate": 8140000.0,
+      "volume_24h": 44708.164489999996,
+      "price_change_24h": -4.348,
+      "momentum_score": 5.085186840115673,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: DGBUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.008140 in general sector\n\u2022 Moderate momentum: 5.1\n\u2022 Volume: $44,708\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 44.412449347,
+      "expected_multiplier": 3.5136460959555613,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    },
+    {
+      "symbol": "ROSEUSDT",
+      "price": 0.02501,
+      "market_cap_estimate": 25010000.0,
+      "volume_24h": 46542.764662,
+      "price_change_24h": -3.697,
+      "momentum_score": 5.037552177012374,
+      "surge_potential": 0.0,
+      "risk_level": "HIGH",
+      "claude_analysis": "\n\ud83d\udcca MICROCAP MONITORING: ROSEUSDT\n\nCURRENT STATUS:\n\u2022 Price: $0.025010 in general sector\n\u2022 Moderate momentum: 5.0\n\u2022 Volume: $46,543\n\nASSESSMENT:\n\u2022 Watching for momentum buildup\n\u2022 No immediate surge signals\n\u2022 Potential future opportunity\n\u2022 Continue monitoring for breakout patterns\n\nRECOMMENDATION: WATCH LIST\n            ",
+      "entry_confidence": 39.9628293986,
+      "expected_multiplier": 2.509361833380942,
+      "time_horizon": "MEDIUM_TERM",
+      "catalyst_factors": [
+        "Microcap potential for explosive growth"
+      ],
+      "risk_factors": [
+        "Extreme volatility due to microcap status",
+        "Low liquidity risk",
+        "Potential for rapid price swings",
+        "Limited fundamental analysis available"
+      ]
+    }
+  ],
+  "surge_signals": [],
+  "analysis_parameters": {
+    "min_volume": 1000,
+    "max_price": 1.0,
+    "min_price": 0.0001,
+    "momentum_threshold": 10.0,
+    "surge_threshold": 20.0,
+    "risk_tolerance": "HIGH",
+    "max_allocation_per_token": 25.0,
+    "stop_loss": -15.0,
+    "target_multipliers": [
+      2.0,
+      5.0,
+      10.0,
+      25.0
+    ]
+  },
+  "market_conditions": {
+    "high_momentum_count": 0,
+    "extreme_risk_count": 0,
+    "immediate_opportunities": 0
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-08-05T18:55:43.831705",
+  "strategy": "Microcap All-In with MAGIC Patterns",
+  "total_allocation": 0.9,
+  "stop_loss_percentage": 5.0,
+  "allocations": [
+    {
+      "symbol": "FLOKIUSDT",
+      "current_price": 0.00010212,
+      "magic_similarity_score": 75,
+      "gain_potential": 0.38582249999999996,
+      "allocation_percentage": 0.4,
+      "entry_price": 0.00010191576,
+      "stop_loss_price": 9.6819972e-05,
+      "take_profit_1": 0.0001273947,
+      "take_profit_2": 0.00015287364,
+      "take_profit_3": 0.00020383152,
+      "risk_score": 10,
+      "confidence": 0.825,
+      "momentum_pattern": "DOUBLE_BOTTOM_SETUP",
+      "volume_profile": "HIGH_LIQUIDITY",
+      "entry_timing": "BUY_THE_DIP",
+      "reasoning": "Dip with volume support - good entry opportunity"
+    },
+    {
+      "symbol": "BONKUSDT",
+      "current_price": 2.443e-05,
+      "magic_similarity_score": 65,
+      "gain_potential": 0.28661125288786843,
+      "allocation_percentage": 0.3,
+      "entry_price": 2.4381140000000002e-05,
+      "stop_loss_price": 2.3162083e-05,
+      "take_profit_1": 3.0476425000000004e-05,
+      "take_profit_2": 3.657171e-05,
+      "take_profit_3": 4.8762280000000004e-05,
+      "risk_score": 20,
+      "confidence": 0.725,
+      "momentum_pattern": "DOUBLE_BOTTOM_SETUP",
+      "volume_profile": "MODERATE_LIQUIDITY",
+      "entry_timing": "BUY_THE_DIP",
+      "reasoning": "Dip with volume support - good entry opportunity"
+    },
+    {
+      "symbol": "1000REKTUSDT",
+      "current_price": 0.00118277,
+      "magic_similarity_score": 35,
+      "gain_potential": 0.09345398454021203,
+      "allocation_percentage": 0.2,
+      "entry_price": 0.00118040446,
+      "stop_loss_price": 0.001121384237,
+      "take_profit_1": 0.001475505575,
+      "take_profit_2": 0.00177060669,
+      "take_profit_3": 0.00236080892,
+      "risk_score": 20,
+      "confidence": 0.575,
+      "momentum_pattern": "ACCUMULATION_PHASE",
+      "volume_profile": "MODERATE_LIQUIDITY",
+      "entry_timing": "MOMENTUM_ENTRY",
+      "reasoning": "Positive momentum with volume - safe entry"
+    }
+  ]
+}

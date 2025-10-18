@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import os
+import sys
+from typing import List
+from urllib.parse import urljoin, quote
+
+import requests
+
+
+def prom_query(prom: str, q: str, timeout: float):
+    url = prom.rstrip('/') + '/api/v1/query?query=' + quote(q, safe='')
+    r = requests.get(url, timeout=timeout)
+    r.raise_for_status()
+    data = r.json()
+    if data.get('status') != 'success':
+        raise RuntimeError(f"Prom query failed: {data}")
+    return data['data']['result']
+
+
+def main():
+    ap = argparse.ArgumentParser(description='PromQL p95 latency assert')
+    ap.add_argument('--prom', required=True, help='Prometheus base URL')
+    ap.add_argument('--metric', default=os.environ.get('P95_METRIC', 'agent_request_seconds_bucket'), help='Histogram bucket metric name')
+    ap.add_argument('--window', default=os.environ.get('P95_WINDOW', '5m'), help='Rate window, e.g., 5m')
+    ap.add_argument('--quantile', type=float, default=float(os.environ.get('P95_QUANTILE', 0.95)), help='Quantile for histogram_quantile')
+    ap.add_argument('--filter', default=os.environ.get('P95_FILTER', 'path!~"/(metrics|health)"'), help='Label filter expression inside {}')
+    ap.add_argument('--group-by', default=os.environ.get('P95_GROUP_BY', 'le'), help='Labels to group by inside sum by(...)')
+    ap.add_argument('--p95-s', type=float, default=float(os.environ.get('P95_LATENCY_S', 1.2)), help='Threshold in seconds')
+    ap.add_argument('--require-data', action='store_true', help='Fail if no data returned')
+    ap.add_argument('--timeout', type=float, default=float(os.environ.get('P95_TIMEOUT', 5)), help='HTTP timeout seconds')
+    args = ap.parse_args()
+
+    metric = args.metric
+    window = args.window
+    filt = args.filter.strip()
+    if filt and not (filt.startswith('{') and filt.endswith('}')):
+        filt = '{' + filt + '}'
+    group_by = args.group_by.strip() or 'le'
+
+    inner = f"sum by ({group_by}) (rate({metric}{filt}[{window}]))"
+    q = f"histogram_quantile({args.quantile}, {inner})"
+
+    print('[P95] Query:', q)
+    try:
+        res = prom_query(args.prom, q, args.timeout)
+    except Exception as e:
+        print(f'[FAIL] Prom query error: {e}')
+        return 2
+
+    if not res:
+        msg = '[WARN] No data for histogram query'
+        print(msg)
+        if args.require_data:
+            print('[FAIL] require-data set and histogram absent')
+            return 2
+        else:
+            print('[OK] Skipping threshold check (no data and require-data not set)')
+            return 0
+
+    # Each vector element has value [ts, str]
+    worst = 0.0
+    worst_labels = {}
+    for s in res:
+        try:
+            v = float(s.get('value', [0, '0'])[1])
+            if v > worst:
+                worst = v
+                worst_labels = s.get('metric', {})
+        except Exception:
+            continue
+
+    print(f"[P95] worst={worst:.3f}s threshold={args.p95_s:.3f}s labels={json.dumps(worst_labels)}")
+    if worst > args.p95_s:
+        print('[FAIL] p95 above threshold')
+        return 2
+    print('[OK] p95 within threshold')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

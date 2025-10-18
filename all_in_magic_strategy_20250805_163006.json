@@ -1,0 +1,457 @@
+{
+  "timestamp": "20250805_163006",
+  "magic_analysis": {
+    "current_price": 0.238,
+    "volume_24h": 7120,
+    "price_change_24h": -11.85,
+    "detected_phase": "consolidation",
+    "confidence": 0.0,
+    "next_phase_probability": 0.0,
+    "action_recommendation": "",
+    "entry_strategy": {},
+    "risk_assessment": {}
+  },
+  "similar_tokens": [
+    {
+      "symbol": "ILVUSDT",
+      "base_asset": "ILV",
+      "price": 18.93,
+      "volume_24h_usdt": 87899.3727,
+      "price_change_24h": 7.618,
+      "rsi_14": 0.0,
+      "volume_category": "micro_cap",
+      "momentum_score": 5.70578577571199,
+      "volatility": 0.07618,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 4.144903556072002,
+      "sector": "gaming",
+      "ecosystem_score": 7.0,
+      "volume_rank": 13,
+      "momentum_rank": 6,
+      "performance_rank": 4,
+      "magic_similarity_score": 14.0,
+      "current_phase": "breakout",
+      "estimated_surge_potential": 60,
+      "magic_correlation": 0.85,
+      "entry_recommendation": {
+        "action": "MOMENTUM BUY",
+        "entry_price": 19.3086,
+        "target": 26.502,
+        "stop_loss": 17.4156
+      }
+    },
+    {
+      "symbol": "AXSUSDT",
+      "base_asset": "AXS",
+      "price": 2.278,
+      "volume_24h_usdt": 1368.03012,
+      "price_change_24h": -2.064,
+      "rsi_14": 0.0,
+      "volume_category": "nano_cap",
+      "momentum_score": 3.3424956593766355,
+      "volatility": 0.020640000000000002,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 4.319176085155841,
+      "sector": "gaming",
+      "ecosystem_score": 7.0,
+      "volume_rank": 90,
+      "momentum_rank": 112,
+      "performance_rank": 67,
+      "magic_similarity_score": 11.5,
+      "current_phase": "accumulation",
+      "estimated_surge_potential": 60,
+      "magic_correlation": 0.6,
+      "entry_recommendation": {
+        "action": "ACCUMULATE",
+        "entry_price": 2.25522,
+        "dca_levels": [
+          2.20966,
+          2.1641
+        ],
+        "target": 2.8475,
+        "stop_loss": 2.0502000000000002
+      }
+    },
+    {
+      "symbol": "MAGICUSDT",
+      "base_asset": "MAGIC",
+      "price": 0.238,
+      "volume_24h_usdt": 7119.8652,
+      "price_change_24h": -11.852,
+      "rsi_14": 0.0,
+      "volume_category": "nano_cap",
+      "momentum_score": 5.0376717712421435,
+      "volatility": 0.11852,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 4.629482057189464,
+      "sector": "gaming",
+      "ecosystem_score": 8.5,
+      "volume_rank": 48,
+      "momentum_rank": 23,
+      "performance_rank": 167,
+      "magic_similarity_score": 9.0,
+      "current_phase": "correction",
+      "estimated_surge_potential": 60,
+      "magic_correlation": 0.3,
+      "entry_recommendation": {
+        "action": "AGGRESSIVE BUY",
+        "entry_price": 0.24037999999999998,
+        "dca_levels": [
+          0.23323999999999998,
+          0.22609999999999997,
+          0.21896
+        ],
+        "target": 0.3094,
+        "stop_loss": 0.20944
+      }
+    },
+    {
+      "symbol": "GALAUSDT",
+      "base_asset": "GALA",
+      "price": 0.01513,
+      "volume_24h_usdt": 4233.05627,
+      "price_change_24h": -2.763,
+      "rsi_14": 0.0,
+      "volume_category": "nano_cap",
+      "momentum_score": 3.9029540415871855,
+      "volatility": 0.02763,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 4.231486489603203,
+      "sector": "gaming",
+      "ecosystem_score": 7.0,
+      "volume_rank": 58,
+      "momentum_rank": 72,
+      "performance_rank": 77,
+      "magic_similarity_score": 9.0,
+      "current_phase": "accumulation",
+      "estimated_surge_potential": 60,
+      "magic_correlation": 0.55,
+      "entry_recommendation": {
+        "action": "ACCUMULATE",
+        "entry_price": 0.0149787,
+        "dca_levels": [
+          0.0146761,
+          0.014373499999999999
+        ],
+        "target": 0.0189125,
+        "stop_loss": 0.013616999999999999
+      }
+    },
+    {
+      "symbol": "ALICEUSDT",
+      "base_asset": "ALICE",
+      "price": 0.3806,
+      "volume_24h_usdt": 1561.0727659999998,
+      "price_change_24h": -9.381,
+      "rsi_14": 0.0,
+      "volume_category": "nano_cap",
+      "momentum_score": 4.131523147223681,
+      "volatility": 0.09381,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 4.67069421319408,
+      "sector": "gaming",
+      "ecosystem_score": 7.0,
+      "volume_rank": 84,
+      "momentum_rank": 56,
+      "performance_rank": 164,
+      "magic_similarity_score": 8.0,
+      "current_phase": "correction",
+      "estimated_surge_potential": 60,
+      "magic_correlation": 0.5,
+      "entry_recommendation": {
+        "action": "AGGRESSIVE BUY",
+        "entry_price": 0.38440599999999997,
+        "dca_levels": [
+          0.372988,
+          0.36157,
+          0.350152
+        ],
+        "target": 0.49478,
+        "stop_loss": 0.334928
+      }
+    },
+    {
+      "symbol": "SNXUSDT",
+      "base_asset": "SNX",
+      "price": 0.573,
+      "volume_24h_usdt": 30762.8802,
+      "price_change_24h": -6.981,
+      "rsi_14": 0.0,
+      "volume_category": "micro_cap",
+      "momentum_score": 5.1861269942116035,
+      "volatility": 0.06981,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 4.227043251447099,
+      "sector": "defi",
+      "ecosystem_score": 8.0,
+      "volume_rank": 25,
+      "momentum_rank": 20,
+      "performance_rank": 153,
+      "magic_similarity_score": 6.5,
+      "current_phase": "consolidation",
+      "estimated_surge_potential": 52.0,
+      "magic_correlation": 0.3,
+      "entry_recommendation": {
+        "action": "WAIT",
+        "entry_price": 0.5615399999999999,
+        "target": 0.6875999999999999,
+        "stop_loss": 0.5156999999999999
+      }
+    },
+    {
+      "symbol": "XRPUSDT",
+      "base_asset": "XRP",
+      "price": 2.9487,
+      "volume_24h_usdt": 643408.69896,
+      "price_change_24h": -3.226,
+      "rsi_14": 0.0,
+      "volume_category": "small_cap",
+      "momentum_score": 6.131086928317252,
+      "volatility": 0.03226,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 3.709178267920687,
+      "sector": "general",
+      "ecosystem_score": 6.0,
+      "volume_rank": 3,
+      "momentum_rank": 2,
+      "performance_rank": 89,
+      "magic_similarity_score": 6.0,
+      "current_phase": "consolidation",
+      "estimated_surge_potential": 48.0,
+      "magic_correlation": 0.3,
+      "entry_recommendation": {
+        "action": "WAIT",
+        "entry_price": 2.889726,
+        "target": 3.53844,
+        "stop_loss": 2.65383
+      }
+    },
+    {
+      "symbol": "ADAUSDT",
+      "base_asset": "ADA",
+      "price": 0.7193,
+      "volume_24h_usdt": 255467.01958,
+      "price_change_24h": -3.255,
+      "rsi_14": 0.0,
+      "volume_category": "small_cap",
+      "momentum_score": 5.732834841304665,
+      "volatility": 0.032549999999999996,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 3.810916289673834,
+      "sector": "layer1",
+      "ecosystem_score": 7.5,
+      "volume_rank": 4,
+      "momentum_rank": 4,
+      "performance_rank": 90,
+      "magic_similarity_score": 6.0,
+      "current_phase": "consolidation",
+      "estimated_surge_potential": 48.0,
+      "magic_correlation": 0.3,
+      "entry_recommendation": {
+        "action": "WAIT",
+        "entry_price": 0.704914,
+        "target": 0.86316,
+        "stop_loss": 0.6473700000000001
+      }
+    },
+    {
+      "symbol": "USDCUSDT",
+      "base_asset": "USDC",
+      "price": 1.0002,
+      "volume_24h_usdt": 182723.5374,
+      "price_change_24h": 0.07,
+      "rsi_14": 0.0,
+      "volume_category": "small_cap",
+      "momentum_score": 5.268794494284831,
+      "volatility": 0.0007000000000000001,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 3.6880513764287923,
+      "sector": "stablecoin",
+      "ecosystem_score": 6.0,
+      "volume_rank": 8,
+      "momentum_rank": 17,
+      "performance_rank": 31,
+      "magic_similarity_score": 6.0,
+      "current_phase": "accumulation",
+      "estimated_surge_potential": 57.599999999999994,
+      "magic_correlation": 0.3,
+      "entry_recommendation": {
+        "action": "ACCUMULATE",
+        "entry_price": 0.990198,
+        "dca_levels": [
+          0.970194,
+          0.95019
+        ],
+        "target": 1.2502499999999999,
+        "stop_loss": 0.90018
+      }
+    },
+    {
+      "symbol": "FLOKIUSDT",
+      "base_asset": "FLOKI",
+      "price": 0.00010212,
+      "volume_24h_usdt": 67310.46068148,
+      "price_change_24h": -7.349,
+      "rsi_14": 0.0,
+      "volume_category": "micro_cap",
+      "momentum_score": 5.562982562934402,
+      "volatility": 0.07349,
+      "ai_prediction": "NEUTRAL",
+      "ai_confidence": 0.5,
+      "risk_score": 4.1604293592663995,
+      "sector": "meme",
+      "ecosystem_score": 5.0,
+      "volume_rank": 17,
+      "momentum_rank": 7,
+      "performance_rank": 158,
+      "magic_similarity_score": 6.0,
+      "current_phase": "consolidation",
+      "estimated_surge_potential": 48.0,
+      "magic_correlation": 0.3,
+      "entry_recommendation": {
+        "action": "WAIT",
+        "entry_price": 0.0001000776,
+        "target": 0.000122544,
+        "stop_loss": 9.1908e-05
+      }
+    }
+  ],
+  "allocation": {
+    "strategy": "all_in_magic_learning",
+    "total_allocation": 0.9,
+    "positions": {
+      "MAGICUSDT": {
+        "allocation": 0.09000000000000001,
+        "reasoning": "MAGIC-similar (Score: 9.0) - 60% potential",
+        "entry_strategy": {
+          "action": "AGGRESSIVE BUY",
+          "entry_price": 0.24037999999999998,
+          "dca_levels": [
+            0.23323999999999998,
+            0.22609999999999997,
+            0.21896
+          ],
+          "target": 0.3094,
+          "stop_loss": 0.20944
+        },
+        "target": 0.3808,
+        "stop_loss": 0.20944,
+        "priority": 4
+      },
+      "ILVUSDT": {
+        "allocation": 0.13999999999999999,
+        "reasoning": "MAGIC-similar (Score: 14.0) - 60% potential",
+        "entry_strategy": {
+          "action": "MOMENTUM BUY",
+          "entry_price": 19.3086,
+          "target": 26.502,
+          "stop_loss": 17.4156
+        },
+        "target": 30.288,
+        "stop_loss": 16.6584,
+        "priority": 2
+      },
+      "AXSUSDT": {
+        "allocation": 0.11499999999999999,
+        "reasoning": "MAGIC-similar (Score: 11.5) - 60% potential",
+        "entry_strategy": {
+          "action": "ACCUMULATE",
+          "entry_price": 2.25522,
+          "dca_levels": [
+            2.20966,
+            2.1641
+          ],
+          "target": 2.8475,
+          "stop_loss": 2.0502000000000002
+        },
+        "target": 3.6448,
+        "stop_loss": 2.00464,
+        "priority": 3
+      },
+      "GALAUSDT": {
+        "allocation": 0.09000000000000001,
+        "reasoning": "MAGIC-similar (Score: 9.0) - 60% potential",
+        "entry_strategy": {
+          "action": "ACCUMULATE",
+          "entry_price": 0.0149787,
+          "dca_levels": [
+            0.0146761,
+            0.014373499999999999
+          ],
+          "target": 0.0189125,
+          "stop_loss": 0.013616999999999999
+        },
+        "target": 0.024208,
+        "stop_loss": 0.013314399999999999,
+        "priority": 5
+      },
+      "CASH_RESERVE": {
+        "allocation": 0.1,
+        "reasoning": "Quick opportunities and DCA funds",
+        "priority": 10
+      }
+    },
+    "reasoning": "Focus on MAGIC pattern replication and gaming sector dominance"
+  },
+  "execution": {
+    "timestamp": "2025-08-05T16:30:06.340154",
+    "strategy": "all_in_magic_learning",
+    "orders": [
+      {
+        "symbol": "ILVUSDT",
+        "action": "MOMENTUM BUY",
+        "amount": 139.99999999999997,
+        "quantity": 7.250655148483059,
+        "entry_price": 19.3086,
+        "target": 30.288,
+        "stop_loss": 16.6584,
+        "reasoning": "MAGIC-similar (Score: 14.0) - 60% potential",
+        "status": "DEMO_EXECUTED"
+      },
+      {
+        "symbol": "AXSUSDT",
+        "action": "ACCUMULATE",
+        "amount": 114.99999999999999,
+        "quantity": 50.99280779702201,
+        "entry_price": 2.25522,
+        "target": 3.6448,
+        "stop_loss": 2.00464,
+        "reasoning": "MAGIC-similar (Score: 11.5) - 60% potential",
+        "status": "DEMO_EXECUTED"
+      },
+      {
+        "symbol": "MAGICUSDT",
+        "action": "AGGRESSIVE BUY",
+        "amount": 90.00000000000001,
+        "quantity": 374.40718861802156,
+        "entry_price": 0.24037999999999998,
+        "target": 0.3808,
+        "stop_loss": 0.20944,
+        "reasoning": "MAGIC-similar (Score: 9.0) - 60% potential",
+        "status": "DEMO_EXECUTED"
+      },
+      {
+        "symbol": "GALAUSDT",
+        "action": "ACCUMULATE",
+        "amount": 90.00000000000001,
+        "quantity": 6008.532115604159,
+        "entry_price": 0.0149787,
+        "target": 0.024208,
+        "stop_loss": 0.013314399999999999,
+        "reasoning": "MAGIC-similar (Score: 9.0) - 60% potential",
+        "status": "DEMO_EXECUTED"
+      }
+    ],
+    "total_invested": 434.99999999999994,
+    "cash_reserved": 100.0
+  }
+}

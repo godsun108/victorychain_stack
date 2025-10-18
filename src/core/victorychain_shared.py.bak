@@ -1,0 +1,412 @@
+#!/usr/bin/env python3
+
+"""
+🚀 VICTORYCHAIN SHARED INTERFACES
+Common interfaces, types, and utilities for the VictoryChain ecosystem
+Author: Senior Developer
+Version: 2.0.0
+"""
+
+import os
+import json
+import logging
+from datetime import datetime, timedelta
+from decimal import Decimal, ROUND_DOWN
+from typing import Dict, List, Optional, Tuple, Union, Any, Protocol, runtime_checkable
+from dataclasses import dataclass, asdict, field
+from enum import Enum
+from abc import ABC, abstractmethod
+
+# Configure module logger
+logger = logging.getLogger(__name__)
+
+# ===== ENUMS =====
+
+class OrderType(Enum):
+    """Order execution types"""
+    BUY = "BUY"
+    SELL = "SELL"
+    HOLD = "HOLD"
+
+class StrategyType(Enum):
+    """Trading strategy types"""
+    CONSOLIDATION = "consolidation"
+    BUY_HOLD = "buy_hold"
+    MOMENTUM = "momentum"
+    ARBITRAGE = "arbitrage"
+    HYBRID = "hybrid"
+
+class TradingMode(Enum):
+    """Trading execution modes"""
+    LIVE = "live"
+    DEMO = "demo"
+    PAPER = "paper"
+
+class OrderStatus(Enum):
+    """Order execution status"""
+    PENDING = "pending"
+    FILLED = "filled"
+    PARTIALLY_FILLED = "partially_filled"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+    REJECTED = "rejected"
+
+class RiskLevel(Enum):
+    """Risk assessment levels"""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    EXTREME = "extreme"
+
+class ConfidenceLevel(Enum):
+    """Confidence levels for trading decisions"""
+    VERY_LOW = "very_low"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    VERY_HIGH = "very_high"
+
+# ===== DATA CLASSES =====
+
+@dataclass
+class MarketData:
+    """Market data snapshot"""
+    symbol: str
+    price: float
+    volume_24h: float
+    price_change_24h: float
+    timestamp: datetime = field(default_factory=datetime.now)
+    bid: Optional[float] = None
+    ask: Optional[float] = None
+    spread: Optional[float] = None
+
+@dataclass
+class TradingSignal:
+    """Trading signal with comprehensive data"""
+    symbol: str
+    action: OrderType
+    confidence: float
+    reasoning: str
+    target_amount: float
+    current_price: float
+    strategy_type: StrategyType
+    timestamp: datetime = field(default_factory=datetime.now)
+    stop_loss: Optional[float] = None
+    take_profit: Optional[float] = None
+    risk_level: RiskLevel = RiskLevel.MEDIUM
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass
+class TradeResult:
+    """Trade execution result"""
+    success: bool
+    order_id: Optional[str] = None
+    symbol: Optional[str] = None
+    executed_qty: Optional[float] = None
+    executed_price: Optional[float] = None
+    commission: Optional[float] = None
+    status: OrderStatus = OrderStatus.PENDING
+    error_message: Optional[str] = None
+    timestamp: datetime = field(default_factory=datetime.now)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass
+class PortfolioPosition:
+    """Portfolio position data"""
+    symbol: str
+    quantity: float
+    avg_price: float
+    current_price: float
+    market_value: float
+    unrealized_pnl: float
+    unrealized_pnl_pct: float
+    timestamp: datetime = field(default_factory=datetime.now)
+
+@dataclass
+class TradingConfig:
+    """Unified trading configuration"""
+    # Risk Management
+    max_position_size: float = 0.25           # 25% max position
+    stop_loss_pct: float = 0.15               # 15% stop loss
+    take_profit_pct: float = 0.30             # 30% take profit
+    max_daily_loss: float = 0.05              # 5% max daily loss
+    
+    # Trading Parameters
+    min_trade_amount: float = 25.0            # Minimum $25 per trade
+    max_concurrent_positions: int = 5         # Maximum positions
+    quality_threshold: float = 0.70           # Minimum quality score
+    confidence_threshold: float = 0.75        # Minimum confidence
+    
+    # Strategy-Specific
+    momentum_threshold: float = 15.0          # Momentum percentage
+    volume_threshold: float = 500000.0        # Minimum daily volume
+    consolidation_threshold: float = 1.0      # Consolidation limit
+    
+    # Technical
+    rate_limit_delay: float = 1.0             # API rate limiting
+    max_retries: int = 3                      # Maximum retry attempts
+    timeout_seconds: int = 30                 # Request timeout
+    
+    # Claude AI
+    claude_enabled: bool = True               # Enable Claude AI
+    claude_fallback_threshold: float = 0.7    # Fallback threshold
+    token_optimization: bool = True           # Optimize token usage
+
+@dataclass
+class AnalysisResult:
+    """Comprehensive analysis result"""
+    symbol: str
+    score: float
+    recommendation: OrderType
+    confidence: float
+    reasoning: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime = field(default_factory=datetime.now)
+
+# ===== PROTOCOLS =====
+
+@runtime_checkable
+class TradingEngine(Protocol):
+    """Protocol for trading engines"""
+    
+    def analyze_market(self, symbols: List[str]) -> List[AnalysisResult]:
+        """Analyze market for trading opportunities"""
+        ...
+    
+    def execute_trade(self, signal: TradingSignal) -> TradeResult:
+        """Execute a trading signal"""
+        ...
+    
+    def get_portfolio(self) -> List[PortfolioPosition]:
+        """Get current portfolio positions"""
+        ...
+
+@runtime_checkable
+class StrategyProvider(Protocol):
+    """Protocol for strategy providers"""
+    
+    def generate_signals(self, market_data: List[MarketData]) -> List[TradingSignal]:
+        """Generate trading signals from market data"""
+        ...
+    
+    def validate_signal(self, signal: TradingSignal) -> bool:
+        """Validate a trading signal"""
+        ...
+
+@runtime_checkable
+class RiskManager(Protocol):
+    """Protocol for risk management"""
+    
+    def assess_risk(self, signal: TradingSignal, portfolio: List[PortfolioPosition]) -> RiskLevel:
+        """Assess risk level for a trading signal"""
+        ...
+    
+    def check_limits(self, signal: TradingSignal, portfolio: List[PortfolioPosition]) -> bool:
+        """Check if signal violates risk limits"""
+        ...
+
+@runtime_checkable
+class ClaudeProvider(Protocol):
+    """Protocol for Claude AI integration"""
+    
+    def analyze_opportunity(self, data: Dict[str, Any]) -> AnalysisResult:
+        """Analyze trading opportunity with Claude AI"""
+        ...
+    
+    def optimize_tokens(self, prompt: str) -> str:
+        """Optimize prompt for token efficiency"""
+        ...
+
+# ===== ABSTRACT BASE CLASSES =====
+
+class BaseStrategy(ABC):
+    """Base class for trading strategies"""
+    
+    def __init__(self, config: TradingConfig):
+        self.config = config
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    
+    @abstractmethod
+    def analyze(self, market_data: List[MarketData]) -> List[TradingSignal]:
+        """Analyze market data and generate signals"""
+        pass
+    
+    @abstractmethod
+    def validate_signal(self, signal: TradingSignal) -> bool:
+        """Validate a trading signal"""
+        pass
+    
+    def get_strategy_type(self) -> StrategyType:
+        """Get strategy type"""
+        return StrategyType.HYBRID
+
+class BaseTrader(ABC):
+    """Base class for traders"""
+    
+    def __init__(self, config: TradingConfig):
+        self.config = config
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+    
+    @abstractmethod
+    def execute_signal(self, signal: TradingSignal) -> TradeResult:
+        """Execute a trading signal"""
+        pass
+    
+    @abstractmethod
+    def get_portfolio(self) -> List[PortfolioPosition]:
+        """Get current portfolio"""
+        pass
+
+# ===== UTILITY FUNCTIONS =====
+
+def calculate_position_size(portfolio_value: float, target_allocation: float, 
+                          price: float, max_position_size: float) -> float:
+    """Calculate optimal position size"""
+    try:
+        target_value = portfolio_value * min(target_allocation, max_position_size)
+        return target_value / price
+    except (ZeroDivisionError, TypeError):
+        return 0.0
+
+def calculate_stop_loss(entry_price: float, stop_loss_pct: float, order_type: OrderType) -> float:
+    """Calculate stop loss price"""
+    try:
+        if order_type == OrderType.BUY:
+            return entry_price * (1 - stop_loss_pct)
+        elif order_type == OrderType.SELL:
+            return entry_price * (1 + stop_loss_pct)
+        return entry_price
+    except (TypeError, ValueError):
+        return entry_price
+
+def calculate_take_profit(entry_price: float, take_profit_pct: float, order_type: OrderType) -> float:
+    """Calculate take profit price"""
+    try:
+        if order_type == OrderType.BUY:
+            return entry_price * (1 + take_profit_pct)
+        elif order_type == OrderType.SELL:
+            return entry_price * (1 - take_profit_pct)
+        return entry_price
+    except (TypeError, ValueError):
+        return entry_price
+
+def validate_signal_data(signal: TradingSignal) -> bool:
+    """Validate trading signal data integrity"""
+    try:
+        # Basic validation
+        if not signal.symbol or signal.confidence <= 0:
+            return False
+        
+        if signal.target_amount <= 0 or signal.current_price <= 0:
+            return False
+        
+        if signal.confidence > 1.0:
+            return False
+        
+        # Stop loss validation
+        if signal.stop_loss and signal.action == OrderType.BUY:
+            if signal.stop_loss >= signal.current_price:
+                return False
+        
+        # Take profit validation
+        if signal.take_profit and signal.action == OrderType.BUY:
+            if signal.take_profit <= signal.current_price:
+                return False
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Signal validation error: {e}")
+        return False
+
+def format_currency(amount: float, decimals: int = 2) -> str:
+    """Format currency amount"""
+    try:
+        return f"${amount:,.{decimals}f}"
+    except (TypeError, ValueError):
+        return "$0.00"
+
+def format_percentage(value: float, decimals: int = 2) -> str:
+    """Format percentage value"""
+    try:
+        return f"{value:.{decimals}f}%"
+    except (TypeError, ValueError):
+        return "0.00%"
+
+# ===== CONSTANTS =====
+
+# Default configuration values
+DEFAULT_CONFIG = TradingConfig()
+
+# Symbol formatting
+SYMBOL_SUFFIXES = ['USDT', 'USD', 'BTC', 'ETH', 'BNB']
+
+# Time constants
+SECONDS_PER_DAY = 86400
+MILLISECONDS_PER_SECOND = 1000
+
+# Logging format
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+# API endpoints and limits
+BINANCE_API_LIMITS = {
+    'weight_limit': 1200,
+    'order_limit': 10,
+    'requests_per_minute': 60
+}
+
+# Error messages
+ERROR_MESSAGES = {
+    'invalid_signal': 'Invalid trading signal data',
+    'insufficient_funds': 'Insufficient funds for trade',
+    'api_error': 'Exchange API error',
+    'network_error': 'Network connectivity error',
+    'rate_limit': 'API rate limit exceeded'
+}
+
+# Success messages
+SUCCESS_MESSAGES = {
+    'trade_executed': 'Trade executed successfully',
+    'signal_generated': 'Trading signal generated',
+    'analysis_complete': 'Market analysis complete'
+}
+
+def get_logger(name: str) -> logging.Logger:
+    """Get configured logger for module"""
+    return logging.getLogger(name)
+
+def load_config_from_file(file_path: str) -> TradingConfig:
+    """Load trading configuration from file"""
+    try:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                config_data = json.load(f)
+            return TradingConfig(**config_data)
+        else:
+            logger.warning(f"Config file not found: {file_path}, using defaults")
+            return DEFAULT_CONFIG
+    except Exception as e:
+        logger.error(f"Error loading config from {file_path}: {e}")
+        return DEFAULT_CONFIG
+
+def save_config_to_file(config: TradingConfig, file_path: str) -> bool:
+    """Save trading configuration to file"""
+    try:
+        config_dict = asdict(config)
+        with open(file_path, 'w') as f:
+            json.dump(config_dict, f, indent=2, default=str)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving config to {file_path}: {e}")
+        return False
+
+# Module metadata
+__version__ = "2.0.0"
+__author__ = "Senior Developer"
+__description__ = "VictoryChain shared interfaces and utilities"
+
+if __name__ == "__main__":
+    # Module test
+    config = DEFAULT_CONFIG
+    print(f"VictoryChain Shared Interfaces v{__version__}")
+    print(f"Default config: {asdict(config)}")

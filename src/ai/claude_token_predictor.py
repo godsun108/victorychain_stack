@@ -1,0 +1,737 @@
+#!/usr/bin/env python3
+"""
+VictoryChain Claude AI Token Prediction System
+Specialized for 30-50% gain predictions and buy-and-hold strategies
+"""
+
+import asyncio
+import aiohttp
+import requests
+import json
+import os
+import time
+import statistics
+import numpy as np
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("claude_token_predictor.log"),
+        logging.StreamHandler(),
+    ],
+)
+logger = logging.getLogger(__name__)
+
+
+class ClaudeTokenPredictor:
+    def __init__(self):
+        self.claude_api_key = os.getenv("CLAUDE_API_KEY", "")
+        self.BINANCEUS_KEY = os.getenv("BINANCEUS_KEY", "")
+        self.binance_secret = os.getenv("BINANCEUS_SECRET", "")
+        self.base_url = "https://api.binance.us"
+        self.claude_url = "https://api.anthropic.com/v1/messages"
+
+        if not self.claude_api_key:
+            logger.warning("⚠️ Claude API key not found - using fallback analysis")
+        if not self.BINANCEUS_KEY:
+            logger.error("❌ Binance API keys required for market data")
+            exit(1)
+
+    async def get_comprehensive_market_data(self) -> List[Dict]:
+        """Get comprehensive market data across ALL volume categories"""
+        try:
+            # Get 24hr ticker data
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{self.base_url}/api/v3/ticker/24hr"
+                ) as response:
+                    if response.status != 200:
+                        return []
+                    tickers = await response.json()
+
+            # Categorize tokens by volume for comprehensive analysis
+            high_volume_tokens = []  # >$1M volume
+            medium_volume_tokens = []  # $100K-$1M volume
+            low_volume_tokens = []  # $10K-$100K volume
+            micro_volume_tokens = []  # <$10K volume
+
+            for ticker in tickers:
+                symbol = ticker["symbol"]
+                if (
+                    symbol.endswith("USDT")
+                    and symbol not in ["USDCUSDT", "TUSDUSDT", "BUSDUSDT", "FDUSDUSDT"]
+                    and float(ticker["lastPrice"]) >= 0.000001
+                ):  # Very low minimum price
+
+                    volume = float(ticker["quoteVolume"])
+                    token_data = {
+                        "symbol": symbol,
+                        "price": float(ticker["lastPrice"]),
+                        "volume_24h": volume,
+                        "price_change_24h": float(ticker["priceChangePercent"]),
+                        "high_24h": float(ticker["highPrice"]),
+                        "low_24h": float(ticker["lowPrice"]),
+                        "count": int(ticker["count"]),
+                    }
+
+                    # Categorize by volume
+                    if volume >= 1000000:  # >$1M
+                        high_volume_tokens.append(token_data)
+                    elif volume >= 100000:  # $100K-$1M
+                        medium_volume_tokens.append(token_data)
+                    elif volume >= 10000:  # $10K-$100K
+                        low_volume_tokens.append(token_data)
+                    else:  # <$10K
+                        micro_volume_tokens.append(token_data)
+
+            # Smart selection across all categories for maximum opportunity discovery
+            selected_tokens = []
+
+            # Take all high volume (established tokens)
+            selected_tokens.extend(high_volume_tokens)
+
+            # Take top medium volume by momentum
+            medium_volume_tokens.sort(
+                key=lambda x: abs(x["price_change_24h"]), reverse=True
+            )
+            selected_tokens.extend(medium_volume_tokens[:15])  # Top 15 by momentum
+
+            # Take top low volume by momentum (hidden gems)
+            low_volume_tokens.sort(
+                key=lambda x: abs(x["price_change_24h"]), reverse=True
+            )
+            selected_tokens.extend(low_volume_tokens[:20])  # Top 20 by momentum
+
+            # Take top micro volume with highest momentum (moonshot potential)
+            micro_volume_tokens.sort(
+                key=lambda x: abs(x["price_change_24h"]), reverse=True
+            )
+            selected_tokens.extend(micro_volume_tokens[:15])  # Top 15 movers
+
+            logger.info(f"📊 VOLUME CATEGORIES:")
+            logger.info(f"🔥 High Volume (>$1M): {len(high_volume_tokens)} tokens")
+            logger.info(
+                f"📈 Medium Volume ($100K-$1M): {len(medium_volume_tokens)} tokens"
+            )
+            logger.info(f"📊 Low Volume ($10K-$100K): {len(low_volume_tokens)} tokens")
+            logger.info(f"🔍 Micro Volume (<$10K): {len(micro_volume_tokens)} tokens")
+            logger.info(f"✅ Found {len(selected_tokens)} tokens selected for analysis")
+
+            return selected_tokens
+
+        except Exception as e:
+            logger.error(f"Failed to get market data: {e}")
+            return []
+
+    async def get_historical_data(
+        self, symbol: str, interval: str = "1h", limit: int = 168
+    ) -> List[Dict]:
+        """Get historical price data for token"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                params = {"symbol": symbol, "interval": interval, "limit": limit}
+                async with session.get(
+                    f"{self.base_url}/api/v3/klines", params=params
+                ) as response:
+                    if response.status != 200:
+                        return []
+
+                    klines = await response.json()
+
+            processed_data = []
+            for i, kline in enumerate(klines):
+                open_price = float(kline[1])
+                high_price = float(kline[2])
+                low_price = float(kline[3])
+                close_price = float(kline[4])
+                volume = float(kline[5])
+
+                # Calculate returns and volatility
+                if i > 0:
+                    prev_close = float(klines[i - 1][4])
+                    hourly_return = (close_price - prev_close) / prev_close * 100
+                else:
+                    hourly_return = 0
+
+                intraday_volatility = (high_price - low_price) / close_price * 100
+
+                processed_data.append(
+                    {
+                        "timestamp": int(kline[0]),
+                        "open": open_price,
+                        "high": high_price,
+                        "low": low_price,
+                        "close": close_price,
+                        "volume": volume,
+                        "hourly_return": hourly_return,
+                        "volatility": intraday_volatility,
+                    }
+                )
+
+            return processed_data
+
+        except Exception as e:
+            logger.error(f"Failed to get historical data for {symbol}: {e}")
+            return []
+
+    def calculate_advanced_metrics(
+        self, historical_data: List[Dict], current_data: Dict
+    ) -> Dict:
+        """Calculate advanced statistical metrics for prediction"""
+        if len(historical_data) < 50:
+            return {}
+
+        # Extract price and volume data
+        closes = [d["close"] for d in historical_data]
+        volumes = [d["volume"] for d in historical_data]
+        returns = [
+            d["hourly_return"] for d in historical_data if d["hourly_return"] != 0
+        ]
+        volatilities = [d["volatility"] for d in historical_data]
+
+        # Advanced statistical calculations
+        price_std = np.std(closes)
+        price_mean = np.mean(closes)
+        volume_trend = np.polyfit(range(len(volumes)), volumes, 1)[0]  # Volume trend
+
+        # Momentum indicators
+        recent_momentum = np.mean(returns[-24:]) if len(returns) >= 24 else 0
+        short_momentum = np.mean(returns[-6:]) if len(returns) >= 6 else 0
+
+        # Volatility analysis
+        avg_volatility = np.mean(volatilities)
+        volatility_trend = np.polyfit(range(len(volatilities)), volatilities, 1)[0]
+
+        # Support/Resistance levels
+        highs = [d["high"] for d in historical_data[-50:]]  # Last 50 periods
+        lows = [d["low"] for d in historical_data[-50:]]
+        resistance = np.percentile(highs, 90)
+        support = np.percentile(lows, 10)
+
+        # Price position relative to range
+        current_price = current_data["price"]
+        price_position = (
+            (current_price - support) / (resistance - support)
+            if resistance > support
+            else 0.5
+        )
+
+        # RSI calculation
+        gains = [r for r in returns if r > 0]
+        losses = [abs(r) for r in returns if r < 0]
+        avg_gain = np.mean(gains) if gains else 0
+        avg_loss = np.mean(losses) if losses else 0.01
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+
+        # Bollinger Bands
+        bb_period = min(20, len(closes))
+        bb_closes = closes[-bb_period:]
+        bb_mean = np.mean(bb_closes)
+        bb_std = np.std(bb_closes)
+        bb_upper = bb_mean + (bb_std * 2)
+        bb_lower = bb_mean - (bb_std * 2)
+        bb_position = (
+            (current_price - bb_lower) / (bb_upper - bb_lower)
+            if bb_upper > bb_lower
+            else 0.5
+        )
+
+        return {
+            "price_volatility_ratio": (price_std / price_mean) * 100,
+            "volume_trend": volume_trend,
+            "recent_momentum_24h": recent_momentum,
+            "short_momentum_6h": short_momentum,
+            "avg_volatility": avg_volatility,
+            "volatility_trend": volatility_trend,
+            "resistance_level": resistance,
+            "support_level": support,
+            "price_position": price_position,
+            "rsi": rsi,
+            "bollinger_position": bb_position,
+            "distance_to_resistance": (resistance - current_price)
+            / current_price
+            * 100,
+            "distance_to_support": (current_price - support) / current_price * 100,
+            "breakout_potential": (
+                1 - price_position
+                if price_position > 0.8
+                else price_position if price_position < 0.2 else 0.5
+            ),
+        }
+
+    async def claude_30_50_prediction(
+        self, token_data: Dict, historical_data: List[Dict], metrics: Dict
+    ) -> Dict:
+        """Use Claude to predict 30-50% gain probability with detailed analysis"""
+        if not self.claude_api_key:
+            return self._fallback_prediction(token_data, metrics)
+
+        try:
+            # Prepare comprehensive data for Claude
+            symbol = token_data["symbol"]
+            current_price = token_data["price"]
+
+            # Calculate key statistics
+            recent_highs = [d["high"] for d in historical_data[-30:]]
+            recent_lows = [d["low"] for d in historical_data[-30:]]
+            max_recent_high = max(recent_highs) if recent_highs else current_price
+            min_recent_low = min(recent_lows) if recent_lows else current_price
+
+            # Price levels for gains
+            price_30_gain = current_price * 1.30
+            price_50_gain = current_price * 1.50
+
+            # Determine volume category for context
+            volume = token_data["volume_24h"]
+            if volume >= 1000000:
+                volume_category = "High Volume (>$1M) - Established Token"
+                risk_multiplier = 1.0
+            elif volume >= 100000:
+                volume_category = "Medium Volume ($100K-$1M) - Growth Token"
+                risk_multiplier = 1.2
+            elif volume >= 10000:
+                volume_category = "Low Volume ($10K-$100K) - Hidden Gem Potential"
+                risk_multiplier = 1.5
+            else:
+                volume_category = "Micro Volume (<$10K) - Moonshot Potential"
+                risk_multiplier = 2.0
+
+            prompt = f"""As an expert cryptocurrency analyst specializing in identifying high-growth opportunities, analyze {symbol} for 30-50% gain potential in buy-and-hold strategy.
+
+TOKEN: {symbol}
+CATEGORY: {volume_category}
+CURRENT PRICE: ${current_price:.8f}
+24H VOLUME: ${token_data['volume_24h']:,.0f}
+24H CHANGE: {token_data['price_change_24h']:.2f}%
+
+GROWTH OPPORTUNITY ANALYSIS:
+- 30% Gain Target: ${price_30_gain:.8f}
+- 50% Gain Target: ${price_50_gain:.8f}
+- Recent High: ${max_recent_high:.8f}
+- Recent Low: ${min_recent_low:.8f}
+
+VOLUME CATEGORY CONTEXT:
+{volume_category} tokens typically have {'lower liquidity but higher growth potential' if volume < 100000 else 'good liquidity and moderate growth potential' if volume < 1000000 else 'high liquidity but may need stronger catalysts for large moves'}.
+
+TECHNICAL METRICS:
+- Price Volatility: {metrics.get('price_volatility_ratio', 0):.2f}%
+- RSI: {metrics.get('rsi', 50):.1f}
+- Recent Momentum (24h): {metrics.get('recent_momentum_24h', 0):.2f}%
+- Short Momentum (6h): {metrics.get('short_momentum_6h', 0):.2f}%
+- Price Position in Range: {metrics.get('price_position', 0.5):.2f} (0=support, 1=resistance)
+- Bollinger Position: {metrics.get('bollinger_position', 0.5):.2f}
+- Distance to Resistance: {metrics.get('distance_to_resistance', 0):.2f}%
+- Breakout Potential: {metrics.get('breakout_potential', 0.5):.2f}
+- Volume Trend: {metrics.get('volume_trend', 0):.0f}
+
+RISK-REWARD ANALYSIS:
+- Support Level: ${metrics.get('support_level', current_price):.8f}
+- Resistance Level: ${metrics.get('resistance_level', current_price):.8f}
+- Average Volatility: {metrics.get('avg_volatility', 0):.2f}%
+- Risk Multiplier: {risk_multiplier}x (based on volume category)
+
+SPECIAL CONSIDERATIONS FOR {volume_category.split(' ')[0].upper()} VOLUME TOKENS:
+{'- Higher growth potential due to lower market cap\n- May be more responsive to market sentiment\n- Could benefit from discovery by larger traders\n- Risk of manipulation in thin markets' if volume < 100000 else '- Balanced risk-reward profile\n- Good liquidity for entry/exit\n- May follow broader market trends' if volume < 1000000 else '- Lower volatility, more predictable movements\n- Requires significant volume for major moves\n- Good for risk-averse strategies'}
+
+Based on this comprehensive analysis, provide detailed predictions focusing on the unique characteristics of this volume category:
+
+Respond with this exact JSON format:
+{{
+    "gain_30_probability": <0-100>,
+    "gain_50_probability": <0-100>,
+    "optimal_timeframe_days": <number>,
+    "downside_risk_percent": <number>,
+    "stop_loss_percent": <number>,
+    "risk_reward_ratio": <number>,
+    "key_resistance": <price>,
+    "volume_needed_breakout": <number>,
+    "entry_price_low": <price>,
+    "entry_price_high": <price>,
+    "position_size_recommendation": "<micro/small/medium/large>",
+    "dca_intervals": <number_of_weeks>,
+    "confidence_score": <0-100>,
+    "volume_category_advantage": "<key advantage of this volume category>",
+    "prediction_reasoning": "<detailed explanation focusing on volume category characteristics>",
+    "catalysts": ["<factor1>", "<factor2>", "<factor3>"],
+    "risks": ["<risk1>", "<risk2>", "<risk3>"],
+    "moonshot_potential": <0-100>,
+    "recommendation": "<strong_buy/buy/hold/avoid>"
+}}"""
+
+            headers = {
+                "Content-Type": "application/json",
+                "x-api-key": self.claude_api_key,
+                "anthropic-version": "2023-06-01",
+            }
+
+            data = {
+                "model": "claude-3-sonnet-20240229",
+                "max_tokens": 1000,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    self.claude_url, headers=headers, json=data, timeout=20
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        content = result["content"][0]["text"]
+
+                        # Parse JSON response
+                        import re
+
+                        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                        if json_match:
+                            claude_prediction = json.loads(json_match.group())
+                            logger.info(
+                                f"🤖 Claude analyzed {symbol}: {claude_prediction.get('confidence_score', 0)}% confidence"
+                            )
+                            return claude_prediction
+
+            return self._fallback_prediction(token_data, metrics)
+
+        except Exception as e:
+            logger.warning(f"Claude prediction failed for {symbol}: {e}")
+            return self._fallback_prediction(token_data, metrics)
+
+    def _fallback_prediction(self, token_data: Dict, metrics: Dict) -> Dict:
+        """Enhanced fallback prediction with volume category analysis"""
+        try:
+            current_price = token_data["price"]
+            volume = token_data["volume_24h"]
+            volatility = metrics.get("price_volatility_ratio", 10)
+            momentum = metrics.get("recent_momentum_24h", 0)
+            rsi = metrics.get("rsi", 50)
+            breakout_potential = metrics.get("breakout_potential", 0.5)
+
+            # Volume category adjustments
+            if volume >= 1000000:  # High volume
+                volume_multiplier = 1.0
+                base_30_prob = 25
+                base_50_prob = 15
+                risk_adjustment = 1.0
+                position_rec = "medium"
+            elif volume >= 100000:  # Medium volume
+                volume_multiplier = 1.2
+                base_30_prob = 30
+                base_50_prob = 20
+                risk_adjustment = 1.1
+                position_rec = "medium"
+            elif volume >= 10000:  # Low volume (hidden gems)
+                volume_multiplier = 1.5
+                base_30_prob = 40
+                base_50_prob = 30
+                risk_adjustment = 1.3
+                position_rec = "small"
+            else:  # Micro volume (moonshots)
+                volume_multiplier = 2.0
+                base_30_prob = 50
+                base_50_prob = 40
+                risk_adjustment = 1.8
+                position_rec = "micro"
+
+            # Adjust for momentum
+            if momentum > 10:
+                base_30_prob += 25 * volume_multiplier
+                base_50_prob += 20 * volume_multiplier
+            elif momentum > 5:
+                base_30_prob += 15 * volume_multiplier
+                base_50_prob += 12 * volume_multiplier
+            elif momentum > 0:
+                base_30_prob += 8 * volume_multiplier
+                base_50_prob += 6 * volume_multiplier
+
+            # Adjust for RSI
+            if 30 < rsi < 70:  # Not overbought/oversold
+                base_30_prob += 10
+                base_50_prob += 8
+            elif rsi < 30:  # Oversold (good for lower volume tokens)
+                base_30_prob += 15 * (volume_multiplier - 0.5)
+                base_50_prob += 12 * (volume_multiplier - 0.5)
+
+            # Adjust for breakout potential
+            if breakout_potential > 0.7:
+                base_30_prob += 20 * volume_multiplier
+                base_50_prob += 18 * volume_multiplier
+            elif breakout_potential > 0.3:
+                base_30_prob += 10 * volume_multiplier
+                base_50_prob += 8 * volume_multiplier
+
+            # Volatility adjustments (higher volatility = higher potential for low volume)
+            if volatility > 20 and volume < 100000:
+                base_50_prob += 15  # High volatility good for moonshots
+                base_30_prob += 10
+            elif volatility > 10:
+                base_50_prob += max(5, int(volatility * volume_multiplier * 0.5))
+                base_30_prob += max(3, int(volatility * volume_multiplier * 0.3))
+
+            # Risk calculations
+            downside_risk = min(volatility * risk_adjustment * 0.4, 35)
+            stop_loss = max(6, min(20, volatility * risk_adjustment * 0.25))
+
+            # Moonshot potential (higher for lower volume)
+            moonshot_potential = min(
+                95,
+                max(
+                    10,
+                    (100 - volume / 10000) * volume_multiplier
+                    + abs(momentum) * 2
+                    + (100 - rsi if rsi > 50 else rsi) * 0.5,
+                ),
+            )
+
+            # Entry recommendations
+            resistance = metrics.get("resistance_level", current_price * 1.1)
+            support = metrics.get("support_level", current_price * 0.9)
+
+            # Volume category advantages
+            if volume >= 1000000:
+                category_advantage = (
+                    "High liquidity, stable price action, institutional interest"
+                )
+            elif volume >= 100000:
+                category_advantage = (
+                    "Good liquidity with growth potential, balanced risk-reward"
+                )
+            elif volume >= 10000:
+                category_advantage = (
+                    "Hidden gem potential, early discovery opportunity, higher growth"
+                )
+            else:
+                category_advantage = "Moonshot potential, massive upside if discovered, early adopter advantage"
+
+            final_30_prob = min(90, max(5, base_30_prob))
+            final_50_prob = min(85, max(3, base_50_prob))
+
+            return {
+                "gain_30_probability": final_30_prob,
+                "gain_50_probability": final_50_prob,
+                "optimal_timeframe_days": int(60 - volume_multiplier * 10),
+                "downside_risk_percent": downside_risk,
+                "stop_loss_percent": stop_loss,
+                "risk_reward_ratio": (30 / downside_risk) if downside_risk > 0 else 3.0,
+                "key_resistance": resistance,
+                "volume_needed_breakout": token_data["volume_24h"]
+                * (2.0 - volume_multiplier * 0.3),
+                "entry_price_low": support,
+                "entry_price_high": current_price * (1.01 + volume_multiplier * 0.01),
+                "position_size_recommendation": position_rec,
+                "dca_intervals": max(1, int(4 - volume_multiplier)),
+                "confidence_score": min(85, 60 + final_30_prob * 0.3),
+                "volume_category_advantage": category_advantage,
+                "prediction_reasoning": f"Volume category analysis: ${volume:,.0f} volume, {momentum:.1f}% momentum, {volatility:.1f}% volatility, RSI {rsi:.1f}, {moonshot_potential:.0f}% moonshot potential",
+                "catalysts": [
+                    "Volume breakout above resistance",
+                    "Technical momentum alignment",
+                    "Market discovery" if volume < 100000 else "Institutional interest",
+                ],
+                "risks": [
+                    "High volatility" if volatility > 15 else "Market volatility",
+                    "Low liquidity" if volume < 100000 else "Market downturns",
+                    "Manipulation risk" if volume < 50000 else "Sector rotation",
+                ],
+                "moonshot_potential": moonshot_potential,
+                "recommendation": (
+                    "strong_buy"
+                    if final_30_prob > 60 and volume < 50000
+                    else (
+                        "buy"
+                        if final_30_prob > 45
+                        else "hold" if final_30_prob > 25 else "avoid"
+                    )
+                ),
+            }
+
+        except Exception as e:
+            logger.error(f"Enhanced fallback prediction failed: {e}")
+            return {
+                "gain_30_probability": 0,
+                "recommendation": "avoid",
+                "moonshot_potential": 0,
+            }
+
+    async def analyze_top_tokens_for_gains(self) -> List[Dict]:
+        """Analyze top tokens for 30-50% gain potential"""
+        logger.info("🔍 Starting comprehensive token analysis for 30-50% gains...")
+
+        # Get market data
+        market_data = await self.get_comprehensive_market_data()
+        if not market_data:
+            logger.error("Failed to get market data")
+            return []
+
+        logger.info(f"📊 Analyzing {len(market_data)} quality tokens...")
+
+        # Analyze each token
+        analysis_results = []
+
+        for i, token in enumerate(market_data, 1):
+            try:
+                symbol = token["symbol"]
+                logger.info(f"🔍 Analyzing {symbol} ({i}/{len(market_data)})...")
+
+                # Get historical data
+                historical_data = await self.get_historical_data(symbol)
+                if not historical_data:
+                    continue
+
+                # Calculate metrics
+                metrics = self.calculate_advanced_metrics(historical_data, token)
+                if not metrics:
+                    continue
+
+                # Get Claude prediction
+                prediction = await self.claude_30_50_prediction(
+                    token, historical_data, metrics
+                )
+
+                # Combine all data
+                analysis_results.append(
+                    {
+                        "symbol": symbol,
+                        "current_price": token["price"],
+                        "volume_24h": token["volume_24h"],
+                        "price_change_24h": token["price_change_24h"],
+                        "metrics": metrics,
+                        "prediction": prediction,
+                        "gain_30_probability": prediction.get("gain_30_probability", 0),
+                        "gain_50_probability": prediction.get("gain_50_probability", 0),
+                        "confidence_score": prediction.get("confidence_score", 0),
+                        "recommendation": prediction.get("recommendation", "avoid"),
+                    }
+                )
+
+                # Brief pause to avoid rate limits
+                await asyncio.sleep(0.1)
+
+            except Exception as e:
+                logger.error(f"Failed to analyze {symbol}: {e}")
+                continue
+
+        # Sort by combined probability and confidence
+        analysis_results.sort(
+            key=lambda x: (
+                x["gain_30_probability"] * 0.6 + x["gain_50_probability"] * 0.4
+            )
+            * (x["confidence_score"] / 100),
+            reverse=True,
+        )
+
+        logger.info(f"✅ Analysis complete! {len(analysis_results)} tokens analyzed")
+        return analysis_results
+
+    def display_top_predictions(self, results: List[Dict], top_n: int = 10):
+        """Display top token predictions for 30-50% gains"""
+        print("\n" + "=" * 100)
+        print("🏆 TOP TOKENS FOR 30-50% GAINS - BUY & HOLD PREDICTIONS")
+        print("=" * 100)
+
+        for i, result in enumerate(results[:top_n], 1):
+            pred = result["prediction"]
+
+            print(f"\n#{i} {result['symbol']}")
+            print("-" * 50)
+            print(f"💰 Current Price: ${result['current_price']:.6f}")
+            print(f"🎯 30% Gain Probability: {result['gain_30_probability']:.1f}%")
+            print(f"🚀 50% Gain Probability: {result['gain_50_probability']:.1f}%")
+            print(
+                f"⏰ Optimal Timeframe: {pred.get('optimal_timeframe_days', 45)} days"
+            )
+            print(f"🎯 Confidence Score: {result['confidence_score']:.1f}%")
+            print(f"💡 Recommendation: {pred.get('recommendation', 'unknown').upper()}")
+
+            print(f"\n📊 Entry Strategy:")
+            print(
+                f"   • Entry Range: ${pred.get('entry_price_low', 0):.6f} - ${pred.get('entry_price_high', 0):.6f}"
+            )
+            print(
+                f"   • Position Size: {pred.get('position_size_recommendation', 'medium').title()}"
+            )
+            print(f"   • DCA Over: {pred.get('dca_intervals', 2)} weeks")
+            print(f"   • Stop Loss: {pred.get('stop_loss_percent', 10):.1f}%")
+
+            print(f"\n🔍 Risk Analysis:")
+            print(f"   • Downside Risk: {pred.get('downside_risk_percent', 15):.1f}%")
+            print(f"   • Risk/Reward Ratio: {pred.get('risk_reward_ratio', 2):.1f}:1")
+            print(f"   • Key Resistance: ${pred.get('key_resistance', 0):.6f}")
+
+            print(f"\n💭 Claude's Reasoning:")
+            reasoning = pred.get(
+                "prediction_reasoning", "No detailed analysis available"
+            )
+            print(f"   {reasoning[:200]}{'...' if len(reasoning) > 200 else ''}")
+
+            catalysts = pred.get("catalysts", [])
+            if catalysts:
+                print(f"\n🚀 Catalysts: {', '.join(catalysts[:3])}")
+
+            risks = pred.get("risks", [])
+            if risks:
+                print(f"⚠️ Risks: {', '.join(risks[:3])}")
+
+    async def save_analysis_report(self, results: List[Dict]):
+        """Save detailed analysis report"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"claude_30_50_gain_predictions_{timestamp}.json"
+
+        report = {
+            "timestamp": datetime.now().isoformat(),
+            "analysis_type": "30-50% Gain Predictions",
+            "tokens_analyzed": len(results),
+            "results": results,
+        }
+
+        with open(filename, "w") as f:
+            json.dump(report, f, indent=2, default=str)
+
+        logger.info(f"📄 Detailed report saved: {filename}")
+
+
+async def main():
+    """Main function to run Claude token prediction"""
+    try:
+        predictor = ClaudeTokenPredictor()
+
+        print("🤖 Claude AI Token Prediction System")
+        print("🎯 Specialized for 30-50% Gain Predictions")
+        print("=" * 60)
+
+        # Run analysis
+        results = await predictor.analyze_top_tokens_for_gains()
+
+        if results:
+            # Display top predictions
+            predictor.display_top_predictions(results, top_n=10)
+
+            # Save detailed report
+            await predictor.save_analysis_report(results)
+
+            print(f"\n🎯 SUMMARY:")
+            print(f"   • {len(results)} tokens analyzed")
+            strong_buys = len(
+                [r for r in results if r["recommendation"] == "strong_buy"]
+            )
+            buys = len([r for r in results if r["recommendation"] == "buy"])
+            print(f"   • {strong_buys} strong buy recommendations")
+            print(f"   • {buys} buy recommendations")
+            high_prob = len([r for r in results if r["gain_30_probability"] > 50])
+            print(f"   • {high_prob} tokens with >50% probability for 30% gains")
+
+        else:
+            print("❌ No analysis results available")
+
+    except KeyboardInterrupt:
+        print("\n👋 Analysis stopped by user")
+    except Exception as e:
+        logger.error(f"Analysis error: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

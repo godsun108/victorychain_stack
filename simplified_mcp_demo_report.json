@@ -1,0 +1,111 @@
+{
+  "demo_timestamp": "2025-08-06T09:19:16.477812",
+  "library_availability": {
+    "Model Context Protocol": true,
+    "OpenAI": true,
+    "Anthropic": true,
+    "LangChain": true,
+    "Backtrader": true,
+    "NumPy": true,
+    "Pandas": true,
+    "AsyncIO": true,
+    "AioHTTP": true,
+    "JSON": true
+  },
+  "enhanced_validation": {
+    "trade_scenario": {
+      "symbol": "MAGIC",
+      "action": "BUY",
+      "price": 0.2847,
+      "size": 2000,
+      "gas_price": 28.5,
+      "eth_price": 2467,
+      "market_conditions": {
+        "rsi": 32.1,
+        "volume_ratio": 1.45,
+        "trend": "BULLISH_REVERSAL",
+        "volatility": "MODERATE"
+      }
+    },
+    "validation_layers": {
+      "technical_analysis": {
+        "rsi_signal": "OVERSOLD_RECOVERY",
+        "volume_confirmation": "STRONG",
+        "trend_alignment": "BULLISH_REVERSAL",
+        "score": 6.879501498163057
+      },
+      "gas_optimization": {
+        "current_gas": 28.5,
+        "optimal_range": "15-30 gwei",
+        "efficiency_score": 7.2,
+        "recommendation": "PROCEED"
+      },
+      "risk_management": {
+        "position_size_risk": "MODERATE",
+        "liquidity_risk": "LOW",
+        "correlation_risk": "MEDIUM",
+        "overall_risk_score": 6.4399216503995245,
+        "max_position_size": 2500
+      },
+      "ai_consensus": {
+        "model_count": 5,
+        "approve_votes": 5,
+        "confidence_avg": 0.7455344911393735,
+        "risk_score_avg": 5.580531146731498,
+        "consensus": "STRONG_APPROVE"
+      }
+    },
+    "mcp_decision": {
+      "decision": "CONDITIONAL_APPROVAL",
+      "overall_score": 0.627,
+      "execution_permitted": true,
+      "confidence": 0.7455344911393735,
+      "reasoning": "Technical: 6.9/10, Gas: 7.2/10, Risk: 6.4/10"
+    }
+  },
+  "advanced_features": {
+    "multi_model_ai": {
+      "enabled": true,
+      "models": [
+        "GPT-4",
+        "Claude-3",
+        "Llama-2",
+        "Gemini-Pro"
+      ],
+      "consensus_threshold": 0.75,
+      "current_agreement": 0.670297526262549,
+      "recommendation": "Use ensemble for critical trades"
+    },
+    "real_time_risk": {
+      "market_regime_detection": "TRENDING_BULLISH",
+      "volatility_clustering": "MODERATE",
+      "liquidity_monitoring": "ACTIVE",
+      "stress_testing": "ENABLED",
+      "update_frequency": "5 seconds"
+    },
+    "gas_intelligence": {
+      "predictive_modeling": "ENABLED",
+      "optimal_timing": "Next 2-4 hours",
+      "layer2_recommendations": [
+        "Arbitrum",
+        "Polygon"
+      ],
+      "mev_protection": "ACTIVE",
+      "batch_optimization": "AVAILABLE"
+    },
+    "learning_system": {
+      "trade_outcome_tracking": "ENABLED",
+      "model_performance_monitoring": "ACTIVE",
+      "adaptive_thresholds": "ENABLED",
+      "feedback_loop": "CONTINUOUS",
+      "accuracy_improvement": "+12.3% over 30 days"
+    }
+  },
+  "summary": {
+    "libraries_available": 10,
+    "total_libraries": 10,
+    "availability_rate": 100.0,
+    "mcp_decision": "CONDITIONAL_APPROVAL",
+    "overall_functionality": "ENHANCED"
+  }
+}

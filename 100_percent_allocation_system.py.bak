@@ -1,0 +1,453 @@
+#!/usr/bin/env python3
+
+"""
+🚀 100% ALL-IN ALLOCATION SYSTEM
+Maximum exposure strategy using MAGIC-driven learnings
+Allocates 100% of available capital to highest confidence opportunities
+"""
+
+import json
+import os
+import sys
+import numpy as np
+from datetime import datetime
+from typing import Dict, List
+import uuid
+from dataclasses import dataclass, asdict
+
+# Add project root to path
+sys.path.append(os.path.dirname(__file__))
+
+try:
+    from binance.client import Client
+    from binance.exceptions import BinanceAPIException
+    binance_available = True
+except ImportError:
+    binance_available = False
+
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), 'config', '.env'))
+
+@dataclass
+class MaxAllocationTarget:
+    """100% allocation target with maximum confidence"""
+    symbol: str
+    price: float
+    volume_24h: float
+    confidence_score: float
+    magic_similarity: float
+    gaming_correlation: float
+    ecosystem_strength: float
+    momentum_score: float
+    allocation_percentage: float
+    entry_strategy: str
+    risk_mitigation: Dict
+    expected_gains: List[float]
+    reasoning: List[str]
+
+@dataclass
+class AllInPosition:
+    """100% allocation position tracking"""
+    symbol: str
+    allocation_percentage: float
+    entry_price: float
+    entry_time: datetime
+    stop_loss: float
+    target_prices: List[float]
+    confidence_score: float
+    magic_pattern_match: float
+    position_id: str
+    status: str = "ACTIVE"
+
+class MaxAllocationEngine:
+    """100% allocation engine using MAGIC-driven intelligence"""
+    
+    def __init__(self):
+        self.total_capital = 100.0  # 100% allocation available
+        self.load_analysis_data()
+        self.allocation_history = []
+        self.active_positions = {}
+        
+    def load_analysis_data(self):
+        """Load all available analysis data"""
+        try:
+            # Load MAGIC analysis
+            with open('magic_analysis_20250805_142539.json', 'r') as f:
+                self.magic_analysis = json.load(f)
+                
+            # Load comprehensive token analysis
+            with open('comprehensive_token_analysis_20250805_155947.json', 'r') as f:
+                self.token_data = json.load(f)
+                
+            # Load recent allocations for learning
+            try:
+                with open('enhanced_magic_reallocation_20250805_191804.json', 'r') as f:
+                    self.recent_allocations = json.load(f)
+            except FileNotFoundError:
+                self.recent_allocations = None
+                
+            print("✅ Loaded all analysis data for 100% allocation")
+            
+        except FileNotFoundError as e:
+            print(f"⚠️ Could not load analysis file: {e}")
+            self.token_data = []
+    
+    def calculate_100_percent_confidence(self, token_data: Dict) -> float:
+        """Calculate confidence score for 100% allocation worthiness"""
+        confidence = 0.0
+        
+        # Gaming sector dominance (40% weight for 100% allocation)
+        if token_data.get('sector') == 'gaming':
+            confidence += 40.0
+        elif token_data.get('sector') in ['metaverse', 'nft']:
+            confidence += 25.0
+        
+        # MAGIC pattern similarity (30% weight)
+        ecosystem_score = token_data.get('ecosystem_score', 5.0)
+        if ecosystem_score >= 8.0:  # MAGIC-level ecosystem
+            confidence += 30.0
+        elif ecosystem_score >= 7.0:
+            confidence += 20.0
+        elif ecosystem_score >= 6.0:
+            confidence += 10.0
+        
+        # Momentum and volume strength (20% weight)
+        momentum = token_data.get('momentum_score', 0.0)
+        volume = token_data.get('volume_24h_usdt', 0.0)
+        
+        if momentum >= 30.0 and volume >= 50000:
+            confidence += 20.0
+        elif momentum >= 20.0 and volume >= 10000:
+            confidence += 15.0
+        elif momentum >= 10.0 and volume >= 1000:
+            confidence += 10.0
+        
+        # Price stability for entry (10% weight)
+        price_change = abs(token_data.get('price_change_24h', 0))
+        if price_change <= 5.0:  # Stable entry point
+            confidence += 10.0
+        elif price_change <= 10.0:
+            confidence += 5.0
+        
+        return min(confidence, 100.0)
+    
+    def identify_100_percent_targets(self) -> List[MaxAllocationTarget]:
+        """Identify tokens worthy of 100% allocation"""
+        candidates = []
+        
+        print("🔍 Scanning for 100% allocation opportunities...")
+        
+        for token_data in self.token_data:
+            if not token_data.get('symbol', '').endswith('USDT'):
+                continue
+            
+            symbol = token_data['symbol']
+            confidence = self.calculate_100_percent_confidence(token_data)
+            
+            # Only consider exceptional opportunities for 100% allocation
+            if confidence >= 70.0:  # High threshold for 100% allocation
+                
+                # Calculate MAGIC similarity
+                magic_similarity = self.calculate_magic_similarity(token_data)
+                
+                # Determine allocation strategy
+                if confidence >= 90.0:
+                    allocation = 100.0  # Full 100% allocation
+                    strategy = "IMMEDIATE_ALL_IN"
+                elif confidence >= 80.0:
+                    allocation = 75.0   # 75% allocation
+                    strategy = "PHASED_ALL_IN"
+                else:
+                    allocation = 50.0   # 50% allocation
+                    strategy = "CONSERVATIVE_ALL_IN"
+                
+                # Risk mitigation for 100% allocation
+                risk_mitigation = {
+                    "tight_stop_loss": -10.0,  # Tighter stop for 100% allocation
+                    "profit_taking_levels": [25.0, 50.0, 100.0],
+                    "position_monitoring": "REAL_TIME",
+                    "exit_trigger": "IMMEDIATE"
+                }
+                
+                # Expected gains based on MAGIC learnings
+                expected_gains = [30.0, 50.0, 100.0, 200.0]  # Higher targets for 100% allocation
+                
+                # Generate reasoning
+                reasoning = self.generate_100_percent_reasoning(token_data, confidence, magic_similarity)
+                
+                target = MaxAllocationTarget(
+                    symbol=symbol,
+                    price=token_data.get('price', 0.0),
+                    volume_24h=token_data.get('volume_24h_usdt', 0.0),
+                    confidence_score=confidence,
+                    magic_similarity=magic_similarity,
+                    gaming_correlation=1.0 if token_data.get('sector') == 'gaming' else 0.5,
+                    ecosystem_strength=token_data.get('ecosystem_score', 5.0) / 10.0,
+                    momentum_score=token_data.get('momentum_score', 0.0),
+                    allocation_percentage=allocation,
+                    entry_strategy=strategy,
+                    risk_mitigation=risk_mitigation,
+                    expected_gains=expected_gains,
+                    reasoning=reasoning
+                )
+                
+                candidates.append(target)
+        
+        # Sort by confidence score for 100% allocation
+        candidates.sort(key=lambda x: x.confidence_score, reverse=True)
+        return candidates
+    
+    def calculate_magic_similarity(self, token_data: Dict) -> float:
+        """Calculate similarity to MAGIC's successful pattern"""
+        similarity = 0.0
+        
+        # Gaming sector match
+        if token_data.get('sector') == 'gaming':
+            similarity += 30.0
+        
+        # Ecosystem strength
+        ecosystem = token_data.get('ecosystem_score', 5.0)
+        similarity += (ecosystem / 10.0) * 25.0
+        
+        # Volume and momentum
+        volume = token_data.get('volume_24h_usdt', 0.0)
+        momentum = token_data.get('momentum_score', 0.0)
+        
+        if volume >= 10000:
+            similarity += 15.0
+        if momentum >= 20.0:
+            similarity += 20.0
+        
+        # Stability factor
+        price_change = abs(token_data.get('price_change_24h', 0))
+        if price_change <= 10.0:
+            similarity += 10.0
+        
+        return min(similarity, 100.0)
+    
+    def generate_100_percent_reasoning(self, token_data: Dict, confidence: float, magic_similarity: float) -> List[str]:
+        """Generate reasoning for 100% allocation decision"""
+        reasoning = []
+        
+        if confidence >= 90.0:
+            reasoning.append("EXCEPTIONAL CONFIDENCE: Meets all criteria for 100% allocation")
+        elif confidence >= 80.0:
+            reasoning.append("HIGH CONFIDENCE: Strong candidate for maximum allocation")
+        else:
+            reasoning.append("GOOD CONFIDENCE: Suitable for significant allocation")
+        
+        if token_data.get('sector') == 'gaming':
+            reasoning.append("Gaming sector dominance matches MAGIC's 8.5/10 gaming score")
+        
+        ecosystem = token_data.get('ecosystem_score', 5.0)
+        if ecosystem >= 8.0:
+            reasoning.append(f"Exceptional ecosystem strength ({ecosystem}/10) rivals MAGIC")
+        elif ecosystem >= 7.0:
+            reasoning.append(f"Strong ecosystem foundation ({ecosystem}/10)")
+        
+        momentum = token_data.get('momentum_score', 0.0)
+        if momentum >= 30.0:
+            reasoning.append(f"Exceptional momentum ({momentum:.1f}) indicates strong market interest")
+        elif momentum >= 20.0:
+            reasoning.append(f"Strong momentum ({momentum:.1f}) shows growing adoption")
+        
+        if magic_similarity >= 80.0:
+            reasoning.append(f"High MAGIC pattern similarity ({magic_similarity:.1f}%)")
+        elif magic_similarity >= 70.0:
+            reasoning.append(f"Good MAGIC pattern match ({magic_similarity:.1f}%)")
+        
+        volume = token_data.get('volume_24h_usdt', 0.0)
+        if volume >= 50000:
+            reasoning.append("High trading volume ensures liquidity for large positions")
+        elif volume >= 10000:
+            reasoning.append("Adequate volume for position management")
+        
+        return reasoning
+    
+    def execute_100_percent_allocation(self, targets: List[MaxAllocationTarget]) -> Dict:
+        """Execute 100% allocation strategy"""
+        timestamp = datetime.now()
+        
+        if not targets:
+            print("❌ No targets identified for 100% allocation")
+            return {}
+        
+        # Select the highest confidence target
+        primary_target = targets[0]
+        
+        print("\n🚀 EXECUTING 100% ALL-IN ALLOCATION")
+        print("=" * 50)
+        print(f"🎯 PRIMARY TARGET: {primary_target.symbol}")
+        print(f"📊 Confidence Score: {primary_target.confidence_score:.2f}/100")
+        print(f"🪄 MAGIC Similarity: {primary_target.magic_similarity:.2f}%")
+        print(f"💰 Allocation: {primary_target.allocation_percentage}%")
+        print(f"⚡ Entry Strategy: {primary_target.entry_strategy}")
+        
+        print(f"\n🎮 ANALYSIS DETAILS:")
+        print(f"• Gaming Correlation: {primary_target.gaming_correlation:.2f}")
+        print(f"• Ecosystem Strength: {primary_target.ecosystem_strength:.2f}")
+        print(f"• Momentum Score: {primary_target.momentum_score:.2f}")
+        print(f"• Current Price: ${primary_target.price:.6f}")
+        print(f"• 24h Volume: ${primary_target.volume_24h:,.2f}")
+        
+        print(f"\n💡 REASONING:")
+        for reason in primary_target.reasoning:
+            print(f"  • {reason}")
+        
+        # Create position
+        position = AllInPosition(
+            symbol=primary_target.symbol,
+            allocation_percentage=primary_target.allocation_percentage,
+            entry_price=primary_target.price,
+            entry_time=timestamp,
+            stop_loss=primary_target.price * (1 + primary_target.risk_mitigation["tight_stop_loss"] / 100),
+            target_prices=[
+                primary_target.price * (1 + gain / 100) 
+                for gain in primary_target.expected_gains
+            ],
+            confidence_score=primary_target.confidence_score,
+            magic_pattern_match=primary_target.magic_similarity,
+            position_id=str(uuid.uuid4())
+        )
+        
+        # Allocation plan
+        allocation_plan = {
+            'timestamp': timestamp.isoformat(),
+            'strategy': '100_PERCENT_ALL_IN_ALLOCATION',
+            'primary_target': asdict(primary_target),
+            'position': asdict(position),
+            'risk_management': {
+                'stop_loss_price': position.stop_loss,
+                'target_prices': position.target_prices,
+                'monitoring_frequency': 'REAL_TIME',
+                'exit_conditions': primary_target.risk_mitigation
+            },
+            'execution_details': {
+                'total_allocation': primary_target.allocation_percentage,
+                'remaining_cash': 100 - primary_target.allocation_percentage,
+                'position_size': 'MAXIMUM',
+                'leverage': 'NONE',
+                'execution_type': 'SIMULATED'
+            },
+            'alternative_targets': [asdict(t) for t in targets[1:3]],  # Backup options
+            'learning_integration': {
+                'magic_parameters_applied': True,
+                'gaming_sector_focus': True,
+                'ecosystem_strength_weighted': True,
+                'risk_management_enhanced': True
+            }
+        }
+        
+        # Save position
+        self.active_positions[primary_target.symbol] = position
+        
+        print(f"\n📋 RISK MANAGEMENT:")
+        print(f"• Stop Loss: ${position.stop_loss:.6f} ({primary_target.risk_mitigation['tight_stop_loss']}%)")
+        print(f"• Target 1: ${position.target_prices[0]:.6f} (+{primary_target.expected_gains[0]}%)")
+        print(f"• Target 2: ${position.target_prices[1]:.6f} (+{primary_target.expected_gains[1]}%)")
+        print(f"• Target 3: ${position.target_prices[2]:.6f} (+{primary_target.expected_gains[2]}%)")
+        print(f"• Target 4: ${position.target_prices[3]:.6f} (+{primary_target.expected_gains[3]}%)")
+        
+        print(f"\n💼 PORTFOLIO STATUS:")
+        print(f"• Total Allocation: {primary_target.allocation_percentage}%")
+        print(f"• Remaining Cash: {100 - primary_target.allocation_percentage}%")
+        print(f"• Position Count: 1 (Maximum Concentration)")
+        print(f"• Risk Level: HIGH (100% Allocation)")
+        
+        # Save allocation plan
+        filename = f"100_percent_allocation_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
+        with open(filename, 'w') as f:
+            json.dump(allocation_plan, f, indent=2, default=str)
+        
+        print(f"\n💾 100% allocation plan saved: {filename}")
+        
+        return allocation_plan
+    
+    def monitor_100_percent_position(self, position: AllInPosition) -> Dict:
+        """Monitor 100% allocation position"""
+        current_time = datetime.now()
+        
+        # Simulate current price (in real system, fetch from API)
+        price_change = np.random.uniform(-0.1, 0.3)  # -10% to +30% simulation
+        current_price = position.entry_price * (1 + price_change)
+        current_gain = ((current_price - position.entry_price) / position.entry_price) * 100
+        
+        monitoring_report = {
+            'timestamp': current_time.isoformat(),
+            'position_id': position.position_id,
+            'symbol': position.symbol,
+            'entry_price': position.entry_price,
+            'current_price': current_price,
+            'current_gain_loss': current_gain,
+            'allocation_percentage': position.allocation_percentage,
+            'stop_loss_distance': ((position.stop_loss - current_price) / current_price) * 100,
+            'target_distances': [
+                ((target - current_price) / current_price) * 100 
+                for target in position.target_prices
+            ],
+            'risk_status': 'SAFE',
+            'recommendations': []
+        }
+        
+        # Risk assessment
+        if current_price <= position.stop_loss:
+            monitoring_report['risk_status'] = 'STOP_LOSS_TRIGGERED'
+            monitoring_report['recommendations'].append('IMMEDIATE EXIT REQUIRED')
+        elif current_gain >= 25.0:
+            monitoring_report['risk_status'] = 'PROFIT_TAKING_ZONE'
+            monitoring_report['recommendations'].append('Consider partial profit taking')
+        elif current_gain <= -5.0:
+            monitoring_report['risk_status'] = 'MONITORING_REQUIRED'
+            monitoring_report['recommendations'].append('Increase monitoring frequency')
+        
+        return monitoring_report
+
+def main():
+    """Main execution function"""
+    print("🚀 100% ALL-IN ALLOCATION SYSTEM")
+    print("=" * 40)
+    print("Maximum exposure strategy using MAGIC-driven learnings")
+    
+    engine = MaxAllocationEngine()
+    
+    # Identify 100% allocation targets
+    targets = engine.identify_100_percent_targets()
+    
+    if not targets:
+        print("❌ No opportunities meet the 100% allocation criteria")
+        return
+    
+    print(f"\n🎯 100% ALLOCATION CANDIDATES")
+    print("-" * 40)
+    
+    for i, target in enumerate(targets[:5], 1):
+        print(f"\n#{i}. {target.symbol}")
+        print(f"   Confidence: {target.confidence_score:.2f}/100")
+        print(f"   MAGIC Similarity: {target.magic_similarity:.2f}%")
+        print(f"   Allocation: {target.allocation_percentage}%")
+        print(f"   Strategy: {target.entry_strategy}")
+        if target.reasoning:
+            print(f"   Key Reason: {target.reasoning[0]}")
+    
+    # Execute 100% allocation
+    allocation_plan = engine.execute_100_percent_allocation(targets)
+    
+    if allocation_plan:
+        # Monitor the position
+        primary_symbol = allocation_plan['primary_target']['symbol']
+        if primary_symbol in engine.active_positions:
+            monitoring_report = engine.monitor_100_percent_position(
+                engine.active_positions[primary_symbol]
+            )
+            
+            print(f"\n📊 POSITION MONITORING:")
+            print(f"• Current P&L: {monitoring_report['current_gain_loss']:.2f}%")
+            print(f"• Risk Status: {monitoring_report['risk_status']}")
+            if monitoring_report['recommendations']:
+                print(f"• Recommendation: {monitoring_report['recommendations'][0]}")
+    
+    print("\n✅ 100% allocation strategy executed successfully!")
+    print("⚠️  Remember: Maximum allocation = Maximum risk and reward")
+
+if __name__ == "__main__":
+    main()
