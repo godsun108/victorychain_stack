@@ -26,8 +26,70 @@ import requests
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
 from dotenv import load_dotenv
+import math
+import decimal
+from decimal import Decimal
 
 warnings.filterwarnings("ignore")
+
+# --- safety / runtime guards (drop near top, after imports) ---
+SAFE_MODE = os.getenv("SAFE_MODE", "true").lower() == "true"
+ALLOW_LIQUIDATION = os.getenv("ALLOW_LIQUIDATION", "false").lower() == "true"
+DEFAULT_POSITION_PCT = float(os.getenv("POSITION_SIZE_PCT", "0.05"))
+DAILY_LOSS_STOP_PCT = float(os.getenv("DAILY_LOSS_STOP_PCT", "3"))
+MAX_OPEN = int(os.getenv("MAX_OPEN_POSITIONS", "1"))
+RECV_WINDOW_MS = int(os.getenv("RECV_WINDOW_MS", "5000"))
+
+def guard_place(fn_name: str, *args, **kwargs):
+    """If SAFE_MODE enabled, print dry-run and skip actual order."""
+    if SAFE_MODE:
+        print(f"🔒 SAFE_MODE DRY-RUN -> would call {fn_name} args={args} kwargs={kwargs}")
+        return {"dry_run": True, "fn": fn_name, "args": args, "kwargs": kwargs}
+    return None
+
+def _find_symbol_info(client, symbol: str) -> dict:
+    info = client.get_exchange_info()
+    for s in info.get("symbols", []):
+        if s.get("symbol") == symbol:
+            return s
+    raise ValueError(f"Symbol info not found for {symbol}")
+
+def round_qty(client, symbol: str, qty_float: float) -> float:
+    """Round qty to market LOT_SIZE step and enforce minQty."""
+    s = _find_symbol_info(client, symbol)
+    step = None
+    min_qty = None
+    for f in s.get("filters", []):
+        if f.get("filterType") == "LOT_SIZE":
+            step = Decimal(str(f.get("stepSize")))
+            min_qty = Decimal(str(f.get("minQty")))
+            break
+    if step is None:
+        return float(qty_float)
+    q = (Decimal(str(qty_float)) // step) * step
+    if q < (min_qty or Decimal("0")):
+        return float(min_qty or q)
+    return float(q)
+
+def enforce_min_notional(client, symbol: str, price: float, qty: float) -> bool:
+    """Return True if qty * price >= market minNotional (if present)."""
+    s = _find_symbol_info(client, symbol)
+    min_notional = None
+    for f in s.get("filters", []):
+        if f.get("filterType") == "NOTIONAL":
+            min_notional = float(f.get("minNotional"))
+            break
+    if min_notional is None:
+        return True
+    return (qty * price) >= min_notional
+
+def circuit_breaker_hit(today_equity: float, start_of_day_equity: float) -> bool:
+    """Return True when daily drawdown >= configured percent."""
+    if start_of_day_equity <= 0:
+        return False
+    dd_pct = (start_of_day_equity - today_equity) / start_of_day_equity * 100.0
+    return dd_pct >= DAILY_LOSS_STOP_PCT
+
 
 # Configure enhanced logging
 logging.basicConfig(
@@ -931,6 +993,32 @@ Return detailed JSON format with rankings, confidence scores, and specific tradi
             logger.error(f"Error analyzing trading metrics: {e}")
             return None
 
+    def safe_market_buy(self, target_symbol: str, qty_usdt: float):
+        """
+        Compute proper qty/rounding, enforce min notional, and use SAFE_MODE guard.
+        qty_usdt = desired dollar amount to spend (quote)
+        """
+        try:
+            # price fetch
+            ticker = self.client.get_symbol_ticker(symbol=target_symbol)
+            price = float(ticker["price"])
+            # convert desired USDT to base qty
+            qty_float = float(qty_usdt) / price
+            qty = round_qty(self.client, target_symbol, qty_float)
+            if not enforce_min_notional(self.client, target_symbol, price, qty):
+                print(f"⛔ Blocked: {target_symbol} below min notional after rounding")
+                return {"error": "min_notional_failed"}
+
+            maybe = guard_place("order_market_buy", symbol=target_symbol, quantity=qty, recvWindow=RECV_WINDOW_MS)
+            if maybe is not None:
+                return maybe
+
+            # actual order
+            order = self.client.order_market_buy(symbol=target_symbol, quantity=qty, recvWindow=RECV_WINDOW_MS)
+            return order
+        except Exception as e:
+            logger.error(f"safe_market_buy error for {target_symbol}: {e}")
+            return {"error": str(e)}
 
 def main():
     """Main function for VictoryChain Ultimate with MAXIMUM CAPITAL DEPLOYMENT"""
@@ -953,60 +1041,10 @@ def main():
     trader.run_analysis()
 
 
-if __name__ == "__main__":
-    main()
-
-
-def get_user_confirmation():
-    """Get explicit user confirmation for live trading"""
-    print("\n⚠️  TRADING RISK WARNING:")
-
-    print("\n🔐 LIVE TRADING CONFIRMATION REQUIRED")
-    print("To proceed with live trading, you must confirm each step:")
-    print("")
-
-    # Step 1: Risk acknowledgment
-    response1 = input(
-        "1️⃣  Do you acknowledge the risks of live trading? (type 'YES I UNDERSTAND RISKS'): "
-    )
-    if response1 != "YES I UNDERSTAND RISKS":
-        print("❌ Risk acknowledgment required. Live trading cancelled.")
-        return False
-
-    # Step 2: Money confirmation
-    response2 = input(
-        "2️⃣  Confirm you're trading with money you can afford to lose? (type 'YES'): "
-    )
-    if response2 != "YES":
-        print("❌ Money confirmation required. Live trading cancelled.")
-        return False
-
-    # Step 3: Strategy confirmation
-    response3 = input(
-        "3️⃣  Select trading strategy:\n   A) Conservative (small positions, high volume tokens)\n   B) Balanced (medium risk, mixed strategies)\n   C) Aggressive (includes moonshot detection)\n   D) Claude AI Analysis (MAGICUSDT pattern matching)\n   Enter choice (A/B/C/D): "
-    )
-
-    if response3.upper() not in ["A", "B", "C", "D"]:
-        print("❌ Invalid strategy selection. Live trading cancelled.")
-        return False
-
-    strategy_map = {
-        "A": "conservative",
-        "B": "balanced",
-        "C": "aggressive",
-        "D": "claude_analysis",
-    }
-
-    # Step 4: Duration confirmation
-    response4 = input("4️⃣  How long should the bot run? (1-8 hours, enter number): ")
-    try:
-        duration = int(response4)
-        if duration < 1 or duration > 8:
-            print("❌ Duration must be 1-8 hours. Live trading cancelled.")
-            return False
-    except:
-        print("❌ Invalid duration. Live trading cancelled.")
-        return False
+# Removed earlier simple entrypoint and duplicate basic confirmation function to avoid
+# multiple conflicting main() definitions and overwritten symbols; the enhanced
+# get_user_confirmation() and the final launcher main() at the end of this file
+# will be used instead.
 
 
 def get_user_confirmation():
@@ -1660,15 +1698,45 @@ def run_claude_analysis_strategy(config):
 
                 if execute_trade == "EXECUTE":
                     print("🚀 Executing Claude AI recommended trade...")
-                    # Here you would implement the actual trade execution
-                    print("✅ Trade execution logic would go here")
+                    try:
+                        target_symbol = best_opportunity["symbol"]
+                        # use suggested position_size (USDT)
+                        raw_usdt = min(position_size, usdt_balance - 1.0)
+
+                        # current price
+                        ticker = client.get_symbol_ticker(symbol=target_symbol)
+                        price = float(ticker["price"])
+
+                        # get symbol info for filters
+                        info = client.get_exchange_info()
+                        sym_info = next(s for s in info["symbols"] if s["symbol"] == target_symbol)
+
+                        # LOT_SIZE rounding
+                        lot = next(f for f in sym_info["filters"] if f["filterType"] == "LOT_SIZE")
+                        step = float(lot["stepSize"])
+                        min_qty = float(lot["minQty"])
+                        qty_float = float(raw_usdt) / price
+                        qty = math.floor(qty_float / step) * step
+                        if qty < min_qty:
+                            qty = min_qty
+
+                        # NOTIONAL / MIN_NOTIONAL check (if present)
+                        notional = next((f for f in sym_info["filters"] if f["filterType"] in ("NOTIONAL", "MIN_NOTIONAL")), None)
+                        min_notional = float(notional.get("minNotional", 0.0)) if notional else 0.0
+                        if qty * price < min_notional:
+                            print(f"⛔ Blocked: {target_symbol} below min notional after rounding: ${qty*price:.2f} < ${min_notional:.2f}")
+                        else:
+                            # SAFE_MODE guard
+                            if os.getenv("SAFE_MODE", "true").lower() == "true":
+                                print(f"🔒 SAFE_MODE DRY-RUN → would BUY {target_symbol} qty={qty:.8f} @ {price:.8f} (~${qty*price:.2f})")
+                            else:
+                                order = client.order_market_buy(symbol=target_symbol, quantity=qty, recvWindow=RECV_WINDOW_MS)
+                                print("✅ Order placed:", order)
+                    except Exception as e:
+                        logger.error(f"Order execution failed for {best_opportunity.get('symbol')}: {e}")
+                        print(f"❌ Order execution failed: {e}")
                 else:
                     print("❌ Trade execution cancelled")
-            else:
-                print(
-                    f"❌ Insufficient balance for trade (${usdt_balance:.2f} < $20 minimum)"
-                )
-
         print("\n🎉 Claude AI Analysis Strategy Complete!")
 
     except Exception as e:
@@ -1721,3 +1789,65 @@ def main():
 if __name__ == "__main__":
     success = main()
     sys.exit(0 if success else 1)
+
+import math
+import decimal
+from decimal import Decimal
+
+# --- safety / runtime guards (drop near top, after imports) ---
+SAFE_MODE = os.getenv("SAFE_MODE", "true").lower() == "true"
+ALLOW_LIQUIDATION = os.getenv("ALLOW_LIQUIDATION", "false").lower() == "true"
+DEFAULT_POSITION_PCT = float(os.getenv("POSITION_SIZE_PCT", "0.05"))
+DAILY_LOSS_STOP_PCT = float(os.getenv("DAILY_LOSS_STOP_PCT", "3"))
+MAX_OPEN = int(os.getenv("MAX_OPEN_POSITIONS", "1"))
+RECV_WINDOW_MS = int(os.getenv("RECV_WINDOW_MS", "5000"))
+
+def guard_place(fn_name: str, *args, **kwargs):
+    """If SAFE_MODE enabled, print dry-run and skip actual order."""
+    if SAFE_MODE:
+        print(f"🔒 SAFE_MODE DRY-RUN -> would call {fn_name} args={args} kwargs={kwargs}")
+        return {"dry_run": True, "fn": fn_name, "args": args, "kwargs": kwargs}
+    return None
+
+def _find_symbol_info(client, symbol: str) -> dict:
+    info = client.get_exchange_info()
+    for s in info.get("symbols", []):
+        if s.get("symbol") == symbol:
+            return s
+    raise ValueError(f"Symbol info not found for {symbol}")
+
+def round_qty(client, symbol: str, qty_float: float) -> float:
+    """Round qty to market LOT_SIZE step and enforce minQty."""
+    s = _find_symbol_info(client, symbol)
+    step = None
+    min_qty = None
+    for f in s.get("filters", []):
+        if f.get("filterType") == "LOT_SIZE":
+            step = Decimal(str(f.get("stepSize")))
+            min_qty = Decimal(str(f.get("minQty")))
+            break
+    if step is None:
+        return float(qty_float)
+    q = (Decimal(str(qty_float)) // step) * step
+    if q < (min_qty or Decimal("0")):
+        return float(min_qty or q)
+    return float(q)
+
+def enforce_min_notional(client, symbol: str, price: float, qty: float) -> bool:
+    """Return True if qty * price >= market minNotional (if present)."""
+    s = _find_symbol_info(client, symbol)
+    min_notional = None
+    for f in s.get("filters", []):
+        if f.get("filterType") == "NOTIONAL":
+            min_notional = float(f.get("minNotional"))
+            break
+    if min_notional is None:
+        return True
+    return (qty * price) >= min_notional
+
+def circuit_breaker_hit(today_equity: float, start_of_day_equity: float) -> bool:
+    """Return True when daily drawdown >= configured percent."""
+    if start_of_day_equity <= 0:
+        return False
+    dd_pct = (start_of_day_equity - today_equity) / start_of_day_equity * 100.0
+    return dd_pct >= DAILY_LOSS_STOP_PCT
