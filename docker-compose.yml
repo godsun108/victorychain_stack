@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16
+    container_name: victory-impact-db
+    environment:
+      POSTGRES_DB: victory_impact
+      POSTGRES_USER: victory
+      POSTGRES_PASSWORD: victory
+    ports:
+      - "5434:5432"
+    volumes:
+      - victory_impact_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U victory -d victory_impact"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: victory-impact-api
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://victory:victory@db:5432/victory_impact
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: uvicorn src.victory_impact.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./:/app
+
+  worker:
+    build: .
+    container_name: victory-impact-worker
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://victory:victory@db:5432/victory_impact
+    depends_on:
+      db:
+        condition: service_healthy
+    command: python scripts/retry_webhooks.py --loop --sleep-seconds 15 --limit 100
+    volumes:
+      - ./:/app
+
+volumes:
+  victory_impact_db_data:

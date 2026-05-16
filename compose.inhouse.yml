@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: victory_impact
+      POSTGRES_USER: victory
+      POSTGRES_PASSWORD: victory
+    volumes:
+      - victory_impact_db_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://victory:victory@db:5432/victory_impact
+      SOVEREIGN_MODE: "true"
+      ENABLE_EXTERNAL_STRIPE_WEBHOOKS: "false"
+      ENABLE_EXTERNAL_WALLETCONNECT: "false"
+      ENFORCE_INTERNAL_ENDPOINTS_IN_SOVEREIGN_MODE: "true"
+      EVM_RPC_URL: "http://evm-node.internal:8545"
+      INHOUSE_PAYMENT_GATEWAY_BASE_URL: "https://payments.internal"
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    command: uvicorn src.victory_impact.main:app --host 0.0.0.0 --port 8000
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://victory:victory@db:5432/victory_impact
+      SOVEREIGN_MODE: "true"
+      ENABLE_EXTERNAL_STRIPE_WEBHOOKS: "false"
+      ENABLE_EXTERNAL_WALLETCONNECT: "false"
+      ENFORCE_INTERNAL_ENDPOINTS_IN_SOVEREIGN_MODE: "true"
+      EVM_RPC_URL: "http://evm-node.internal:8545"
+      INHOUSE_PAYMENT_GATEWAY_BASE_URL: "https://payments.internal"
+    depends_on:
+      - db
+    command: python scripts/retry_webhooks.py --loop --sleep-seconds 10 --limit 250
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: change-me-now
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+
+volumes:
+  victory_impact_db_data:
