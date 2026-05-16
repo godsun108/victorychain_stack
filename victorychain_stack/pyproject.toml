@@ -1,13 +1,23 @@
 [tool.poetry]
 name = "victorychain_stack"
-version = "0.1.0"
-description = "A project for managing cryptocurrency trading through various exchange adapters."
-authors = ["Your Name <youremail@example.com>"]
+version = "0.2.0"
+description = "VictoryChain nonprofit donation and impact-token MVP"
+authors = ["VictoryChain <dev@victorychain.org>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-ccxt = "^1.60.0"
+python = "^3.10"
+fastapi = "^0.115.0"
+uvicorn = { version = "^0.30.0", extras = ["standard"] }
+sqlalchemy = "^2.0.36"
+pydantic = "^2.9.0"
+pydantic-settings = "^2.5.2"
+psycopg2-binary = "^2.9.10"
+requests = "^2.32.3"
+stripe = "^12.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
