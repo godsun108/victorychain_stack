@@ -142,3 +142,30 @@ class WebhookRemediationUpdate(BaseModel):
     owner_user_id: str | None = None
     remediation_status: Literal["none", "open", "in_progress", "resolved"] | None = None
     remediation_notes: str | None = None
+
+
+class PublicAiAction(BaseModel):
+    label: str
+    path: str
+    description: str
+
+
+class PublicAiChatRequest(BaseModel):
+    user_email: str | None = None
+    message: str
+    history: list[str] | None = None
+
+
+class PublicAiChatResponse(BaseModel):
+    reply: str
+    suggested_actions: list[PublicAiAction] = Field(default_factory=list)
+    intent: str | None = None
+    slots: dict[str, str] = Field(default_factory=dict)
+    missing_fields: list[str] = Field(default_factory=list)
+    next_question: str | None = None
+    execution_ready: bool = False
+    execution_type: str | None = None
+    execution_label: str | None = None
+    confirmation_prompt: str | None = None
+    execution_path: str | None = None
+    execution_payload: dict[str, str] = Field(default_factory=dict)
