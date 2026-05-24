@@ -12,6 +12,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Guard tracked release gate script
+        run: |
+          git ls-files --error-unmatch scripts/release_go_no_go.sh >/dev/null
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -39,6 +43,16 @@ jobs:
             --expect-legacy-disabled \
             --require-empty-bootstrap-tokens \
             --require-empty-legacy-tokens
+
+      - name: Check sovereign zero-external env baseline
+        run: |
+          python scripts/check_sovereign_env_baseline.py \
+            --env-file .env.example \
+            --env-file .env.inhouse.example
+
+      - name: Run inhouse release go/no-go gate
+        run: |
+          SKIP_FRONTEND=1 ENV_FILE=.env.inhouse.example bash scripts/release_go_no_go.sh inhouse
 
       - name: Run ISO20022 and regression tests
         run: |

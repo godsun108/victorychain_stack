@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "VictoryChain Impact Token API"
     app_env: str = "dev"
+    zero_external_mode: bool = True
     sovereign_mode: bool = True
     inhouse_only_mode: bool = True
     enable_external_stripe_webhooks: bool = False
@@ -106,6 +107,7 @@ class Settings(BaseSettings):
     iso20022_enable_institutional_profile: bool = True
     iso20022_institutional_profile_path: str = ""
     iso20022_require_external_schema_pack: bool = False
+    iso20022_require_idempotency_key: bool = False
     victorychain_iso20022_onchain_enabled: bool = True
     victorychain_require_iso20022_onchain: bool = False
     victorychain_iso20022_onchain_log_path: str = ""

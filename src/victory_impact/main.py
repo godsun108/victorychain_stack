@@ -154,6 +154,11 @@ def _is_internal_url(url: str) -> bool:
     return _is_internal_hostname(parsed.hostname)
 
 
+def _parse_url_list(raw_value: str) -> list[str]:
+    normalized = (raw_value or "").replace(";", "\n").replace(",", "\n")
+    return [value.strip() for value in normalized.splitlines() if value.strip()]
+
+
 def validate_sovereign_runtime_settings() -> None:
     if not settings.sovereign_mode or not settings.enforce_internal_endpoints_in_sovereign_mode:
         return
@@ -169,6 +174,58 @@ def validate_sovereign_runtime_settings() -> None:
 
     if violations:
         raise RuntimeError("sovereign mode misconfiguration: " + "; ".join(violations))
+
+
+def validate_zero_external_mode_settings() -> None:
+    if not settings.zero_external_mode:
+        return
+
+    violations: list[str] = []
+    if not settings.sovereign_mode:
+        violations.append("sovereign_mode must be true when zero_external_mode=true")
+    if settings.enable_external_stripe_webhooks:
+        violations.append("enable_external_stripe_webhooks must be false when zero_external_mode=true")
+    if settings.enable_external_walletconnect:
+        violations.append("enable_external_walletconnect must be false when zero_external_mode=true")
+    if settings.public_web_mode:
+        violations.append("public_web_mode must be false when zero_external_mode=true")
+
+    url_settings = {
+        "evm_rpc_url": settings.evm_rpc_url,
+        "inhouse_payment_gateway_base_url": settings.inhouse_payment_gateway_base_url,
+        "inhouse_checkout_app_base_url": settings.inhouse_checkout_app_base_url,
+        "delivery_instacart_base_url": settings.delivery_instacart_base_url,
+        "delivery_doordash_base_url": settings.delivery_doordash_base_url,
+        "delivery_uber_eats_base_url": settings.delivery_uber_eats_base_url,
+        "delivery_grubhub_base_url": settings.delivery_grubhub_base_url,
+        "delivery_shipt_base_url": settings.delivery_shipt_base_url,
+    }
+    for key, url in url_settings.items():
+        value = (url or "").strip()
+        if not value:
+            continue
+        if not _is_internal_url(value):
+            violations.append(f"{key} must be internal/private when zero_external_mode=true")
+
+    for fallback_url in _parse_url_list(settings.evm_rpc_fallback_urls):
+        if not _is_internal_url(fallback_url):
+            violations.append("evm_rpc_fallback_urls must only contain internal/private URLs when zero_external_mode=true")
+
+    if settings.sanctions_screening_provider.strip().lower() not in {"local_rules"}:
+        violations.append("sanctions_screening_provider must be local_rules when zero_external_mode=true")
+
+    origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+    for origin in origins:
+        parsed = urlparse(origin)
+        host = (parsed.hostname or "").strip().lower()
+        if not host:
+            violations.append("cors_origins entries must include host when zero_external_mode=true")
+            continue
+        if not _is_internal_hostname(host):
+            violations.append("cors_origins must only use internal/private hosts when zero_external_mode=true")
+
+    if violations:
+        raise RuntimeError("zero-external mode misconfiguration: " + "; ".join(sorted(set(violations))))
 
 
 def validate_inhouse_only_settings() -> None:
@@ -271,12 +328,17 @@ def log_admin_auth_mode() -> None:
     )
 
 
-@app.on_event("startup")
-def startup_event() -> None:
+def validate_runtime_startup_settings() -> None:
+    validate_zero_external_mode_settings()
     validate_inhouse_only_settings()
     validate_sovereign_runtime_settings()
     validate_public_runtime_settings()
     validate_admin_auth_settings()
+
+
+@app.on_event("startup")
+def startup_event() -> None:
+    validate_runtime_startup_settings()
     log_admin_auth_mode()
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
@@ -305,6 +367,7 @@ def healthcheck() -> dict:
             "tax_receipts": "enabled" if runtime_policies.tax_receipts_enabled else "disabled_pending_legal_review",
         },
         "sovereignty": {
+            "zero_external_mode": settings.zero_external_mode,
             "sovereign_mode": settings.sovereign_mode,
             "inhouse_only_mode": settings.inhouse_only_mode,
             "external_stripe_webhooks": settings.enable_external_stripe_webhooks,

@@ -28,7 +28,9 @@ from src.victory_impact.main import (
     validate_admin_auth_settings,
     validate_inhouse_only_settings,
     validate_public_runtime_settings,
+    validate_runtime_startup_settings,
     validate_sovereign_runtime_settings,
+    validate_zero_external_mode_settings,
 )
 from src.victory_impact.policies import runtime_policies
 from src.victory_impact.routers import admin, delivery, payments, public
@@ -2287,6 +2289,135 @@ def test_inhouse_only_runtime_validation_blocks_external_dependencies():
         settings.enable_external_stripe_webhooks = old_stripe
         settings.enable_external_walletconnect = old_walletconnect
         settings.admin_allow_legacy_api_tokens = old_admin_legacy
+        settings.public_web_mode = old_public_web_mode
+        settings.evm_rpc_url = old_rpc
+
+
+def test_zero_external_mode_validation_accepts_internal_configuration():
+    old_zero_external = settings.zero_external_mode
+    old_sovereign = settings.sovereign_mode
+    old_stripe = settings.enable_external_stripe_webhooks
+    old_walletconnect = settings.enable_external_walletconnect
+    old_public_web_mode = settings.public_web_mode
+    old_rpc = settings.evm_rpc_url
+    old_fallbacks = settings.evm_rpc_fallback_urls
+    old_gateway = settings.inhouse_payment_gateway_base_url
+    old_checkout = settings.inhouse_checkout_app_base_url
+    old_instacart = settings.delivery_instacart_base_url
+    old_doordash = settings.delivery_doordash_base_url
+    old_ubereats = settings.delivery_uber_eats_base_url
+    old_grubhub = settings.delivery_grubhub_base_url
+    old_shipt = settings.delivery_shipt_base_url
+    old_sanctions = settings.sanctions_screening_provider
+    old_origins = settings.cors_origins
+    settings.zero_external_mode = True
+    settings.sovereign_mode = True
+    settings.enable_external_stripe_webhooks = False
+    settings.enable_external_walletconnect = False
+    settings.public_web_mode = False
+    settings.evm_rpc_url = "http://evm-node:8545"
+    settings.evm_rpc_fallback_urls = "http://evm-backup:8545,https://rpc.victory.local"
+    settings.inhouse_payment_gateway_base_url = "https://api.victory.local"
+    settings.inhouse_checkout_app_base_url = "https://app.victory.local"
+    settings.delivery_instacart_base_url = "https://delivery.victory.local"
+    settings.delivery_doordash_base_url = ""
+    settings.delivery_uber_eats_base_url = ""
+    settings.delivery_grubhub_base_url = ""
+    settings.delivery_shipt_base_url = ""
+    settings.sanctions_screening_provider = "local_rules"
+    settings.cors_origins = "https://app.victory.local,http://localhost:5173"
+    try:
+        validate_zero_external_mode_settings()
+    finally:
+        settings.zero_external_mode = old_zero_external
+        settings.sovereign_mode = old_sovereign
+        settings.enable_external_stripe_webhooks = old_stripe
+        settings.enable_external_walletconnect = old_walletconnect
+        settings.public_web_mode = old_public_web_mode
+        settings.evm_rpc_url = old_rpc
+        settings.evm_rpc_fallback_urls = old_fallbacks
+        settings.inhouse_payment_gateway_base_url = old_gateway
+        settings.inhouse_checkout_app_base_url = old_checkout
+        settings.delivery_instacart_base_url = old_instacart
+        settings.delivery_doordash_base_url = old_doordash
+        settings.delivery_uber_eats_base_url = old_ubereats
+        settings.delivery_grubhub_base_url = old_grubhub
+        settings.delivery_shipt_base_url = old_shipt
+        settings.sanctions_screening_provider = old_sanctions
+        settings.cors_origins = old_origins
+
+
+def test_zero_external_mode_validation_blocks_external_configuration():
+    old_zero_external = settings.zero_external_mode
+    old_sovereign = settings.sovereign_mode
+    old_stripe = settings.enable_external_stripe_webhooks
+    old_walletconnect = settings.enable_external_walletconnect
+    old_public_web_mode = settings.public_web_mode
+    old_rpc = settings.evm_rpc_url
+    old_fallbacks = settings.evm_rpc_fallback_urls
+    old_sanctions = settings.sanctions_screening_provider
+    old_origins = settings.cors_origins
+    settings.zero_external_mode = True
+    settings.sovereign_mode = False
+    settings.enable_external_stripe_webhooks = True
+    settings.enable_external_walletconnect = True
+    settings.public_web_mode = True
+    settings.evm_rpc_url = "https://mainnet.infura.io/v3/example"
+    settings.evm_rpc_fallback_urls = "http://evm-backup:8545,https://rpc.ankr.com/eth"
+    settings.sanctions_screening_provider = "third_party"
+    settings.cors_origins = "https://example.com"
+    try:
+        try:
+            validate_zero_external_mode_settings()
+            assert False, "expected RuntimeError for zero-external misconfiguration"
+        except RuntimeError as exc:
+            message = str(exc)
+            assert "sovereign_mode must be true when zero_external_mode=true" in message
+            assert "enable_external_stripe_webhooks must be false when zero_external_mode=true" in message
+            assert "enable_external_walletconnect must be false when zero_external_mode=true" in message
+            assert "public_web_mode must be false when zero_external_mode=true" in message
+            assert "evm_rpc_url must be internal/private when zero_external_mode=true" in message
+            assert "evm_rpc_fallback_urls must only contain internal/private URLs when zero_external_mode=true" in message
+            assert "sanctions_screening_provider must be local_rules when zero_external_mode=true" in message
+            assert "cors_origins must only use internal/private hosts when zero_external_mode=true" in message
+    finally:
+        settings.zero_external_mode = old_zero_external
+        settings.sovereign_mode = old_sovereign
+        settings.enable_external_stripe_webhooks = old_stripe
+        settings.enable_external_walletconnect = old_walletconnect
+        settings.public_web_mode = old_public_web_mode
+        settings.evm_rpc_url = old_rpc
+        settings.evm_rpc_fallback_urls = old_fallbacks
+        settings.sanctions_screening_provider = old_sanctions
+        settings.cors_origins = old_origins
+
+
+def test_runtime_startup_validation_fails_fast_on_zero_external_misconfiguration():
+    old_zero_external = settings.zero_external_mode
+    old_sovereign = settings.sovereign_mode
+    old_stripe = settings.enable_external_stripe_webhooks
+    old_walletconnect = settings.enable_external_walletconnect
+    old_public_web_mode = settings.public_web_mode
+    old_rpc = settings.evm_rpc_url
+    settings.zero_external_mode = True
+    settings.sovereign_mode = False
+    settings.enable_external_stripe_webhooks = True
+    settings.enable_external_walletconnect = True
+    settings.public_web_mode = True
+    settings.evm_rpc_url = "https://mainnet.infura.io/v3/example"
+    try:
+        try:
+            validate_runtime_startup_settings()
+            assert False, "expected RuntimeError for startup zero-external misconfiguration"
+        except RuntimeError as exc:
+            message = str(exc)
+            assert message.startswith("zero-external mode misconfiguration:")
+            assert "sovereign_mode must be true when zero_external_mode=true" in message
+    finally:
+        settings.zero_external_mode = old_zero_external
+        settings.sovereign_mode = old_sovereign
+        settings.enable_external_stripe_webhooks = old_stripe
+        settings.enable_external_walletconnect = old_walletconnect
         settings.public_web_mode = old_public_web_mode
         settings.evm_rpc_url = old_rpc
 

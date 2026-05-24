@@ -73,6 +73,7 @@ uvicorn src.victory_impact.main:app --reload
 - Generate admin bootstrap tokens: `make admin-token-gen` (`ROLES=... TOKEN_LENGTH=... INCLUDE_LEGACY=true` optional)
 - Rotate admin token mappings in env file: `make admin-token-rotate ENV_FILE=.env` (backs up then validates)
 - Validate admin env hygiene: `make admin-env-check ENV_FILE=.env.example`
+- Validate sovereign zero-external env baseline: `make sovereign-env-check ENV_FILE=.env.example`
 - Run admin incident-recovery drill: `make admin-auth-recovery-drill ENV_FILE=.env PORT=9010`
 - vUSD auto-retry (last N hours): `make vusd-auto-retry`
 - vUSD auto-retry dry-run preview: `make vusd-auto-retry-dry`
@@ -97,6 +98,9 @@ Additional self-service endpoints:
 - `GET /payments/intent/{intent_id}`
 - `POST /payments/capture`
 - `POST /payments/compliance/iso20022/validate`
+- `POST /payments/compliance/iso20022/conformance-evidence`
+- `POST /payments/compliance/iso20022/conformance-evidence/verify`
+- `POST /payments/compliance/iso20022/conformance-evidence/bundle`
 - `POST /payments/compliance/iso20022/status-report`
 - `GET /payments/compliance/iso20022/status-report/{correlation_id}`
 - `POST /payments/compliance/iso20022/exception-report`
@@ -109,6 +113,7 @@ Additional self-service endpoints:
 - `POST /payments/compliance/iso20022/disposition-auto-resolve`
 
 ISO lifecycle write endpoints support optional body field `idempotency_key` for replay-safe processing.
+When provided, ISO lifecycle write responses include `X-Idempotency-Key`.
 - `GET /delivery/providers`
 - `POST /delivery/orders`
 - `GET /delivery/orders/{order_id}`
@@ -165,11 +170,12 @@ ISO lifecycle write endpoints support optional body field `idempotency_key` for 
 
 Sovereign defaults:
 
+- `ZERO_EXTERNAL_MODE=true`
 - `SOVEREIGN_MODE=true`
 - `ENABLE_EXTERNAL_STRIPE_WEBHOOKS=false`
 - `ENABLE_EXTERNAL_WALLETCONNECT=false`
 - `PUBLIC_WEB_MODE=false`
-- `INHOUSE_ONLY_MODE=false`
+- `INHOUSE_ONLY_MODE=true`
 - `ENFORCE_INTERNAL_ENDPOINTS_IN_SOVEREIGN_MODE=true`
 - `EVM_RPC_URL` must be private/internal
 - `INHOUSE_PAYMENT_GATEWAY_BASE_URL` must be private/internal
@@ -209,6 +215,7 @@ Public launch hardening controls:
 - `ISO20022_SCHEMA_ROOT` (override schema root, default bundled pack)
 - `ISO20022_INSTITUTIONAL_PROFILE_PATH` (override institutional profile JSON)
 - `ISO20022_REQUIRE_EXTERNAL_SCHEMA_PACK` (default `false`; set `true` in production)
+- `ISO20022_REQUIRE_IDEMPOTENCY_KEY` (default `false`; when `true` and `APP_ENV=prod`, all ISO write endpoints require body `idempotency_key`)
 - `VICTORYCHAIN_ISO20022_ONCHAIN_ENABLED` (default `true`)
 - `VICTORYCHAIN_REQUIRE_ISO20022_ONCHAIN` (default `false`; set `true` for strict enforcement)
 
@@ -221,10 +228,12 @@ In `APP_ENV=prod` with `PUBLIC_WEB_MODE=true`:
 
 In `INHOUSE_ONLY_MODE=true`:
 
+- `ZERO_EXTERNAL_MODE` should be `true`
 - `SOVEREIGN_MODE` must be `true`
 - `ENABLE_EXTERNAL_STRIPE_WEBHOOKS` must be `false`
 - `ENABLE_EXTERNAL_WALLETCONNECT` must be `false`
 - `ADMIN_ALLOW_LEGACY_API_TOKENS` must be `false`
+- `PUBLIC_WEB_MODE` must be `false`
 - `EVM_RPC_URL` must be internal/private
 
 One-command in-house public stack:
