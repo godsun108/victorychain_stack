@@ -1,4 +1,5 @@
 import ipaddress
+import logging
 import re
 import threading
 from collections import defaultdict, deque
@@ -13,7 +14,7 @@ from .compliance import NON_INVESTMENT_DISCLAIMER
 from .config import settings
 from .db import Base, SessionLocal, engine
 from .policies import runtime_policies
-from .routers import admin, beneficiaries, donors, governance, payments, public, subscriptions, transparency, webhooks
+from .routers import admin, beneficiaries, delivery, donors, governance, payments, public, subscriptions, transparency, webhooks
 from .services.donations import ensure_default_categories
 from .services.observability import build_prometheus_metrics
 from .services.sanctions import screening_provider_name
@@ -43,12 +44,30 @@ app.include_router(admin.router)
 app.include_router(transparency.router)
 app.include_router(payments.router)
 app.include_router(webhooks.router)
+app.include_router(delivery.router)
 app.include_router(public.router)
 app.include_router(subscriptions.router)
+
+logger = logging.getLogger(__name__)
 
 _rate_limiter_lock = threading.Lock()
 _rate_limiter_events: dict[str, deque[datetime]] = defaultdict(deque)
 Network = ipaddress.IPv4Network | ipaddress.IPv6Network
+
+
+def _parse_admin_token_role_mapping(raw_value: str) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    normalized = (raw_value or "").replace(";", "\n").replace(",", "\n")
+    for line in normalized.splitlines():
+        token_part, sep, role_part = line.partition(":")
+        if not sep:
+            continue
+        token = token_part.strip()
+        role = role_part.strip().lower()
+        if not token or role not in {"admin", "board", "compliance"}:
+            continue
+        mapping[token] = role
+    return mapping
 
 
 def _parse_trusted_proxy_networks() -> list[Network]:
@@ -142,7 +161,7 @@ def validate_sovereign_runtime_settings() -> None:
     violations: list[str] = []
     if not _is_internal_url(settings.evm_rpc_url):
         violations.append(f"evm_rpc_url must be internal/private in sovereign mode: {settings.evm_rpc_url}")
-    if not _is_internal_url(settings.inhouse_payment_gateway_base_url) and not settings.inhouse_only_mode:
+    if not _is_internal_url(settings.inhouse_payment_gateway_base_url):
         violations.append(
             "inhouse_payment_gateway_base_url must be internal/private in sovereign mode: "
             f"{settings.inhouse_payment_gateway_base_url}"
@@ -216,11 +235,49 @@ def validate_public_runtime_settings() -> None:
         raise RuntimeError("public mode misconfiguration: " + "; ".join(sorted(set(violations))))
 
 
+def validate_admin_auth_settings() -> None:
+    violations: list[str] = []
+
+    if settings.admin_bootstrap_enabled:
+        bootstrap_mapping = _parse_admin_token_role_mapping(settings.admin_bootstrap_tokens)
+        if not bootstrap_mapping:
+            violations.append(
+                "admin_bootstrap_tokens must include at least one valid token:role mapping "
+                "when admin_bootstrap_enabled=true"
+            )
+
+    if settings.admin_allow_legacy_api_tokens:
+        legacy_mapping = _parse_admin_token_role_mapping(settings.admin_legacy_api_tokens)
+        if not legacy_mapping:
+            violations.append(
+                "admin_legacy_api_tokens must include at least one valid token:role mapping "
+                "when admin_allow_legacy_api_tokens=true"
+            )
+
+    if violations:
+        raise RuntimeError("admin auth misconfiguration: " + "; ".join(sorted(set(violations))))
+
+
+def log_admin_auth_mode() -> None:
+    bootstrap_mapping = _parse_admin_token_role_mapping(settings.admin_bootstrap_tokens)
+    legacy_mapping = _parse_admin_token_role_mapping(settings.admin_legacy_api_tokens)
+    logger.warning(
+        "admin_auth_mode bootstrap_enabled=%s bootstrap_token_count=%d legacy_enabled=%s "
+        "legacy_token_count=%d bearer_enabled=true",
+        settings.admin_bootstrap_enabled,
+        len(bootstrap_mapping),
+        settings.admin_allow_legacy_api_tokens,
+        len(legacy_mapping),
+    )
+
+
 @app.on_event("startup")
 def startup_event() -> None:
     validate_inhouse_only_settings()
     validate_sovereign_runtime_settings()
     validate_public_runtime_settings()
+    validate_admin_auth_settings()
+    log_admin_auth_mode()
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:

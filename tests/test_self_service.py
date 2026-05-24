@@ -25,12 +25,13 @@ from src.victory_impact.main import (
     _is_internal_url,
     _is_private_or_loopback_ip,
     _parse_trusted_proxy_networks,
+    validate_admin_auth_settings,
     validate_inhouse_only_settings,
     validate_public_runtime_settings,
     validate_sovereign_runtime_settings,
 )
 from src.victory_impact.policies import runtime_policies
-from src.victory_impact.routers import admin, payments, public
+from src.victory_impact.routers import admin, delivery, payments, public
 from src.victory_impact.schemas import (
     AdminPaymentIntentBulkActionRequest,
     AdminOpsActionRequest,
@@ -77,6 +78,8 @@ from src.victory_impact.services.public_auth import (
     validate_wallet_session_token,
     verify_wallet_signature,
 )
+
+TEST_ADMIN_BOOTSTRAP_TOKENS = "admin-token:admin,board-token:board,compliance-token:compliance"
 
 
 def build_db() -> Session:
@@ -233,10 +236,15 @@ def test_public_services_catalog_includes_launch_endpoints():
     paths = {item.path for item in catalog.services}
     assert catalog.launch_surface == "public_web"
     assert "/public/services" in paths
+    assert "/delivery/providers" in paths
+    assert "/delivery/providers/{provider}/sync/{provider_order_id}" in paths
     assert "/public/wallet/{wallet_address}" in paths
     assert "/public/vusd/verify" in paths
     assert "/public/diagnostics/ingest" in paths
     assert "/public/diagnostics/reports" in paths
+
+    providers = delivery.list_delivery_providers()
+    assert providers.providers
 
 
 def test_public_vusd_verify_persists_verification_record():
@@ -1345,40 +1353,84 @@ def test_admin_pegasus_policy_and_signal_controls():
 
 def test_admin_api_session_issue_validate_and_revoke():
     db = build_db()
-    issued = issue_admin_api_session(db, "admin-token")
-    assert issued["role"] == "admin"
-    assert issued["token"]
-    assert validate_admin_api_session_token(db, issued["token"]) == "admin"
+    old_enabled = settings.admin_bootstrap_enabled
+    old_tokens = settings.admin_bootstrap_tokens
+    settings.admin_bootstrap_enabled = True
+    settings.admin_bootstrap_tokens = TEST_ADMIN_BOOTSTRAP_TOKENS
+    try:
+        issued = issue_admin_api_session(db, "admin-token")
+        assert issued["role"] == "admin"
+        assert issued["token"]
+        assert validate_admin_api_session_token(db, issued["token"]) == "admin"
 
-    assert revoke_admin_api_session_token(db, issued["token"]) is True
-    assert validate_admin_api_session_token(db, issued["token"]) is None
+        assert revoke_admin_api_session_token(db, issued["token"]) is True
+        assert validate_admin_api_session_token(db, issued["token"]) is None
+    finally:
+        settings.admin_bootstrap_enabled = old_enabled
+        settings.admin_bootstrap_tokens = old_tokens
 
 
 def test_admin_api_session_requires_admin_bootstrap_token():
     db = build_db()
+    old_enabled = settings.admin_bootstrap_enabled
+    old_tokens = settings.admin_bootstrap_tokens
+    settings.admin_bootstrap_enabled = True
+    settings.admin_bootstrap_tokens = TEST_ADMIN_BOOTSTRAP_TOKENS
     try:
-        issue_admin_api_session(db, "donor-token")
-        assert False, "expected ValueError for non-admin bootstrap token"
-    except ValueError as exc:
-        assert "invalid bootstrap token" in str(exc)
+        try:
+            issue_admin_api_session(db, "donor-token")
+            assert False, "expected ValueError for non-admin bootstrap token"
+        except ValueError as exc:
+            assert "invalid bootstrap token" in str(exc)
+    finally:
+        settings.admin_bootstrap_enabled = old_enabled
+        settings.admin_bootstrap_tokens = old_tokens
+
+
+def test_admin_api_session_requires_configured_bootstrap_tokens():
+    db = build_db()
+    old_enabled = settings.admin_bootstrap_enabled
+    old_tokens = settings.admin_bootstrap_tokens
+    settings.admin_bootstrap_enabled = True
+    settings.admin_bootstrap_tokens = ""
+    try:
+        try:
+            issue_admin_api_session(db, "admin-token")
+            assert False, "expected ValueError when bootstrap tokens are not configured"
+        except ValueError as exc:
+            assert "not configured" in str(exc)
+    finally:
+        settings.admin_bootstrap_enabled = old_enabled
+        settings.admin_bootstrap_tokens = old_tokens
 
 
 def test_current_role_supports_bearer_and_legacy_tokens():
     db = build_db()
+    old_enabled = settings.admin_bootstrap_enabled
     old_allow_legacy = settings.admin_allow_legacy_api_tokens
+    old_legacy_tokens = settings.admin_legacy_api_tokens
+    old_tokens = settings.admin_bootstrap_tokens
+    settings.admin_bootstrap_enabled = True
     settings.admin_allow_legacy_api_tokens = True
+    settings.admin_legacy_api_tokens = TEST_ADMIN_BOOTSTRAP_TOKENS
+    settings.admin_bootstrap_tokens = TEST_ADMIN_BOOTSTRAP_TOKENS
     try:
         issued = issue_admin_api_session(db, "board-token")
         assert current_role(authorization=f"Bearer {issued['token']}", x_api_token=None, db=db) == "board"
         assert current_role(authorization=None, x_api_token="compliance-token", db=db) == "compliance"
     finally:
+        settings.admin_bootstrap_enabled = old_enabled
         settings.admin_allow_legacy_api_tokens = old_allow_legacy
+        settings.admin_legacy_api_tokens = old_legacy_tokens
+        settings.admin_bootstrap_tokens = old_tokens
 
 
 def test_current_role_rejects_legacy_token_when_disabled():
     db = build_db()
     old_allow_legacy = settings.admin_allow_legacy_api_tokens
+    old_legacy_tokens = settings.admin_legacy_api_tokens
     settings.admin_allow_legacy_api_tokens = False
+    settings.admin_legacy_api_tokens = TEST_ADMIN_BOOTSTRAP_TOKENS
     try:
         try:
             current_role(authorization=None, x_api_token="admin-token", db=db)
@@ -1388,36 +1440,49 @@ def test_current_role_rejects_legacy_token_when_disabled():
             assert "disabled" in str(exc.detail).lower()
     finally:
         settings.admin_allow_legacy_api_tokens = old_allow_legacy
+        settings.admin_legacy_api_tokens = old_legacy_tokens
 
 
 def test_admin_auth_session_endpoints_issue_and_revoke():
     db = build_db()
     request = _build_request("10.1.2.3")
-    issued = admin.create_admin_session(request=request, x_api_token="admin-token", x_device_id="ios-dev-1", db=db)
-    assert issued.role == "admin"
-    assert issued.token
+    old_enabled = settings.admin_bootstrap_enabled
+    old_tokens = settings.admin_bootstrap_tokens
+    settings.admin_bootstrap_enabled = True
+    settings.admin_bootstrap_tokens = TEST_ADMIN_BOOTSTRAP_TOKENS
+    try:
+        issued = admin.create_admin_session(request=request, x_api_token="admin-token", x_device_id="ios-dev-1", db=db)
+        assert issued.role == "admin"
+        assert issued.token
 
-    rotated = admin.rotate_admin_session(
-        request=request,
-        authorization=f"Bearer {issued.token}",
-        x_device_id="ios-dev-1",
-        db=db,
-        role="admin",
-    )
-    assert rotated.role == "admin"
-    assert rotated.token != issued.token
+        rotated = admin.rotate_admin_session(
+            request=request,
+            authorization=f"Bearer {issued.token}",
+            x_device_id="ios-dev-1",
+            db=db,
+            role="admin",
+        )
+        assert rotated.role == "admin"
+        assert rotated.token != issued.token
 
-    result = admin.revoke_admin_session(authorization=f"Bearer {issued.token}", db=db, role="admin")
-    assert result["status"] == "revoked"
+        result = admin.revoke_admin_session(authorization=f"Bearer {issued.token}", db=db, role="admin")
+        assert result["status"] == "revoked"
 
-    second = admin.revoke_admin_session(authorization=f"Bearer {rotated.token}", db=db, role="admin")
-    assert second["status"] == "revoked"
+        second = admin.revoke_admin_session(authorization=f"Bearer {rotated.token}", db=db, role="admin")
+        assert second["status"] == "revoked"
+    finally:
+        settings.admin_bootstrap_enabled = old_enabled
+        settings.admin_bootstrap_tokens = old_tokens
 
 
 def test_admin_session_limit_auto_revokes_oldest():
     db = build_db()
+    old_enabled = settings.admin_bootstrap_enabled
     old_max = settings.admin_session_max_active_per_role
+    old_tokens = settings.admin_bootstrap_tokens
+    settings.admin_bootstrap_enabled = True
     settings.admin_session_max_active_per_role = 2
+    settings.admin_bootstrap_tokens = TEST_ADMIN_BOOTSTRAP_TOKENS
     try:
         first = admin.create_admin_session(request=_build_request("10.1.1.1"), x_api_token="admin-token", db=db)
         second = admin.create_admin_session(request=_build_request("10.1.1.2"), x_api_token="admin-token", db=db)
@@ -1432,13 +1497,17 @@ def test_admin_session_limit_auto_revokes_oldest():
         active_sessions = db.query(AdminAPISession).filter(AdminAPISession.revoked_at.is_(None)).all()
         assert len(active_sessions) == 2
     finally:
+        settings.admin_bootstrap_enabled = old_enabled
         settings.admin_session_max_active_per_role = old_max
+        settings.admin_bootstrap_tokens = old_tokens
 
 
 def test_admin_bootstrap_can_be_disabled():
     db = build_db()
     old_enabled = settings.admin_bootstrap_enabled
+    old_tokens = settings.admin_bootstrap_tokens
     settings.admin_bootstrap_enabled = False
+    settings.admin_bootstrap_tokens = TEST_ADMIN_BOOTSTRAP_TOKENS
     try:
         try:
             admin.create_admin_session(request=_build_request("10.1.9.9"), x_api_token="admin-token", db=db)
@@ -1448,6 +1517,7 @@ def test_admin_bootstrap_can_be_disabled():
             assert "disabled" in str(exc.detail).lower()
     finally:
         settings.admin_bootstrap_enabled = old_enabled
+        settings.admin_bootstrap_tokens = old_tokens
 
 
 def test_admin_ops_action_and_audit_endpoints():
@@ -2097,12 +2167,14 @@ def test_public_runtime_validation_requires_walletconnect_and_https_origins():
     old_public_web_mode = settings.public_web_mode
     old_walletconnect = settings.enable_external_walletconnect
     old_inhouse = settings.inhouse_only_mode
+    old_bootstrap = settings.admin_bootstrap_enabled
     old_admin_legacy = settings.admin_allow_legacy_api_tokens
     old_origins = settings.cors_origins
     settings.app_env = "prod"
     settings.public_web_mode = True
     settings.enable_external_walletconnect = False
     settings.inhouse_only_mode = False
+    settings.admin_bootstrap_enabled = True
     settings.admin_allow_legacy_api_tokens = True
     settings.cors_origins = "http://localhost:5173"
     try:
@@ -2121,6 +2193,7 @@ def test_public_runtime_validation_requires_walletconnect_and_https_origins():
         settings.public_web_mode = old_public_web_mode
         settings.enable_external_walletconnect = old_walletconnect
         settings.inhouse_only_mode = old_inhouse
+        settings.admin_bootstrap_enabled = old_bootstrap
         settings.admin_allow_legacy_api_tokens = old_admin_legacy
         settings.cors_origins = old_origins
 
@@ -2251,6 +2324,46 @@ def test_public_runtime_validation_allows_no_walletconnect_in_inhouse_only_mode(
         settings.admin_allow_legacy_api_tokens = old_admin_legacy
         settings.admin_bootstrap_enabled = old_admin_bootstrap
         settings.cors_origins = old_origins
+
+
+def test_admin_auth_validation_requires_bootstrap_tokens_when_enabled():
+    old_bootstrap_enabled = settings.admin_bootstrap_enabled
+    old_bootstrap_tokens = settings.admin_bootstrap_tokens
+    settings.admin_bootstrap_enabled = True
+    settings.admin_bootstrap_tokens = ""
+    try:
+        try:
+            validate_admin_auth_settings()
+            assert False, "expected RuntimeError when bootstrap is enabled without bootstrap tokens"
+        except RuntimeError as exc:
+            message = str(exc)
+            assert "admin_bootstrap_tokens must include at least one valid token:role mapping" in message
+    finally:
+        settings.admin_bootstrap_enabled = old_bootstrap_enabled
+        settings.admin_bootstrap_tokens = old_bootstrap_tokens
+
+
+def test_admin_auth_validation_requires_legacy_tokens_when_legacy_enabled():
+    old_allow_legacy = settings.admin_allow_legacy_api_tokens
+    old_legacy_tokens = settings.admin_legacy_api_tokens
+    old_bootstrap_enabled = settings.admin_bootstrap_enabled
+    old_bootstrap_tokens = settings.admin_bootstrap_tokens
+    settings.admin_allow_legacy_api_tokens = True
+    settings.admin_legacy_api_tokens = ""
+    settings.admin_bootstrap_enabled = False
+    settings.admin_bootstrap_tokens = ""
+    try:
+        try:
+            validate_admin_auth_settings()
+            assert False, "expected RuntimeError when legacy auth is enabled without legacy token mappings"
+        except RuntimeError as exc:
+            message = str(exc)
+            assert "admin_legacy_api_tokens must include at least one valid token:role mapping" in message
+    finally:
+        settings.admin_allow_legacy_api_tokens = old_allow_legacy
+        settings.admin_legacy_api_tokens = old_legacy_tokens
+        settings.admin_bootstrap_enabled = old_bootstrap_enabled
+        settings.admin_bootstrap_tokens = old_bootstrap_tokens
 
 
 def test_inhouse_payment_intent_checkout_and_one_time_capture():

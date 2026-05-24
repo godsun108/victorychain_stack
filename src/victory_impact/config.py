@@ -28,6 +28,20 @@ class Settings(BaseSettings):
     inhouse_payment_gateway_base_url: str = "https://payments.local"
     inhouse_checkout_app_base_url: str = ""
     inhouse_payment_intent_ttl_seconds: int = 1800
+    delivery_supported_providers: str = "instacart,doordash,uber_eats,grubhub,shipt,generic"
+    delivery_webhook_token: str = ""
+    delivery_auto_verify_settlement_tx: bool = True
+    delivery_provider_api_timeout_seconds: int = 15
+    delivery_instacart_base_url: str = ""
+    delivery_instacart_api_key: str = ""
+    delivery_doordash_base_url: str = ""
+    delivery_doordash_api_key: str = ""
+    delivery_uber_eats_base_url: str = ""
+    delivery_uber_eats_api_key: str = ""
+    delivery_grubhub_base_url: str = ""
+    delivery_grubhub_api_key: str = ""
+    delivery_shipt_base_url: str = ""
+    delivery_shipt_api_key: str = ""
     webhook_max_retries: int = 3
     webhook_retry_interval_seconds: int = 300
     webhook_retry_max_delay_seconds: int = 21600
@@ -59,9 +73,11 @@ class Settings(BaseSettings):
     admin_session_ttl_seconds: int = 3600
     admin_session_rotate_before_expiry_seconds: int = 600
     admin_session_max_active_per_role: int = 5
-    admin_bootstrap_enabled: bool = True
+    admin_bootstrap_enabled: bool = False
+    admin_bootstrap_tokens: str = ""
     admin_bootstrap_allowed_roles: str = "admin,board,compliance"
     admin_allow_legacy_api_tokens: bool = False
+    admin_legacy_api_tokens: str = ""
     public_rate_limit_window_seconds: int = 60
     public_rate_limit_max_requests: int = 120
     trust_proxy_headers: bool = False
@@ -85,6 +101,16 @@ class Settings(BaseSettings):
     pegasus_max_rejected_1h: int = 30
     pegasus_trusted_signal_ttl_hours: int = 168
     pegasus_cross_actor_source_ref_block: bool = True
+    iso20022_schema_root: str = ""
+    iso20022_require_schema: bool = True
+    iso20022_enable_institutional_profile: bool = True
+    iso20022_institutional_profile_path: str = ""
+    iso20022_require_external_schema_pack: bool = False
+    victorychain_iso20022_onchain_enabled: bool = True
+    victorychain_require_iso20022_onchain: bool = False
+    victorychain_iso20022_onchain_log_path: str = ""
+    victorychain_iso20022_bizsvc: str = "victorychain.vusd.fednow.01"
+    victorychain_iso20022_default_currency: str = "USD"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 

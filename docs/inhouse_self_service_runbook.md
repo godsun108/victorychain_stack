@@ -18,13 +18,49 @@ make up
 make logs
 ```
 
-## 3. Admin Access Tokens (Header)
+## 3. Admin Bootstrap Token (Header)
 
-Use `x-api-token` on admin endpoints:
+Use `x-api-token` only for bootstrap session minting on `POST /admin/auth/session`.
+Generate bootstrap mappings with:
 
-- `admin-token`
-- `board-token`
-- `compliance-token`
+```bash
+make admin-token-gen
+# optional: make admin-token-gen ROLES=admin,board TOKEN_LENGTH=64 INCLUDE_LEGACY=true
+```
+
+Rotate mappings directly into `.env` with backup + validation:
+
+```bash
+make admin-token-rotate ENV_FILE=.env
+# optional: make admin-token-rotate ENV_FILE=.env ENABLE_BOOTSTRAP=true INCLUDE_LEGACY=true
+```
+
+Or directly:
+
+```bash
+./scripts/generate_admin_tokens.sh --include-legacy
+```
+
+```bash
+./scripts/rotate_admin_tokens.sh --env-file .env
+```
+
+Paste the emitted values into `.env`:
+
+- `ADMIN_BOOTSTRAP_TOKENS=...`
+- `ADMIN_LEGACY_API_TOKENS=...` (only if `ADMIN_ALLOW_LEGACY_API_TOKENS=true`)
+
+Validate env hygiene:
+
+```bash
+make admin-env-check ENV_FILE=.env
+```
+
+Then use the returned bearer token for admin endpoints.
+
+For rotation, rollback, and incident-time bootstrap procedures, use:
+
+- `docs/admin_auth_rotation.md`
 
 ## 4. Core Self-Service Workflows
 
