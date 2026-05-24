@@ -51,7 +51,20 @@ Expected steady state:
 `make api-restart PORT=9000`
 3. Re-run Section 3 and Section 4.
 
-## 6. Rollback (If Rotation Fails)
+## 6. Drill (Non-Production, Recommended Each Release)
+
+Run the full recovery drill on isolated port and temp env:
+
+`make admin-auth-recovery-drill ENV_FILE=.env PORT=9010`
+
+Success means:
+
+1. bootstrap session mint succeeds during temporary bootstrap enablement
+2. bearer session access + revoke succeeds
+3. bootstrap mint fails (401) after bootstrap disablement
+4. drill log contains `admin_auth_mode bootstrap_enabled=False`
+
+## 7. Rollback (If Rotation Fails)
 
 1. Restore latest backup:
 `cp .env.bak.<timestamp> .env`

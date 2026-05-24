@@ -73,12 +73,14 @@ uvicorn src.victory_impact.main:app --reload
 - Generate admin bootstrap tokens: `make admin-token-gen` (`ROLES=... TOKEN_LENGTH=... INCLUDE_LEGACY=true` optional)
 - Rotate admin token mappings in env file: `make admin-token-rotate ENV_FILE=.env` (backs up then validates)
 - Validate admin env hygiene: `make admin-env-check ENV_FILE=.env.example`
+- Run admin incident-recovery drill: `make admin-auth-recovery-drill ENV_FILE=.env PORT=9010`
 - vUSD auto-retry (last N hours): `make vusd-auto-retry`
 - vUSD auto-retry dry-run preview: `make vusd-auto-retry-dry`
 - SLO control-loop execute: `make slo-control-loop`
 - SLO control-loop dry-run preview: `make slo-control-loop-dry`
 - API health sentinel one-shot: `make api-health-sentinel PORT=9100`
 - Prometheus config/rules validation: `make prometheus-check`
+- Managed API start enforces dependency parity (`VICTORY_IMPACT_SYNC_REQUIREMENTS_ON_START=true` by default)
 
 SLO automation notes:
 
@@ -101,6 +103,12 @@ Additional self-service endpoints:
 - `GET /payments/compliance/iso20022/exception-report/{correlation_id}`
 - `POST /payments/compliance/iso20022/cancellation-response`
 - `POST /payments/compliance/iso20022/cancellation-auto-resolve`
+- `POST /payments/compliance/iso20022/acknowledgement`
+- `GET /payments/compliance/iso20022/acknowledgement/{correlation_id}`
+- `POST /payments/compliance/iso20022/rejection-notification`
+- `POST /payments/compliance/iso20022/disposition-auto-resolve`
+
+ISO lifecycle write endpoints support optional body field `idempotency_key` for replay-safe processing.
 - `GET /delivery/providers`
 - `POST /delivery/orders`
 - `GET /delivery/orders/{order_id}`

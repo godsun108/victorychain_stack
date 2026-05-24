@@ -88,7 +88,22 @@ make api-restart PORT=9000
 4. Re-run regression tests:
 `pytest -q`
 
-## 5. CI/Policy Guardrails
+## 5. Non-Production Drill
+
+Run the end-to-end drill flow on an isolated port:
+
+```bash
+make admin-auth-recovery-drill ENV_FILE=.env PORT=9010
+```
+
+This validates:
+
+- temporary bootstrap enablement
+- bearer mint + protected endpoint access
+- bootstrap disablement and 401 enforcement
+- startup audit line with `bootstrap_enabled=False`
+
+## 6. CI/Policy Guardrails
 
 CI enforces token hygiene in `.env.example` and `.env.inhouse.example` via:
 

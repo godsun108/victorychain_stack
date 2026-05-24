@@ -1,4 +1,4 @@
-.PHONY: help setup run test up down logs logs-worker reset-db seed retry-once admin-token-gen admin-token-rotate admin-env-check vusd-auto-retry vusd-auto-retry-dry slo-control-loop slo-control-loop-dry prometheus-check release-check ios-bump api-start api-stop api-restart api-status api-health-sentinel
+.PHONY: help setup run test up down logs logs-worker reset-db seed retry-once admin-token-gen admin-token-rotate admin-env-check admin-auth-recovery-drill vusd-auto-retry vusd-auto-retry-dry slo-control-loop slo-control-loop-dry prometheus-check release-check ios-bump api-start api-stop api-restart api-status api-health-sentinel
 
 help:
 	@echo "setup      Create .venv and install deps"
@@ -14,6 +14,7 @@ help:
 	@echo "admin-token-gen Generate ADMIN_BOOTSTRAP_TOKENS mapping (set ROLES/TOKEN_LENGTH/INCLUDE_LEGACY=true)"
 	@echo "admin-token-rotate Rotate admin auth tokens in ENV_FILE with backup + validation"
 	@echo "admin-env-check Validate admin env token hygiene (ENV_FILE defaults to .env.example)"
+	@echo "admin-auth-recovery-drill Run full bootstrap->bearer->disable drill on isolated port"
 	@echo "vusd-auto-retry Trigger vUSD failed/rejected retry for last N hours"
 	@echo "vusd-auto-retry-dry Dry-run vUSD failed/rejected retry for last N hours"
 	@echo "slo-control-loop Run SLO control-loop execution with ops alert on degraded"
@@ -82,6 +83,12 @@ admin-env-check:
 		$$( [ "$${EXPECT_LEGACY_DISABLED:-true}" = "true" ] && echo --expect-legacy-disabled ) \
 		$$( [ "$${REQUIRE_EMPTY_BOOTSTRAP_TOKENS:-false}" = "true" ] && echo --require-empty-bootstrap-tokens ) \
 		$$( [ "$${REQUIRE_EMPTY_LEGACY_TOKENS:-false}" = "true" ] && echo --require-empty-legacy-tokens )
+
+admin-auth-recovery-drill:
+	@./scripts/run_admin_auth_recovery_drill.sh \
+		--source-env "$${ENV_FILE:-.env}" \
+		--port "$${PORT:-9010}" \
+		--startup-timeout "$${STARTUP_TIMEOUT:-45}"
 
 vusd-auto-retry:
 	@VICTORY_API_BASE_URL=$${VICTORY_API_BASE_URL:-http://localhost:8000} \

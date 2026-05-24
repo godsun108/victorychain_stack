@@ -21,6 +21,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          python -m pip check
+
+      - name: Prepare managed runtime venv
+        run: |
+          python -m venv .venv_victoryimpact
+          .venv_victoryimpact/bin/python -m pip install --upgrade pip
+          .venv_victoryimpact/bin/python -m pip install -r requirements.txt
+          .venv_victoryimpact/bin/python -m pip check
 
       - name: Check admin env token hygiene
         run: |
@@ -43,6 +51,21 @@ jobs:
             tests/test_impact_mvp.py \
             tests/test_self_service.py \
             tests/test_delivery_compat.py
+
+      - name: Run admin auth recovery drill gate
+        run: |
+          make admin-auth-recovery-drill ENV_FILE=.env.example PORT=9010 STARTUP_TIMEOUT=90
+
+      - name: Run managed startup health gate
+        run: |
+          cleanup() {
+            make api-stop PORT=9020 || true
+          }
+          trap cleanup EXIT
+
+          make api-start PORT=9020
+          curl --silent --show-error --fail --max-time 5 "http://127.0.0.1:9020/" >/dev/null
+          grep "admin_auth_mode" .victory_impact_api.log | tail -n 1
 
       - name: Build external schema pack
         run: |
