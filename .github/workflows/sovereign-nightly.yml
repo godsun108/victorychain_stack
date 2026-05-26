@@ -1,0 +1,144 @@
+name: Sovereign Nightly
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  sovereign-build-inputs-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      DIAG_DIR: runtime/reports/ci/sovereign-nightly
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Initialize diagnostics
+        run: |
+          set -euo pipefail
+          mkdir -p "${DIAG_DIR}"
+          {
+            echo "run_started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "run_id=${GITHUB_RUN_ID}"
+            echo "run_attempt=${GITHUB_RUN_ATTEMPT}"
+            echo "repository=${GITHUB_REPOSITORY}"
+            echo "ref=${GITHUB_REF}"
+            echo "sha=${GITHUB_SHA}"
+          } > "${DIAG_DIR}/run_metadata.txt"
+
+      - name: Prepare local internal registry
+        run: |
+          set -euo pipefail
+          make setup-internal-registry-host \
+            REGISTRY_PORT=5501 \
+            REGISTRY_CONTAINER_NAME=victory_internal_registry_5501 \
+            REGISTRY_DATA_DIR="$PWD/runtime/registry-data-ci" \
+            2>&1 | tee "${DIAG_DIR}/setup_internal_registry.log"
+
+      - name: Mirror required base images into local internal registry
+        run: |
+          set -euo pipefail
+          for img in postgres:16 caddy:2.8.4 python:3.12-slim; do
+            repo="${img%%:*}"
+            tag="${img#*:}"
+            target="localhost:5501/mirror/library/${repo}:${tag}"
+            docker pull "${img}"
+            docker tag "${img}" "${target}"
+            docker push "${target}"
+          done 2>&1 | tee "${DIAG_DIR}/mirror_base_images.log"
+
+      - name: Build wheelhouse for strict local-wheelhouse builds
+        run: |
+          set -euo pipefail
+          make python-wheelhouse-build \
+            PYTHON_WHEELHOUSE_IMAGE=localhost:5501/mirror/library/python:3.12-slim \
+            CLEAR_WHEELHOUSE=true \
+            2>&1 | tee "${DIAG_DIR}/wheelhouse_build.log"
+
+      - name: Render CI sovereign env
+        run: |
+          set -euo pipefail
+          cp .env.inhouse.example .env.ci.sovereign
+          sed -i.bak 's|registry.victory.internal|localhost:5501|g' .env.ci.sovereign
+          sed -i.bak 's|^RUNTIME_ENV_FILE=.*$|RUNTIME_ENV_FILE=.env.ci.sovereign|' .env.ci.sovereign
+          rm -f .env.ci.sovereign.bak
+          grep -nE '^(RUNTIME_ENV_FILE|INTERNAL_REGISTRY|INTERNAL_PYPI)' .env.ci.sovereign > "${DIAG_DIR}/ci_env_key_lines.txt" || true
+
+      - name: Run full sovereign build-input gate
+        id: gate
+        run: |
+          set +e
+          make sovereign-build-inputs-check-full \
+            ENV_FILE=.env.ci.sovereign \
+            COMPOSE_FILE=compose.inhouse.public.yml \
+            2>&1 | tee "${DIAG_DIR}/sovereign_gate.log"
+          exit_code="${PIPESTATUS[0]}"
+          echo "exit_code=${exit_code}" >> "${GITHUB_OUTPUT}"
+          echo "${exit_code}" > "${DIAG_DIR}/sovereign_gate.exit_code"
+          set -e
+
+      - name: Capture post-run diagnostics
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p "${DIAG_DIR}"
+          docker ps -a > "${DIAG_DIR}/docker_ps_a.txt" || true
+          docker images --digests > "${DIAG_DIR}/docker_images_digests.txt" || true
+          ls -lah runtime > "${DIAG_DIR}/runtime_tree_top.txt" || true
+          ls -lah runtime/wheelhouse > "${DIAG_DIR}/wheelhouse_listing.txt" || true
+          du -sh runtime/wheelhouse > "${DIAG_DIR}/wheelhouse_size.txt" || true
+
+      - name: Upload sovereign nightly diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sovereign-nightly-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: runtime/reports/ci/sovereign-nightly
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Write run summary
+        if: always()
+        run: |
+          set -euo pipefail
+          gate_code="${{ steps.gate.outputs.exit_code }}"
+          {
+            echo "## Sovereign Nightly Summary"
+            echo ""
+            echo "- Workflow run: \`${GITHUB_RUN_ID}\` (attempt \`${GITHUB_RUN_ATTEMPT}\`)"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Gate exit code: \`${gate_code}\`"
+            echo "- Diagnostics artifact: \`sovereign-nightly-diagnostics-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}\`"
+            echo "- Diagnostics dir: \`${DIAG_DIR}\`"
+            echo ""
+            if [ "${gate_code}" = "0" ]; then
+              echo "Result: PASS"
+            else
+              echo "Result: FAIL"
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Enforce gate pass
+        if: always()
+        run: |
+          code="${{ steps.gate.outputs.exit_code }}"
+          if [ "${code}" != "0" ]; then
+            echo "sovereign-build-inputs-check-full failed with exit code ${code}"
+            exit "${code}"
+          fi
+
+      - name: Cleanup local mirror services
+        if: always()
+        run: |
+          docker rm -f victory_internal_pypi_5400 || true
+          docker rm -f victory_internal_registry_5501 || true
