@@ -42,6 +42,7 @@ jobs:
         working-directory: victorychain_stack
     env:
       PYOQS_VERSION: "0.16.0"
+      PYTHONPATH: "."
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
