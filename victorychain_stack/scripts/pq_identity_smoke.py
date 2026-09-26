@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime, timedelta, timezone
 
+from src.victory_impact.classical_crypto import ECDSAP256Verifier, generate_research_p256_keypair, sign_research_p256
 from src.victory_impact.hybrid_authorization import HybridAuthorization, HybridPublicKeys
 from src.victory_impact.identity import AuthorizationChallenge, ReplayGuard
 from src.victory_impact.key_registry import KeyRegistry, PublicKeyRecord
@@ -11,20 +12,11 @@ from src.victory_impact.providers.liboqs_provider import LibOQSProvider
 from src.victory_impact.quantum_security import SignedEnvelope
 
 
-class ResearchClassicalVerifier:
-    """Deterministic test verifier only; NOT production classical cryptography."""
-    def sign(self, key: bytes, message: bytes) -> bytes:
-        return hashlib.sha256(key + message).digest()
-
-    def verify(self, public_key: bytes, message: bytes, signature: bytes) -> bool:
-        return signature == self.sign(public_key, message)
-
-
 def main() -> None:
     provider = LibOQSProvider()
     pq_keys = provider.ml_dsa_keygen("ML-DSA-65")
-    classical_key = b"research-only-classical-key"
-    classical = ResearchClassicalVerifier()
+    classical_key, classical_private = generate_research_p256_keypair()
+    classical = ECDSAP256Verifier()
 
     now = datetime.now(timezone.utc)
     challenge = AuthorizationChallenge(
@@ -43,7 +35,7 @@ def main() -> None:
     registry = KeyRegistry()
     registry.register(PublicKeyRecord(
         "classical-1", challenge.actor, "authorization-classical",
-        "RESEARCH-TEST-ONLY", classical_key, challenge.issued_at,
+        "ECDSA-P256-SHA256", classical_key, challenge.issued_at,
     ))
     registry.register(PublicKeyRecord(
         "pq-1", challenge.actor, "authorization-pq",
@@ -54,7 +46,7 @@ def main() -> None:
         version=1,
         suite_id=challenge.suite_id,
         payload_digest=challenge.digest(),
-        classical_signature=classical.sign(classical_key, message).hex(),
+        classical_signature=sign_research_p256(classical_private, message).hex(),
         pq_signature=provider.ml_dsa_sign("ML-DSA-65", pq_keys.secret_key, message).hex(),
     )
     authorization = HybridAuthorization(challenge, envelope)
@@ -69,7 +61,7 @@ def main() -> None:
         key_registry=registry,
     )
     print("VICTORY_PQ_IDENTITY_SMOKE=PASS")
-    print("CLAIM=research-only; classical leg is deterministic test verifier")
+    print("CLAIM=research-only; real ECDSA P-256 + real ML-DSA-65")
     print(f"PQ_PROVIDER={provider.provider_id}")
     print("PQ_PARAMETER_SET=ML-DSA-65")
     print(f"CHALLENGE_DIGEST={challenge.digest()}")
