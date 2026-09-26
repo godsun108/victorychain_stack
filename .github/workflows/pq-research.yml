@@ -11,17 +11,10 @@ on:
       - "victorychain_stack/tests/test_liboqs_provider_boundary.py"
       - "victorychain_stack/scripts/pq_smoke.py"
       - "victorychain_stack/requirements-pq.txt"
+      - "PQ_PROVIDER_LOCK.md"
       - ".github/workflows/pq-research.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "victorychain_stack/src/victory_impact/pq_*.py"
-      - "victorychain_stack/src/victory_impact/providers/**"
-      - "victorychain_stack/tests/test_pq_*.py"
-      - "victorychain_stack/tests/test_liboqs_provider_boundary.py"
-      - "victorychain_stack/scripts/pq_smoke.py"
-      - "victorychain_stack/requirements-pq.txt"
-      - ".github/workflows/pq-research.yml"
 
 permissions:
   contents: read
@@ -39,8 +32,43 @@ jobs:
           python-version: "3.12"
       - name: Install core test dependencies
         run: pip install -r requirements.txt
-      - name: Run PQ boundary tests
+      - name: Run PQ boundary and evidence tests
         run: pytest -q tests/test_pq_provider.py tests/test_liboqs_provider_boundary.py tests/test_pq_evidence.py tests/test_pq_smoke_evidence.py
 
-  # Real-provider smoke remains intentionally separate from the production
-  # gate until the provider/version is pinned and reviewed.
+  real-provider-smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: victorychain_stack
+    env:
+      PYOQS_VERSION: "0.16.0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install native build prerequisites
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build libssl-dev git
+      - name: Install pinned PQ wrapper
+        run: pip install -r requirements-pq.txt
+      - name: Run real ML-KEM / ML-DSA smoke and emit evidence
+        run: python scripts/pq_smoke.py --evidence-out evidence/pq-smoke.json
+      - name: Verify evidence is research-only
+        run: |
+          python - <<'PY'
+import json
+from pathlib import Path
+p = Path("evidence/pq-smoke.json")
+d = json.loads(p.read_text())
+assert d["evidence"]["deployment_approved"] is False
+assert d["evidence"]["kem_round_trip"] is True
+assert d["evidence"]["dsa_valid_signature"] is True
+assert d["evidence"]["dsa_modified_message_rejected"] is True
+print("EVIDENCE_FINGERPRINT", d["fingerprint"])
+PY
+      - name: Upload PQ evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: victory-pq-smoke-evidence
+          path: victorychain_stack/evidence/pq-smoke.json
+          if-no-files-found: error
