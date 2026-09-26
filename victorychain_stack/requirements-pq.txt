@@ -1,0 +1,4 @@
+# Optional post-quantum research dependency.
+# Keep separate from the production dependency set until provider review.
+# Provider version must be pinned before any promotion beyond research/testnet.
+liboqs-python
