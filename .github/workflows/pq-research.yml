@@ -10,6 +10,10 @@ on:
       - "victorychain_stack/tests/test_pq_*.py"
       - "victorychain_stack/tests/test_liboqs_provider_boundary.py"
       - "victorychain_stack/scripts/pq_smoke.py"
+      - "victorychain_stack/scripts/pq_identity_smoke.py"
+      - "victorychain_stack/src/victory_impact/hybrid_authorization.py"
+      - "victorychain_stack/src/victory_impact/identity.py"
+      - "victorychain_stack/src/victory_impact/key_registry.py"
       - "victorychain_stack/src/victory_impact/pq_evidence.py"
       - "victorychain_stack/requirements-pq.txt"
       - "PQ_PROVIDER_LOCK.md"
@@ -55,6 +59,10 @@ jobs:
         run: pip install -r requirements-pq.txt
       - name: Run real ML-KEM / ML-DSA smoke and emit evidence
         run: python scripts/pq_smoke.py --evidence-out evidence/pq-smoke.json
+      - name: Run real ML-DSA Victory Identity authorization smoke
+        working-directory: victorychain_stack
+        run: python scripts/pq_identity_smoke.py
+
       - name: Verify evidence is research-only
         run: |
           python - <<'PY'
