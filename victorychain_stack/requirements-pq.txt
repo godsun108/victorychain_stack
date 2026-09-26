@@ -1,4 +1,3 @@
-# Optional post-quantum research dependency.
-# Keep separate from the production dependency set until provider review.
-# Provider version must be pinned before any promotion beyond research/testnet.
-liboqs-python
+# Victory PQ research provider pin — 2026-09-26
+# PyPI release provenance is recorded in PQ_PROVIDER_LOCK.md.
+liboqs-python==0.16.0.1
