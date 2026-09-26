@@ -1,0 +1,35 @@
+name: Victory PQ Research
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [main]
+    paths:
+      - "victorychain_stack/src/victory_impact/pq_*.py"
+      - "victorychain_stack/src/victory_impact/providers/**"
+      - "victorychain_stack/scripts/pq_smoke.py"
+      - "victorychain_stack/requirements-pq.txt"
+      - ".github/workflows/pq-research.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  boundary:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: victorychain_stack
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install core test dependencies
+        run: pip install -r requirements.txt
+      - name: Run provider boundary tests
+        run: pytest -q tests/test_pq_provider.py tests/test_liboqs_provider_boundary.py
+
+  # Real-provider smoke is deliberately manual until a provider/version is
+  # pinned and reviewed. Do not let an unpinned research dependency become a
+  # production gate by accident.
