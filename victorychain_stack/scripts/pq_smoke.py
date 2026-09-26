@@ -8,14 +8,18 @@ import argparse
 import json
 from pathlib import Path
 
-from src.victory_impact.pq_conformance import kem_round_trip
 from src.victory_impact.pq_evidence import PQEvidence, evidence_record
 from src.victory_impact.providers.liboqs_provider import LibOQSProvider
 
 
 def run() -> dict:
     provider = LibOQSProvider()
-    kem_ok = kem_round_trip(provider, "ML-KEM-768")
+    kem_keys = provider.ml_kem_keygen("ML-KEM-768")
+    encapsulated = provider.ml_kem_encapsulate("ML-KEM-768", kem_keys.public_key)
+    recovered = provider.ml_kem_decapsulate(
+        "ML-KEM-768", kem_keys.secret_key, encapsulated.ciphertext
+    )
+    kem_ok = recovered == encapsulated.shared_secret
 
     keys = provider.ml_dsa_keygen("ML-DSA-65")
     message = b"victory-pq-smoke-v2"
