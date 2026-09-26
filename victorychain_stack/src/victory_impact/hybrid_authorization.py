@@ -62,6 +62,10 @@ class HybridAuthorization:
             pq_record = key_registry.require_active(
                 keys.pq_key_id, actor=self.challenge.actor, purpose="authorization-pq"
             )
+            if classical_record.algorithm != "ECDSA-P256-SHA256":
+                raise ValueError("classical key algorithm mismatch")
+            if pq_record.algorithm != keys.pq_parameter_set:
+                raise ValueError("post-quantum key algorithm mismatch")
             if classical_record.public_key != keys.classical_public_key:
                 raise ValueError("classical key material mismatch")
             if pq_record.public_key != keys.pq_public_key:
