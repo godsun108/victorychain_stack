@@ -56,16 +56,16 @@ jobs:
       - name: Verify evidence is research-only
         run: |
           python - <<'PY'
-import json
-from pathlib import Path
-p = Path("evidence/pq-smoke.json")
-d = json.loads(p.read_text())
-assert d["evidence"]["deployment_approved"] is False
-assert d["evidence"]["kem_round_trip"] is True
-assert d["evidence"]["dsa_valid_signature"] is True
-assert d["evidence"]["dsa_modified_message_rejected"] is True
-print("EVIDENCE_FINGERPRINT", d["fingerprint"])
-PY
+          import json
+          from pathlib import Path
+          p = Path("evidence/pq-smoke.json")
+          d = json.loads(p.read_text())
+          assert d["evidence"]["deployment_approved"] is False
+          assert d["evidence"]["kem_round_trip"] is True
+          assert d["evidence"]["dsa_valid_signature"] is True
+          assert d["evidence"]["dsa_modified_message_rejected"] is True
+          print("EVIDENCE_FINGERPRINT", d["fingerprint"])
+          PY
       - name: Upload PQ evidence
         uses: actions/upload-artifact@v4
         with:
