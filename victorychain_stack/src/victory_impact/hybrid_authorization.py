@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Protocol
 
 from .identity import AuthorizationChallenge, ReplayGuard
+from .key_registry import KeyRegistry
 from .pq_provider import PQProvider
 from .quantum_security import SignedEnvelope, authorize_suite
 
@@ -24,6 +25,8 @@ class HybridPublicKeys:
     classical_public_key: bytes
     pq_public_key: bytes
     pq_parameter_set: str = "ML-DSA-65"
+    classical_key_id: str | None = None
+    pq_key_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -39,6 +42,7 @@ class HybridAuthorization:
         pq_provider: PQProvider,
         replay_guard: ReplayGuard,
         now: datetime,
+        key_registry: KeyRegistry | None = None,
     ) -> None:
         self.challenge.validate(now=now)
         self.envelope.validate_structure()
@@ -48,6 +52,20 @@ class HybridAuthorization:
             raise ValueError("suite mismatch")
         if self.envelope.payload_digest != self.challenge.digest():
             raise ValueError("authorization payload digest mismatch")
+
+        if key_registry is not None:
+            if not keys.classical_key_id or not keys.pq_key_id:
+                raise ValueError("registered key ids required")
+            classical_record = key_registry.require_active(
+                keys.classical_key_id, actor=self.challenge.actor, purpose="authorization-classical"
+            )
+            pq_record = key_registry.require_active(
+                keys.pq_key_id, actor=self.challenge.actor, purpose="authorization-pq"
+            )
+            if classical_record.public_key != keys.classical_public_key:
+                raise ValueError("classical key material mismatch")
+            if pq_record.public_key != keys.pq_public_key:
+                raise ValueError("post-quantum key material mismatch")
 
         message = self.challenge.canonical_bytes()
         try:
