@@ -121,3 +121,25 @@ def test_wrong_actor_cannot_use_registered_keys():
     ))
     with pytest.raises(ValueError, match="not bound"):
         verify(forged, keys, registry, pq)
+
+def test_classical_algorithm_substitution_fails():
+    auth, keys, registry, pq = fixture()
+    original = registry.get("c1")
+    registry._keys["c1"] = PublicKeyRecord(
+        original.key_id, original.actor, original.purpose, "RSA-PSS",
+        original.public_key, original.created_at,
+    )
+    with pytest.raises(ValueError, match="classical key algorithm mismatch"):
+        verify(auth, keys, registry, pq)
+
+
+def test_pq_algorithm_substitution_fails():
+    auth, keys, registry, pq = fixture()
+    original = registry.get("p1")
+    registry._keys["p1"] = PublicKeyRecord(
+        original.key_id, original.actor, original.purpose, "ML-DSA-44",
+        original.public_key, original.created_at,
+    )
+    with pytest.raises(ValueError, match="post-quantum key algorithm mismatch"):
+        verify(auth, keys, registry, pq)
+
