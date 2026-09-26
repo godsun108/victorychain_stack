@@ -10,6 +10,7 @@ on:
       - "victorychain_stack/tests/test_pq_*.py"
       - "victorychain_stack/tests/test_liboqs_provider_boundary.py"
       - "victorychain_stack/scripts/pq_smoke.py"
+      - "victorychain_stack/src/victory_impact/pq_evidence.py"
       - "victorychain_stack/requirements-pq.txt"
       - "PQ_PROVIDER_LOCK.md"
       - ".github/workflows/pq-research.yml"
