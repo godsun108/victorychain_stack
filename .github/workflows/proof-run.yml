@@ -156,10 +156,7 @@ jobs:
         run: |
           {
             echo "PROMPT_VERSION & GIT"
-            python - <<'PY'
-            from governance.prompt_version import current_version
-            print("PROMPT_VERSION", current_version())
-            PY
+            python -c "from governance.prompt_version import current_version; print(current_version())"
             git rev-parse --short HEAD | sed 's/^/GIT_COMMIT /'
             echo
             echo "LOCKDOWN STATUS"
