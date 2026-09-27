@@ -58,7 +58,7 @@ jobs:
 
       - name: Guardrail scan
         run: |
-          python .hooks/forbid_raw_ccxt.py $(git ls-files "**/*.py")
+          python .hooks/forbid_raw_ccxt.py
           echo "GUARDRAIL_SCAN OK"
 
       - name: Status (expect UNLOCKED)
@@ -158,7 +158,7 @@ jobs:
             ./status.sh --json || true
             echo
             echo "GUARDRAIL"
-            python .hooks/forbid_raw_ccxt.py $(git ls-files "**/*.py") && echo "GUARDRAIL_SCAN OK"
+            python .hooks/forbid_raw_ccxt.py && echo "GUARDRAIL_SCAN OK"
             echo
             echo "REPORTS"
             ls -1 reports || true
