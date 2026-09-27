@@ -2,8 +2,10 @@ from datetime import datetime, timezone, timedelta
 import pytest
 from src.victory_impact.communications import CommunicationEnvelope, MessageReplayGuard
 
+FIXTURE_TIME = datetime.now(timezone.utc)
+
 def msg(**kw):
-    d=dict(message_id="m1",sender="did:victory:alice",recipient="agent:ryln",channel="direct",kind="request",created_at=datetime.now(timezone.utc),nonce="n1",payload={"b":2,"a":1})
+    d=dict(message_id="m1",sender="did:victory:alice",recipient="agent:ryln",channel="direct",kind="request",created_at=FIXTURE_TIME,nonce="n1",payload={"b":2,"a":1})
     d.update(kw); return CommunicationEnvelope(**d)
 
 def test_message_digest_is_canonical():
