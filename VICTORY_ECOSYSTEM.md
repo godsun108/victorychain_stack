@@ -70,6 +70,10 @@ advantage, consciousness sensing, or physical effects without evidence.
 Recovery target: Victory gaming runtime/ecosystem, player identity, achievements,
 items/assets, tournaments, social play, creator content and optional economy.
 
+Fonzi is the first named portable-character concept on this substrate. Victory owns
+its canonical identity/provenance model; pixel travel form, Victory home form and
+external environment manifestations remain separate representations. See `FONZI.md`.
+
 Design boundary: game logic should remain performant and fun off-chain where
 appropriate. Chain state is reserved for ownership/provenance/settlement that
 actually benefits from consensus. AI agents cannot spend player assets without
