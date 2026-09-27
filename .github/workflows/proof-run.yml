@@ -97,7 +97,7 @@ jobs:
           from governance.approvals import mint_test_token
           print(mint_test_token(action="vault.unlock", ttl_seconds=120))
           PY
-)
+          )
           ./unlock.sh -y
           ./status.sh --json
 
@@ -125,7 +125,7 @@ jobs:
           from governance.approvals import mint_test_token
           print(mint_test_token(action="order.create", ttl_seconds=120))
           PY
-)
+          )
           python - <<'PY'
           from libs.exchange_adapters.binance_us import guarded_create_order
           try:
@@ -149,9 +149,9 @@ jobs:
           {
             echo "PROMPT_VERSION & GIT"
             python - <<'PY'
-          from governance.prompt_version import current_version
-          print("PROMPT_VERSION", current_version())
-          PY
+            from governance.prompt_version import current_version
+            print("PROMPT_VERSION", current_version())
+            PY
             git rev-parse --short HEAD | sed 's/^/GIT_COMMIT /'
             echo
             echo "LOCKDOWN STATUS"
