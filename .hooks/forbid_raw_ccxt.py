@@ -19,7 +19,7 @@ scan_roots = (
 )
 
 exit_code = 0
-for path in sys.argv[1:]:
+paths = sys.argv[1:]\nif not paths:\n    import subprocess\n    raw = subprocess.check_output(["git", "ls-files", "-z", "--", "*.py"])\n    paths = [p.decode("utf-8") for p in raw.split(b"\\0") if p]\n\nfor path in paths:
     # Normalize to repo-relative POSIX-ish path
     p = path.replace("\\", "/")
     if any(p.startswith(root) for root in scan_roots):
